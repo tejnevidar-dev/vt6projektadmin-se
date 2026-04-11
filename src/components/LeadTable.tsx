@@ -1,5 +1,5 @@
 import { Phone, MapPin, Calendar, FileText, ChevronRight } from "lucide-react";
-import type { Lead, LeadStatus } from "@/lib/mock-data";
+import type { Lead, LeadStatus } from "@/lib/types";
 
 interface LeadTableProps {
   leads: Lead[];

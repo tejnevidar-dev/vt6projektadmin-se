@@ -1,5 +1,5 @@
 import { Users, Flame, Phone, CheckCircle } from "lucide-react";
-import type { Lead } from "@/lib/mock-data";
+import type { Lead } from "@/lib/types";
 
 interface KpiCardsProps {
   leads: Lead[];

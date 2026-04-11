@@ -1,6 +1,6 @@
 import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Lead } from "@/lib/mock-data";
+import type { Lead } from "@/lib/types";
 
 interface LeadDetailProps {
   lead: Lead;

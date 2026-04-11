@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
-import { Plus, Home } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Plus, Home, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KpiCards } from "@/components/KpiCards";
 import { FilterPanel } from "@/components/FilterPanel";
 import { LeadTable } from "@/components/LeadTable";
 import { LeadDetail } from "@/components/LeadDetail";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
-import { mockLeads, type Lead, type LeadStatus } from "@/lib/mock-data";
+import { CsvImportDialog } from "@/components/CsvImportDialog";
+import { fetchLeads } from "@/lib/leads-api";
+import type { Lead, LeadStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
   component: Dashboard,
@@ -20,7 +22,8 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
-  const [leads, setLeads] = useState<Lead[]>(mockLeads);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [region, setRegion] = useState("");
   const [municipality, setMunicipality] = useState("");
@@ -29,6 +32,22 @@ function Dashboard() {
   const [onlyWithPermit, setOnlyWithPermit] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showCsvDialog, setShowCsvDialog] = useState(false);
+
+  const loadLeads = useCallback(async () => {
+    try {
+      const data = await fetchLeads();
+      setLeads(data);
+    } catch (err) {
+      console.error("Failed to fetch leads:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLeads();
+  }, [loadLeads]);
 
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
@@ -58,13 +77,8 @@ function Dashboard() {
     setOnlyWithPermit(false);
   };
 
-  const handleAddLead = (lead: Lead) => {
-    setLeads((prev) => [lead, ...prev]);
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
@@ -76,14 +90,19 @@ function Dashboard() {
               <p className="text-xs text-muted-foreground">Säljpanel leads</p>
             </div>
           </div>
-          <Button onClick={() => setShowAddDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Ny lead
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowCsvDialog(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              CSV-import
+            </Button>
+            <Button onClick={() => setShowAddDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Ny lead
+            </Button>
+          </div>
         </div>
       </header>
 
-      {/* Main content */}
       <main className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
         <KpiCards leads={leads} />
         <FilterPanel
@@ -103,20 +122,24 @@ function Dashboard() {
         />
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {filteredLeads.length} av {leads.length} leads
+            {loading ? "Laddar..." : `${filteredLeads.length} av ${leads.length} leads`}
           </p>
         </div>
         <LeadTable leads={filteredLeads} onSelect={setSelectedLead} />
       </main>
 
-      {/* Dialogs */}
       {selectedLead && (
         <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} />
       )}
       <AddLeadDialog
         open={showAddDialog}
         onClose={() => setShowAddDialog(false)}
-        onAdd={handleAddLead}
+        onAdded={loadLeads}
+      />
+      <CsvImportDialog
+        open={showCsvDialog}
+        onClose={() => setShowCsvDialog(false)}
+        onImported={loadLeads}
       />
     </div>
   );
