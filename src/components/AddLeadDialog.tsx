@@ -2,15 +2,16 @@ import { useState } from "react";
 import { X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { Lead, LeadStatus, LeadSource } from "@/lib/mock-data";
+import { addLead } from "@/lib/leads-api";
+import type { LeadStatus, LeadSource } from "@/lib/types";
 
 interface AddLeadDialogProps {
   open: boolean;
   onClose: () => void;
-  onAdd: (lead: Lead) => void;
+  onAdded: () => void;
 }
 
-export function AddLeadDialog({ open, onClose, onAdd }: AddLeadDialogProps) {
+export function AddLeadDialog({ open, onClose, onAdded }: AddLeadDialogProps) {
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -24,32 +25,34 @@ export function AddLeadDialog({ open, onClose, onAdd }: AddLeadDialogProps) {
     source: "telemarketing" as LeadSource,
     notes: "",
   });
+  const [saving, setSaving] = useState(false);
 
   if (!open) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const buildYear = Number(form.buildYear);
-    const newLead: Lead = {
-      id: Date.now().toString(),
-      name: form.name,
-      phone: form.phone,
-      address: form.address,
-      municipality: form.municipality,
-      region: form.region,
-      buildYear,
-      roofType: form.roofType,
-      roofAge: 2026 - buildYear,
-      status: form.status,
-      source: form.source,
-      age: Number(form.age),
-      notes: form.notes,
-      hasRoofPermit: false,
-      lastContact: null,
-      createdAt: new Date().toISOString().slice(0, 10),
-    };
-    onAdd(newLead);
-    onClose();
+    setSaving(true);
+    try {
+      await addLead({
+        name: form.name,
+        phone: form.phone,
+        address: form.address,
+        municipality: form.municipality,
+        region: form.region,
+        buildYear: Number(form.buildYear),
+        roofType: form.roofType,
+        age: Number(form.age),
+        status: form.status,
+        source: form.source,
+        notes: form.notes,
+      });
+      onAdded();
+      onClose();
+    } catch (err) {
+      console.error("Failed to add lead:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const update = (field: string, value: string) =>
@@ -160,9 +163,9 @@ export function AddLeadDialog({ open, onClose, onAdd }: AddLeadDialogProps) {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button type="submit" className="flex-1">
+            <Button type="submit" className="flex-1" disabled={saving}>
               <Plus className="mr-2 h-4 w-4" />
-              Lägg till
+              {saving ? "Sparar..." : "Lägg till"}
             </Button>
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Avbryt

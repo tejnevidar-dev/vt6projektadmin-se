@@ -1,7 +1,7 @@
 import { Search, SlidersHorizontal, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { REGIONS, MUNICIPALITIES, type LeadStatus } from "@/lib/mock-data";
+import { REGIONS, MUNICIPALITIES, type LeadStatus } from "@/lib/types";
 
 interface FilterPanelProps {
   search: string;
