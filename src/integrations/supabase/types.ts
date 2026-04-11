@@ -14,7 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      leads: {
+        Row: {
+          age: number | null
+          created_at: string
+          email: string | null
+          id: string
+          last_contact: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          property_id: string | null
+          source: Database["public"]["Enums"]["lead_source"]
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_contact?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          property_id?: string | null
+          source?: Database["public"]["Enums"]["lead_source"]
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_contact?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          property_id?: string | null
+          source?: Database["public"]["Enums"]["lead_source"]
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      properties: {
+        Row: {
+          address: string
+          build_year: number | null
+          created_at: string
+          has_roof_permit: boolean
+          id: string
+          latitude: number | null
+          longitude: number | null
+          municipality: string
+          property_designation: string | null
+          region: string
+          roof_age: number | null
+          roof_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          build_year?: number | null
+          created_at?: string
+          has_roof_permit?: boolean
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          municipality: string
+          property_designation?: string | null
+          region: string
+          roof_age?: number | null
+          roof_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          build_year?: number | null
+          created_at?: string
+          has_roof_permit?: boolean
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          municipality?: string
+          property_designation?: string | null
+          region?: string
+          roof_age?: number | null
+          roof_type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +123,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      lead_source:
+        | "field"
+        | "telemarketing"
+        | "scan"
+        | "referral"
+        | "csv_import"
+      lead_status: "cold" | "warm" | "hot" | "customer" | "lost"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +256,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      lead_source: ["field", "telemarketing", "scan", "referral", "csv_import"],
+      lead_status: ["cold", "warm", "hot", "customer", "lost"],
+    },
   },
 } as const
