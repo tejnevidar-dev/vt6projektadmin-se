@@ -13,7 +13,7 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
   head: () => ({
     meta: [
-      { title: "TakSälj – Säljpanel" },
+      { title: "Sälj tak – Säljpanel leads" },
       { name: "description", content: "Säljpanel för takfirmor – hantera leads, filtrera byggnader och hitta kunder." },
     ],
   }),
@@ -72,8 +72,8 @@ function Dashboard() {
               <Home className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-foreground">TakSälj</h1>
-              <p className="text-xs text-muted-foreground">Säljpanel · Takfirma</p>
+              <h1 className="text-lg font-bold text-foreground">Sälj tak</h1>
+              <p className="text-xs text-muted-foreground">Säljpanel leads</p>
             </div>
           </div>
           <Button onClick={() => setShowAddDialog(true)}>
