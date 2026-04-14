@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Home, Upload } from "lucide-react";
+import { Plus, Home, Upload, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KpiCards } from "@/components/KpiCards";
 import { FilterPanel } from "@/components/FilterPanel";
@@ -9,6 +9,7 @@ import { LeadDetail } from "@/components/LeadDetail";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { fetchLeads } from "@/lib/leads-api";
+import { useAuth } from "@/hooks/use-auth";
 import type { Lead, LeadStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
@@ -22,6 +23,8 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
+  const { isAuthenticated, loading: authLoading, signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -33,6 +36,12 @@ function Dashboard() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate({ to: "/login" });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   const loadLeads = useCallback(async () => {
     try {
@@ -77,6 +86,16 @@ function Dashboard() {
     setOnlyWithPermit(false);
   };
 
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-muted-foreground">Laddar...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return null;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
@@ -98,6 +117,9 @@ function Dashboard() {
             <Button onClick={() => setShowAddDialog(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Ny lead
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => signOut()} title="Logga ut">
+              <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
