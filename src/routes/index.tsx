@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Home, Upload } from "lucide-react";
+import { Plus, Home, Upload, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KpiCards } from "@/components/KpiCards";
 import { FilterPanel } from "@/components/FilterPanel";
@@ -9,6 +9,7 @@ import { LeadDetail } from "@/components/LeadDetail";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { fetchLeads } from "@/lib/leads-api";
+import { useAuth } from "@/hooks/use-auth";
 import type { Lead, LeadStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
