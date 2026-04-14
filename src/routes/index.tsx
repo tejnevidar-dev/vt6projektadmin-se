@@ -121,7 +121,7 @@ function Dashboard() {
             <Button variant="ghost" size="icon" onClick={() => signOut()} title="Logga ut">
               <LogOut className="h-4 w-4" />
             </Button>
-        </div>
+          </div>
       </header>
 
       <main className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
