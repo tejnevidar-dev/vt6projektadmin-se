@@ -108,3 +108,50 @@ export async function importCsv(rows: CsvRow[]): Promise<number> {
 
   return imported;
 }
+
+export async function updateLead(input: {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  municipality: string;
+  region: string;
+  buildYear: number;
+  roofType: string;
+  age: number;
+  status: LeadStatus;
+  notes: string;
+  propertyId: string | null;
+}): Promise<Lead> {
+  if (input.propertyId) {
+    const { error: propError } = await supabase
+      .from("properties")
+      .update({
+        address: input.address,
+        municipality: input.municipality,
+        region: input.region,
+        build_year: input.buildYear || null,
+        roof_type: input.roofType,
+        roof_age: input.buildYear ? new Date().getFullYear() - input.buildYear : null,
+      })
+      .eq("id", input.propertyId);
+
+    if (propError) throw propError;
+  }
+
+  const { data: lead, error: leadError } = await supabase
+    .from("leads")
+    .update({
+      name: input.name,
+      phone: input.phone,
+      age: input.age || null,
+      status: input.status,
+      notes: input.notes,
+    })
+    .eq("id", input.id)
+    .select("*, property:properties(*)")
+    .single();
+
+  if (leadError) throw leadError;
+  return toFlatLead(lead as LeadWithProperty);
+}

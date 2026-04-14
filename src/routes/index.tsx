@@ -129,7 +129,7 @@ function Dashboard() {
       </main>
 
       {selectedLead && (
-        <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} />
+        <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onUpdated={loadLeads} />
       )}
       <AddLeadDialog
         open={showAddDialog}
