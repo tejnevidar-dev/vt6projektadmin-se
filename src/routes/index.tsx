@@ -23,6 +23,8 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
+  const { isAuthenticated, loading: authLoading, signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -34,6 +36,12 @@ function Dashboard() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate({ to: "/login" });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   const loadLeads = useCallback(async () => {
     try {
