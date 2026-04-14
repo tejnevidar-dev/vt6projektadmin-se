@@ -118,7 +118,9 @@ function Dashboard() {
               <Plus className="mr-2 h-4 w-4" />
               Ny lead
             </Button>
-          </div>
+            <Button variant="ghost" size="icon" onClick={() => signOut()} title="Logga ut">
+              <LogOut className="h-4 w-4" />
+            </Button>
         </div>
       </header>
 
