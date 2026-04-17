@@ -1,8 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench, LayoutGrid } from "lucide-react";
+import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench, LayoutGrid, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { KpiCards } from "@/components/KpiCards";
 import { FilterPanel } from "@/components/FilterPanel";
 import { LeadTable } from "@/components/LeadTable";
@@ -11,8 +17,8 @@ import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { fetchLeads } from "@/lib/leads-api";
 import { useAuth } from "@/hooks/use-auth";
-import type { Lead, LeadStatus, JobType } from "@/lib/types";
-import { JOB_TYPE_LABELS } from "@/lib/types";
+import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
+import { JOB_TYPE_LABELS, PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/types";
 
 const JOB_TAB_ICONS: Record<JobType, typeof Hammer> = {
   roof_replacement: Hammer,
@@ -45,6 +51,7 @@ function Dashboard() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
   const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
+  const [pipelineView, setPipelineView] = useState<PipelineStage>("saljpanel");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -67,9 +74,14 @@ function Dashboard() {
     loadLeads();
   }, [loadLeads]);
 
+  const stageLeads = useMemo(
+    () => leads.filter((l) => l.pipelineStage === pipelineView),
+    [leads, pipelineView]
+  );
+
   const jobTypeLeads = useMemo(
-    () => (activeJobType === "all" ? leads : leads.filter((l) => l.jobType === activeJobType)),
-    [leads, activeJobType]
+    () => (activeJobType === "all" ? stageLeads : stageLeads.filter((l) => l.jobType === activeJobType)),
+    [stageLeads, activeJobType]
   );
 
   const filteredLeads = useMemo(() => {
@@ -120,7 +132,31 @@ function Dashboard() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-foreground">Sälj tak</h1>
-              <p className="text-xs text-muted-foreground">Säljpanel leads</p>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="group flex items-center gap-1 rounded-md text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                  {PIPELINE_STAGE_LABELS[pipelineView]}
+                  <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]:rotate-180" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  {PIPELINE_STAGES.map((stage) => {
+                    const count = leads.filter((l) => l.pipelineStage === stage).length;
+                    const active = stage === pipelineView;
+                    return (
+                      <DropdownMenuItem
+                        key={stage}
+                        onClick={() => setPipelineView(stage)}
+                        className="flex items-center justify-between gap-2"
+                      >
+                        <span className="flex items-center gap-2">
+                          {active ? <Check className="h-3.5 w-3.5 text-primary" /> : <span className="w-3.5" />}
+                          {PIPELINE_STAGE_LABELS[stage]}
+                        </span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{count}</span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           <div className="flex gap-2">
@@ -146,12 +182,12 @@ function Dashboard() {
               <LayoutGrid className="h-4 w-4" />
               <span>Alla</span>
               <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground data-[state=active]:bg-primary/10">
-                {leads.length}
+                {stageLeads.length}
               </span>
             </TabsTrigger>
             {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map((jt) => {
               const Icon = JOB_TAB_ICONS[jt];
-              const count = leads.filter((l) => l.jobType === jt).length;
+              const count = stageLeads.filter((l) => l.jobType === jt).length;
               return (
                 <TabsTrigger key={jt} value={jt} className="gap-2 py-2">
                   <Icon className="h-4 w-4" />

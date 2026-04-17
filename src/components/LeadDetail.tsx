@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare, Pencil, Save } from "lucide-react";
+import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateLead } from "@/lib/leads-api";
+import { updateLead, updateLeadPipelineStage } from "@/lib/leads-api";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
-import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/types";
+import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_STAGE_LABELS } from "@/lib/types";
 
 interface LeadDetailProps {
   lead: Lead;
@@ -211,17 +211,52 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           )}
         </div>
 
-        <div className="mt-6 flex gap-3">
-          <Button className="flex-1" asChild>
-            <a href={`tel:${lead.phone.replace(/[\s-]/g, "")}`}>
-              <Phone className="mr-2 h-4 w-4" />
-              Ring
-            </a>
-          </Button>
-          <Button variant="outline" className="flex-1" onClick={() => setEditing(true)}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Redigera
-          </Button>
+        <div className="mt-6 space-y-3">
+          <div className="rounded-lg border border-border bg-muted/40 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">Pipeline-status</span>
+              <span className="text-sm font-semibold text-card-foreground">{PIPELINE_STAGE_LABELS[lead.pipelineStage]}</span>
+            </div>
+            {(() => {
+              const next = NEXT_PIPELINE_STAGE[lead.pipelineStage];
+              const isDone = lead.pipelineStage === "slutford";
+              return (
+                <Button
+                  className="w-full"
+                  variant={isDone ? "outline" : "default"}
+                  disabled={!next || saving}
+                  onClick={async () => {
+                    if (!next) return;
+                    setSaving(true);
+                    try {
+                      await updateLeadPipelineStage(lead.id, next);
+                      onUpdated?.();
+                      onClose();
+                    } catch (err) {
+                      console.error("Failed to update pipeline stage:", err);
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                >
+                  {isDone ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <ArrowRight className="mr-2 h-4 w-4" />}
+                  {PIPELINE_ACTION_LABELS[lead.pipelineStage]}
+                </Button>
+              );
+            })()}
+          </div>
+          <div className="flex gap-3">
+            <Button className="flex-1" asChild>
+              <a href={`tel:${lead.phone.replace(/[\s-]/g, "")}`}>
+                <Phone className="mr-2 h-4 w-4" />
+                Ring
+              </a>
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={() => setEditing(true)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Redigera
+            </Button>
+          </div>
         </div>
       </div>
     </div>

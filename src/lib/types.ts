@@ -6,6 +6,31 @@ export type DbProperty = Database["public"]["Tables"]["properties"]["Row"];
 export type LeadStatus = Database["public"]["Enums"]["lead_status"];
 export type LeadSource = Database["public"]["Enums"]["lead_source"];
 export type JobType = Database["public"]["Enums"]["job_type"];
+export type PipelineStage = Database["public"]["Enums"]["pipeline_stage"];
+
+export const PIPELINE_STAGES: PipelineStage[] = ["saljpanel", "bokad", "pagaende", "slutford"];
+
+export const PIPELINE_STAGE_LABELS: Record<PipelineStage, string> = {
+  saljpanel: "Säljpanel leads",
+  bokad: "Bokade",
+  pagaende: "Pågående",
+  slutford: "Slutförda",
+};
+
+// Next stage in the pipeline (null = end)
+export const NEXT_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null> = {
+  saljpanel: "bokad",
+  bokad: "pagaende",
+  pagaende: "slutford",
+  slutford: null,
+};
+
+export const PIPELINE_ACTION_LABELS: Record<PipelineStage, string> = {
+  saljpanel: "Flytta till Bokade",
+  bokad: "Flytta till Pågående",
+  pagaende: "Markera som Slutförd",
+  slutford: "Slutförd",
+};
 
 export const JOB_TYPE_LABELS: Record<JobType, string> = {
   roof_replacement: "Takbyte",
@@ -34,6 +59,7 @@ export interface Lead {
   status: LeadStatus;
   source: LeadSource;
   jobType: JobType;
+  pipelineStage: PipelineStage;
   age: number;
   notes: string;
   hasRoofPermit: boolean;
@@ -59,6 +85,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     status: lp.status,
     source: lp.source,
     jobType: lp.job_type,
+    pipelineStage: lp.pipeline_stage,
     age: lp.age ?? 0,
     notes: lp.notes ?? "",
     hasRoofPermit: lp.property?.has_roof_permit ?? false,

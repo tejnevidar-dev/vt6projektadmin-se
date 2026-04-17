@@ -25,6 +25,7 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          pipeline_stage: Database["public"]["Enums"]["pipeline_stage"]
           property_id: string | null
           source: Database["public"]["Enums"]["lead_source"]
           status: Database["public"]["Enums"]["lead_status"]
@@ -40,6 +41,7 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           property_id?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
@@ -55,6 +57,7 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           property_id?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
@@ -134,6 +137,7 @@ export type Database = {
         | "referral"
         | "csv_import"
       lead_status: "cold" | "warm" | "hot" | "customer" | "lost"
+      pipeline_stage: "saljpanel" | "bokad" | "pagaende" | "slutford"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -264,6 +268,7 @@ export const Constants = {
       job_type: ["roof_replacement", "roof_cleaning", "light_roof_work"],
       lead_source: ["field", "telemarketing", "scan", "referral", "csv_import"],
       lead_status: ["cold", "warm", "hot", "customer", "lost"],
+      pipeline_stage: ["saljpanel", "bokad", "pagaende", "slutford"],
     },
   },
 } as const
