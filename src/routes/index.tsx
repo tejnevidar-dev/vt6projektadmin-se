@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Home, Upload, LogOut } from "lucide-react";
+import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { KpiCards } from "@/components/KpiCards";
 import { FilterPanel } from "@/components/FilterPanel";
 import { LeadTable } from "@/components/LeadTable";
@@ -10,7 +11,14 @@ import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { fetchLeads } from "@/lib/leads-api";
 import { useAuth } from "@/hooks/use-auth";
-import type { Lead, LeadStatus } from "@/lib/types";
+import type { Lead, LeadStatus, JobType } from "@/lib/types";
+import { JOB_TYPE_LABELS } from "@/lib/types";
+
+const JOB_TAB_ICONS: Record<JobType, typeof Hammer> = {
+  roof_replacement: Hammer,
+  roof_cleaning: Droplets,
+  light_roof_work: Wrench,
+};
 
 export const Route = createFileRoute("/")({
   component: Dashboard,
@@ -36,6 +44,7 @@ function Dashboard() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
+  const [activeJobType, setActiveJobType] = useState<JobType>("roof_replacement");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -58,8 +67,13 @@ function Dashboard() {
     loadLeads();
   }, [loadLeads]);
 
+  const jobTypeLeads = useMemo(
+    () => leads.filter((l) => l.jobType === activeJobType),
+    [leads, activeJobType]
+  );
+
   const filteredLeads = useMemo(() => {
-    return leads.filter((lead) => {
+    return jobTypeLeads.filter((lead) => {
       if (search) {
         const q = search.toLowerCase();
         const match =
@@ -75,7 +89,7 @@ function Dashboard() {
       if (onlyWithPermit && !lead.hasRoofPermit) return false;
       return true;
     });
-  }, [leads, search, region, municipality, maxBuildYear, statusFilter, onlyWithPermit]);
+  }, [jobTypeLeads, search, region, municipality, maxBuildYear, statusFilter, onlyWithPermit]);
 
   const resetFilters = () => {
     setSearch("");

@@ -13,12 +13,6 @@ interface AddLeadDialogProps {
   defaultJobType?: JobType;
 }
 
-interface AddLeadDialogPropsLegacy {
-  open: boolean;
-  onClose: () => void;
-  onAdded: () => void;
-}
-
 export function AddLeadDialog({ open, onClose, onAdded, defaultJobType = "roof_replacement" }: AddLeadDialogProps) {
   const [form, setForm] = useState({
     name: "",
