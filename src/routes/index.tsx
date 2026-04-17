@@ -183,7 +183,11 @@ function Dashboard() {
         />
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {loading ? "Laddar..." : `${filteredLeads.length} av ${jobTypeLeads.length} ${JOB_TYPE_LABELS[activeJobType].toLowerCase()}`}
+            {loading
+              ? "Laddar..."
+              : `${filteredLeads.length} av ${jobTypeLeads.length} ${
+                  activeJobType === "all" ? "leads" : JOB_TYPE_LABELS[activeJobType].toLowerCase()
+                }`}
           </p>
         </div>
         <LeadTable leads={filteredLeads} onSelect={setSelectedLead} />
