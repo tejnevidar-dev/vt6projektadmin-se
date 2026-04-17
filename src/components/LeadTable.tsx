@@ -1,5 +1,6 @@
-import { Phone, MapPin, Calendar, FileText, ChevronRight } from "lucide-react";
-import type { Lead, LeadStatus } from "@/lib/types";
+import { Phone, MapPin, Calendar, FileText, ChevronRight, Hammer, Droplets, Wrench } from "lucide-react";
+import type { Lead, LeadStatus, JobType } from "@/lib/types";
+import { JOB_TYPE_LABELS } from "@/lib/types";
 
 interface LeadTableProps {
   leads: Lead[];
@@ -12,6 +13,12 @@ const statusConfig: Record<LeadStatus, { label: string; className: string }> = {
   hot: { label: "Het", className: "bg-destructive/15 text-destructive" },
   customer: { label: "Kund", className: "bg-success/15 text-success" },
   lost: { label: "Förlorad", className: "bg-muted text-muted-foreground" },
+};
+
+const jobTypeConfig: Record<JobType, { className: string; icon: typeof Hammer }> = {
+  roof_replacement: { className: "bg-primary/15 text-primary", icon: Hammer },
+  roof_cleaning: { className: "bg-info/15 text-info", icon: Droplets },
+  light_roof_work: { className: "bg-accent/20 text-accent-foreground", icon: Wrench },
 };
 
 export function LeadTable({ leads, onSelect }: LeadTableProps) {
@@ -51,9 +58,24 @@ export function LeadTable({ leads, onSelect }: LeadTableProps) {
                   className="cursor-pointer border-b border-border/50 transition-colors last:border-0 hover:bg-muted/30"
                 >
                   <td className="px-4 py-3">
-                    <div>
-                      <p className="font-medium text-card-foreground">{lead.name}</p>
-                      <p className="text-xs text-muted-foreground">{lead.age} år</p>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="font-medium text-card-foreground">{lead.name}</p>
+                        <p className="text-xs text-muted-foreground">{lead.age} år</p>
+                      </div>
+                      {(() => {
+                        const jt = jobTypeConfig[lead.jobType];
+                        const Icon = jt.icon;
+                        return (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${jt.className}`}
+                            title={JOB_TYPE_LABELS[lead.jobType]}
+                          >
+                            <Icon className="h-3 w-3" />
+                            <span className="hidden sm:inline">{JOB_TYPE_LABELS[lead.jobType]}</span>
+                          </span>
+                        );
+                      })()}
                     </div>
                   </td>
                   <td className="px-4 py-3">
