@@ -68,7 +68,7 @@ function Dashboard() {
   }, [loadLeads]);
 
   const jobTypeLeads = useMemo(
-    () => leads.filter((l) => l.jobType === activeJobType),
+    () => (activeJobType === "all" ? leads : leads.filter((l) => l.jobType === activeJobType)),
     [leads, activeJobType]
   );
 
