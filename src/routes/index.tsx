@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench } from "lucide-react";
+import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { KpiCards } from "@/components/KpiCards";
