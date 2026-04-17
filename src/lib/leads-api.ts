@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { LeadWithProperty, Lead } from "./types";
 import { toFlatLead } from "./types";
-import type { LeadStatus, LeadSource } from "./types";
+import type { LeadStatus, LeadSource, JobType } from "./types";
 
 export async function fetchLeads(): Promise<Lead[]> {
   const { data, error } = await supabase
@@ -24,6 +24,7 @@ export async function addLead(input: {
   age: number;
   status: LeadStatus;
   source: LeadSource;
+  jobType: JobType;
   notes: string;
 }): Promise<Lead> {
   // Create property first
@@ -51,6 +52,7 @@ export async function addLead(input: {
       age: input.age || null,
       status: input.status,
       source: input.source,
+      job_type: input.jobType,
       notes: input.notes,
     })
     .select("*, property:properties(*)")
@@ -71,7 +73,7 @@ export interface CsvRow {
   age: string;
 }
 
-export async function importCsv(rows: CsvRow[]): Promise<number> {
+export async function importCsv(rows: CsvRow[], jobType: JobType = "roof_replacement"): Promise<number> {
   let imported = 0;
 
   for (const row of rows) {
@@ -101,6 +103,7 @@ export async function importCsv(rows: CsvRow[]): Promise<number> {
         age: parseInt(row.age) || null,
         status: "cold",
         source: "csv_import",
+        job_type: jobType,
       });
 
     if (!leadError) imported++;
@@ -120,6 +123,7 @@ export async function updateLead(input: {
   roofType: string;
   age: number;
   status: LeadStatus;
+  jobType: JobType;
   notes: string;
   propertyId: string | null;
 }): Promise<Lead> {
@@ -146,6 +150,7 @@ export async function updateLead(input: {
       phone: input.phone,
       age: input.age || null,
       status: input.status,
+      job_type: input.jobType,
       notes: input.notes,
     })
     .eq("id", input.id)

@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Home, Upload, LogOut } from "lucide-react";
+import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { KpiCards } from "@/components/KpiCards";
 import { FilterPanel } from "@/components/FilterPanel";
 import { LeadTable } from "@/components/LeadTable";
@@ -10,7 +11,14 @@ import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { fetchLeads } from "@/lib/leads-api";
 import { useAuth } from "@/hooks/use-auth";
-import type { Lead, LeadStatus } from "@/lib/types";
+import type { Lead, LeadStatus, JobType } from "@/lib/types";
+import { JOB_TYPE_LABELS } from "@/lib/types";
+
+const JOB_TAB_ICONS: Record<JobType, typeof Hammer> = {
+  roof_replacement: Hammer,
+  roof_cleaning: Droplets,
+  light_roof_work: Wrench,
+};
 
 export const Route = createFileRoute("/")({
   component: Dashboard,
@@ -36,6 +44,7 @@ function Dashboard() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
+  const [activeJobType, setActiveJobType] = useState<JobType>("roof_replacement");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -58,8 +67,13 @@ function Dashboard() {
     loadLeads();
   }, [loadLeads]);
 
+  const jobTypeLeads = useMemo(
+    () => leads.filter((l) => l.jobType === activeJobType),
+    [leads, activeJobType]
+  );
+
   const filteredLeads = useMemo(() => {
-    return leads.filter((lead) => {
+    return jobTypeLeads.filter((lead) => {
       if (search) {
         const q = search.toLowerCase();
         const match =
@@ -75,7 +89,7 @@ function Dashboard() {
       if (onlyWithPermit && !lead.hasRoofPermit) return false;
       return true;
     });
-  }, [leads, search, region, municipality, maxBuildYear, statusFilter, onlyWithPermit]);
+  }, [jobTypeLeads, search, region, municipality, maxBuildYear, statusFilter, onlyWithPermit]);
 
   const resetFilters = () => {
     setSearch("");
@@ -126,7 +140,25 @@ function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
-        <KpiCards leads={leads} />
+        <Tabs value={activeJobType} onValueChange={(v) => setActiveJobType(v as JobType)}>
+          <TabsList className="grid h-auto w-full grid-cols-3 p-1">
+            {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map((jt) => {
+              const Icon = JOB_TAB_ICONS[jt];
+              const count = leads.filter((l) => l.jobType === jt).length;
+              return (
+                <TabsTrigger key={jt} value={jt} className="gap-2 py-2">
+                  <Icon className="h-4 w-4" />
+                  <span>{JOB_TYPE_LABELS[jt]}</span>
+                  <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground data-[state=active]:bg-primary/10">
+                    {count}
+                  </span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </Tabs>
+
+        <KpiCards leads={jobTypeLeads} />
         <FilterPanel
           search={search}
           onSearchChange={setSearch}
@@ -144,7 +176,7 @@ function Dashboard() {
         />
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {loading ? "Laddar..." : `${filteredLeads.length} av ${leads.length} leads`}
+            {loading ? "Laddar..." : `${filteredLeads.length} av ${jobTypeLeads.length} ${JOB_TYPE_LABELS[activeJobType].toLowerCase()}`}
           </p>
         </div>
         <LeadTable leads={filteredLeads} onSelect={setSelectedLead} />
@@ -157,11 +189,13 @@ function Dashboard() {
         open={showAddDialog}
         onClose={() => setShowAddDialog(false)}
         onAdded={loadLeads}
+        defaultJobType={activeJobType}
       />
       <CsvImportDialog
         open={showCsvDialog}
         onClose={() => setShowCsvDialog(false)}
         onImported={loadLeads}
+        jobType={activeJobType}
       />
     </div>
   );

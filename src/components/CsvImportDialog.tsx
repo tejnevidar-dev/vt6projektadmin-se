@@ -2,11 +2,14 @@ import { useState, useRef } from "react";
 import { X, Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { importCsv, type CsvRow } from "@/lib/leads-api";
+import type { JobType } from "@/lib/types";
+import { JOB_TYPE_LABELS } from "@/lib/types";
 
 interface CsvImportDialogProps {
   open: boolean;
   onClose: () => void;
   onImported: () => void;
+  jobType?: JobType;
 }
 
 function parseCsv(text: string): CsvRow[] {
@@ -25,7 +28,7 @@ function parseCsv(text: string): CsvRow[] {
   });
 }
 
-export function CsvImportDialog({ open, onClose, onImported }: CsvImportDialogProps) {
+export function CsvImportDialog({ open, onClose, onImported, jobType = "roof_replacement" }: CsvImportDialogProps) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<CsvRow[]>([]);
   const [importing, setImporting] = useState(false);
@@ -48,7 +51,7 @@ export function CsvImportDialog({ open, onClose, onImported }: CsvImportDialogPr
     try {
       const text = await file.text();
       const rows = parseCsv(text);
-      const count = await importCsv(rows);
+      const count = await importCsv(rows, jobType);
       setResult(`${count} av ${rows.length} rader importerade!`);
       onImported();
     } catch {
@@ -62,7 +65,10 @@ export function CsvImportDialog({ open, onClose, onImported }: CsvImportDialogPr
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-card-foreground">Importera fastighetsdata (CSV)</h2>
+          <div>
+            <h2 className="text-lg font-bold text-card-foreground">Importera fastighetsdata (CSV)</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Importeras som: {JOB_TYPE_LABELS[jobType]}</p>
+          </div>
           <button onClick={onClose} className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
             <X className="h-5 w-5" />
           </button>

@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          job_type: Database["public"]["Enums"]["job_type"]
           last_contact: string | null
           name: string
           notes: string | null
@@ -34,6 +35,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
           name: string
           notes?: string | null
@@ -48,6 +50,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
           name?: string
           notes?: string | null
@@ -123,6 +126,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      job_type: "roof_replacement" | "roof_cleaning" | "light_roof_work"
       lead_source:
         | "field"
         | "telemarketing"
@@ -257,6 +261,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      job_type: ["roof_replacement", "roof_cleaning", "light_roof_work"],
       lead_source: ["field", "telemarketing", "scan", "referral", "csv_import"],
       lead_status: ["cold", "warm", "hot", "customer", "lost"],
     },

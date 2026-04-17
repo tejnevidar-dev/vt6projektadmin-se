@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateLead } from "@/lib/leads-api";
-import type { Lead, LeadStatus } from "@/lib/types";
-import { REGIONS, MUNICIPALITIES } from "@/lib/types";
+import type { Lead, LeadStatus, JobType } from "@/lib/types";
+import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/types";
 
 interface LeadDetailProps {
   lead: Lead;
@@ -43,6 +43,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
     roofType: lead.roofType,
     age: lead.age,
     status: lead.status as LeadStatus,
+    jobType: lead.jobType as JobType,
     notes: lead.notes,
   });
 
@@ -123,6 +124,14 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Jobbtyp">
+              <Select value={form.jobType} onValueChange={(v) => set("jobType", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {JOB_TYPES.map((jt) => <SelectItem key={jt} value={jt}>{JOB_TYPE_LABELS[jt]}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>

@@ -5,6 +5,15 @@ export type DbLead = Database["public"]["Tables"]["leads"]["Row"];
 export type DbProperty = Database["public"]["Tables"]["properties"]["Row"];
 export type LeadStatus = Database["public"]["Enums"]["lead_status"];
 export type LeadSource = Database["public"]["Enums"]["lead_source"];
+export type JobType = Database["public"]["Enums"]["job_type"];
+
+export const JOB_TYPE_LABELS: Record<JobType, string> = {
+  roof_replacement: "Takbyten",
+  roof_cleaning: "Taktvättar",
+  light_roof_work: "Lättare takarbeten",
+};
+
+export const JOB_TYPES: JobType[] = ["roof_replacement", "roof_cleaning", "light_roof_work"];
 
 // Joined lead + property for UI display
 export interface LeadWithProperty extends DbLead {
@@ -24,6 +33,7 @@ export interface Lead {
   roofAge: number;
   status: LeadStatus;
   source: LeadSource;
+  jobType: JobType;
   age: number;
   notes: string;
   hasRoofPermit: boolean;
@@ -48,6 +58,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     roofAge: buildYear ? currentYear - buildYear : 0,
     status: lp.status,
     source: lp.source,
+    jobType: lp.job_type,
     age: lp.age ?? 0,
     notes: lp.notes ?? "",
     hasRoofPermit: lp.property?.has_roof_permit ?? false,
