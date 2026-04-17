@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
   head: () => ({
     meta: [
-      { title: "Sälj tak – Säljpanel leads" },
+      { title: "Säljpanel – Leads" },
       { name: "description", content: "Säljpanel för takfirmor – hantera leads, filtrera byggnader och hitta kunder." },
     ],
   }),

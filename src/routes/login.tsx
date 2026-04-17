@@ -11,8 +11,8 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
   head: () => ({
     meta: [
-      { title: "Logga in – Sälj tak" },
-      { name: "description", content: "Logga in på Sälj tak för att hantera dina leads." },
+      { title: "Logga in – Säljpanel" },
+      { name: "description", content: "Logga in på Säljpanel för att hantera dina leads." },
     ],
   }),
 });
@@ -66,7 +66,7 @@ function LoginPage() {
           </div>
           <CardTitle>{isSignUp ? "Skapa konto" : "Logga in"}</CardTitle>
           <CardDescription>
-            {isSignUp ? "Registrera ett nytt konto" : "Logga in på Sälj tak"}
+            {isSignUp ? "Registrera ett nytt konto" : "Logga in på Säljpanel"}
           </CardDescription>
         </CardHeader>
         <CardContent>
