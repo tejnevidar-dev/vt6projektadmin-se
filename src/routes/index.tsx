@@ -1,8 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench, LayoutGrid } from "lucide-react";
+import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench, LayoutGrid, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { KpiCards } from "@/components/KpiCards";
 import { FilterPanel } from "@/components/FilterPanel";
 import { LeadTable } from "@/components/LeadTable";
@@ -11,8 +17,8 @@ import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { fetchLeads } from "@/lib/leads-api";
 import { useAuth } from "@/hooks/use-auth";
-import type { Lead, LeadStatus, JobType } from "@/lib/types";
-import { JOB_TYPE_LABELS } from "@/lib/types";
+import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
+import { JOB_TYPE_LABELS, PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/types";
 
 const JOB_TAB_ICONS: Record<JobType, typeof Hammer> = {
   roof_replacement: Hammer,
