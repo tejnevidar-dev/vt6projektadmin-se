@@ -44,7 +44,7 @@ function Dashboard() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
-  const [activeJobType, setActiveJobType] = useState<JobType>("roof_replacement");
+  const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
