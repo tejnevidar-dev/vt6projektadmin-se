@@ -51,6 +51,7 @@ function Dashboard() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
   const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
+  const [pipelineView, setPipelineView] = useState<PipelineStage>("saljpanel");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
