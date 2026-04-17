@@ -200,13 +200,13 @@ function Dashboard() {
         open={showAddDialog}
         onClose={() => setShowAddDialog(false)}
         onAdded={loadLeads}
-        defaultJobType={activeJobType}
+        defaultJobType={activeJobType === "all" ? "roof_replacement" : activeJobType}
       />
       <CsvImportDialog
         open={showCsvDialog}
         onClose={() => setShowCsvDialog(false)}
         onImported={loadLeads}
-        jobType={activeJobType}
+        jobType={activeJobType === "all" ? "roof_replacement" : activeJobType}
       />
     </div>
   );
