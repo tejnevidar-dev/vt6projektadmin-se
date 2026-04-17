@@ -1,7 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { LeadWithProperty, Lead } from "./types";
 import { toFlatLead } from "./types";
-import type { LeadStatus, LeadSource, JobType } from "./types";
+import type { LeadStatus, LeadSource, JobType, PipelineStage } from "./types";
+
+export async function updateLeadPipelineStage(id: string, stage: PipelineStage): Promise<void> {
+  const { error } = await supabase
+    .from("leads")
+    .update({ pipeline_stage: stage })
+    .eq("id", id);
+  if (error) throw error;
+}
 
 export async function fetchLeads(): Promise<Lead[]> {
   const { data, error } = await supabase
