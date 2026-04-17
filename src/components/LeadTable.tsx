@@ -58,9 +58,24 @@ export function LeadTable({ leads, onSelect }: LeadTableProps) {
                   className="cursor-pointer border-b border-border/50 transition-colors last:border-0 hover:bg-muted/30"
                 >
                   <td className="px-4 py-3">
-                    <div>
-                      <p className="font-medium text-card-foreground">{lead.name}</p>
-                      <p className="text-xs text-muted-foreground">{lead.age} år</p>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="font-medium text-card-foreground">{lead.name}</p>
+                        <p className="text-xs text-muted-foreground">{lead.age} år</p>
+                      </div>
+                      {(() => {
+                        const jt = jobTypeConfig[lead.jobType];
+                        const Icon = jt.icon;
+                        return (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${jt.className}`}
+                            title={JOB_TYPE_LABELS[lead.jobType]}
+                          >
+                            <Icon className="h-3 w-3" />
+                            <span className="hidden sm:inline">{JOB_TYPE_LABELS[lead.jobType]}</span>
+                          </span>
+                        );
+                      })()}
                     </div>
                   </td>
                   <td className="px-4 py-3">
