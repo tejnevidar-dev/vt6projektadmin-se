@@ -131,7 +131,7 @@ function Dashboard() {
               <Home className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-foreground">Sälj tak</h1>
+              <h1 className="text-lg font-bold text-foreground">Säljpanel </h1>
             </div>
           </div>
           <div className="flex gap-2">
