@@ -182,7 +182,7 @@ function Dashboard() {
               <LayoutGrid className="h-4 w-4" />
               <span>Alla</span>
               <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground data-[state=active]:bg-primary/10">
-                {leads.length}
+                {stageLeads.length}
               </span>
             </TabsTrigger>
             {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map((jt) => {
