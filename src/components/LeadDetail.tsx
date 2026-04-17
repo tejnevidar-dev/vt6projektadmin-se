@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare, Pencil, Save } from "lucide-react";
+import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateLead } from "@/lib/leads-api";
+import { updateLead, updateLeadPipelineStage } from "@/lib/leads-api";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
-import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/types";
+import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_STAGE_LABELS } from "@/lib/types";
 
 interface LeadDetailProps {
   lead: Lead;
