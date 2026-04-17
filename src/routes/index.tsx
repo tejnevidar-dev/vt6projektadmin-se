@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench } from "lucide-react";
+import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { KpiCards } from "@/components/KpiCards";
@@ -44,7 +44,7 @@ function Dashboard() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
-  const [activeJobType, setActiveJobType] = useState<JobType>("roof_replacement");
+  const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -68,7 +68,7 @@ function Dashboard() {
   }, [loadLeads]);
 
   const jobTypeLeads = useMemo(
-    () => leads.filter((l) => l.jobType === activeJobType),
+    () => (activeJobType === "all" ? leads : leads.filter((l) => l.jobType === activeJobType)),
     [leads, activeJobType]
   );
 
@@ -140,8 +140,15 @@ function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
-        <Tabs value={activeJobType} onValueChange={(v) => setActiveJobType(v as JobType)}>
-          <TabsList className="grid h-auto w-full grid-cols-3 p-1">
+        <Tabs value={activeJobType} onValueChange={(v) => setActiveJobType(v as JobType | "all")}>
+          <TabsList className="grid h-auto w-full grid-cols-4 p-1">
+            <TabsTrigger value="all" className="gap-2 py-2">
+              <LayoutGrid className="h-4 w-4" />
+              <span>Alla</span>
+              <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground data-[state=active]:bg-primary/10">
+                {leads.length}
+              </span>
+            </TabsTrigger>
             {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map((jt) => {
               const Icon = JOB_TAB_ICONS[jt];
               const count = leads.filter((l) => l.jobType === jt).length;
@@ -176,7 +183,11 @@ function Dashboard() {
         />
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {loading ? "Laddar..." : `${filteredLeads.length} av ${jobTypeLeads.length} ${JOB_TYPE_LABELS[activeJobType].toLowerCase()}`}
+            {loading
+              ? "Laddar..."
+              : `${filteredLeads.length} av ${jobTypeLeads.length} ${
+                  activeJobType === "all" ? "leads" : JOB_TYPE_LABELS[activeJobType].toLowerCase()
+                }`}
           </p>
         </div>
         <LeadTable leads={filteredLeads} onSelect={setSelectedLead} />
@@ -189,13 +200,13 @@ function Dashboard() {
         open={showAddDialog}
         onClose={() => setShowAddDialog(false)}
         onAdded={loadLeads}
-        defaultJobType={activeJobType}
+        defaultJobType={activeJobType === "all" ? "roof_replacement" : activeJobType}
       />
       <CsvImportDialog
         open={showCsvDialog}
         onClose={() => setShowCsvDialog(false)}
         onImported={loadLeads}
-        jobType={activeJobType}
+        jobType={activeJobType === "all" ? "roof_replacement" : activeJobType}
       />
     </div>
   );
