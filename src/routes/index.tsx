@@ -187,7 +187,7 @@ function Dashboard() {
             </TabsTrigger>
             {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map((jt) => {
               const Icon = JOB_TAB_ICONS[jt];
-              const count = leads.filter((l) => l.jobType === jt).length;
+              const count = stageLeads.filter((l) => l.jobType === jt).length;
               return (
                 <TabsTrigger key={jt} value={jt} className="gap-2 py-2">
                   <Icon className="h-4 w-4" />
