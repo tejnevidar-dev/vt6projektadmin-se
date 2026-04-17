@@ -59,6 +59,7 @@ export interface Lead {
   status: LeadStatus;
   source: LeadSource;
   jobType: JobType;
+  pipelineStage: PipelineStage;
   age: number;
   notes: string;
   hasRoofPermit: boolean;
@@ -84,6 +85,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     status: lp.status,
     source: lp.source,
     jobType: lp.job_type,
+    pipelineStage: lp.pipeline_stage,
     age: lp.age ?? 0,
     notes: lp.notes ?? "",
     hasRoofPermit: lp.property?.has_roof_permit ?? false,
