@@ -140,8 +140,15 @@ function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
-        <Tabs value={activeJobType} onValueChange={(v) => setActiveJobType(v as JobType)}>
-          <TabsList className="grid h-auto w-full grid-cols-3 p-1">
+        <Tabs value={activeJobType} onValueChange={(v) => setActiveJobType(v as JobType | "all")}>
+          <TabsList className="grid h-auto w-full grid-cols-4 p-1">
+            <TabsTrigger value="all" className="gap-2 py-2">
+              <LayoutGrid className="h-4 w-4" />
+              <span>Alla</span>
+              <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground data-[state=active]:bg-primary/10">
+                {leads.length}
+              </span>
+            </TabsTrigger>
             {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map((jt) => {
               const Icon = JOB_TAB_ICONS[jt];
               const count = leads.filter((l) => l.jobType === jt).length;
