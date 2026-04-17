@@ -132,34 +132,36 @@ function Dashboard() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-foreground">Sälj tak</h1>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="group flex items-center gap-1 rounded-md text-xs text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                  {PIPELINE_STAGE_LABELS[pipelineView]}
-                  <ChevronDown className="h-3 w-3 transition-transform group-data-[state=open]:rotate-180" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  {PIPELINE_STAGES.map((stage) => {
-                    const count = leads.filter((l) => l.pipelineStage === stage).length;
-                    const active = stage === pipelineView;
-                    return (
-                      <DropdownMenuItem
-                        key={stage}
-                        onClick={() => setPipelineView(stage)}
-                        className="flex items-center justify-between gap-2"
-                      >
-                        <span className="flex items-center gap-2">
-                          {active ? <Check className="h-3.5 w-3.5 text-primary" /> : <span className="w-3.5" />}
-                          {PIPELINE_STAGE_LABELS[stage]}
-                        </span>
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{count}</span>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
           <div className="flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  Leads
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {PIPELINE_STAGES.map((stage) => {
+                  const count = leads.filter((l) => l.pipelineStage === stage).length;
+                  const active = stage === pipelineView;
+                  return (
+                    <DropdownMenuItem
+                      key={stage}
+                      onClick={() => setPipelineView(stage)}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <span className="flex items-center gap-2">
+                        {active ? <Check className="h-3.5 w-3.5 text-primary" /> : <span className="w-3.5" />}
+                        {PIPELINE_STAGE_LABELS[stage]}
+                      </span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{count}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="outline" onClick={() => setShowCsvDialog(true)}>
               <Upload className="mr-2 h-4 w-4" />
               CSV-import
