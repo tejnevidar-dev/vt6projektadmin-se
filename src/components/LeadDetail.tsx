@@ -211,17 +211,52 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           )}
         </div>
 
-        <div className="mt-6 flex gap-3">
-          <Button className="flex-1" asChild>
-            <a href={`tel:${lead.phone.replace(/[\s-]/g, "")}`}>
-              <Phone className="mr-2 h-4 w-4" />
-              Ring
-            </a>
-          </Button>
-          <Button variant="outline" className="flex-1" onClick={() => setEditing(true)}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Redigera
-          </Button>
+        <div className="mt-6 space-y-3">
+          <div className="rounded-lg border border-border bg-muted/40 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">Pipeline-status</span>
+              <span className="text-sm font-semibold text-card-foreground">{PIPELINE_STAGE_LABELS[lead.pipelineStage]}</span>
+            </div>
+            {(() => {
+              const next = NEXT_PIPELINE_STAGE[lead.pipelineStage];
+              const isDone = lead.pipelineStage === "slutford";
+              return (
+                <Button
+                  className="w-full"
+                  variant={isDone ? "outline" : "default"}
+                  disabled={!next || saving}
+                  onClick={async () => {
+                    if (!next) return;
+                    setSaving(true);
+                    try {
+                      await updateLeadPipelineStage(lead.id, next);
+                      onUpdated?.();
+                      onClose();
+                    } catch (err) {
+                      console.error("Failed to update pipeline stage:", err);
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                >
+                  {isDone ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <ArrowRight className="mr-2 h-4 w-4" />}
+                  {PIPELINE_ACTION_LABELS[lead.pipelineStage]}
+                </Button>
+              );
+            })()}
+          </div>
+          <div className="flex gap-3">
+            <Button className="flex-1" asChild>
+              <a href={`tel:${lead.phone.replace(/[\s-]/g, "")}`}>
+                <Phone className="mr-2 h-4 w-4" />
+                Ring
+              </a>
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={() => setEditing(true)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Redigera
+            </Button>
+          </div>
         </div>
       </div>
     </div>
