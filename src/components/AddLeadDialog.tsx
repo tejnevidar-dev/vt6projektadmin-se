@@ -3,15 +3,23 @@ import { X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { addLead } from "@/lib/leads-api";
-import type { LeadStatus, LeadSource } from "@/lib/types";
+import type { LeadStatus, LeadSource, JobType } from "@/lib/types";
+import { JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/types";
 
 interface AddLeadDialogProps {
   open: boolean;
   onClose: () => void;
   onAdded: () => void;
+  defaultJobType?: JobType;
 }
 
-export function AddLeadDialog({ open, onClose, onAdded }: AddLeadDialogProps) {
+interface AddLeadDialogPropsLegacy {
+  open: boolean;
+  onClose: () => void;
+  onAdded: () => void;
+}
+
+export function AddLeadDialog({ open, onClose, onAdded, defaultJobType = "roof_replacement" }: AddLeadDialogProps) {
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -23,6 +31,7 @@ export function AddLeadDialog({ open, onClose, onAdded }: AddLeadDialogProps) {
     age: "",
     status: "cold" as LeadStatus,
     source: "telemarketing" as LeadSource,
+    jobType: defaultJobType as JobType,
     notes: "",
   });
   const [saving, setSaving] = useState(false);
@@ -44,6 +53,7 @@ export function AddLeadDialog({ open, onClose, onAdded }: AddLeadDialogProps) {
         age: Number(form.age),
         status: form.status,
         source: form.source,
+        jobType: form.jobType,
         notes: form.notes,
       });
       onAdded();
@@ -150,6 +160,19 @@ export function AddLeadDialog({ open, onClose, onAdded }: AddLeadDialogProps) {
                 <option value="referral">Referens</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Jobbtyp</label>
+            <select
+              value={form.jobType}
+              onChange={(e) => update("jobType", e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {JOB_TYPES.map((jt) => (
+                <option key={jt} value={jt}>{JOB_TYPE_LABELS[jt]}</option>
+              ))}
+            </select>
           </div>
 
           <div>
