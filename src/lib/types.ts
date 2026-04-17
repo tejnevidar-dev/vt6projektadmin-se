@@ -9,7 +9,7 @@ export type JobType = Database["public"]["Enums"]["job_type"];
 
 export const JOB_TYPE_LABELS: Record<JobType, string> = {
   roof_replacement: "Takbyten",
-  roof_cleaning: "Taktvättar",
+  roof_cleaning: "Taktvätt",
   light_roof_work: "Lättare takarbeten",
 };
 
