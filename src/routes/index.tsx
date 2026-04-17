@@ -74,9 +74,14 @@ function Dashboard() {
     loadLeads();
   }, [loadLeads]);
 
+  const stageLeads = useMemo(
+    () => leads.filter((l) => l.pipelineStage === pipelineView),
+    [leads, pipelineView]
+  );
+
   const jobTypeLeads = useMemo(
-    () => (activeJobType === "all" ? leads : leads.filter((l) => l.jobType === activeJobType)),
-    [leads, activeJobType]
+    () => (activeJobType === "all" ? stageLeads : stageLeads.filter((l) => l.jobType === activeJobType)),
+    [stageLeads, activeJobType]
   );
 
   const filteredLeads = useMemo(() => {
