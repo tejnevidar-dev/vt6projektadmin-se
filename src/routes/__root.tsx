@@ -32,7 +32,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Sälj tak" },
+      { title: "Säljpanel" },
       { name: "description", content: "Säljpanel för takfirmor" },
     ],
     links: [
