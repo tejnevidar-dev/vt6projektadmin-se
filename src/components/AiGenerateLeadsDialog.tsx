@@ -89,18 +89,49 @@ export function AiGenerateLeadsDialog({ open, onClose }: AiGenerateLeadsDialogPr
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Antal leads att generera</label>
-            <Select value={String(count)} onValueChange={(v) => setCount(Number(v))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5 leads</SelectItem>
-                <SelectItem value="10">10 leads</SelectItem>
-                <SelectItem value="20">20 leads</SelectItem>
-                <SelectItem value="50">50 leads</SelectItem>
-              </SelectContent>
-            </Select>
+            <label className="mb-1.5 block text-sm font-medium">
+              Antal leads att generera
+              <span className="ml-1 text-xs font-normal text-muted-foreground">(max 500)</span>
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min={1}
+                max={500}
+                value={count}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  if (Number.isNaN(n)) return;
+                  setCount(Math.max(1, Math.min(500, n)));
+                }}
+                className="h-9 w-24 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+              <input
+                type="range"
+                min={1}
+                max={500}
+                step={1}
+                value={count}
+                onChange={(e) => setCount(Number(e.target.value))}
+                className="flex-1 accent-primary"
+              />
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {[10, 50, 100, 250, 500].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setCount(n)}
+                  className={`rounded-md border px-2 py-0.5 text-xs transition-colors ${
+                    count === n
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm">
