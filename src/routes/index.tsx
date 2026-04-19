@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench, LayoutGrid, ChevronDown, Check } from "lucide-react";
+import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench, LayoutGrid, ChevronDown, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -15,6 +15,7 @@ import { LeadTable } from "@/components/LeadTable";
 import { LeadDetail } from "@/components/LeadDetail";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { CsvImportDialog } from "@/components/CsvImportDialog";
+import { AiGenerateLeadsDialog } from "@/components/AiGenerateLeadsDialog";
 import { fetchLeads } from "@/lib/leads-api";
 import { useAuth } from "@/hooks/use-auth";
 import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
@@ -50,6 +51,7 @@ function Dashboard() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
+  const [showAiDialog, setShowAiDialog] = useState(false);
   const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
   const [pipelineView, setPipelineView] = useState<PipelineStage>("saljpanel");
 
@@ -169,6 +171,10 @@ function Dashboard() {
               <Upload className="mr-2 h-4 w-4" />
               CSV-import
             </Button>
+            <Button variant="outline" onClick={() => setShowAiDialog(true)}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              AI-generera
+            </Button>
             <Button onClick={() => setShowAddDialog(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Ny lead
@@ -248,6 +254,11 @@ function Dashboard() {
         onClose={() => setShowCsvDialog(false)}
         onImported={loadLeads}
         jobType={activeJobType === "all" ? "roof_replacement" : activeJobType}
+      />
+      <AiGenerateLeadsDialog
+        open={showAiDialog}
+        onClose={() => setShowAiDialog(false)}
+        onCreated={loadLeads}
       />
     </div>
   );
