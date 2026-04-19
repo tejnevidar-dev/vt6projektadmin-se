@@ -87,6 +87,8 @@ export type Database = {
           region: string
           roof_age: number | null
           roof_type: string | null
+          roof_wash_reason: string | null
+          roof_wash_score: number | null
           updated_at: string
         }
         Insert: {
@@ -102,6 +104,8 @@ export type Database = {
           region: string
           roof_age?: number | null
           roof_type?: string | null
+          roof_wash_reason?: string | null
+          roof_wash_score?: number | null
           updated_at?: string
         }
         Update: {
@@ -117,6 +121,8 @@ export type Database = {
           region?: string
           roof_age?: number | null
           roof_type?: string | null
+          roof_wash_reason?: string | null
+          roof_wash_score?: number | null
           updated_at?: string
         }
         Relationships: []
