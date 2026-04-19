@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench, LayoutGrid, ChevronDown, Check, Sparkles } from "lucide-react";
+import { Plus, Home, Upload, LogOut, Hammer, Droplets, Wrench, LayoutGrid, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -16,6 +16,7 @@ import { LeadDetail } from "@/components/LeadDetail";
 import { AddLeadDialog } from "@/components/AddLeadDialog";
 import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { AiGenerateLeadsDialog } from "@/components/AiGenerateLeadsDialog";
+import { NewLeadChoiceDialog } from "@/components/NewLeadChoiceDialog";
 import { fetchLeads } from "@/lib/leads-api";
 import { useAuth } from "@/hooks/use-auth";
 import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
@@ -52,6 +53,7 @@ function Dashboard() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
   const [showAiDialog, setShowAiDialog] = useState(false);
+  const [showChoiceDialog, setShowChoiceDialog] = useState(false);
   const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
   const [pipelineView, setPipelineView] = useState<PipelineStage>("saljpanel");
 
@@ -171,11 +173,7 @@ function Dashboard() {
               <Upload className="mr-2 h-4 w-4" />
               CSV-import
             </Button>
-            <Button variant="outline" onClick={() => setShowAiDialog(true)}>
-              <Sparkles className="mr-2 h-4 w-4" />
-              AI-generera
-            </Button>
-            <Button onClick={() => setShowAddDialog(true)}>
+            <Button onClick={() => setShowChoiceDialog(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Ny lead
             </Button>
@@ -259,6 +257,18 @@ function Dashboard() {
         open={showAiDialog}
         onClose={() => setShowAiDialog(false)}
         onCreated={loadLeads}
+      />
+      <NewLeadChoiceDialog
+        open={showChoiceDialog}
+        onClose={() => setShowChoiceDialog(false)}
+        onChooseAi={() => {
+          setShowChoiceDialog(false);
+          setShowAiDialog(true);
+        }}
+        onChooseManual={() => {
+          setShowChoiceDialog(false);
+          setShowAddDialog(true);
+        }}
       />
     </div>
   );
