@@ -139,6 +139,9 @@ function Dashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
                   Leads
+                  <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                    {stageLeads.length}
+                  </span>
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
