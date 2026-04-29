@@ -19,6 +19,7 @@ export type Database = {
           age: number | null
           created_at: string
           email: string | null
+          external_id: string | null
           id: string
           job_type: Database["public"]["Enums"]["job_type"]
           last_contact: string | null
@@ -35,6 +36,7 @@ export type Database = {
           age?: number | null
           created_at?: string
           email?: string | null
+          external_id?: string | null
           id?: string
           job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
@@ -51,6 +53,7 @@ export type Database = {
           age?: number | null
           created_at?: string
           email?: string | null
+          external_id?: string | null
           id?: string
           job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
@@ -142,8 +145,14 @@ export type Database = {
         | "scan"
         | "referral"
         | "csv_import"
+        | "roslagstak"
       lead_status: "cold" | "warm" | "hot" | "customer" | "lost"
-      pipeline_stage: "saljpanel" | "bokad" | "pagaende" | "slutford"
+      pipeline_stage:
+        | "inkommande_webb"
+        | "saljpanel"
+        | "bokad"
+        | "pagaende"
+        | "slutford"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -272,9 +281,22 @@ export const Constants = {
   public: {
     Enums: {
       job_type: ["roof_replacement", "roof_cleaning", "light_roof_work"],
-      lead_source: ["field", "telemarketing", "scan", "referral", "csv_import"],
+      lead_source: [
+        "field",
+        "telemarketing",
+        "scan",
+        "referral",
+        "csv_import",
+        "roslagstak",
+      ],
       lead_status: ["cold", "warm", "hot", "customer", "lost"],
-      pipeline_stage: ["saljpanel", "bokad", "pagaende", "slutford"],
+      pipeline_stage: [
+        "inkommande_webb",
+        "saljpanel",
+        "bokad",
+        "pagaende",
+        "slutford",
+      ],
     },
   },
 } as const
