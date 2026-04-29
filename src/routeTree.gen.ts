@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -22,31 +23,41 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRoslagstakWebhookRoute =
+  ApiPublicRoslagstakWebhookRouteImport.update({
+    id: '/api/public/roslagstak-webhook',
+    path: '/api/public/roslagstak-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login'
+  fullPaths: '/' | '/login' | '/api/public/roslagstak-webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login'
-  id: '__root__' | '/' | '/login'
+  to: '/' | '/login' | '/api/public/roslagstak-webhook'
+  id: '__root__' | '/' | '/login' | '/api/public/roslagstak-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +76,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/roslagstak-webhook': {
+      id: '/api/public/roslagstak-webhook'
+      path: '/api/public/roslagstak-webhook'
+      fullPath: '/api/public/roslagstak-webhook'
+      preLoaderRoute: typeof ApiPublicRoslagstakWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
