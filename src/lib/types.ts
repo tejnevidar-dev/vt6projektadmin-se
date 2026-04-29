@@ -8,9 +8,10 @@ export type LeadSource = Database["public"]["Enums"]["lead_source"];
 export type JobType = Database["public"]["Enums"]["job_type"];
 export type PipelineStage = Database["public"]["Enums"]["pipeline_stage"];
 
-export const PIPELINE_STAGES: PipelineStage[] = ["saljpanel", "bokad", "pagaende", "slutford"];
+export const PIPELINE_STAGES: PipelineStage[] = ["inkommande_webb", "saljpanel", "bokad", "pagaende", "slutford"];
 
 export const PIPELINE_STAGE_LABELS: Record<PipelineStage, string> = {
+  inkommande_webb: "Inkommande webb",
   saljpanel: "Säljpanel leads",
   bokad: "Bokade",
   pagaende: "Pågående",
@@ -19,6 +20,7 @@ export const PIPELINE_STAGE_LABELS: Record<PipelineStage, string> = {
 
 // Next stage in the pipeline (null = end)
 export const NEXT_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null> = {
+  inkommande_webb: "saljpanel",
   saljpanel: "bokad",
   bokad: "pagaende",
   pagaende: "slutford",
@@ -26,6 +28,7 @@ export const NEXT_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null> = 
 };
 
 export const PIPELINE_ACTION_LABELS: Record<PipelineStage, string> = {
+  inkommande_webb: "Flytta till Säljpanel",
   saljpanel: "Flytta till Bokade",
   bokad: "Flytta till Pågående",
   pagaende: "Markera som Slutförd",
