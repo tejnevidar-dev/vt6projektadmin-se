@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
 
@@ -22,6 +23,11 @@ const WebhookLogsRoute = WebhookLogsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -38,12 +44,14 @@ const ApiPublicRoslagstakWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
@@ -51,18 +59,30 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/webhook-logs' | '/api/public/roslagstak-webhook'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/webhook-logs'
+    | '/api/public/roslagstak-webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/webhook-logs' | '/api/public/roslagstak-webhook'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/webhook-logs'
+    | '/api/public/roslagstak-webhook'
   id:
     | '__root__'
     | '/'
+    | '/dashboard'
     | '/login'
     | '/webhook-logs'
     | '/api/public/roslagstak-webhook'
@@ -70,6 +90,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   WebhookLogsRoute: typeof WebhookLogsRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
@@ -91,6 +112,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -110,6 +138,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   WebhookLogsRoute: WebhookLogsRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
