@@ -172,13 +172,6 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
           </div>
         </main>
       </div>
-
-            {tabs && <div className="mb-8">{tabs}</div>}
-
-            {children}
-          </div>
-        </main>
-      </div>
     </div>
   );
 }
