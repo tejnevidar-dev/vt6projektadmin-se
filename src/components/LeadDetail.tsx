@@ -34,6 +34,22 @@ const sourceLabels: Record<string, string> = {
 export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteLead(lead.id);
+      onUpdated?.();
+      onClose();
+    } catch (err) {
+      console.error("Failed to delete lead:", err);
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
   const [form, setForm] = useState({
     name: lead.name,
     phone: lead.phone,
