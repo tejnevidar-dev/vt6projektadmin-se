@@ -24,7 +24,7 @@ async function logWebhook(args: {
   lead_id?: string | null;
 }) {
   try {
-    await supabaseAdmin.from("webhook_logs").insert({
+    await (supabaseAdmin.from("webhook_logs") as any).insert({
       source: "roslagstak",
       status_code: args.status_code,
       status: args.status,
