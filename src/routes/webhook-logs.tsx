@@ -1,8 +1,9 @@
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AppShell } from "@/components/AppShell";
 
 type WebhookLog = {
   id: string;
@@ -19,9 +20,9 @@ type WebhookLog = {
 const PAGE_SIZE = 25;
 
 export const Route = createFileRoute("/webhook-logs")({
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (search: Record<string, unknown>): { page?: number } => {
     const p = Number(search.page);
-    return { page: Number.isFinite(p) && p >= 1 ? Math.floor(p) : 1 };
+    return { page: Number.isFinite(p) && p >= 1 ? Math.floor(p) : undefined };
   },
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/webhook-logs")({
 });
 
 function WebhookLogsPage() {
-  const { page } = Route.useSearch();
+  const { page = 1 } = Route.useSearch();
   const navigate = useNavigate({ from: "/webhook-logs" });
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [total, setTotal] = useState(0);
@@ -63,25 +64,19 @@ function WebhookLogsPage() {
   const goTo = (p: number) => navigate({ search: { page: Math.min(Math.max(1, p), totalPages) } });
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <AppShell
+      title="Webhook-loggar"
+      actions={<Button variant="outline" size="sm" onClick={load}>Uppdatera</Button>}
+    >
       <div className="mx-auto max-w-6xl space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Webhook-loggar</h1>
-            <p className="text-sm text-muted-foreground">
-              Inkommande anrop till /api/public/roslagstak-webhook · {total} totalt
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={load}>Uppdatera</Button>
-            <Link to="/"><Button variant="ghost">Tillbaka</Button></Link>
-          </div>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Inkommande anrop till /api/public/roslagstak-webhook · {total} totalt
+        </p>
 
         {loading ? (
           <div className="text-sm text-muted-foreground">Laddar...</div>
         ) : logs.length === 0 ? (
-          <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
+          <div className="rounded-md border border-border bg-card p-6 text-center text-sm text-muted-foreground">
             Inga loggar än. När RoslagsTak skickar en webhook visas den här.
           </div>
         ) : (
@@ -91,7 +86,7 @@ function WebhookLogsPage() {
                 const ok = log.status_code >= 200 && log.status_code < 300;
                 const isOpen = openId === log.id;
                 return (
-                  <div key={log.id} className="rounded-md border bg-card">
+                  <div key={log.id} className="rounded-md border border-border bg-card">
                     <button
                       onClick={() => setOpenId(isOpen ? null : log.id)}
                       className="flex w-full items-center justify-between gap-4 p-3 text-left hover:bg-muted/50"
@@ -106,7 +101,7 @@ function WebhookLogsPage() {
                       <span className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString("sv-SE")}</span>
                     </button>
                     {isOpen && (
-                      <div className="border-t p-3 space-y-3">
+                      <div className="border-t border-border p-3 space-y-3">
                         {log.lead_id && (
                           <div className="text-sm"><span className="text-muted-foreground">Lead-ID:</span> {log.lead_id}</div>
                         )}
@@ -139,6 +134,7 @@ function WebhookLogsPage() {
           </>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }
+
