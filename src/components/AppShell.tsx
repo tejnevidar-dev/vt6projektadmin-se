@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, ChevronRight as Caret } from "lucide-react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,20 @@ const navItems = [
   { to: "/settings", label: "Inställningar", icon: Settings, group: "System" },
 ] as const;
 
-export function AppShell({ children, title, actions }: { children: ReactNode; title: string; actions?: ReactNode }) {
+export interface PageHeaderProps {
+  title: string;
+  description?: ReactNode;
+  meta?: ReactNode;
+  actions?: ReactNode;
+  tabs?: ReactNode;
+}
+
+interface AppShellProps extends PageHeaderProps {
+  children: ReactNode;
+  topbarActions?: ReactNode;
+}
+
+export function AppShell({ children, title, description, meta, actions, tabs, topbarActions }: AppShellProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -23,6 +36,7 @@ export function AppShell({ children, title, actions }: { children: ReactNode; ti
   };
 
   const groups = Array.from(new Set(navItems.map((i) => i.group)));
+  const activeNav = navItems.find((i) => pathname === i.to || (i.to !== "/dashboard" && pathname.startsWith(i.to)));
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
 
   return (
@@ -30,49 +44,47 @@ export function AppShell({ children, title, actions }: { children: ReactNode; ti
       <aside
         className={cn(
           "sticky top-0 z-20 flex h-screen flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200",
-          collapsed ? "w-[64px]" : "w-[244px]"
+          collapsed ? "w-[60px]" : "w-[220px]"
         )}
       >
-        <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70 shadow-[0_4px_14px_-4px_color-mix(in_oklab,var(--primary)_70%,transparent)]">
-            <span className="font-display text-base italic text-primary-foreground">S</span>
+        <div className="flex h-14 items-center gap-2.5 px-3">
+          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 shadow-[0_3px_10px_-3px_color-mix(in_oklab,var(--primary)_70%,transparent)]">
+            <span className="font-display text-[15px] italic leading-none text-primary-foreground">S</span>
           </div>
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <div className="font-display text-[17px] italic tracking-tight">Sälj&nbsp;tak</div>
-              <div className="truncate text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Säljpanel</div>
+              <div className="font-display text-[15px] italic tracking-tight">Sälj&nbsp;tak</div>
+              <div className="truncate text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Säljpanel</div>
             </div>
           )}
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2 py-4">
+        <nav className="flex-1 overflow-y-auto px-2 pt-2">
           {groups.map((group) => (
-            <div key={group} className="mb-4">
+            <div key={group} className="mb-3">
               {!collapsed && (
-                <div className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+                <div className="mb-1 px-2.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/60">
                   {group}
                 </div>
               )}
-              <div className="space-y-0.5">
+              <div className="space-y-px">
                 {navItems.filter((i) => i.group === group).map((item) => {
-                  const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+                  const active = item === activeNav;
                   const Icon = item.icon;
                   return (
                     <Link
                       key={item.to}
                       to={item.to}
                       className={cn(
-                        "group relative flex items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors",
+                        "group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors",
                         active
                           ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
                       )}
                       title={collapsed ? item.label : undefined}
                     >
-                      {active && (
-                        <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-primary" />
-                      )}
-                      <Icon className={cn("h-[16px] w-[16px] shrink-0", active ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground")} />
+                      {active && <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-r-full bg-primary" />}
+                      <Icon className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "text-sidebar-foreground/55 group-hover:text-sidebar-foreground")} />
                       {!collapsed && <span className="truncate font-medium">{item.label}</span>}
                     </Link>
                   );
@@ -82,15 +94,15 @@ export function AppShell({ children, title, actions }: { children: ReactNode; ti
           ))}
         </nav>
 
-        <div className="border-t border-sidebar-border p-2">
-          <div className={cn("flex items-center gap-3 rounded-md px-2 py-2", collapsed && "justify-center")}>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-semibold uppercase">
+        <div className="border-t border-sidebar-border/70 p-2">
+          <div className={cn("flex items-center gap-2.5 rounded-md px-1.5 py-1.5", collapsed && "justify-center")}>
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-[10px] font-semibold uppercase">
               {initials}
             </div>
             {!collapsed && (
               <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-medium" title={user?.email ?? ""}>{user?.email ?? "—"}</div>
-                <button onClick={handleSignOut} className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">
+                <div className="truncate text-[12px] font-medium" title={user?.email ?? ""}>{user?.email ?? "—"}</div>
+                <button onClick={handleSignOut} className="flex items-center gap-1 text-[10.5px] text-muted-foreground hover:text-foreground">
                   <LogOut className="h-3 w-3" /> Logga ut
                 </button>
               </div>
@@ -98,27 +110,64 @@ export function AppShell({ children, title, actions }: { children: ReactNode; ti
           </div>
           <button
             onClick={() => setCollapsed((c) => !c)}
-            className="mt-1 flex w-full items-center justify-center rounded-md py-1.5 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="mt-1 flex w-full items-center justify-center rounded-md py-1 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             title={collapsed ? "Expandera" : "Komprimera"}
           >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
           </button>
         </div>
       </aside>
 
       <div className="relative flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-border/70 bg-background/70 px-8 backdrop-blur-md">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Sälj&nbsp;tak</span>
-            <Caret className="h-3.5 w-3.5 text-muted-foreground/50" />
-            <h1 className="font-display text-[22px] italic leading-none tracking-tight text-foreground">{title}</h1>
+        {/* Topbar: global, app-level controls */}
+        <header className="sticky top-0 z-10 flex h-12 items-center justify-between gap-4 border-b border-border/60 bg-background/75 px-6 backdrop-blur-md">
+          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+            <span>Sälj&nbsp;tak</span>
+            <Caret className="h-3 w-3 text-muted-foreground/40" />
+            <span className="text-foreground">{activeNav?.label ?? title}</span>
           </div>
-          <div className="flex items-center gap-2">{actions}</div>
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex h-7 w-64 items-center gap-2 rounded-md border border-border/70 bg-card/60 px-2.5 text-[12px] text-muted-foreground transition-colors hover:border-border">
+              <Search className="h-3.5 w-3.5" />
+              <span className="flex-1 truncate">Sök leads, adresser…</span>
+              <kbd className="rounded border border-border/70 bg-muted/60 px-1 font-mono text-[10px] text-muted-foreground">⌘K</kbd>
+            </div>
+            {topbarActions}
+            <button className="rounded-md border border-border/70 bg-card/60 p-1.5 text-muted-foreground hover:text-foreground" title="Notiser">
+              <Bell className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </header>
-        <main className="relative z-[1] flex-1 overflow-auto px-8 py-8">
-          <div className="mx-auto w-full max-w-[1480px]">{children}</div>
+
+        <main className="relative z-[1] flex-1 overflow-auto">
+          <div className="mx-auto w-full max-w-[1440px] px-10 pt-10 pb-16">
+            {/* Page header */}
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-6 border-b border-border/50 pb-6">
+              <div className="min-w-0 flex-1 space-y-2">
+                <h1 className="font-display text-[40px] italic leading-[1.05] tracking-tight text-foreground">{title}</h1>
+                {description && (
+                  <p className="max-w-2xl text-[14px] leading-relaxed text-muted-foreground">{description}</p>
+                )}
+                {meta && <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 pt-1 text-[12px] text-muted-foreground">{meta}</div>}
+              </div>
+              {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+            </div>
+
+            {tabs && <div className="mb-8">{tabs}</div>}
+
+            {children}
+          </div>
         </main>
       </div>
+    </div>
+  );
+}
+
+export function MetaItem({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">{label}</span>
+      <span className="text-foreground">{value}</span>
     </div>
   );
 }
