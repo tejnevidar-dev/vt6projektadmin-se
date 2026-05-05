@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, CheckCircle2 } from "lucide-react";
+import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, CheckCircle2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateLead, updateLeadPipelineStage } from "@/lib/leads-api";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { updateLead, updateLeadPipelineStage, deleteLead } from "@/lib/leads-api";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
 import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_STAGE_LABELS } from "@/lib/types";
 
@@ -33,6 +34,22 @@ const sourceLabels: Record<string, string> = {
 export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteLead(lead.id);
+      onUpdated?.();
+      onClose();
+    } catch (err) {
+      console.error("Failed to delete lead:", err);
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
   const [form, setForm] = useState({
     name: lead.name,
     phone: lead.phone,
@@ -257,8 +274,37 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               Redigera
             </Button>
           </div>
+          <Button
+            variant="outline"
+            className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Ta bort lead
+          </Button>
         </div>
       </div>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ta bort {lead.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Detta tar bort leaden permanent. Åtgärden kan inte ångras.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Tar bort..." : "Ta bort"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
