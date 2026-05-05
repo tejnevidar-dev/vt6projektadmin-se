@@ -11,6 +11,11 @@ export async function updateLeadPipelineStage(id: string, stage: PipelineStage):
   if (error) throw error;
 }
 
+export async function deleteLead(id: string): Promise<void> {
+  const { error } = await supabase.from("leads").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function fetchLeads(): Promise<Lead[]> {
   const { data, error } = await supabase
     .from("leads")
