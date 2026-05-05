@@ -49,11 +49,11 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
       >
         <div className="flex h-14 items-center gap-2.5 px-3">
           <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 shadow-[0_3px_10px_-3px_color-mix(in_oklab,var(--primary)_70%,transparent)]">
-            <span className="font-display text-[15px] italic leading-none text-primary-foreground">S</span>
+            <span className="text-[14px] font-semibold leading-none text-primary-foreground">S</span>
           </div>
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <div className="font-display text-[15px] italic tracking-tight">Sälj&nbsp;tak</div>
+              <div className="text-[14px] font-semibold tracking-tight">Sälj&nbsp;tak</div>
               <div className="truncate text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Säljpanel</div>
             </div>
           )}
@@ -144,7 +144,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
             {/* Page header */}
             <div className="mb-8 flex flex-wrap items-end justify-between gap-6 border-b border-border/50 pb-6">
               <div className="min-w-0 flex-1 space-y-2">
-                <h1 className="font-display text-[40px] italic leading-[1.05] tracking-tight text-foreground">{title}</h1>
+                <h1 className="text-[32px] font-semibold leading-[1.1] tracking-tight text-foreground">{title}</h1>
                 {description && (
                   <p className="max-w-2xl text-[14px] leading-relaxed text-muted-foreground">{description}</p>
                 )}
