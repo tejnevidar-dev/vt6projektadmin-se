@@ -42,9 +42,7 @@ function LeadsContent() {
   const [search, setSearch] = useState("");
   const [region, setRegion] = useState("");
   const [municipality, setMunicipality] = useState("");
-  const [maxBuildYear, setMaxBuildYear] = useState(1986);
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
-  const [onlyWithPermit, setOnlyWithPermit] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
@@ -85,20 +83,16 @@ function LeadsContent() {
       }
       if (region && lead.region !== region) return false;
       if (municipality && lead.municipality !== municipality) return false;
-      if (lead.buildYear > maxBuildYear) return false;
       if (statusFilter !== "all" && lead.status !== statusFilter) return false;
-      if (onlyWithPermit && !lead.hasRoofPermit) return false;
       return true;
     });
-  }, [jobTypeLeads, search, region, municipality, maxBuildYear, statusFilter, onlyWithPermit]);
+  }, [jobTypeLeads, search, region, municipality, statusFilter]);
 
   const resetFilters = () => {
     setSearch("");
     setRegion("");
     setMunicipality("");
-    setMaxBuildYear(1986);
     setStatusFilter("all");
-    setOnlyWithPermit(false);
   };
 
   const handleStageChange = async (leadId: string, stage: Lead["pipelineStage"]) => {
@@ -213,12 +207,8 @@ function LeadsContent() {
               onRegionChange={setRegion}
               municipality={municipality}
               onMunicipalityChange={setMunicipality}
-              maxBuildYear={maxBuildYear}
-              onMaxBuildYearChange={setMaxBuildYear}
               statusFilter={statusFilter}
               onStatusFilterChange={setStatusFilter}
-              onlyWithPermit={onlyWithPermit}
-              onOnlyWithPermitChange={setOnlyWithPermit}
               onReset={resetFilters}
             />
           </div>

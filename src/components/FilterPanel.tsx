@@ -10,12 +10,8 @@ interface FilterPanelProps {
   onRegionChange: (v: string) => void;
   municipality: string;
   onMunicipalityChange: (v: string) => void;
-  maxBuildYear: number;
-  onMaxBuildYearChange: (v: number) => void;
   statusFilter: LeadStatus | "all";
   onStatusFilterChange: (v: LeadStatus | "all") => void;
-  onlyWithPermit: boolean;
-  onOnlyWithPermitChange: (v: boolean) => void;
   onReset: () => void;
 }
 
@@ -26,12 +22,8 @@ export function FilterPanel({
   onRegionChange,
   municipality,
   onMunicipalityChange,
-  maxBuildYear,
-  onMaxBuildYearChange,
   statusFilter,
   onStatusFilterChange,
-  onlyWithPermit,
-  onOnlyWithPermitChange,
   onReset,
 }: FilterPanelProps) {
   const municipalities = region ? MUNICIPALITIES[region] || [] : [];
@@ -43,9 +35,9 @@ export function FilterPanel({
         <h2 className="text-sm font-semibold text-card-foreground">Filter & Sök</h2>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {/* Search */}
-        <div className="relative xl:col-span-2">
+        <div className="relative lg:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Sök namn, adress, telefon..."
@@ -83,19 +75,6 @@ export function FilterPanel({
           ))}
         </select>
 
-        {/* Build year */}
-        <div className="flex items-center gap-2">
-          <label className="whitespace-nowrap text-xs text-muted-foreground">Byggt före</label>
-          <Input
-            type="number"
-            value={maxBuildYear}
-            onChange={(e) => onMaxBuildYearChange(Number(e.target.value))}
-            min={1900}
-            max={2026}
-            className="w-full"
-          />
-        </div>
-
         {/* Status */}
         <select
           value={statusFilter}
@@ -111,16 +90,7 @@ export function FilterPanel({
         </select>
       </div>
 
-      <div className="mt-3 flex items-center gap-4">
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <input
-            type="checkbox"
-            checked={onlyWithPermit}
-            onChange={(e) => onOnlyWithPermitChange(e.target.checked)}
-            className="rounded border-input accent-primary"
-          />
-          Har bygglov (tak)
-        </label>
+      <div className="mt-3 flex items-center">
         <Button variant="ghost" size="sm" onClick={onReset} className="ml-auto">
           <RotateCcw className="mr-1 h-3 w-3" />
           Rensa filter
