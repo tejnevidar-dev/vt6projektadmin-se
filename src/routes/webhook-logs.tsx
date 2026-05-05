@@ -19,9 +19,9 @@ type WebhookLog = {
 const PAGE_SIZE = 25;
 
 export const Route = createFileRoute("/webhook-logs")({
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (search: Record<string, unknown>): { page?: number } => {
     const p = Number(search.page);
-    return { page: Number.isFinite(p) && p >= 1 ? Math.floor(p) : 1 };
+    return { page: Number.isFinite(p) && p >= 1 ? Math.floor(p) : undefined };
   },
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
