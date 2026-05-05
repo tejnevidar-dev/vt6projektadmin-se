@@ -142,7 +142,7 @@ function Dashboard() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
-                  Leads
+                  {PIPELINE_STAGE_LABELS[pipelineView]}
                   <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                     {stageLeads.length}
                   </span>
