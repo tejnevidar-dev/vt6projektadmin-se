@@ -308,8 +308,11 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
         </AlertDialogContent>
       </AlertDialog>
         </div>
+        </div>
       </div>
     </>
+  );
+}
   );
 }
 
