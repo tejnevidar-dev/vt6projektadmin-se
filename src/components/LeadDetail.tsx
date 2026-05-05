@@ -172,8 +172,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl">
+    <>
+      <div className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm animate-in fade-in" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-border bg-card shadow-2xl animate-in slide-in-from-right">
+        <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-5 flex items-start justify-between">
           <div>
             <h2 className="text-xl font-bold text-card-foreground">{lead.name}</h2>
