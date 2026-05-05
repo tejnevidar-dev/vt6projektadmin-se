@@ -65,7 +65,7 @@ export function LeadKanban({ leads, onSelect, onStageChange }: Props) {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="grid grid-cols-2 gap-3 pb-2 md:grid-cols-3 xl:grid-cols-5">
         {PIPELINE_STAGES.map((stage) => {
           const stageLeads = leads.filter((l) => l.pipelineStage === stage);
           return (
@@ -87,7 +87,7 @@ export function LeadKanban({ leads, onSelect, onStageChange }: Props) {
 function KanbanColumn({ stage, count, children }: { stage: PipelineStage; count: number; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
   return (
-    <div className="flex w-72 shrink-0 flex-col">
+    <div className="flex min-w-0 flex-col">
       <div className="mb-2 flex items-center justify-between px-1">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {PIPELINE_STAGE_LABELS[stage]}
