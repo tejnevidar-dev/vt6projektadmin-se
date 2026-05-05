@@ -113,11 +113,11 @@ function LeadsContent() {
 
   const headerActions = (
     <>
-      <div className="flex rounded-md border border-border bg-card p-0.5">
+      <div className="flex rounded-md border border-border bg-card/60 p-0.5">
         <button
           onClick={() => setView("kanban")}
           className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
-            view === "kanban" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            view === "kanban" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <KanbanSquare className="h-3.5 w-3.5" /> Board
@@ -125,7 +125,7 @@ function LeadsContent() {
         <button
           onClick={() => setView("table")}
           className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
-            view === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            view === "table" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <TableIcon className="h-3.5 w-3.5" /> Tabell
@@ -140,62 +140,113 @@ function LeadsContent() {
     </>
   );
 
-  return (
-    <AppShell title="Leads" actions={headerActions}>
-      <div className="mx-auto max-w-[1600px] space-y-5">
-        <Tabs value={activeJobType} onValueChange={(v) => setActiveJobType(v as JobType | "all")}>
-          <TabsList className="grid h-auto w-full grid-cols-4 p-1">
-            <TabsTrigger value="all" className="gap-2 py-2">
-              <LayoutGrid className="h-4 w-4" />
-              <span>Alla</span>
-              <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                {leads.length}
-              </span>
+  const tabs = (
+    <Tabs value={activeJobType} onValueChange={(v) => setActiveJobType(v as JobType | "all")}>
+      <TabsList className="h-auto gap-1 rounded-none border-b border-border/60 bg-transparent p-0">
+        <TabsTrigger
+          value="all"
+          className="gap-2 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-[13px] data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+        >
+          <LayoutGrid className="h-4 w-4" />
+          <span>Alla</span>
+          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] tabular-nums text-muted-foreground">{leads.length}</span>
+        </TabsTrigger>
+        {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map((jt) => {
+          const Icon = JOB_TAB_ICONS[jt];
+          const count = leads.filter((l) => l.jobType === jt).length;
+          return (
+            <TabsTrigger
+              key={jt}
+              value={jt}
+              className="gap-2 rounded-none border-b-2 border-transparent bg-transparent px-3 py-2.5 text-[13px] data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            >
+              <Icon className="h-4 w-4" />
+              <span>{JOB_TYPE_LABELS[jt]}</span>
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] tabular-nums text-muted-foreground">{count}</span>
             </TabsTrigger>
-            {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map((jt) => {
-              const Icon = JOB_TAB_ICONS[jt];
-              const count = leads.filter((l) => l.jobType === jt).length;
-              return (
-                <TabsTrigger key={jt} value={jt} className="gap-2 py-2">
-                  <Icon className="h-4 w-4" />
-                  <span>{JOB_TYPE_LABELS[jt]}</span>
-                  <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{count}</span>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-        </Tabs>
+          );
+        })}
+      </TabsList>
+    </Tabs>
+  );
 
+  const meta = (
+    <>
+      <span className="flex items-center gap-1.5">
+        <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">Totalt</span>
+        <span className="font-medium tabular-nums text-foreground">{leads.length}</span>
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">Visar</span>
+        <span className="font-medium tabular-nums text-foreground">{filteredLeads.length}</span>
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">Vy</span>
+        <span className="font-medium text-foreground">{view === "kanban" ? "Kanban-board" : "Tabell"}</span>
+      </span>
+    </>
+  );
+
+  return (
+    <AppShell
+      title="Leads"
+      description="Hantera inkommande och pågående leads. Drag-and-drop mellan pipeline-steg eller bläddra som tabell."
+      meta={meta}
+      actions={headerActions}
+      tabs={tabs}
+    >
+      <div className="space-y-6">
         <KpiCards leads={jobTypeLeads} />
-        <FilterPanel
-          search={search}
-          onSearchChange={setSearch}
-          region={region}
-          onRegionChange={setRegion}
-          municipality={municipality}
-          onMunicipalityChange={setMunicipality}
-          maxBuildYear={maxBuildYear}
-          onMaxBuildYearChange={setMaxBuildYear}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          onlyWithPermit={onlyWithPermit}
-          onOnlyWithPermitChange={setOnlyWithPermit}
-          onReset={resetFilters}
-        />
 
-        <div className="text-sm text-muted-foreground">
-          {loading
-            ? "Laddar..."
-            : `${filteredLeads.length} av ${jobTypeLeads.length} ${
-                activeJobType === "all" ? "leads" : JOB_TYPE_LABELS[activeJobType].toLowerCase()
-              }`}
-        </div>
+        <section className="rounded-xl border border-border/70 bg-card/40 shadow-[0_1px_0_0_color-mix(in_oklab,var(--foreground)_4%,transparent)]">
+          <div className="flex items-center justify-between border-b border-border/60 px-5 py-3">
+            <div>
+              <h2 className="text-[13px] font-semibold text-foreground">Filter</h2>
+              <p className="text-[11.5px] text-muted-foreground">Förfina listan med region, kommun, status och fastighetsdata</p>
+            </div>
+          </div>
+          <div className="p-5">
+            <FilterPanel
+              search={search}
+              onSearchChange={setSearch}
+              region={region}
+              onRegionChange={setRegion}
+              municipality={municipality}
+              onMunicipalityChange={setMunicipality}
+              maxBuildYear={maxBuildYear}
+              onMaxBuildYearChange={setMaxBuildYear}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              onlyWithPermit={onlyWithPermit}
+              onOnlyWithPermitChange={setOnlyWithPermit}
+              onReset={resetFilters}
+            />
+          </div>
+        </section>
 
-        {view === "kanban" ? (
-          <LeadKanban leads={filteredLeads} onSelect={setSelectedLead} onStageChange={handleStageChange} />
-        ) : (
-          <LeadTable leads={filteredLeads} onSelect={setSelectedLead} />
-        )}
+        <section className="rounded-xl border border-border/70 bg-card/40">
+          <div className="flex items-center justify-between border-b border-border/60 px-5 py-3">
+            <div>
+              <h2 className="text-[13px] font-semibold text-foreground">
+                {view === "kanban" ? "Pipeline" : "Lead-tabell"}
+              </h2>
+              <p className="text-[11.5px] text-muted-foreground">
+                {loading
+                  ? "Laddar leads..."
+                  : `${filteredLeads.length} av ${jobTypeLeads.length} ${
+                      activeJobType === "all" ? "leads" : JOB_TYPE_LABELS[activeJobType].toLowerCase()
+                    }`}
+              </p>
+            </div>
+          </div>
+          <div className={view === "kanban" ? "p-4" : ""}>
+            {view === "kanban" ? (
+              <LeadKanban leads={filteredLeads} onSelect={setSelectedLead} onStageChange={handleStageChange} />
+            ) : (
+              <LeadTable leads={filteredLeads} onSelect={setSelectedLead} />
+            )}
+          </div>
+        </section>
       </div>
 
       {selectedLead && (
