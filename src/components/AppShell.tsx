@@ -120,21 +120,22 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
 
       <div className="relative flex min-w-0 flex-1 flex-col">
         {/* Topbar: global, app-level controls */}
-        <header className="sticky top-0 z-10 flex h-12 items-center justify-between gap-4 border-b border-border/60 bg-background/75 px-6 backdrop-blur-md">
-          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-            <span>Sälj&nbsp;tak</span>
-            <Caret className="h-3 w-3 text-muted-foreground/40" />
-            <span className="text-foreground">{activeNav?.label ?? title}</span>
+        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-6 border-b border-border bg-background/85 px-8 backdrop-blur-xl">
+          <div className="flex min-w-0 items-center gap-2.5 text-[12.5px]">
+            <span className="font-medium text-muted-foreground/80">Sälj&nbsp;tak</span>
+            <Caret className="h-3 w-3 text-muted-foreground/30" />
+            <span className="truncate font-semibold text-foreground">{activeNav?.label ?? title}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden md:flex h-7 w-64 items-center gap-2 rounded-md border border-border/70 bg-card/60 px-2.5 text-[12px] text-muted-foreground transition-colors hover:border-border">
+          <div className="flex items-center gap-2.5">
+            <div className="hidden md:flex h-8 w-72 items-center gap-2 rounded-lg border border-border bg-card/80 px-3 text-[12.5px] text-muted-foreground shadow-sm transition-colors hover:border-border focus-within:border-ring">
               <Search className="h-3.5 w-3.5" />
               <span className="flex-1 truncate">Sök leads, adresser…</span>
-              <kbd className="rounded border border-border/70 bg-muted/60 px-1 font-mono text-[10px] text-muted-foreground">⌘K</kbd>
+              <kbd className="rounded border border-border bg-muted/70 px-1.5 font-mono text-[10px] text-muted-foreground">⌘K</kbd>
             </div>
             {topbarActions}
-            <button className="rounded-md border border-border/70 bg-card/60 p-1.5 text-muted-foreground hover:text-foreground" title="Notiser">
+            <button className="relative rounded-lg border border-border bg-card/80 p-2 text-muted-foreground shadow-sm transition-colors hover:text-foreground" title="Notiser">
               <Bell className="h-3.5 w-3.5" />
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
             </button>
           </div>
         </header>
@@ -142,16 +143,35 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
         <main className="relative z-[1] flex-1 overflow-auto">
           <div className="mx-auto w-full max-w-[1440px] px-10 pt-10 pb-16">
             {/* Page header */}
-            <div className="mb-8 flex flex-wrap items-end justify-between gap-6 border-b border-border/50 pb-6">
-              <div className="min-w-0 flex-1 space-y-2">
-                <h1 className="text-[32px] font-semibold leading-[1.1] tracking-tight text-foreground">{title}</h1>
-                {description && (
-                  <p className="max-w-2xl text-[14px] leading-relaxed text-muted-foreground">{description}</p>
-                )}
-                {meta && <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 pt-1 text-[12px] text-muted-foreground">{meta}</div>}
+            <header className="mb-8">
+              <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
+                <div className="min-w-0 flex-1 space-y-3">
+                  {activeNav?.group && (
+                    <div className="flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-primary/80">
+                      <span className="h-px w-6 bg-primary/50" />
+                      {activeNav.group}
+                    </div>
+                  )}
+                  <h1 className="text-[36px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground">{title}</h1>
+                  {description && (
+                    <p className="max-w-2xl text-[14.5px] leading-relaxed text-muted-foreground">{description}</p>
+                  )}
+                </div>
+                {actions && <div className="flex shrink-0 flex-wrap items-center gap-2 pt-1">{actions}</div>}
               </div>
-              {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
-            </div>
+              {meta && (
+                <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border/60 pt-4 text-[12px] text-muted-foreground">
+                  {meta}
+                </div>
+              )}
+            </header>
+
+            {tabs && <div className="mb-8 -mx-1">{tabs}</div>}
+
+            {children}
+          </div>
+        </main>
+      </div>
 
             {tabs && <div className="mb-8">{tabs}</div>}
 
