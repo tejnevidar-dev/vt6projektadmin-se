@@ -1,6 +1,4 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,12 +18,11 @@ type WebhookLog = {
 
 const PAGE_SIZE = 25;
 
-const searchSchema = z.object({
-  page: fallback(z.number().int().min(1), 1).default(1),
-});
-
 export const Route = createFileRoute("/webhook-logs")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (search: Record<string, unknown>) => {
+    const p = Number(search.page);
+    return { page: Number.isFinite(p) && p >= 1 ? Math.floor(p) : 1 };
+  },
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/login" });
