@@ -274,8 +274,37 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               Redigera
             </Button>
           </div>
+          <Button
+            variant="outline"
+            className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Ta bort lead
+          </Button>
         </div>
       </div>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ta bort {lead.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Detta tar bort leaden permanent. Åtgärden kan inte ångras.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Tar bort..." : "Ta bort"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
