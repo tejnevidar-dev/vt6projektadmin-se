@@ -31,7 +31,7 @@ export const Route = createFileRoute("/webhook-logs")({
 });
 
 function WebhookLogsPage() {
-  const { page } = Route.useSearch();
+  const { page = 1 } = Route.useSearch();
   const navigate = useNavigate({ from: "/webhook-logs" });
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [total, setTotal] = useState(0);
