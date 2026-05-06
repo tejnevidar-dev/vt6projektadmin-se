@@ -28,17 +28,19 @@ interface AppShellProps extends PageHeaderProps {
 
 export function AppShell({ children, title, description, meta, actions, tabs, topbarActions }: AppShellProps) {
   const { signOut, user } = useAuth();
+  const { isAdmin } = useUserRoles();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [collapsed, setCollapsed] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
-    navigate({ to: "/login" });
+    navigate({ to: "/login", search: {} });
   };
 
-  const groups = Array.from(new Set(navItems.map((i) => i.group)));
-  const activeNav = navItems.find((i) => pathname === i.to || (i.to !== "/dashboard" && pathname.startsWith(i.to)));
+  const visibleNav = navItems.filter((i) => !i.adminOnly || isAdmin);
+  const groups = Array.from(new Set(visibleNav.map((i) => i.group)));
+  const activeNav = visibleNav.find((i) => pathname === i.to || (i.to !== "/dashboard" && pathname.startsWith(i.to)));
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
 
   return (
