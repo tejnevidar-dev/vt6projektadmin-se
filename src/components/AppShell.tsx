@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", adminOnly: false },
   { to: "/leads", label: "Leads", icon: Users, group: "Arbeta", adminOnly: false },
-  { to: "/admin", label: "Medlemmar", icon: Shield, group: "Hantera", adminOnly: true },
+  { to: "/admin", label: "Medlemmar", icon: Shield, group: "Hantera", adminOnly: false },
   { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "Hantera", adminOnly: true },
   { to: "/settings", label: "Inställningar", icon: Settings, group: "Hantera", adminOnly: false },
 ] as const;

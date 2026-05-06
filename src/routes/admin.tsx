@@ -51,19 +51,16 @@ function AdminPage() {
   const [inviteRole, setInviteRole] = useState<AppRole>("saljare");
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    if (!rolesLoading && !isAdmin) {
-      navigate({ to: "/dashboard" });
-    }
-  }, [rolesLoading, isAdmin]);
-
   const loadData = async () => {
     setLoading(true);
-    const [profilesRes, rolesRes, invitesRes] = await Promise.all([
+    const queries: Array<PromiseLike<any>> = [
       supabase.from("profiles").select("id, email, display_name").order("created_at"),
       supabase.from("user_roles").select("user_id, role"),
-      supabase.from("invitations").select("*").order("created_at", { ascending: false }),
-    ]);
+    ];
+    if (isAdmin) {
+      queries.push(supabase.from("invitations").select("*").order("created_at", { ascending: false }));
+    }
+    const [profilesRes, rolesRes, invitesRes] = await Promise.all(queries);
     const rolesByUser = new Map<string, AppRole[]>();
     (rolesRes.data ?? []).forEach((r: any) => {
       const arr = rolesByUser.get(r.user_id) ?? [];
@@ -76,13 +73,13 @@ function AdminPage() {
         roles: rolesByUser.get(p.id) ?? [],
       }))
     );
-    setInvitations((invitesRes.data ?? []) as Invitation[]);
+    if (invitesRes) setInvitations((invitesRes.data ?? []) as Invitation[]);
     setLoading(false);
   };
 
   useEffect(() => {
-    if (isAdmin) loadData();
-  }, [isAdmin]);
+    if (!rolesLoading) loadData();
+  }, [rolesLoading, isAdmin]);
 
   const setMemberRole = async (userId: string, newRole: AppRole) => {
     await supabase.from("user_roles").delete().eq("user_id", userId);
@@ -129,7 +126,7 @@ function AdminPage() {
     toast.success("Inbjudningslänk kopierad");
   };
 
-  if (rolesLoading || !isAdmin) {
+  if (rolesLoading) {
     return (
       <AppShell title="Medlemmar">
         <p className="text-muted-foreground">Laddar...</p>
@@ -145,7 +142,8 @@ function AdminPage() {
       description="Hantera vem som har åtkomst till Säljpanel och vilka rättigheter de har."
     >
       <div className="space-y-8">
-        {/* Invite form */}
+        {/* Invite form (admin only) */}
+        {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -185,9 +183,10 @@ function AdminPage() {
             </p>
           </CardContent>
         </Card>
+        )}
 
         {/* Pending invites */}
-        {pendingInvites.length > 0 && (
+        {isAdmin && pendingInvites.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Väntande inbjudningar ({pendingInvites.length})</CardTitle>
@@ -243,7 +242,7 @@ function AdminPage() {
                     <TableHead>Namn</TableHead>
                     <TableHead>E-post</TableHead>
                     <TableHead>Roll</TableHead>
-                    <TableHead className="text-right">Åtgärd</TableHead>
+                    {isAdmin && <TableHead className="text-right">Åtgärd</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -258,26 +257,34 @@ function AdminPage() {
                         <TableCell className="font-medium">{m.display_name ?? "—"}</TableCell>
                         <TableCell className="text-muted-foreground">{m.email}</TableCell>
                         <TableCell>
-                          <Select
-                            value={m.roles.length ? currentRole : "none"}
-                            onValueChange={(v) => v !== "none" && setMemberRole(m.id, v as AppRole)}
-                          >
-                            <SelectTrigger className="w-40 h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">Administratör</SelectItem>
-                              <SelectItem value="saljare">Säljare</SelectItem>
-                              <SelectItem value="viewer">Viewer</SelectItem>
-                              {!m.roles.length && <SelectItem value="none" disabled>Ingen åtkomst</SelectItem>}
-                            </SelectContent>
-                          </Select>
+                          {isAdmin ? (
+                            <Select
+                              value={m.roles.length ? currentRole : "none"}
+                              onValueChange={(v) => v !== "none" && setMemberRole(m.id, v as AppRole)}
+                            >
+                              <SelectTrigger className="w-40 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Administratör</SelectItem>
+                                <SelectItem value="saljare">Säljare</SelectItem>
+                                <SelectItem value="viewer">Viewer</SelectItem>
+                                {!m.roles.length && <SelectItem value="none" disabled>Ingen åtkomst</SelectItem>}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge variant="secondary">
+                              {m.roles.length ? roleLabel(currentRole) : "Ingen åtkomst"}
+                            </Badge>
+                          )}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" onClick={() => removeMember(m.id)}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </TableCell>
+                        {isAdmin && (
+                          <TableCell className="text-right">
+                            <Button size="sm" variant="ghost" onClick={() => removeMember(m.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}
