@@ -53,7 +53,7 @@ function AdminPage() {
 
   const loadData = async () => {
     setLoading(true);
-    const queries: Promise<any>[] = [
+    const queries: Array<PromiseLike<any>> = [
       supabase.from("profiles").select("id, email, display_name").order("created_at"),
       supabase.from("user_roles").select("user_id, role"),
     ];
