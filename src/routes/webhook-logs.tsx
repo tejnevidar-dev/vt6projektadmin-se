@@ -26,7 +26,7 @@ export const Route = createFileRoute("/webhook-logs")({
   },
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: "/login" });
+    if (!data.user) throw redirect({ to: "/login", search: {} });
   },
   component: WebhookLogsPage,
 });

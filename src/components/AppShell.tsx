@@ -201,7 +201,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     );
   }
   if (!isAuthenticated) {
-    navigate({ to: "/login" });
+    navigate({ to: "/login", search: {} });
     return null;
   }
   return <>{children}</>;
