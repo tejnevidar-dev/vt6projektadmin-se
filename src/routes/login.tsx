@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +10,9 @@ import { Home } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    invite: typeof search.invite === "string" ? search.invite : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Logga in – Säljpanel" },
@@ -20,12 +24,33 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { signIn, signUp, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { invite } = Route.useSearch();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [inviteInfo, setInviteInfo] = useState<{ email: string; role: string } | null>(null);
+
+  useEffect(() => {
+    if (!invite) return;
+    setIsSignUp(true);
+    supabase
+      .from("invitations")
+      .select("email, role")
+      .eq("token", invite)
+      .is("used_at", null)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setInviteInfo(data as any);
+          setEmail((data as any).email);
+        } else {
+          setError("Inbjudan är ogiltig eller har gått ut.");
+        }
+      });
+  }, [invite]);
 
   if (isAuthenticated) {
     navigate({ to: "/" });
@@ -40,7 +65,7 @@ function LoginPage() {
 
     try {
       if (isSignUp) {
-        const { needsConfirmation } = await signUp(email, password);
+        const { needsConfirmation } = await signUp(email, password, invite);
         if (needsConfirmation) {
           setMessage("Kolla din e-post för att bekräfta kontot!");
         } else {
@@ -57,6 +82,8 @@ function LoginPage() {
     }
   };
 
+  const roleLabel = (r: string) => r === "admin" ? "Administratör" : r === "saljare" ? "Säljare" : "Viewer";
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
@@ -66,7 +93,9 @@ function LoginPage() {
           </div>
           <CardTitle>{isSignUp ? "Skapa konto" : "Logga in"}</CardTitle>
           <CardDescription>
-            {isSignUp ? "Registrera ett nytt konto" : "Logga in på Säljpanel"}
+            {inviteInfo
+              ? `Du har blivit inbjuden som ${roleLabel(inviteInfo.role)}`
+              : isSignUp ? "Registrera ett nytt konto" : "Logga in på Säljpanel"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -80,6 +109,7 @@ function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="namn@företag.se"
                 required
+                disabled={!!inviteInfo}
               />
             </div>
             <div className="space-y-2">
@@ -100,15 +130,17 @@ function LoginPage() {
               {loading ? "Vänta..." : isSignUp ? "Skapa konto" : "Logga in"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(!isSignUp); setError(""); setMessage(""); }}
-              className="text-sm text-muted-foreground hover:text-foreground underline"
-            >
-              {isSignUp ? "Har redan ett konto? Logga in" : "Inget konto? Registrera dig"}
-            </button>
-          </div>
+          {!invite && (
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => { setIsSignUp(!isSignUp); setError(""); setMessage(""); }}
+                className="text-sm text-muted-foreground hover:text-foreground underline"
+              >
+                {isSignUp ? "Har redan ett konto? Logga in" : "Inget konto? Registrera dig"}
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
