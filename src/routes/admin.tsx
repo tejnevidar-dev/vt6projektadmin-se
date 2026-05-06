@@ -1,16 +1,61 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type AppRole } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Copy, Trash2, UserPlus, Shield } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Copy,
+  Trash2,
+  UserPlus,
+  Shield,
+  Users,
+  Link2,
+  Mail,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -27,6 +72,7 @@ interface Member {
   email: string;
   display_name: string | null;
   roles: AppRole[];
+  created_at: string;
 }
 interface Invitation {
   id: string;
@@ -34,6 +80,7 @@ interface Invitation {
   role: AppRole;
   token: string;
   used_at: string | null;
+  used_by: string | null;
   expires_at: string;
   created_at: string;
 }
@@ -41,26 +88,40 @@ interface Invitation {
 const roleLabel = (r: AppRole) =>
   r === "admin" ? "Administratör" : r === "saljare" ? "Säljare" : "Viewer";
 
+const roleVariant = (r: AppRole): "default" | "secondary" | "outline" =>
+  r === "admin" ? "default" : r === "saljare" ? "secondary" : "outline";
+
 function AdminPage() {
+  const { user } = useAuth();
   const { isAdmin, loading: rolesLoading } = useUserRoles();
   const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Invite dialog state
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<AppRole>("saljare");
   const [creating, setCreating] = useState(false);
+  const [createdToken, setCreatedToken] = useState<string | null>(null);
+
+  // Confirm dialogs
+  const [confirmRemove, setConfirmRemove] = useState<Member | null>(null);
+  const [confirmRevoke, setConfirmRevoke] = useState<Invitation | null>(null);
 
   const loadData = async () => {
     setLoading(true);
-    const queries: Array<PromiseLike<any>> = [
-      supabase.from("profiles").select("id, email, display_name").order("created_at"),
+    const [profilesRes, rolesRes, invitesRes] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, email, display_name, created_at")
+        .order("created_at"),
       supabase.from("user_roles").select("user_id, role"),
-    ];
-    if (isAdmin) {
-      queries.push(supabase.from("invitations").select("*").order("created_at", { ascending: false }));
-    }
-    const [profilesRes, rolesRes, invitesRes] = await Promise.all(queries);
+      isAdmin
+        ? supabase.from("invitations").select("*").order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
     const rolesByUser = new Map<string, AppRole[]>();
     (rolesRes.data ?? []).forEach((r: any) => {
       const arr = rolesByUser.get(r.user_id) ?? [];
@@ -73,27 +134,30 @@ function AdminPage() {
         roles: rolesByUser.get(p.id) ?? [],
       }))
     );
-    if (invitesRes) setInvitations((invitesRes.data ?? []) as Invitation[]);
+    setInvitations(((invitesRes as any).data ?? []) as Invitation[]);
     setLoading(false);
   };
 
   useEffect(() => {
     if (!rolesLoading) loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rolesLoading, isAdmin]);
 
   const setMemberRole = async (userId: string, newRole: AppRole) => {
     await supabase.from("user_roles").delete().eq("user_id", userId);
-    const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: newRole });
+    const { error } = await supabase
+      .from("user_roles")
+      .insert({ user_id: userId, role: newRole });
     if (error) toast.error("Kunde inte uppdatera roll: " + error.message);
     else toast.success("Roll uppdaterad");
     loadData();
   };
 
   const removeMember = async (userId: string) => {
-    if (!confirm("Ta bort all åtkomst för denna användare?")) return;
     const { error } = await supabase.from("user_roles").delete().eq("user_id", userId);
     if (error) toast.error(error.message);
     else toast.success("Åtkomst borttagen");
+    setConfirmRemove(null);
     loadData();
   };
 
@@ -101,22 +165,51 @@ function AdminPage() {
     e.preventDefault();
     if (!inviteEmail) return;
     setCreating(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("invitations")
-      .insert({ email: inviteEmail.trim().toLowerCase(), role: inviteRole });
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Inbjudan skapad");
-      setInviteEmail("");
+      .insert({ email: inviteEmail.trim().toLowerCase(), role: inviteRole })
+      .select("token")
+      .single();
+    if (error) {
+      toast.error(error.message);
+      setCreating(false);
+      return;
     }
+    toast.success("Inbjudan skapad");
+    setCreatedToken((data as any).token);
     setCreating(false);
     loadData();
+  };
+
+  const closeInviteDialog = () => {
+    setInviteOpen(false);
+    setInviteEmail("");
+    setInviteRole("saljare");
+    setCreatedToken(null);
   };
 
   const revokeInvite = async (id: string) => {
     const { error } = await supabase.from("invitations").delete().eq("id", id);
     if (error) toast.error(error.message);
     else toast.success("Inbjudan borttagen");
+    setConfirmRevoke(null);
+    loadData();
+  };
+
+  const resendInvite = async (inv: Invitation) => {
+    // "Resend" = extend expiry by 14 days from now
+    const newExpires = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    const { error } = await supabase
+      .from("invitations")
+      .update({ expires_at: newExpires })
+      .eq("id", inv.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    const url = `${window.location.origin}/login?invite=${inv.token}`;
+    await navigator.clipboard.writeText(url);
+    toast.success("Inbjudan förnyad – länken kopierad till urklipp");
     loadData();
   };
 
@@ -126,6 +219,24 @@ function AdminPage() {
     toast.success("Inbjudningslänk kopierad");
   };
 
+  const inviteStatus = (inv: Invitation): "used" | "expired" | "pending" => {
+    if (inv.used_at) return "used";
+    if (new Date(inv.expires_at) <= new Date()) return "expired";
+    return "pending";
+  };
+
+  const stats = useMemo(() => {
+    const admins = members.filter((m) => m.roles.includes("admin")).length;
+    const saljare = members.filter(
+      (m) => m.roles.includes("saljare") && !m.roles.includes("admin")
+    ).length;
+    const viewers = members.filter(
+      (m) => m.roles.includes("viewer") && !m.roles.includes("admin") && !m.roles.includes("saljare")
+    ).length;
+    const pending = invitations.filter((i) => inviteStatus(i) === "pending").length;
+    return { admins, saljare, viewers, pending };
+  }, [members, invitations]);
+
   if (rolesLoading) {
     return (
       <AppShell title="Medlemmar">
@@ -134,25 +245,237 @@ function AdminPage() {
     );
   }
 
-  const pendingInvites = invitations.filter((i) => !i.used_at && new Date(i.expires_at) > new Date());
-
   return (
     <AppShell
       title="Medlemmar"
       description="Hantera vem som har åtkomst till Säljpanel och vilka rättigheter de har."
+      actions={
+        isAdmin ? (
+          <Button onClick={() => setInviteOpen(true)} size="sm">
+            <UserPlus className="mr-2 h-4 w-4" /> Bjud in medlem
+          </Button>
+        ) : null
+      }
     >
-      <div className="space-y-8">
-        {/* Invite form (admin only) */}
-        {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <UserPlus className="h-4 w-4" /> Bjud in ny medlem
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={createInvite} className="flex flex-wrap items-end gap-3">
-              <div className="flex-1 min-w-[240px] space-y-1.5">
+      <div className="space-y-6">
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard icon={<Shield className="h-4 w-4" />} label="Administratörer" value={stats.admins} />
+          <StatCard icon={<Users className="h-4 w-4" />} label="Säljare" value={stats.saljare} />
+          <StatCard icon={<Users className="h-4 w-4" />} label="Viewers" value={stats.viewers} />
+          <StatCard icon={<Mail className="h-4 w-4" />} label="Väntande inbjudningar" value={stats.pending} />
+        </div>
+
+        <Tabs defaultValue="members" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="members">
+              <Users className="mr-2 h-4 w-4" /> Medlemmar ({members.length})
+            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="invitations">
+                <Mail className="mr-2 h-4 w-4" /> Inbjudningar ({invitations.length})
+              </TabsTrigger>
+            )}
+          </TabsList>
+
+          {/* Members tab */}
+          <TabsContent value="members">
+            <Card>
+              <CardContent className="p-0">
+                {loading ? (
+                  <p className="p-6 text-muted-foreground">Laddar...</p>
+                ) : members.length === 0 ? (
+                  <p className="p-6 text-muted-foreground">Inga medlemmar ännu.</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Namn</TableHead>
+                        <TableHead>E-post</TableHead>
+                        <TableHead>Roll</TableHead>
+                        <TableHead>Tillagd</TableHead>
+                        {isAdmin && <TableHead className="text-right">Åtgärd</TableHead>}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {members.map((m) => {
+                        const currentRole: AppRole = m.roles.includes("admin")
+                          ? "admin"
+                          : m.roles.includes("saljare")
+                          ? "saljare"
+                          : "viewer";
+                        const isSelf = m.id === user?.id;
+                        return (
+                          <TableRow key={m.id}>
+                            <TableCell className="font-medium">
+                              {m.display_name ?? "—"}
+                              {isSelf && (
+                                <Badge variant="outline" className="ml-2 text-xs">
+                                  Du
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">{m.email}</TableCell>
+                            <TableCell>
+                              {isAdmin && !isSelf ? (
+                                <Select
+                                  value={m.roles.length ? currentRole : "viewer"}
+                                  onValueChange={(v) => setMemberRole(m.id, v as AppRole)}
+                                >
+                                  <SelectTrigger className="h-8 w-40">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="admin">Administratör</SelectItem>
+                                    <SelectItem value="saljare">Säljare</SelectItem>
+                                    <SelectItem value="viewer">Viewer</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Badge variant={roleVariant(currentRole)}>
+                                  {m.roles.length ? roleLabel(currentRole) : "Ingen åtkomst"}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {new Date(m.created_at).toLocaleDateString("sv-SE")}
+                            </TableCell>
+                            {isAdmin && (
+                              <TableCell className="text-right">
+                                {!isSelf && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setConfirmRemove(m)}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Invitations tab */}
+          {isAdmin && (
+            <TabsContent value="invitations">
+              <Card>
+                <CardContent className="p-0">
+                  {invitations.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <Mail className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        Inga inbjudningar ännu. Klicka på "Bjud in medlem" för att komma igång.
+                      </p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>E-post</TableHead>
+                          <TableHead>Roll</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Skapad</TableHead>
+                          <TableHead>Går ut</TableHead>
+                          <TableHead className="text-right">Åtgärd</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {invitations.map((inv) => {
+                          const status = inviteStatus(inv);
+                          return (
+                            <TableRow key={inv.id}>
+                              <TableCell className="font-medium">{inv.email}</TableCell>
+                              <TableCell>
+                                <Badge variant={roleVariant(inv.role)}>{roleLabel(inv.role)}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                {status === "pending" && (
+                                  <span className="inline-flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-500">
+                                    <Clock className="h-3.5 w-3.5" /> Väntar
+                                  </span>
+                                )}
+                                {status === "used" && (
+                                  <span className="inline-flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-500">
+                                    <CheckCircle2 className="h-3.5 w-3.5" /> Accepterad
+                                  </span>
+                                )}
+                                {status === "expired" && (
+                                  <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                                    <XCircle className="h-3.5 w-3.5" /> Utgången
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground text-sm">
+                                {new Date(inv.created_at).toLocaleDateString("sv-SE")}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground text-sm">
+                                {new Date(inv.expires_at).toLocaleDateString("sv-SE")}
+                              </TableCell>
+                              <TableCell className="text-right space-x-1">
+                                {status === "pending" && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => copyInviteLink(inv.token)}
+                                  >
+                                    <Copy className="mr-1.5 h-3.5 w-3.5" /> Kopiera länk
+                                  </Button>
+                                )}
+                                {status === "expired" && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => resendInvite(inv)}
+                                  >
+                                    <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Förnya
+                                  </Button>
+                                )}
+                                {status !== "used" && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setConfirmRevoke(inv)}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
+      </div>
+
+      {/* Invite dialog */}
+      <Dialog open={inviteOpen} onOpenChange={(o) => (o ? setInviteOpen(true) : closeInviteDialog())}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bjud in ny medlem</DialogTitle>
+            <DialogDescription>
+              {createdToken
+                ? "Inbjudan skapad! Kopiera länken nedan och skicka till mottagaren."
+                : "Skapa en inbjudningslänk som mottagaren kan använda för att registrera ett konto."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {!createdToken ? (
+            <form onSubmit={createInvite} className="space-y-4">
+              <div className="space-y-1.5">
                 <Label htmlFor="invite-email">E-post</Label>
                 <Input
                   id="invite-email"
@@ -161,139 +484,119 @@ function AdminPage() {
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="namn@företag.se"
                   required
+                  autoFocus
                 />
               </div>
               <div className="space-y-1.5">
                 <Label>Roll</Label>
                 <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
-                  <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Administratör</SelectItem>
-                    <SelectItem value="saljare">Säljare</SelectItem>
-                    <SelectItem value="viewer">Viewer</SelectItem>
+                    <SelectItem value="admin">Administratör – full åtkomst</SelectItem>
+                    <SelectItem value="saljare">Säljare – kan redigera leads</SelectItem>
+                    <SelectItem value="viewer">Viewer – endast läsa</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" disabled={creating}>
-                {creating ? "Skapar..." : "Skapa inbjudan"}
-              </Button>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={closeInviteDialog}>
+                  Avbryt
+                </Button>
+                <Button type="submit" disabled={creating}>
+                  {creating ? "Skapar..." : "Skapa inbjudan"}
+                </Button>
+              </DialogFooter>
             </form>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Kopiera inbjudningslänken nedan och skicka till mottagaren. Länken är giltig i 14 dagar.
-            </p>
-          </CardContent>
-        </Card>
-        )}
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>Inbjudningslänk</Label>
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={`${window.location.origin}/login?invite=${createdToken}`}
+                    onFocus={(e) => e.currentTarget.select()}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => copyInviteLink(createdToken)}
+                  >
+                    <Link2 className="mr-1.5 h-4 w-4" /> Kopiera
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Länken är giltig i 14 dagar.</p>
+              </div>
+              <DialogFooter>
+                <Button onClick={closeInviteDialog}>Klar</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-        {/* Pending invites */}
-        {isAdmin && pendingInvites.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Väntande inbjudningar ({pendingInvites.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>E-post</TableHead>
-                    <TableHead>Roll</TableHead>
-                    <TableHead>Går ut</TableHead>
-                    <TableHead className="text-right">Åtgärd</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pendingInvites.map((inv) => (
-                    <TableRow key={inv.id}>
-                      <TableCell className="font-medium">{inv.email}</TableCell>
-                      <TableCell><Badge variant="secondary">{roleLabel(inv.role)}</Badge></TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(inv.expires_at).toLocaleDateString("sv-SE")}
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button size="sm" variant="outline" onClick={() => copyInviteLink(inv.token)}>
-                          <Copy className="h-3.5 w-3.5 mr-1.5" /> Kopiera länk
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => revokeInvite(inv.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
+      {/* Confirm remove member */}
+      <AlertDialog open={!!confirmRemove} onOpenChange={(o) => !o && setConfirmRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ta bort åtkomst?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmRemove?.email} kommer inte längre kunna logga in på Säljpanel.
+              Användarens konto raderas inte – du kan ge åtkomst igen senare.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmRemove && removeMember(confirmRemove.id)}>
+              Ta bort åtkomst
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-        {/* Members */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Shield className="h-4 w-4" /> Medlemmar ({members.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <p className="p-6 text-muted-foreground">Laddar...</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Namn</TableHead>
-                    <TableHead>E-post</TableHead>
-                    <TableHead>Roll</TableHead>
-                    {isAdmin && <TableHead className="text-right">Åtgärd</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {members.map((m) => {
-                    const currentRole: AppRole = m.roles.includes("admin")
-                      ? "admin"
-                      : m.roles.includes("saljare")
-                      ? "saljare"
-                      : "viewer";
-                    return (
-                      <TableRow key={m.id}>
-                        <TableCell className="font-medium">{m.display_name ?? "—"}</TableCell>
-                        <TableCell className="text-muted-foreground">{m.email}</TableCell>
-                        <TableCell>
-                          {isAdmin ? (
-                            <Select
-                              value={m.roles.length ? currentRole : "none"}
-                              onValueChange={(v) => v !== "none" && setMemberRole(m.id, v as AppRole)}
-                            >
-                              <SelectTrigger className="w-40 h-8">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="admin">Administratör</SelectItem>
-                                <SelectItem value="saljare">Säljare</SelectItem>
-                                <SelectItem value="viewer">Viewer</SelectItem>
-                                {!m.roles.length && <SelectItem value="none" disabled>Ingen åtkomst</SelectItem>}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Badge variant="secondary">
-                              {m.roles.length ? roleLabel(currentRole) : "Ingen åtkomst"}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        {isAdmin && (
-                          <TableCell className="text-right">
-                            <Button size="sm" variant="ghost" onClick={() => removeMember(m.id)}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      {/* Confirm revoke invite */}
+      <AlertDialog open={!!confirmRevoke} onOpenChange={(o) => !o && setConfirmRevoke(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ta bort inbjudan?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Inbjudningslänken till {confirmRevoke?.email} kommer sluta fungera.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmRevoke && revokeInvite(confirmRevoke.id)}>
+              Ta bort
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
+  );
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+}) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-3 p-4">
+        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted text-muted-foreground">
+          {icon}
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="text-2xl font-semibold">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
