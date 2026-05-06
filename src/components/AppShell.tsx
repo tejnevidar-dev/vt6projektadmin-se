@@ -72,7 +72,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
                 </div>
               )}
               <div className="space-y-px">
-                {navItems.filter((i) => i.group === group).map((item) => {
+                {visibleNav.filter((i) => i.group === group).map((item) => {
                   const active = item === activeNav;
                   const Icon = item.icon;
                   return (
