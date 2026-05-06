@@ -51,19 +51,16 @@ function AdminPage() {
   const [inviteRole, setInviteRole] = useState<AppRole>("saljare");
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    if (!rolesLoading && !isAdmin) {
-      navigate({ to: "/dashboard" });
-    }
-  }, [rolesLoading, isAdmin]);
-
   const loadData = async () => {
     setLoading(true);
-    const [profilesRes, rolesRes, invitesRes] = await Promise.all([
+    const queries: Promise<any>[] = [
       supabase.from("profiles").select("id, email, display_name").order("created_at"),
       supabase.from("user_roles").select("user_id, role"),
-      supabase.from("invitations").select("*").order("created_at", { ascending: false }),
-    ]);
+    ];
+    if (isAdmin) {
+      queries.push(supabase.from("invitations").select("*").order("created_at", { ascending: false }));
+    }
+    const [profilesRes, rolesRes, invitesRes] = await Promise.all(queries);
     const rolesByUser = new Map<string, AppRole[]>();
     (rolesRes.data ?? []).forEach((r: any) => {
       const arr = rolesByUser.get(r.user_id) ?? [];
@@ -76,13 +73,13 @@ function AdminPage() {
         roles: rolesByUser.get(p.id) ?? [],
       }))
     );
-    setInvitations((invitesRes.data ?? []) as Invitation[]);
+    if (invitesRes) setInvitations((invitesRes.data ?? []) as Invitation[]);
     setLoading(false);
   };
 
   useEffect(() => {
-    if (isAdmin) loadData();
-  }, [isAdmin]);
+    if (!rolesLoading) loadData();
+  }, [rolesLoading, isAdmin]);
 
   const setMemberRole = async (userId: string, newRole: AppRole) => {
     await supabase.from("user_roles").delete().eq("user_id", userId);
