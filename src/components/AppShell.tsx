@@ -1,14 +1,16 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret } from "lucide-react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useUserRoles } from "@/hooks/use-role";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta" },
-  { to: "/leads", label: "Leads", icon: Users, group: "Arbeta" },
-  { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "System" },
-  { to: "/settings", label: "Inställningar", icon: Settings, group: "System" },
+  { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", adminOnly: false },
+  { to: "/leads", label: "Leads", icon: Users, group: "Arbeta", adminOnly: false },
+  { to: "/admin", label: "Medlemmar", icon: Shield, group: "System", adminOnly: true },
+  { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "System", adminOnly: true },
+  { to: "/settings", label: "Inställningar", icon: Settings, group: "System", adminOnly: false },
 ] as const;
 
 export interface PageHeaderProps {
