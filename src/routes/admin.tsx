@@ -126,7 +126,7 @@ function AdminPage() {
     toast.success("Inbjudningslänk kopierad");
   };
 
-  if (rolesLoading || !isAdmin) {
+  if (rolesLoading) {
     return (
       <AppShell title="Medlemmar">
         <p className="text-muted-foreground">Laddar...</p>
