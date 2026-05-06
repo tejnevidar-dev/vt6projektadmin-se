@@ -25,7 +25,7 @@ const JOB_TAB_ICONS: Record<JobType, typeof Hammer> = {
 
 export const Route = createFileRoute("/leads")({
   component: LeadsPage,
-  head: () => ({ meta: [{ title: "Leads – Sälj tak" }] }),
+  head: () => ({ meta: [{ title: "Leads – Säljpanel" }] }),
 });
 
 function LeadsPage() {
