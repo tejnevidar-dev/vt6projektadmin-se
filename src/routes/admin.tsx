@@ -242,7 +242,7 @@ function AdminPage() {
                     <TableHead>Namn</TableHead>
                     <TableHead>E-post</TableHead>
                     <TableHead>Roll</TableHead>
-                    <TableHead className="text-right">Åtgärd</TableHead>
+                    {isAdmin && <TableHead className="text-right">Åtgärd</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -257,26 +257,34 @@ function AdminPage() {
                         <TableCell className="font-medium">{m.display_name ?? "—"}</TableCell>
                         <TableCell className="text-muted-foreground">{m.email}</TableCell>
                         <TableCell>
-                          <Select
-                            value={m.roles.length ? currentRole : "none"}
-                            onValueChange={(v) => v !== "none" && setMemberRole(m.id, v as AppRole)}
-                          >
-                            <SelectTrigger className="w-40 h-8">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">Administratör</SelectItem>
-                              <SelectItem value="saljare">Säljare</SelectItem>
-                              <SelectItem value="viewer">Viewer</SelectItem>
-                              {!m.roles.length && <SelectItem value="none" disabled>Ingen åtkomst</SelectItem>}
-                            </SelectContent>
-                          </Select>
+                          {isAdmin ? (
+                            <Select
+                              value={m.roles.length ? currentRole : "none"}
+                              onValueChange={(v) => v !== "none" && setMemberRole(m.id, v as AppRole)}
+                            >
+                              <SelectTrigger className="w-40 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">Administratör</SelectItem>
+                                <SelectItem value="saljare">Säljare</SelectItem>
+                                <SelectItem value="viewer">Viewer</SelectItem>
+                                {!m.roles.length && <SelectItem value="none" disabled>Ingen åtkomst</SelectItem>}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge variant="secondary">
+                              {m.roles.length ? roleLabel(currentRole) : "Ingen åtkomst"}
+                            </Badge>
+                          )}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" onClick={() => removeMember(m.id)}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </TableCell>
+                        {isAdmin && (
+                          <TableCell className="text-right">
+                            <Button size="sm" variant="ghost" onClick={() => removeMember(m.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}
