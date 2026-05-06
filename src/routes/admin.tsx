@@ -186,7 +186,7 @@ function AdminPage() {
         )}
 
         {/* Pending invites */}
-        {pendingInvites.length > 0 && (
+        {isAdmin && pendingInvites.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Väntande inbjudningar ({pendingInvites.length})</CardTitle>
