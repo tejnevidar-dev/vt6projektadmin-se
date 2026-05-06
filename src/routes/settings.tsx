@@ -25,7 +25,7 @@ function SettingsContent() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate({ to: "/login" });
+    navigate({ to: "/login", search: {} });
   };
 
   return (
