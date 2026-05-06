@@ -142,7 +142,8 @@ function AdminPage() {
       description="Hantera vem som har åtkomst till Säljpanel och vilka rättigheter de har."
     >
       <div className="space-y-8">
-        {/* Invite form */}
+        {/* Invite form (admin only) */}
+        {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -182,6 +183,7 @@ function AdminPage() {
             </p>
           </CardContent>
         </Card>
+        )}
 
         {/* Pending invites */}
         {pendingInvites.length > 0 && (
