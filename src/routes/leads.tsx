@@ -66,9 +66,14 @@ function LeadsContent() {
     loadLeads();
   }, [loadLeads]);
 
+  const activeLeads = useMemo(
+    () => leads.filter((l) => l.pipelineStage === "inkommande_webb" || l.pipelineStage === "saljpanel"),
+    [leads]
+  );
+
   const jobTypeLeads = useMemo(
-    () => (activeJobType === "all" ? leads : leads.filter((l) => l.jobType === activeJobType)),
-    [leads, activeJobType]
+    () => (activeJobType === "all" ? activeLeads : activeLeads.filter((l) => l.jobType === activeJobType)),
+    [activeLeads, activeJobType]
   );
 
   const filteredLeads = useMemo(() => {
@@ -143,11 +148,11 @@ function LeadsContent() {
         >
           <LayoutGrid className="h-4 w-4" />
           <span>Alla</span>
-          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] tabular-nums text-muted-foreground">{leads.length}</span>
+          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] tabular-nums text-muted-foreground">{activeLeads.length}</span>
         </TabsTrigger>
         {(Object.keys(JOB_TYPE_LABELS) as JobType[]).map((jt) => {
           const Icon = JOB_TAB_ICONS[jt];
-          const count = leads.filter((l) => l.jobType === jt).length;
+          const count = activeLeads.filter((l) => l.jobType === jt).length;
           return (
             <TabsTrigger
               key={jt}
@@ -168,7 +173,7 @@ function LeadsContent() {
     <>
       <span className="flex items-center gap-1.5">
         <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">Totalt</span>
-        <span className="font-medium tabular-nums text-foreground">{leads.length}</span>
+        <span className="font-medium tabular-nums text-foreground">{activeLeads.length}</span>
       </span>
       <span className="flex items-center gap-1.5">
         <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">Visar</span>
@@ -231,7 +236,7 @@ function LeadsContent() {
           </div>
           <div className={view === "kanban" ? "p-4" : ""}>
             {view === "kanban" ? (
-              <LeadKanban leads={filteredLeads} onSelect={setSelectedLead} onStageChange={handleStageChange} />
+              <LeadKanban leads={filteredLeads} onSelect={setSelectedLead} onStageChange={handleStageChange} stages={["inkommande_webb", "saljpanel"]} />
             ) : (
               <LeadTable leads={filteredLeads} onSelect={setSelectedLead} />
             )}
