@@ -31,6 +31,14 @@ const STATUS_DOT: Record<LeadStatus, string> = {
   lost: "bg-muted-foreground/40",
 };
 
+const STATUS_BADGE: Record<LeadStatus, { label: string; className: string }> = {
+  cold: { label: "Kall", className: "bg-muted text-muted-foreground" },
+  warm: { label: "Varm", className: "bg-warning/15 text-warning-foreground" },
+  hot: { label: "Het", className: "bg-destructive/15 text-destructive" },
+  customer: { label: "Kund", className: "bg-success/15 text-success" },
+  lost: { label: "Förlorad", className: "bg-muted text-muted-foreground" },
+};
+
 const JOB_ICON: Record<JobType, typeof Hammer> = {
   roof_replacement: Hammer,
   roof_cleaning: Droplets,
