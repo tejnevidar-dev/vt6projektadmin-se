@@ -13,6 +13,7 @@ interface LeadDetailProps {
   lead: Lead;
   onClose: () => void;
   onUpdated?: () => void;
+  variant?: "drawer" | "panel";
 }
 
 const statusLabels: Record<string, string> = {
@@ -31,11 +32,12 @@ const sourceLabels: Record<string, string> = {
   csv_import: "CSV-import",
 };
 
-export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
+export function LeadDetail({ lead, onClose, onUpdated, variant = "drawer" }: LeadDetailProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const isDrawer = variant === "drawer";
 
   const handleDelete = async () => {
     setDeleting(true);
