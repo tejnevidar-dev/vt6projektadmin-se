@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LeadTable } from "@/components/LeadTable";
+import { LeadDetail } from "@/components/LeadDetail";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -64,12 +66,17 @@ function timeAgo(iso: string) {
 function DashboardContent() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
-  useEffect(() => {
+  const reload = () => {
     fetchLeads()
       .then(setLeads)
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    reload();
   }, []);
 
   const total = leads.length;
@@ -126,6 +133,24 @@ function DashboardContent() {
             <div className="mt-3 text-3xl font-bold">{loading ? "—" : s.value}</div>
           </div>
         ))}
+      </div>
+
+      <div>
+        <div className="mb-3 flex items-end justify-between">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Senaste leads
+          </h3>
+          <Link to="/leads" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+            Visa alla <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+        {loading ? (
+          <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            Laddar…
+          </div>
+        ) : (
+          <LeadTable leads={sorted.slice(0, 8)} onSelect={setSelectedLead} />
+        )}
       </div>
 
       <div>
@@ -228,6 +253,17 @@ function DashboardContent() {
           </div>
         </div>
       </div>
+
+      {selectedLead && (
+        <LeadDetail
+          lead={selectedLead}
+          onClose={() => setSelectedLead(null)}
+          onUpdated={() => {
+            reload();
+            setSelectedLead(null);
+          }}
+        />
+      )}
     </div>
   );
 }
