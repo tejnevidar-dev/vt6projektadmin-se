@@ -31,6 +31,14 @@ const STATUS_DOT: Record<LeadStatus, string> = {
   lost: "bg-muted-foreground/40",
 };
 
+const STATUS_BADGE: Record<LeadStatus, { label: string; className: string }> = {
+  cold: { label: "Kall", className: "bg-muted text-muted-foreground" },
+  warm: { label: "Varm", className: "bg-warning/15 text-warning-foreground" },
+  hot: { label: "Het", className: "bg-destructive/15 text-destructive" },
+  customer: { label: "Kund", className: "bg-success/15 text-success" },
+  lost: { label: "Förlorad", className: "bg-muted text-muted-foreground" },
+};
+
 const JOB_ICON: Record<JobType, typeof Hammer> = {
   roof_replacement: Hammer,
   roof_cleaning: Droplets,
@@ -151,7 +159,15 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
             </div>
           )}
         </div>
-        <span className={cn("mt-1 h-2 w-2 shrink-0 rounded-full", STATUS_DOT[lead.status])} title={lead.status} />
+        <span
+          className={cn(
+            "mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+            STATUS_BADGE[lead.status].className
+          )}
+        >
+          <span className={cn("h-1.5 w-1.5 rounded-full", STATUS_DOT[lead.status])} />
+          {STATUS_BADGE[lead.status].label}
+        </span>
       </div>
       <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className="h-3 w-3" />
