@@ -109,8 +109,7 @@ function DashboardContent() {
   ];
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-      <div className="min-w-0 space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Välkommen tillbaka</h2>
@@ -258,25 +257,17 @@ function DashboardContent() {
           </div>
         </div>
       </div>
-      </div>
 
-      <aside className="min-h-[520px] min-w-0 xl:sticky xl:top-24 xl:h-[calc(100dvh-7rem)] xl:self-start">
-        {selectedLead ? (
-          <LeadDetail
-            lead={selectedLead}
-            variant="panel"
-            onClose={() => setSelectedLead(null)}
-            onUpdated={() => {
-              reload();
-              setSelectedLead(null);
-            }}
-          />
-        ) : (
-          <div className="flex h-full min-h-[520px] items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">
-            Välj en lead i tabellen för att visa detaljer här.
-          </div>
-        )}
-      </aside>
+      {selectedLead && (
+        <LeadDetail
+          lead={selectedLead}
+          onClose={() => setSelectedLead(null)}
+          onUpdated={() => {
+            reload();
+            setSelectedLead(null);
+          }}
+        />
+      )}
     </div>
   );
 }

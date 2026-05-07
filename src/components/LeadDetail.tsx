@@ -13,7 +13,6 @@ interface LeadDetailProps {
   lead: Lead;
   onClose: () => void;
   onUpdated?: () => void;
-  variant?: "drawer" | "panel";
 }
 
 const statusLabels: Record<string, string> = {
@@ -32,12 +31,11 @@ const sourceLabels: Record<string, string> = {
   csv_import: "CSV-import",
 };
 
-export function LeadDetail({ lead, onClose, onUpdated, variant = "drawer" }: LeadDetailProps) {
+export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const isDrawer = variant === "drawer";
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -175,9 +173,9 @@ export function LeadDetail({ lead, onClose, onUpdated, variant = "drawer" }: Lea
 
   return (
     <>
-      {isDrawer && <div className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm animate-in fade-in" onClick={onClose} />}
-      <div className={isDrawer ? "fixed inset-y-0 right-0 z-50 h-[100dvh] w-full max-w-lg overflow-y-auto overscroll-contain border-l border-border bg-card shadow-2xl animate-in slide-in-from-right" : "flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card"}>
-        <div className={isDrawer ? "p-6" : "min-h-0 flex-1 overflow-y-auto p-6"}>
+      <div className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm animate-in fade-in" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 z-50 h-[100dvh] w-full max-w-lg overflow-y-auto overscroll-contain border-l border-border bg-card shadow-2xl animate-in slide-in-from-right">
+        <div className="p-6">
         <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-5 flex items-start justify-between gap-3 border-b border-border bg-card/95 p-6 backdrop-blur">
           <div className="min-w-0">
             <h2 className="truncate text-xl font-bold text-card-foreground">{lead.name}</h2>
