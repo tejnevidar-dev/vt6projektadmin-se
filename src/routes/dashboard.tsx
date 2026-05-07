@@ -154,7 +154,7 @@ function DashboardContent() {
                   {loading ? (
                     <p className="text-sm text-muted-foreground">Laddar…</p>
                   ) : items.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Inga leads ännu.</p>
+                    <p className="text-sm text-muted-foreground">Inga {PIPELINE_STAGE_LABELS[stage].toLowerCase()} ännu.</p>
                   ) : (
                     items.map((l) => (
                       <div
