@@ -41,9 +41,10 @@ interface Props {
   leads: Lead[];
   onSelect: (lead: Lead) => void;
   onStageChange: (leadId: string, stage: PipelineStage) => void;
+  stages?: PipelineStage[];
 }
 
-export function LeadKanban({ leads, onSelect, onStageChange }: Props) {
+export function LeadKanban({ leads, onSelect, onStageChange, stages = PIPELINE_STAGES }: Props) {
   const [activeLead, setActiveLead] = useState<Lead | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -63,10 +64,13 @@ export function LeadKanban({ leads, onSelect, onStageChange }: Props) {
     }
   };
 
+  const cols = Math.min(Math.max(stages.length, 1), 5);
+  const gridCols = ["", "grid-cols-1", "grid-cols-2", "grid-cols-3", "grid-cols-2 md:grid-cols-4", "grid-cols-2 md:grid-cols-3 xl:grid-cols-5"][cols];
+
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-2 gap-3 pb-2 md:grid-cols-3 xl:grid-cols-5">
-        {PIPELINE_STAGES.map((stage) => {
+      <div className={cn("grid gap-3 pb-2", gridCols)}>
+        {stages.map((stage) => {
           const stageLeads = leads.filter((l) => l.pipelineStage === stage);
           return (
             <KanbanColumn key={stage} stage={stage} count={stageLeads.length}>
