@@ -176,14 +176,21 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
       <div className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm animate-in fade-in" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-border bg-card shadow-2xl animate-in slide-in-from-right">
         <div className="flex-1 overflow-y-auto p-6">
-        <div className="mb-5 flex items-start justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-card-foreground">{lead.name}</h2>
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="truncate text-xl font-bold text-card-foreground">{lead.name}</h2>
             <p className="text-sm text-muted-foreground">{lead.age} år · {sourceLabels[lead.source]}</p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-            <X className="h-5 w-5" />
-          </button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            className="shrink-0"
+            aria-label="Stäng"
+          >
+            <X className="mr-1 h-4 w-4" />
+            Stäng
+          </Button>
         </div>
 
         <div className="space-y-4">
