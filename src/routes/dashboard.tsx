@@ -136,6 +136,24 @@ function DashboardContent() {
       </div>
 
       <div>
+        <div className="mb-3 flex items-end justify-between">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Senaste leads
+          </h3>
+          <Link to="/leads" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+            Visa alla <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+        {loading ? (
+          <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            Laddar…
+          </div>
+        ) : (
+          <LeadTable leads={sorted.slice(0, 8)} onSelect={setSelectedLead} />
+        )}
+      </div>
+
+      <div>
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Senast tillagda per kategori
         </h3>
