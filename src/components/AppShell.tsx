@@ -129,7 +129,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
         {/* Topbar: global, app-level controls */}
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-6 border-b border-border bg-background/85 px-8 backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-2.5 text-[12.5px]">
-            <span className="font-medium text-muted-foreground/80">Säljpanel</span>
+            <span className="font-medium text-muted-foreground/80">Leads</span>
             <Caret className="h-3 w-3 text-muted-foreground/30" />
             <span className="truncate font-semibold text-foreground">{activeNav?.label ?? title}</span>
           </div>
