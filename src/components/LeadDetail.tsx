@@ -175,8 +175,8 @@ export function LeadDetail({ lead, onClose, onUpdated, variant = "drawer" }: Lea
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm animate-in fade-in" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 h-[100dvh] w-full max-w-lg overflow-y-auto overscroll-contain border-l border-border bg-card shadow-2xl animate-in slide-in-from-right">
+      {isDrawer && <div className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm animate-in fade-in" onClick={onClose} />}
+      <div className={isDrawer ? "fixed inset-y-0 right-0 z-50 h-[100dvh] w-full max-w-lg overflow-y-auto overscroll-contain border-l border-border bg-card shadow-2xl animate-in slide-in-from-right" : "flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card"}>
         <div className="p-6">
         <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-5 flex items-start justify-between gap-3 border-b border-border bg-card/95 p-6 backdrop-blur">
           <div className="min-w-0">
