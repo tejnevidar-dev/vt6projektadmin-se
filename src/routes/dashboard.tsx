@@ -149,7 +149,11 @@ function DashboardContent() {
             Laddar…
           </div>
         ) : (
-          <LeadTable leads={sorted.slice(0, 8)} onSelect={setSelectedLead} selectedId={selectedLead?.id} />
+          <LeadTable
+            leads={sorted.slice(0, 8)}
+            onSelect={(l) => setSelectedLead((curr) => (curr?.id === l.id ? null : l))}
+            selectedId={selectedLead?.id}
+          />
         )}
       </div>
 
