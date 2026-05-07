@@ -253,6 +253,17 @@ function DashboardContent() {
           </div>
         </div>
       </div>
+
+      {selectedLead && (
+        <LeadDetail
+          lead={selectedLead}
+          onClose={() => setSelectedLead(null)}
+          onUpdated={() => {
+            reload();
+            setSelectedLead(null);
+          }}
+        />
+      )}
     </div>
   );
 }
