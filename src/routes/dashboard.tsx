@@ -66,12 +66,17 @@ function timeAgo(iso: string) {
 function DashboardContent() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
-  useEffect(() => {
+  const reload = () => {
     fetchLeads()
       .then(setLeads)
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    reload();
   }, []);
 
   const total = leads.length;
