@@ -10,10 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
+import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as PagaendeRouteImport } from './routes/pagaende'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeadsRouteImport } from './routes/leads'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as BokadeRouteImport } from './routes/bokade'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
@@ -23,9 +26,19 @@ const WebhookLogsRoute = WebhookLogsRouteImport.update({
   path: '/webhook-logs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SlutfordaRoute = SlutfordaRouteImport.update({
+  id: '/slutforda',
+  path: '/slutforda',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagaendeRoute = PagaendeRouteImport.update({
+  id: '/pagaende',
+  path: '/pagaende',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -41,6 +54,11 @@ const LeadsRoute = LeadsRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BokadeRoute = BokadeRouteImport.update({
+  id: '/bokade',
+  path: '/bokade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -63,20 +81,26 @@ const ApiPublicRoslagstakWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
+  '/pagaende': typeof PagaendeRoute
   '/settings': typeof SettingsRoute
+  '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
+  '/pagaende': typeof PagaendeRoute
   '/settings': typeof SettingsRoute
+  '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -84,10 +108,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
+  '/pagaende': typeof PagaendeRoute
   '/settings': typeof SettingsRoute
+  '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -96,30 +123,39 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/bokade'
     | '/dashboard'
     | '/leads'
     | '/login'
+    | '/pagaende'
     | '/settings'
+    | '/slutforda'
     | '/webhook-logs'
     | '/api/public/roslagstak-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
+    | '/bokade'
     | '/dashboard'
     | '/leads'
     | '/login'
+    | '/pagaende'
     | '/settings'
+    | '/slutforda'
     | '/webhook-logs'
     | '/api/public/roslagstak-webhook'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/bokade'
     | '/dashboard'
     | '/leads'
     | '/login'
+    | '/pagaende'
     | '/settings'
+    | '/slutforda'
     | '/webhook-logs'
     | '/api/public/roslagstak-webhook'
   fileRoutesById: FileRoutesById
@@ -127,10 +163,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  BokadeRoute: typeof BokadeRoute
   DashboardRoute: typeof DashboardRoute
   LeadsRoute: typeof LeadsRoute
   LoginRoute: typeof LoginRoute
+  PagaendeRoute: typeof PagaendeRoute
   SettingsRoute: typeof SettingsRoute
+  SlutfordaRoute: typeof SlutfordaRoute
   WebhookLogsRoute: typeof WebhookLogsRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -144,11 +183,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WebhookLogsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/slutforda': {
+      id: '/slutforda'
+      path: '/slutforda'
+      fullPath: '/slutforda'
+      preLoaderRoute: typeof SlutfordaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagaende': {
+      id: '/pagaende'
+      path: '/pagaende'
+      fullPath: '/pagaende'
+      preLoaderRoute: typeof PagaendeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -170,6 +223,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bokade': {
+      id: '/bokade'
+      path: '/bokade'
+      fullPath: '/bokade'
+      preLoaderRoute: typeof BokadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -199,10 +259,13 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  BokadeRoute: BokadeRoute,
   DashboardRoute: DashboardRoute,
   LeadsRoute: LeadsRoute,
   LoginRoute: LoginRoute,
+  PagaendeRoute: PagaendeRoute,
   SettingsRoute: SettingsRoute,
+  SlutfordaRoute: SlutfordaRoute,
   WebhookLogsRoute: WebhookLogsRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
 }

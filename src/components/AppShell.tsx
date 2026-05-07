@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
@@ -8,6 +8,9 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", adminOnly: false },
   { to: "/leads", label: "Leads", icon: Users, group: "Arbeta", adminOnly: false },
+  { to: "/bokade", label: "Bokade", icon: CalendarCheck, group: "Arbeta", adminOnly: false },
+  { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", adminOnly: false },
+  { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", adminOnly: false },
   { to: "/admin", label: "Medlemmar", icon: Shield, group: "Hantera", adminOnly: false },
   { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "Hantera", adminOnly: true },
   { to: "/settings", label: "Inställningar", icon: Settings, group: "Hantera", adminOnly: false },
