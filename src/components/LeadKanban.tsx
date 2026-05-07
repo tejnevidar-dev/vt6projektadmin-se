@@ -107,8 +107,8 @@ function KanbanColumn({ stage, count, children }: { stage: PipelineStage; count:
       >
         {children}
         {count === 0 && (
-          <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-border/50 p-6 text-xs text-muted-foreground/60">
-            Inga leads
+          <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-border/50 p-6 text-center text-xs text-muted-foreground/60">
+            Inga {PIPELINE_STAGE_LABELS[stage].toLowerCase()} ännu.
           </div>
         )}
       </div>
