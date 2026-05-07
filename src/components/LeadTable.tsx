@@ -5,6 +5,7 @@ import { JOB_TYPE_LABELS } from "@/lib/types";
 interface LeadTableProps {
   leads: Lead[];
   onSelect: (lead: Lead) => void;
+  selectedId?: string | null;
 }
 
 const statusConfig: Record<LeadStatus, { label: string; className: string }> = {
@@ -21,7 +22,7 @@ const jobTypeConfig: Record<JobType, { className: string; icon: typeof Hammer }>
   light_roof_work: { className: "bg-accent/20 text-accent-foreground", icon: Wrench },
 };
 
-export function LeadTable({ leads, onSelect }: LeadTableProps) {
+export function LeadTable({ leads, onSelect, selectedId }: LeadTableProps) {
   if (leads.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-12 text-center">
@@ -51,11 +52,15 @@ export function LeadTable({ leads, onSelect }: LeadTableProps) {
           <tbody>
             {leads.map((lead) => {
               const status = statusConfig[lead.status];
+              const isSelected = selectedId === lead.id;
               return (
                 <tr
                   key={lead.id}
                   onClick={() => onSelect(lead)}
-                  className="cursor-pointer border-b border-border/50 transition-colors last:border-0 hover:bg-muted/30"
+                  aria-selected={isSelected}
+                  className={`cursor-pointer border-b border-border/50 transition-colors last:border-0 hover:bg-muted/30 ${
+                    isSelected ? "bg-primary/10 ring-1 ring-inset ring-primary/40 hover:bg-primary/15" : ""
+                  }`}
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
