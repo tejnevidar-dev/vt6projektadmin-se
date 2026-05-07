@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LeadTable } from "@/components/LeadTable";
+import { LeadDetail } from "@/components/LeadDetail";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
