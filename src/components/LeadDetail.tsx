@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, CheckCircle2, Trash2 } from "lucide-react";
+import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { updateLead, updateLeadPipelineStage, deleteLead } from "@/lib/leads-api";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
-import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_STAGE_LABELS } from "@/lib/types";
+import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PREVIOUS_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_BACK_LABELS, PIPELINE_STAGE_LABELS } from "@/lib/types";
 
 interface LeadDetailProps {
   lead: Lead;
@@ -245,29 +245,44 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             </div>
             {(() => {
               const next = NEXT_PIPELINE_STAGE[lead.pipelineStage];
+              const prev = PREVIOUS_PIPELINE_STAGE[lead.pipelineStage];
               const isDone = lead.pipelineStage === "slutford";
+              const move = async (target: typeof next) => {
+                if (!target) return;
+                setSaving(true);
+                try {
+                  await updateLeadPipelineStage(lead.id, target);
+                  onUpdated?.();
+                  onClose();
+                } catch (err) {
+                  console.error("Failed to update pipeline stage:", err);
+                } finally {
+                  setSaving(false);
+                }
+              };
               return (
-                <Button
-                  className="w-full"
-                  variant={isDone ? "outline" : "default"}
-                  disabled={!next || saving}
-                  onClick={async () => {
-                    if (!next) return;
-                    setSaving(true);
-                    try {
-                      await updateLeadPipelineStage(lead.id, next);
-                      onUpdated?.();
-                      onClose();
-                    } catch (err) {
-                      console.error("Failed to update pipeline stage:", err);
-                    } finally {
-                      setSaving(false);
-                    }
-                  }}
-                >
-                  {isDone ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <ArrowRight className="mr-2 h-4 w-4" />}
-                  {PIPELINE_ACTION_LABELS[lead.pipelineStage]}
-                </Button>
+                <div className="space-y-2">
+                  <Button
+                    className="w-full"
+                    variant={isDone ? "outline" : "default"}
+                    disabled={!next || saving}
+                    onClick={() => move(next)}
+                  >
+                    {isDone ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <ArrowRight className="mr-2 h-4 w-4" />}
+                    {PIPELINE_ACTION_LABELS[lead.pipelineStage]}
+                  </Button>
+                  {prev && (
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      disabled={saving}
+                      onClick={() => move(prev)}
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      {PIPELINE_BACK_LABELS[lead.pipelineStage]}
+                    </Button>
+                  )}
+                </div>
               );
             })()}
           </div>

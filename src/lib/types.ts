@@ -27,6 +27,22 @@ export const NEXT_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null> = 
   slutford: null,
 };
 
+export const PREVIOUS_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null> = {
+  inkommande_webb: null,
+  saljpanel: "inkommande_webb",
+  bokad: "saljpanel",
+  pagaende: "bokad",
+  slutford: "pagaende",
+};
+
+export const PIPELINE_BACK_LABELS: Record<PipelineStage, string> = {
+  inkommande_webb: "Tillbaka",
+  saljpanel: "Tillbaka till Inkommande webb",
+  bokad: "Tillbaka till Säljpanel",
+  pagaende: "Tillbaka till Bokade",
+  slutford: "Tillbaka till Pågående",
+};
+
 export const PIPELINE_ACTION_LABELS: Record<PipelineStage, string> = {
   inkommande_webb: "Flytta till Säljpanel",
   saljpanel: "Flytta till Bokade",
