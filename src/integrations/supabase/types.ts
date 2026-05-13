@@ -50,9 +50,48 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_activities: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          lead_id: string
+          metadata: Json | null
+          type: Database["public"]["Enums"]["activity_type"]
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          lead_id: string
+          metadata?: Json | null
+          type: Database["public"]["Enums"]["activity_type"]
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          lead_id?: string
+          metadata?: Json | null
+          type?: Database["public"]["Enums"]["activity_type"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           age: number | null
+          assigned_to: string | null
           created_at: string
           email: string | null
           external_id: string | null
@@ -64,12 +103,14 @@ export type Database = {
           phone: string | null
           pipeline_stage: Database["public"]["Enums"]["pipeline_stage"]
           property_id: string | null
+          score: number | null
           source: Database["public"]["Enums"]["lead_source"]
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
         }
         Insert: {
           age?: number | null
+          assigned_to?: string | null
           created_at?: string
           email?: string | null
           external_id?: string | null
@@ -81,12 +122,14 @@ export type Database = {
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           property_id?: string | null
+          score?: number | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
         }
         Update: {
           age?: number | null
+          assigned_to?: string | null
           created_at?: string
           email?: string | null
           external_id?: string | null
@@ -98,6 +141,7 @@ export type Database = {
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           property_id?: string | null
+          score?: number | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
@@ -261,6 +305,15 @@ export type Database = {
       }
     }
     Enums: {
+      activity_type:
+        | "created"
+        | "stage_change"
+        | "status_change"
+        | "assignment"
+        | "note"
+        | "call"
+        | "pitch_generated"
+        | "updated"
       app_role: "admin" | "saljare" | "viewer"
       job_type: "roof_replacement" | "roof_cleaning" | "light_roof_work"
       lead_source:
@@ -404,6 +457,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_type: [
+        "created",
+        "stage_change",
+        "status_change",
+        "assignment",
+        "note",
+        "call",
+        "pitch_generated",
+        "updated",
+      ],
       app_role: ["admin", "saljare", "viewer"],
       job_type: ["roof_replacement", "roof_cleaning", "light_roof_work"],
       lead_source: [
