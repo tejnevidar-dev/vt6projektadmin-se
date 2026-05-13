@@ -1,7 +1,9 @@
-import { Search, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Search, SlidersHorizontal, RotateCcw, UserCheck, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { REGIONS, MUNICIPALITIES, type LeadStatus } from "@/lib/types";
+import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 
 interface FilterPanelProps {
   search: string;
@@ -12,6 +14,10 @@ interface FilterPanelProps {
   onMunicipalityChange: (v: string) => void;
   statusFilter: LeadStatus | "all";
   onStatusFilterChange: (v: LeadStatus | "all") => void;
+  assignedFilter?: string; // user_id | "all" | "unassigned"
+  onAssignedFilterChange?: (v: string) => void;
+  createdByFilter?: string;
+  onCreatedByFilterChange?: (v: string) => void;
   onReset: () => void;
 }
 
@@ -24,9 +30,18 @@ export function FilterPanel({
   onMunicipalityChange,
   statusFilter,
   onStatusFilterChange,
+  assignedFilter = "all",
+  onAssignedFilterChange,
+  createdByFilter = "all",
+  onCreatedByFilterChange,
   onReset,
 }: FilterPanelProps) {
   const municipalities = region ? MUNICIPALITIES[region] || [] : [];
+  const [saljare, setSaljare] = useState<Saljare[]>([]);
+
+  useEffect(() => {
+    fetchSaljare().then(setSaljare).catch(() => setSaljare([]));
+  }, []);
 
   return (
     <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
@@ -36,7 +51,6 @@ export function FilterPanel({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Search */}
         <div className="relative lg:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -47,7 +61,6 @@ export function FilterPanel({
           />
         </div>
 
-        {/* Region */}
         <select
           value={region}
           onChange={(e) => {
@@ -62,7 +75,6 @@ export function FilterPanel({
           ))}
         </select>
 
-        {/* Municipality */}
         <select
           value={municipality}
           onChange={(e) => onMunicipalityChange(e.target.value)}
@@ -75,7 +87,6 @@ export function FilterPanel({
           ))}
         </select>
 
-        {/* Status */}
         <select
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value as LeadStatus | "all")}
@@ -88,6 +99,42 @@ export function FilterPanel({
           <option value="customer">Kund</option>
           <option value="lost">Förlorad</option>
         </select>
+
+        {onAssignedFilterChange && (
+          <div className="relative">
+            <UserCheck className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <select
+              value={assignedFilter}
+              onChange={(e) => onAssignedFilterChange(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              title="Filtrera på tilldelad säljare"
+            >
+              <option value="all">Tilldelad: Alla</option>
+              <option value="unassigned">Otilldelade</option>
+              {saljare.map((s) => (
+                <option key={s.id} value={s.id}>Tilldelad: {s.display_name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {onCreatedByFilterChange && (
+          <div className="relative">
+            <UserPlus className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <select
+              value={createdByFilter}
+              onChange={(e) => onCreatedByFilterChange(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              title="Filtrera på vem som lade in/sålde leaden"
+            >
+              <option value="all">Inlagd av: Alla</option>
+              <option value="unknown">Okänd skapare</option>
+              {saljare.map((s) => (
+                <option key={s.id} value={s.id}>Inlagd av: {s.display_name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="mt-3 flex items-center">
