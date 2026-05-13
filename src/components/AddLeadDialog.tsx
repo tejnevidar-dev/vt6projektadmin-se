@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { X, Plus, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { addLead } from "@/lib/leads-api";
+import { addLead, findLeadByPhone } from "@/lib/leads-api";
 import type { LeadStatus, LeadSource, JobType } from "@/lib/types";
 import { JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/types";
 
@@ -29,6 +29,8 @@ export function AddLeadDialog({ open, onClose, onAdded, defaultJobType = "roof_r
     notes: "",
   });
   const [saving, setSaving] = useState(false);
+  const [duplicate, setDuplicate] = useState<{ id: string; name: string } | null>(null);
+  const [forceCreate, setForceCreate] = useState(false);
 
   if (!open) return null;
 
@@ -36,6 +38,15 @@ export function AddLeadDialog({ open, onClose, onAdded, defaultJobType = "roof_r
     e.preventDefault();
     setSaving(true);
     try {
+      // Dubblettkontroll på telefon
+      if (!forceCreate) {
+        const dup = await findLeadByPhone(form.phone);
+        if (dup) {
+          setDuplicate(dup);
+          setSaving(false);
+          return;
+        }
+      }
       await addLead({
         name: form.name,
         phone: form.phone,
@@ -50,6 +61,8 @@ export function AddLeadDialog({ open, onClose, onAdded, defaultJobType = "roof_r
         jobType: form.jobType,
         notes: form.notes,
       });
+      setDuplicate(null);
+      setForceCreate(false);
       onAdded();
       onClose();
     } catch (err) {
