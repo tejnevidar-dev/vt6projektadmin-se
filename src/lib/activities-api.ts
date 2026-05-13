@@ -28,7 +28,7 @@ export async function logActivity(
   metadata: Record<string, unknown> = {}
 ): Promise<void> {
   const { data: userData } = await supabase.auth.getUser();
-  const { error } = await supabase.from("lead_activities").insert({
+  const { error } = await (supabase.from("lead_activities") as any).insert({
     lead_id: leadId,
     user_id: userData.user?.id ?? null,
     type,
