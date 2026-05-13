@@ -43,6 +43,8 @@ function LeadsContent() {
   const [region, setRegion] = useState("");
   const [municipality, setMunicipality] = useState("");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+  const [assignedFilter, setAssignedFilter] = useState<string>("all");
+  const [createdByFilter, setCreatedByFilter] = useState<string>("all");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
@@ -89,15 +91,27 @@ function LeadsContent() {
       if (region && lead.region !== region) return false;
       if (municipality && lead.municipality !== municipality) return false;
       if (statusFilter !== "all" && lead.status !== statusFilter) return false;
+      if (assignedFilter !== "all") {
+        if (assignedFilter === "unassigned") {
+          if (lead.assignedTo) return false;
+        } else if (lead.assignedTo !== assignedFilter) return false;
+      }
+      if (createdByFilter !== "all") {
+        if (createdByFilter === "unknown") {
+          if (lead.createdBy) return false;
+        } else if (lead.createdBy !== createdByFilter) return false;
+      }
       return true;
     });
-  }, [jobTypeLeads, search, region, municipality, statusFilter]);
+  }, [jobTypeLeads, search, region, municipality, statusFilter, assignedFilter, createdByFilter]);
 
   const resetFilters = () => {
     setSearch("");
     setRegion("");
     setMunicipality("");
     setStatusFilter("all");
+    setAssignedFilter("all");
+    setCreatedByFilter("all");
   };
 
   const handleStageChange = async (leadId: string, stage: Lead["pipelineStage"]) => {
@@ -214,6 +228,10 @@ function LeadsContent() {
               onMunicipalityChange={setMunicipality}
               statusFilter={statusFilter}
               onStatusFilterChange={setStatusFilter}
+              assignedFilter={assignedFilter}
+              onAssignedFilterChange={setAssignedFilter}
+              createdByFilter={createdByFilter}
+              onCreatedByFilterChange={setCreatedByFilter}
               onReset={resetFilters}
             />
           </div>

@@ -104,6 +104,9 @@ export async function addLead(input: {
 
   if (propError) throw propError;
 
+  const { data: userData } = await supabase.auth.getUser();
+  const currentUserId = userData?.user?.id ?? null;
+
   const { data: lead, error: leadError } = await supabase
     .from("leads")
     .insert({
@@ -115,6 +118,7 @@ export async function addLead(input: {
       source: input.source,
       job_type: input.jobType,
       notes: input.notes,
+      created_by: currentUserId,
     })
     .select("*, property:properties(*)")
     .single();
@@ -142,6 +146,8 @@ export interface CsvRow {
 
 export async function importCsv(rows: CsvRow[], jobType: JobType = "roof_replacement"): Promise<number> {
   let imported = 0;
+  const { data: userData } = await supabase.auth.getUser();
+  const currentUserId = userData?.user?.id ?? null;
 
   for (const row of rows) {
     const buildYear = parseInt(row.build_year) || null;
@@ -171,6 +177,7 @@ export async function importCsv(rows: CsvRow[], jobType: JobType = "roof_replace
         status: "cold",
         source: "csv_import",
         job_type: jobType,
+        created_by: currentUserId,
       })
       .select("*, property:properties(*)")
       .single();

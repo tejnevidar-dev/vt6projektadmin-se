@@ -86,6 +86,7 @@ export interface Lead {
   createdAt: string;
   propertyId: string | null;
   assignedTo: string | null;
+  createdBy: string | null;
   score: number;
 }
 
@@ -114,6 +115,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     createdAt: lp.created_at,
     propertyId: lp.property_id,
     assignedTo: (lp as { assigned_to?: string | null }).assigned_to ?? null,
+    createdBy: (lp as { created_by?: string | null }).created_by ?? null,
     score: (lp as { score?: number | null }).score ?? 0,
   };
 }
