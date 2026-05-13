@@ -19,6 +19,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BokadeRouteImport } from './routes/bokade'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiAiPitchRouteImport } from './routes/api/ai-pitch'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
 
 const WebhookLogsRoute = WebhookLogsRouteImport.update({
@@ -71,6 +72,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiPitchRoute = ApiAiPitchRouteImport.update({
+  id: '/api/ai-pitch',
+  path: '/api/ai-pitch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRoslagstakWebhookRoute =
   ApiPublicRoslagstakWebhookRouteImport.update({
     id: '/api/public/roslagstak-webhook',
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
+  '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
+  '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRoutesById {
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
+  '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRouteTypes {
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slutforda'
     | '/webhook-logs'
+    | '/api/ai-pitch'
     | '/api/public/roslagstak-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slutforda'
     | '/webhook-logs'
+    | '/api/ai-pitch'
     | '/api/public/roslagstak-webhook'
   id:
     | '__root__'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slutforda'
     | '/webhook-logs'
+    | '/api/ai-pitch'
     | '/api/public/roslagstak-webhook'
   fileRoutesById: FileRoutesById
 }
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
   WebhookLogsRoute: typeof WebhookLogsRoute
+  ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
 }
 
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai-pitch': {
+      id: '/api/ai-pitch'
+      path: '/api/ai-pitch'
+      fullPath: '/api/ai-pitch'
+      preLoaderRoute: typeof ApiAiPitchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/roslagstak-webhook': {
       id: '/api/public/roslagstak-webhook'
       path: '/api/public/roslagstak-webhook'
@@ -267,6 +287,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,
   WebhookLogsRoute: WebhookLogsRoute,
+  ApiAiPitchRoute: ApiAiPitchRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
 }
 export const routeTree = rootRouteImport

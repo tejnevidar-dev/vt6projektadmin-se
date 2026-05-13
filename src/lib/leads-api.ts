@@ -2,13 +2,32 @@ import { supabase } from "@/integrations/supabase/client";
 import type { LeadWithProperty, Lead } from "./types";
 import { toFlatLead } from "./types";
 import type { LeadStatus, LeadSource, JobType, PipelineStage } from "./types";
+import { calculateLeadScore } from "./lead-scoring";
+import { logActivity } from "./activities-api";
+import { PIPELINE_STAGE_LABELS } from "./types";
 
-export async function updateLeadPipelineStage(id: string, stage: PipelineStage): Promise<void> {
+const statusLabel: Record<LeadStatus, string> = {
+  cold: "Kall",
+  warm: "Varm",
+  hot: "Het",
+  customer: "Kund",
+  lost: "Förlorad",
+};
+
+export async function updateLeadPipelineStage(id: string, stage: PipelineStage, fromStage?: PipelineStage): Promise<void> {
   const { error } = await supabase
     .from("leads")
     .update({ pipeline_stage: stage })
     .eq("id", id);
   if (error) throw error;
+  await logActivity(
+    id,
+    "stage_change",
+    fromStage
+      ? `Flyttade från ${PIPELINE_STAGE_LABELS[fromStage]} till ${PIPELINE_STAGE_LABELS[stage]}`
+      : `Flyttade till ${PIPELINE_STAGE_LABELS[stage]}`,
+    { from: fromStage ?? null, to: stage }
+  );
 }
 
 export async function deleteLead(id: string): Promise<void> {
@@ -26,6 +45,36 @@ export async function fetchLeads(): Promise<Lead[]> {
   return (data as LeadWithProperty[]).map(toFlatLead);
 }
 
+/** Returnerar id på existerande lead om telefon redan finns. */
+export async function findLeadByPhone(phone: string): Promise<{ id: string; name: string } | null> {
+  const normalized = phone.replace(/[\s-]/g, "");
+  if (!normalized) return null;
+  const { data } = await supabase
+    .from("leads")
+    .select("id, name, phone")
+    .ilike("phone", `%${normalized.slice(-7)}%`)
+    .limit(5);
+  const match = (data ?? []).find((l) => (l.phone ?? "").replace(/[\s-]/g, "") === normalized);
+  return match ? { id: match.id, name: match.name } : null;
+}
+
+export async function assignLead(id: string, assignedTo: string | null, assigneeName?: string): Promise<void> {
+  const { error } = await (supabase.from("leads") as any)
+    .update({ assigned_to: assignedTo })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "assignment",
+    assignedTo ? `Tilldelad till ${assigneeName ?? "säljare"}` : "Tilldelning borttagen",
+    { assigned_to: assignedTo }
+  );
+}
+
+function computeAndPersistScore(leadId: string, score: number) {
+  return (supabase.from("leads") as any).update({ score }).eq("id", leadId);
+}
+
 export async function addLead(input: {
   name: string;
   phone: string;
@@ -40,7 +89,6 @@ export async function addLead(input: {
   jobType: JobType;
   notes: string;
 }): Promise<Lead> {
-  // Create property first
   const { data: prop, error: propError } = await supabase
     .from("properties")
     .insert({
@@ -72,7 +120,13 @@ export async function addLead(input: {
     .single();
 
   if (leadError) throw leadError;
-  return toFlatLead(lead as LeadWithProperty);
+
+  const flat = toFlatLead(lead as LeadWithProperty);
+  const score = calculateLeadScore(flat);
+  await computeAndPersistScore(flat.id, score);
+  await logActivity(flat.id, "created", `Lead skapat (${input.source})`, { source: input.source });
+
+  return { ...flat, /* score not in flat type */ };
 }
 
 export interface CsvRow {
@@ -107,7 +161,7 @@ export async function importCsv(rows: CsvRow[], jobType: JobType = "roof_replace
 
     if (propError) continue;
 
-    const { error: leadError } = await supabase
+    const { data: lead, error: leadError } = await supabase
       .from("leads")
       .insert({
         property_id: prop.id,
@@ -117,9 +171,16 @@ export async function importCsv(rows: CsvRow[], jobType: JobType = "roof_replace
         status: "cold",
         source: "csv_import",
         job_type: jobType,
-      });
+      })
+      .select("*, property:properties(*)")
+      .single();
 
-    if (!leadError) imported++;
+    if (!leadError && lead) {
+      imported++;
+      const flat = toFlatLead(lead as LeadWithProperty);
+      const score = calculateLeadScore(flat);
+      await computeAndPersistScore(flat.id, score);
+    }
   }
 
   return imported;
@@ -156,6 +217,9 @@ export async function updateLead(input: {
     if (propError) throw propError;
   }
 
+  // Hämta gammalt status för att kunna logga
+  const { data: prev } = await supabase.from("leads").select("status").eq("id", input.id).single();
+
   const { data: lead, error: leadError } = await supabase
     .from("leads")
     .update({
@@ -171,5 +235,62 @@ export async function updateLead(input: {
     .single();
 
   if (leadError) throw leadError;
-  return toFlatLead(lead as LeadWithProperty);
+  const flat = toFlatLead(lead as LeadWithProperty);
+  const score = calculateLeadScore(flat);
+  await computeAndPersistScore(flat.id, score);
+
+  if (prev && prev.status !== input.status) {
+    await logActivity(
+      flat.id,
+      "status_change",
+      `Status: ${statusLabel[prev.status as LeadStatus]} → ${statusLabel[input.status]}`,
+      { from: prev.status, to: input.status }
+    );
+  } else {
+    await logActivity(flat.id, "updated", "Lead uppdaterades");
+  }
+
+  return flat;
+}
+
+/** Räkna om score för alla leads (manuell trigger). */
+export async function recomputeAllScores(): Promise<number> {
+  const leads = await fetchLeads();
+  let updated = 0;
+  for (const lead of leads) {
+    const score = calculateLeadScore(lead);
+    const { error } = await (supabase.from("leads") as any)
+      .update({ score })
+      .eq("id", lead.id);
+    if (!error) updated++;
+  }
+  return updated;
+}
+
+export async function bulkUpdateStage(leadIds: string[], stage: PipelineStage): Promise<void> {
+  const { error } = await supabase.from("leads").update({ pipeline_stage: stage }).in("id", leadIds);
+  if (error) throw error;
+  for (const id of leadIds) {
+    await logActivity(id, "stage_change", `Bulk-flytt till ${PIPELINE_STAGE_LABELS[stage]}`, { to: stage });
+  }
+}
+
+export async function bulkAssign(leadIds: string[], assignedTo: string | null, assigneeName?: string): Promise<void> {
+  const { error } = await (supabase.from("leads") as any)
+    .update({ assigned_to: assignedTo })
+    .in("id", leadIds);
+  if (error) throw error;
+  for (const id of leadIds) {
+    await logActivity(
+      id,
+      "assignment",
+      assignedTo ? `Bulk-tilldelad till ${assigneeName ?? "säljare"}` : "Bulk-borttagen tilldelning",
+      { assigned_to: assignedTo }
+    );
+  }
+}
+
+export async function bulkDelete(leadIds: string[]): Promise<void> {
+  const { error } = await supabase.from("leads").delete().in("id", leadIds);
+  if (error) throw error;
 }

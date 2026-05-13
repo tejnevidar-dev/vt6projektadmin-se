@@ -10,9 +10,10 @@ import {
   DragOverlay,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { Phone, MapPin, Calendar, Hammer, Droplets, Wrench } from "lucide-react";
+import { Phone, MapPin, Calendar, Hammer, Droplets, Wrench, Flame } from "lucide-react";
 import type { Lead, PipelineStage, JobType, LeadStatus } from "@/lib/types";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/types";
+import { scoreLabel } from "@/lib/lead-scoring";
 import { cn } from "@/lib/utils";
 
 const STAGE_ACCENT: Record<PipelineStage, string> = {
@@ -141,6 +142,7 @@ function KanbanCard({ lead, onSelect }: { lead: Lead; onSelect: (lead: Lead) => 
 
 function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean }) {
   const Icon = JOB_ICON[lead.jobType];
+  const score = scoreLabel(lead.score);
   return (
     <div
       className={cn(
@@ -183,6 +185,18 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
             {lead.buildYear}
           </span>
         )}
+      </div>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+            score.className
+          )}
+          title={`Lead-score ${lead.score}/100`}
+        >
+          <Flame className="h-3 w-3" />
+          {score.label} · {lead.score}
+        </span>
       </div>
     </div>
   );

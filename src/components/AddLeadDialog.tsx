@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { X, Plus, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { addLead } from "@/lib/leads-api";
+import { addLead, findLeadByPhone } from "@/lib/leads-api";
 import type { LeadStatus, LeadSource, JobType } from "@/lib/types";
 import { JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/types";
 
@@ -29,6 +29,8 @@ export function AddLeadDialog({ open, onClose, onAdded, defaultJobType = "roof_r
     notes: "",
   });
   const [saving, setSaving] = useState(false);
+  const [duplicate, setDuplicate] = useState<{ id: string; name: string } | null>(null);
+  const [forceCreate, setForceCreate] = useState(false);
 
   if (!open) return null;
 
@@ -36,6 +38,15 @@ export function AddLeadDialog({ open, onClose, onAdded, defaultJobType = "roof_r
     e.preventDefault();
     setSaving(true);
     try {
+      // Dubblettkontroll på telefon
+      if (!forceCreate) {
+        const dup = await findLeadByPhone(form.phone);
+        if (dup) {
+          setDuplicate(dup);
+          setSaving(false);
+          return;
+        }
+      }
       await addLead({
         name: form.name,
         phone: form.phone,
@@ -50,6 +61,8 @@ export function AddLeadDialog({ open, onClose, onAdded, defaultJobType = "roof_r
         jobType: form.jobType,
         notes: form.notes,
       });
+      setDuplicate(null);
+      setForceCreate(false);
       onAdded();
       onClose();
     } catch (err) {
@@ -74,6 +87,26 @@ export function AddLeadDialog({ open, onClose, onAdded, defaultJobType = "roof_r
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {duplicate && (
+          <div className="mb-3 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-foreground" />
+            <div className="flex-1">
+              <p className="font-medium text-warning-foreground">Möjlig dubblett</p>
+              <p className="text-xs text-muted-foreground">
+                Telefonnumret matchar lead "{duplicate.name}". Skapa ändå?
+              </p>
+              <div className="mt-2 flex gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={() => { setForceCreate(true); setDuplicate(null); }}>
+                  Skapa ändå
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => setDuplicate(null)}>
+                  Avbryt
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
