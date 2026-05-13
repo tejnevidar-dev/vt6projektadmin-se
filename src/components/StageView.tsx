@@ -5,9 +5,10 @@ import { LeadTable } from "@/components/LeadTable";
 import { LeadDetail } from "@/components/LeadDetail";
 import { Input } from "@/components/ui/input";
 import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
+import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import type { Lead, PipelineStage, JobType } from "@/lib/types";
 import { PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS, JOB_TYPES } from "@/lib/types";
-import { KanbanSquare, Table as TableIcon, Search, X } from "lucide-react";
+import { KanbanSquare, Table as TableIcon, Search, X, UserCheck, UserPlus } from "lucide-react";
 
 interface Props {
   stage: PipelineStage;
@@ -29,6 +30,13 @@ function StageContent({ stage, description }: Props) {
   const [view, setView] = useState<"kanban" | "table">("kanban");
   const [search, setSearch] = useState("");
   const [jobTypeFilter, setJobTypeFilter] = useState<JobType | "all">("all");
+  const [assignedFilter, setAssignedFilter] = useState<string>("all");
+  const [createdByFilter, setCreatedByFilter] = useState<string>("all");
+  const [saljare, setSaljare] = useState<Saljare[]>([]);
+
+  useEffect(() => {
+    fetchSaljare().then(setSaljare).catch(() => setSaljare([]));
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -51,13 +59,23 @@ function StageContent({ stage, description }: Props) {
     const q = search.trim().toLowerCase();
     return stageLeads.filter((lead) => {
       if (jobTypeFilter !== "all" && lead.jobType !== jobTypeFilter) return false;
+      if (assignedFilter !== "all") {
+        if (assignedFilter === "unassigned") {
+          if (lead.assignedTo) return false;
+        } else if (lead.assignedTo !== assignedFilter) return false;
+      }
+      if (createdByFilter !== "all") {
+        if (createdByFilter === "unknown") {
+          if (lead.createdBy) return false;
+        } else if (lead.createdBy !== createdByFilter) return false;
+      }
       if (!q) return true;
       return (
         lead.name.toLowerCase().includes(q) ||
         lead.address.toLowerCase().includes(q)
       );
     });
-  }, [stageLeads, search, jobTypeFilter]);
+  }, [stageLeads, search, jobTypeFilter, assignedFilter, createdByFilter]);
 
   const handleStageChange = async (leadId: string, newStage: PipelineStage) => {
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, pipelineStage: newStage } : l)));
