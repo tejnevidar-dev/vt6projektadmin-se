@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,9 +86,12 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
   };
 
   const municipalities = form.region ? MUNICIPALITIES[form.region] || [] : [];
+  const portalRoot = typeof document !== "undefined" ? document.body : null;
+
+  if (!portalRoot) return null;
 
   if (editing) {
-    return (
+    return createPortal(
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-sm">
         <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-xl">
           <div className="mb-5 flex items-start justify-between">
@@ -167,16 +171,17 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             </Button>
           </div>
         </div>
-      </div>
+      </div>,
+      portalRoot
     );
   }
 
-  return (
+  return createPortal(
     <>
       <div className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm animate-in fade-in" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-lg flex-col border-l border-border bg-card shadow-2xl animate-in slide-in-from-right">
+      <div className="fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden border-l border-border bg-card shadow-2xl animate-in slide-in-from-right">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-border bg-card/95 px-6 py-4 backdrop-blur">
+        <div className="shrink-0 flex items-start justify-between gap-3 border-b border-border bg-card/95 px-6 py-4 backdrop-blur">
           <div className="min-w-0">
             <h2 className="truncate text-xl font-bold text-card-foreground">{lead.name}</h2>
             <p className="text-sm text-muted-foreground">{lead.age} år · {sourceLabels[lead.source]}</p>
@@ -194,7 +199,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <InfoRow icon={Phone} label="Telefon">
@@ -241,7 +246,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
         </div>
 
         {/* Sticky footer with actions */}
-        <div className="border-t border-border bg-card/95 px-6 py-4 backdrop-blur space-y-3">
+        <div className="shrink-0 border-t border-border bg-card/95 px-6 py-4 backdrop-blur space-y-3">
           <div className="rounded-lg border border-border bg-muted/40 p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">Pipeline-status</span>
@@ -333,7 +338,8 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </>
+    </>,
+    portalRoot
   );
 }
 
