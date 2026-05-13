@@ -174,9 +174,9 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
   return (
     <>
       <div className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm animate-in fade-in" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 h-[100dvh] w-full max-w-lg overflow-y-auto overscroll-contain border-l border-border bg-card shadow-2xl animate-in slide-in-from-right">
-        <div className="p-6">
-        <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-5 flex items-start justify-between gap-3 border-b border-border bg-card/95 p-6 backdrop-blur">
+      <div className="fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-lg flex-col border-l border-border bg-card shadow-2xl animate-in slide-in-from-right">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-border bg-card/95 px-6 py-4 backdrop-blur">
           <div className="min-w-0">
             <h2 className="truncate text-xl font-bold text-card-foreground">{lead.name}</h2>
             <p className="text-sm text-muted-foreground">{lead.age} år · {sourceLabels[lead.source]}</p>
@@ -193,51 +193,55 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           </Button>
         </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <InfoRow icon={Phone} label="Telefon">
-              <a href={`tel:${lead.phone.replace(/[\s-]/g, "")}`} className="text-primary hover:underline">{lead.phone}</a>
-            </InfoRow>
-            <InfoRow icon={User} label="Status">
-              <span className="font-medium">{statusLabels[lead.status]}</span>
-            </InfoRow>
-          </div>
-
-          <InfoRow icon={MapPin} label="Adress"><span>{lead.address}</span></InfoRow>
-
-          <div className="grid grid-cols-3 gap-4">
-            <InfoRow icon={Calendar} label="Byggnadsår"><span className="font-medium">{lead.buildYear}</span></InfoRow>
-            <InfoRow icon={Home} label="Taktyp"><span>{lead.roofType}</span></InfoRow>
-            <InfoRow icon={Home} label="Takålder">
-              <span className={`font-medium ${lead.roofAge > 40 ? "text-destructive" : ""}`}>{lead.roofAge} år</span>
-            </InfoRow>
-          </div>
-
-          {lead.hasRoofPermit && (
-            <div className="rounded-lg bg-warning/10 p-3">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-warning-foreground" />
-                <span className="text-sm font-medium text-warning-foreground">Bygglov ansökt (takarbete)</span>
-              </div>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <InfoRow icon={Phone} label="Telefon">
+                <a href={`tel:${lead.phone.replace(/[\s-]/g, "")}`} className="text-primary hover:underline">{lead.phone}</a>
+              </InfoRow>
+              <InfoRow icon={User} label="Status">
+                <span className="font-medium">{statusLabels[lead.status]}</span>
+              </InfoRow>
             </div>
-          )}
 
-          {lead.notes && (
-            <div className="rounded-lg bg-muted p-3">
-              <div className="mb-1 flex items-center gap-1.5">
-                <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs font-medium text-muted-foreground">Anteckningar</span>
-              </div>
-              <p className="text-sm text-card-foreground">{lead.notes}</p>
+            <InfoRow icon={MapPin} label="Adress"><span>{lead.address}</span></InfoRow>
+
+            <div className="grid grid-cols-3 gap-4">
+              <InfoRow icon={Calendar} label="Byggnadsår"><span className="font-medium">{lead.buildYear}</span></InfoRow>
+              <InfoRow icon={Home} label="Taktyp"><span>{lead.roofType}</span></InfoRow>
+              <InfoRow icon={Home} label="Takålder">
+                <span className={`font-medium ${lead.roofAge > 40 ? "text-destructive" : ""}`}>{lead.roofAge} år</span>
+              </InfoRow>
             </div>
-          )}
 
-          {lead.lastContact && (
-            <p className="text-xs text-muted-foreground">Senast kontaktad: {lead.lastContact}</p>
-          )}
+            {lead.hasRoofPermit && (
+              <div className="rounded-lg bg-warning/10 p-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-warning-foreground" />
+                  <span className="text-sm font-medium text-warning-foreground">Bygglov ansökt (takarbete)</span>
+                </div>
+              </div>
+            )}
+
+            {lead.notes && (
+              <div className="rounded-lg bg-muted p-3">
+                <div className="mb-1 flex items-center gap-1.5">
+                  <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">Anteckningar</span>
+                </div>
+                <p className="text-sm text-card-foreground">{lead.notes}</p>
+              </div>
+            )}
+
+            {lead.lastContact && (
+              <p className="text-xs text-muted-foreground">Senast kontaktad: {lead.lastContact}</p>
+            )}
+          </div>
         </div>
 
-        <div className="mt-6 space-y-3">
+        {/* Sticky footer with actions */}
+        <div className="border-t border-border bg-card/95 px-6 py-4 backdrop-blur space-y-3">
           <div className="rounded-lg border border-border bg-muted/40 p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">Pipeline-status</span>
@@ -328,7 +332,6 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        </div>
       </div>
     </>
   );
