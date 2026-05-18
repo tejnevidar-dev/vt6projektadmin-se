@@ -13,6 +13,7 @@ import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
 import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PagaendeRouteImport } from './routes/pagaende'
+import { Route as OfferteradeRouteImport } from './routes/offerterade'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeadsRouteImport } from './routes/leads'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -40,6 +41,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const PagaendeRoute = PagaendeRouteImport.update({
   id: '/pagaende',
   path: '/pagaende',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfferteradeRoute = OfferteradeRouteImport.update({
+  id: '/offerterade',
+  path: '/offerterade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
+  '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
+  '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
+  '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/leads'
     | '/login'
+    | '/offerterade'
     | '/pagaende'
     | '/settings'
     | '/slutforda'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/leads'
     | '/login'
+    | '/offerterade'
     | '/pagaende'
     | '/settings'
     | '/slutforda'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/leads'
     | '/login'
+    | '/offerterade'
     | '/pagaende'
     | '/settings'
     | '/slutforda'
@@ -179,6 +191,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   LeadsRoute: typeof LeadsRoute
   LoginRoute: typeof LoginRoute
+  OfferteradeRoute: typeof OfferteradeRoute
   PagaendeRoute: typeof PagaendeRoute
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
@@ -215,6 +228,13 @@ declare module '@tanstack/react-router' {
       path: '/pagaende'
       fullPath: '/pagaende'
       preLoaderRoute: typeof PagaendeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/offerterade': {
+      id: '/offerterade'
+      path: '/offerterade'
+      fullPath: '/offerterade'
+      preLoaderRoute: typeof OfferteradeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -283,6 +303,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LeadsRoute: LeadsRoute,
   LoginRoute: LoginRoute,
+  OfferteradeRoute: OfferteradeRoute,
   PagaendeRoute: PagaendeRoute,
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,

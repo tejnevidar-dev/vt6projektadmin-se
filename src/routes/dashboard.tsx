@@ -39,6 +39,7 @@ function DashboardPage() {
 const STAGE_ROUTES: Record<PipelineStage, string> = {
   inkommande_webb: "/leads",
   saljpanel: "/leads",
+  offererad: "/offerterade",
   bokad: "/bokade",
   pagaende: "/pagaende",
   slutford: "/slutforda",
@@ -47,6 +48,7 @@ const STAGE_ROUTES: Record<PipelineStage, string> = {
 const STAGE_ICONS: Record<PipelineStage, typeof Inbox> = {
   inkommande_webb: Webhook,
   saljpanel: Inbox,
+  offererad: ClipboardList,
   bokad: CalendarCheck,
   pagaende: Loader2,
   slutford: CheckCircle2,
@@ -93,6 +95,7 @@ function DashboardContent() {
     const map: Record<PipelineStage, Lead[]> = {
       inkommande_webb: [],
       saljpanel: [],
+      offererad: [],
       bokad: [],
       pagaende: [],
       slutford: [],

@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 const STAGE_ACCENT: Record<PipelineStage, string> = {
   inkommande_webb: "border-l-info",
   saljpanel: "border-l-primary",
+  offererad: "border-l-accent",
   bokad: "border-l-warning",
   pagaende: "border-l-chart-4",
   slutford: "border-l-success",

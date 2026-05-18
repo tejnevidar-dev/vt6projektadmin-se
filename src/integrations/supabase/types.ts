@@ -330,6 +330,7 @@ export type Database = {
       pipeline_stage:
         | "inkommande_webb"
         | "saljpanel"
+        | "offererad"
         | "bokad"
         | "pagaende"
         | "slutford"
@@ -484,6 +485,7 @@ export const Constants = {
       pipeline_stage: [
         "inkommande_webb",
         "saljpanel",
+        "offererad",
         "bokad",
         "pagaende",
         "slutford",
