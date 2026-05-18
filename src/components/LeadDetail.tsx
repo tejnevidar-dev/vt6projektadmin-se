@@ -250,6 +250,9 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
 
         {/* Sticky footer with actions */}
         <div className="shrink-0 border-t border-border bg-card/95 px-6 py-4 backdrop-blur space-y-3">
+          {lead.pipelineStage === "offererad" && (
+            <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
+          )}
           <div className="rounded-lg border border-border bg-muted/40 p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">Pipeline-status</span>
