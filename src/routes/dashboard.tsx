@@ -95,6 +95,7 @@ function DashboardContent() {
     const map: Record<PipelineStage, Lead[]> = {
       inkommande_webb: [],
       saljpanel: [],
+      offererad: [],
       bokad: [],
       pagaende: [],
       slutford: [],
