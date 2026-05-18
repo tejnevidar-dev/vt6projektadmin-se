@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { updateLead, updateLeadPipelineStage, deleteLead } from "@/lib/leads-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
+import { OfferPdfCard } from "@/components/OfferPdfCard";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
 import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PREVIOUS_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_BACK_LABELS, PIPELINE_STAGE_LABELS } from "@/lib/types";
 
