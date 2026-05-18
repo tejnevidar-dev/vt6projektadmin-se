@@ -8,11 +8,12 @@ export type LeadSource = Database["public"]["Enums"]["lead_source"];
 export type JobType = Database["public"]["Enums"]["job_type"];
 export type PipelineStage = Database["public"]["Enums"]["pipeline_stage"];
 
-export const PIPELINE_STAGES: PipelineStage[] = ["inkommande_webb", "saljpanel", "bokad", "pagaende", "slutford"];
+export const PIPELINE_STAGES: PipelineStage[] = ["inkommande_webb", "saljpanel", "offererad", "bokad", "pagaende", "slutford"];
 
 export const PIPELINE_STAGE_LABELS: Record<PipelineStage, string> = {
   inkommande_webb: "Inkommande webb",
   saljpanel: "Säljpanel leads",
+  offererad: "Offerterade",
   bokad: "Bokade",
   pagaende: "Pågående",
   slutford: "Slutförda",
@@ -21,7 +22,8 @@ export const PIPELINE_STAGE_LABELS: Record<PipelineStage, string> = {
 // Next stage in the pipeline (null = end)
 export const NEXT_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null> = {
   inkommande_webb: "saljpanel",
-  saljpanel: "bokad",
+  saljpanel: "offererad",
+  offererad: "bokad",
   bokad: "pagaende",
   pagaende: "slutford",
   slutford: null,
@@ -30,7 +32,8 @@ export const NEXT_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null> = 
 export const PREVIOUS_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null> = {
   inkommande_webb: null,
   saljpanel: "inkommande_webb",
-  bokad: "saljpanel",
+  offererad: "saljpanel",
+  bokad: "offererad",
   pagaende: "bokad",
   slutford: "pagaende",
 };
@@ -38,14 +41,16 @@ export const PREVIOUS_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null
 export const PIPELINE_BACK_LABELS: Record<PipelineStage, string> = {
   inkommande_webb: "Tillbaka",
   saljpanel: "Tillbaka till Inkommande webb",
-  bokad: "Tillbaka till Säljpanel",
+  offererad: "Tillbaka till Säljpanel",
+  bokad: "Tillbaka till Offerterade",
   pagaende: "Tillbaka till Bokade",
   slutford: "Tillbaka till Pågående",
 };
 
 export const PIPELINE_ACTION_LABELS: Record<PipelineStage, string> = {
   inkommande_webb: "Flytta till Säljpanel",
-  saljpanel: "Flytta till Bokade",
+  saljpanel: "Flytta till Offerterade",
+  offererad: "Flytta till Bokade",
   bokad: "Flytta till Pågående",
   pagaende: "Markera som Slutförd",
   slutford: "Slutförd",
