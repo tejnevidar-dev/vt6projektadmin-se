@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { updateLead, updateLeadPipelineStage, deleteLead } from "@/lib/leads-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
+import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
 import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PREVIOUS_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_BACK_LABELS, PIPELINE_STAGE_LABELS } from "@/lib/types";
 
@@ -253,6 +254,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           {lead.pipelineStage === "offererad" && (
             <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
           )}
+          <LeadDocumentsCard leadId={lead.id} />
           <div className="rounded-lg border border-border bg-muted/40 p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">Pipeline-status</span>
