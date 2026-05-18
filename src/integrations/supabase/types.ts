@@ -104,6 +104,7 @@ export type Database = {
           last_contact: string | null
           name: string
           notes: string | null
+          offer_pdf_path: string | null
           phone: string | null
           pipeline_stage: Database["public"]["Enums"]["pipeline_stage"]
           price: number | null
@@ -130,6 +131,7 @@ export type Database = {
           last_contact?: string | null
           name: string
           notes?: string | null
+          offer_pdf_path?: string | null
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           price?: number | null
@@ -156,6 +158,7 @@ export type Database = {
           last_contact?: string | null
           name?: string
           notes?: string | null
+          offer_pdf_path?: string | null
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           price?: number | null
