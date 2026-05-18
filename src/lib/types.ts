@@ -94,6 +94,11 @@ export interface Lead {
   createdBy: string | null;
   score: number;
   bookingDate: string | null;
+  price: number | null;
+  assignmentType: string | null;
+  subcontractorName: string | null;
+  subcontractorPrice: number | null;
+  foremanName: string | null;
 }
 
 // Convert DB join result to flat Lead
@@ -124,6 +129,11 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     createdBy: (lp as { created_by?: string | null }).created_by ?? null,
     score: (lp as { score?: number | null }).score ?? 0,
     bookingDate: (lp as { booking_date?: string | null }).booking_date ?? null,
+    price: (lp as { price?: number | null }).price ?? null,
+    assignmentType: (lp as { assignment_type?: string | null }).assignment_type ?? null,
+    subcontractorName: (lp as { subcontractor_name?: string | null }).subcontractor_name ?? null,
+    subcontractorPrice: (lp as { subcontractor_price?: number | null }).subcontractor_price ?? null,
+    foremanName: (lp as { foreman_name?: string | null }).foreman_name ?? null,
   };
 }
 

@@ -14,29 +14,53 @@ const statusLabel: Record<LeadStatus, string> = {
   lost: "Förlorad",
 };
 
+export interface BookingPatch {
+  bookingDate?: string | null;
+  price?: number | null;
+  assignmentType?: string | null;
+  subcontractorName?: string | null;
+  subcontractorPrice?: number | null;
+  foremanName?: string | null;
+}
+
 export async function updateLeadPipelineStage(
   id: string,
   stage: PipelineStage,
   fromStage?: PipelineStage,
-  bookingDate?: string | null,
+  booking?: BookingPatch,
 ): Promise<void> {
-  const patch: { pipeline_stage: PipelineStage; booking_date?: string | null } = { pipeline_stage: stage };
-  if (bookingDate !== undefined) patch.booking_date = bookingDate;
-  const { error } = await supabase
-    .from("leads")
+  const patch: Record<string, unknown> = { pipeline_stage: stage };
+  if (booking) {
+    if (booking.bookingDate !== undefined) patch.booking_date = booking.bookingDate;
+    if (booking.price !== undefined) patch.price = booking.price;
+    if (booking.assignmentType !== undefined) patch.assignment_type = booking.assignmentType;
+    if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
+    if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
+    if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
+  }
+  const { error } = await (supabase.from("leads") as any)
     .update(patch)
     .eq("id", id);
   if (error) throw error;
-  const bookingNote = bookingDate
-    ? ` (bokat ${new Date(bookingDate).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })})`
-    : "";
+  const parts: string[] = [];
+  if (booking?.bookingDate) {
+    parts.push(`bokat ${new Date(booking.bookingDate).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}`);
+  }
+  if (booking?.price != null) parts.push(`pris ${booking.price} kr`);
+  if (booking?.assignmentType === "subcontractor" && booking.subcontractorName) {
+    parts.push(`UE: ${booking.subcontractorName}${booking.subcontractorPrice != null ? ` (${booking.subcontractorPrice} kr)` : ""}`);
+  }
+  if (booking?.assignmentType === "foreman" && booking.foremanName) {
+    parts.push(`Arbetsledare: ${booking.foremanName}`);
+  }
+  const bookingNote = parts.length ? ` (${parts.join(", ")})` : "";
   await logActivity(
     id,
     "stage_change",
     fromStage
       ? `Flyttade från ${PIPELINE_STAGE_LABELS[fromStage]} till ${PIPELINE_STAGE_LABELS[stage]}${bookingNote}`
       : `Flyttade till ${PIPELINE_STAGE_LABELS[stage]}${bookingNote}`,
-    { from: fromStage ?? null, to: stage, booking_date: bookingDate ?? null }
+    { from: fromStage ?? null, to: stage, ...(booking ?? {}) }
   );
 }
 
