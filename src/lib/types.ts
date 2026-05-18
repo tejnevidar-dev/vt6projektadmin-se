@@ -93,6 +93,7 @@ export interface Lead {
   assignedTo: string | null;
   createdBy: string | null;
   score: number;
+  bookingDate: string | null;
 }
 
 // Convert DB join result to flat Lead
@@ -122,6 +123,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     assignedTo: (lp as { assigned_to?: string | null }).assigned_to ?? null,
     createdBy: (lp as { created_by?: string | null }).created_by ?? null,
     score: (lp as { score?: number | null }).score ?? 0,
+    bookingDate: (lp as { booking_date?: string | null }).booking_date ?? null,
   };
 }
 

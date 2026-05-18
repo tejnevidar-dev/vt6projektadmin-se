@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { updateLead, updateLeadPipelineStage, deleteLead } from "@/lib/leads-api";
+import { BookingDateDialog } from "@/components/BookingDateDialog";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
 import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PREVIOUS_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_BACK_LABELS, PIPELINE_STAGE_LABELS } from "@/lib/types";
 
@@ -37,6 +38,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [bookingFor, setBookingFor] = useState<null | { from: Lead["pipelineStage"] }>(null);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -258,9 +260,13 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               const isDone = lead.pipelineStage === "slutford";
               const move = async (target: typeof next) => {
                 if (!target) return;
+                if (target === "bokad") {
+                  setBookingFor({ from: lead.pipelineStage });
+                  return;
+                }
                 setSaving(true);
                 try {
-                  await updateLeadPipelineStage(lead.id, target);
+                  await updateLeadPipelineStage(lead.id, target, lead.pipelineStage);
                   onUpdated?.();
                   onClose();
                 } catch (err) {
@@ -337,6 +343,22 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        <BookingDateDialog
+          open={bookingFor !== null}
+          leadName={lead.name}
+          initialDate={lead.bookingDate}
+          onCancel={() => setBookingFor(null)}
+          onConfirm={async (iso) => {
+            try {
+              await updateLeadPipelineStage(lead.id, "bokad", bookingFor?.from, iso);
+              onUpdated?.();
+              setBookingFor(null);
+              onClose();
+            } catch (err) {
+              console.error("Failed to book lead:", err);
+            }
+          }}
+        />
       </div>
     </>,
     portalRoot

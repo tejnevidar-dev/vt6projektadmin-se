@@ -14,19 +14,29 @@ const statusLabel: Record<LeadStatus, string> = {
   lost: "Förlorad",
 };
 
-export async function updateLeadPipelineStage(id: string, stage: PipelineStage, fromStage?: PipelineStage): Promise<void> {
+export async function updateLeadPipelineStage(
+  id: string,
+  stage: PipelineStage,
+  fromStage?: PipelineStage,
+  bookingDate?: string | null,
+): Promise<void> {
+  const patch: { pipeline_stage: PipelineStage; booking_date?: string | null } = { pipeline_stage: stage };
+  if (bookingDate !== undefined) patch.booking_date = bookingDate;
   const { error } = await supabase
     .from("leads")
-    .update({ pipeline_stage: stage })
+    .update(patch)
     .eq("id", id);
   if (error) throw error;
+  const bookingNote = bookingDate
+    ? ` (bokat ${new Date(bookingDate).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })})`
+    : "";
   await logActivity(
     id,
     "stage_change",
     fromStage
-      ? `Flyttade från ${PIPELINE_STAGE_LABELS[fromStage]} till ${PIPELINE_STAGE_LABELS[stage]}`
-      : `Flyttade till ${PIPELINE_STAGE_LABELS[stage]}`,
-    { from: fromStage ?? null, to: stage }
+      ? `Flyttade från ${PIPELINE_STAGE_LABELS[fromStage]} till ${PIPELINE_STAGE_LABELS[stage]}${bookingNote}`
+      : `Flyttade till ${PIPELINE_STAGE_LABELS[stage]}${bookingNote}`,
+    { from: fromStage ?? null, to: stage, booking_date: bookingDate ?? null }
   );
 }
 

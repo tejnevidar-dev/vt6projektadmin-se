@@ -92,6 +92,7 @@ export type Database = {
         Row: {
           age: number | null
           assigned_to: string | null
+          booking_date: string | null
           created_at: string
           created_by: string | null
           email: string | null
@@ -112,6 +113,7 @@ export type Database = {
         Insert: {
           age?: number | null
           assigned_to?: string | null
+          booking_date?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
@@ -132,6 +134,7 @@ export type Database = {
         Update: {
           age?: number | null
           assigned_to?: string | null
+          booking_date?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
