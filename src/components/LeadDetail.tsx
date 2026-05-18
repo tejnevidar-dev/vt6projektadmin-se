@@ -38,6 +38,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [bookingFor, setBookingFor] = useState<null | { from: Lead["pipelineStage"] }>(null);
 
   const handleDelete = async () => {
     setDeleting(true);
