@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Phone, MapPin, Calendar, FileText, ChevronRight, Hammer, Droplets, Wrench, Flame, Trash2, ArrowRight, UserPlus } from "lucide-react";
+import { Phone, MapPin, Calendar, FileText, ChevronRight, Hammer, Droplets, Wrench, Flame, Trash2, ArrowRight, UserPlus, AlertTriangle } from "lucide-react";
 import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
-import { JOB_TYPE_LABELS, PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/types";
+import { JOB_TYPE_LABELS, PIPELINE_STAGES, PIPELINE_STAGE_LABELS, hasIncompleteBooking } from "@/lib/types";
 import { scoreLabel } from "@/lib/lead-scoring";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -190,6 +190,15 @@ export function LeadTable({ leads, onSelect, selectedId, onBulkActionDone }: Lea
                             </span>
                           );
                         })()}
+                        {hasIncompleteBooking(lead) && (
+                          <span
+                            className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive"
+                            title="Bokning saknar pris eller tilldelning"
+                          >
+                            <AlertTriangle className="h-3 w-3" />
+                            <span className="hidden sm:inline">Saknar info</span>
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-3 py-3">

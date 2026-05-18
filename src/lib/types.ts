@@ -101,6 +101,14 @@ export interface Lead {
   foremanName: string | null;
 }
 
+/** True om en bokad lead saknar pris eller tilldelning (UE / arbetsledare). */
+export function hasIncompleteBooking(lead: Pick<Lead, "pipelineStage" | "price" | "assignmentType">): boolean {
+  if (lead.pipelineStage !== "bokad") return false;
+  const missingPrice = lead.price == null;
+  const missingAssignment = !lead.assignmentType || lead.assignmentType === "none";
+  return missingPrice || missingAssignment;
+}
+
 // Convert DB join result to flat Lead
 export function toFlatLead(lp: LeadWithProperty): Lead {
   const currentYear = new Date().getFullYear();
