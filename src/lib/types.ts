@@ -93,6 +93,7 @@ export interface Lead {
   assignedTo: string | null;
   createdBy: string | null;
   score: number;
+  bookingDate: string | null;
 }
 
 // Convert DB join result to flat Lead
