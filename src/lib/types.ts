@@ -99,6 +99,7 @@ export interface Lead {
   subcontractorName: string | null;
   subcontractorPrice: number | null;
   foremanName: string | null;
+  offerPdfPath: string | null;
 }
 
 /** True om en bokad lead saknar pris eller tilldelning (UE / arbetsledare). */
