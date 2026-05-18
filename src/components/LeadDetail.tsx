@@ -260,9 +260,13 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               const isDone = lead.pipelineStage === "slutford";
               const move = async (target: typeof next) => {
                 if (!target) return;
+                if (target === "bokad") {
+                  setBookingFor({ from: lead.pipelineStage });
+                  return;
+                }
                 setSaving(true);
                 try {
-                  await updateLeadPipelineStage(lead.id, target);
+                  await updateLeadPipelineStage(lead.id, target, lead.pipelineStage);
                   onUpdated?.();
                   onClose();
                 } catch (err) {
