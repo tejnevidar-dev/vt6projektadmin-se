@@ -69,6 +69,51 @@ export async function deleteLead(id: string): Promise<void> {
   if (error) throw error;
 }
 
+const OFFERS_BUCKET = "offers";
+
+export async function uploadOfferPdf(leadId: string, file: File): Promise<string> {
+  if (file.type !== "application/pdf") {
+    throw new Error("Endast PDF-filer kan laddas upp som offert.");
+  }
+  const path = `${leadId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  const { error: upErr } = await supabase.storage.from(OFFERS_BUCKET).upload(path, file, {
+    contentType: "application/pdf",
+    upsert: false,
+  });
+  if (upErr) throw upErr;
+
+  // Try to remove previous offer
+  const { data: existing } = await supabase.from("leads").select("offer_pdf_path").eq("id", leadId).single();
+  const oldPath = (existing as { offer_pdf_path?: string | null } | null)?.offer_pdf_path;
+
+  const { error: updErr } = await (supabase.from("leads") as any)
+    .update({ offer_pdf_path: path })
+    .eq("id", leadId);
+  if (updErr) throw updErr;
+
+  if (oldPath && oldPath !== path) {
+    await supabase.storage.from(OFFERS_BUCKET).remove([oldPath]);
+  }
+
+  await logActivity(leadId, "updated", `Offert-PDF uppladdad (${file.name})`, { offer_pdf_path: path });
+  return path;
+}
+
+export async function removeOfferPdf(leadId: string, path: string): Promise<void> {
+  await supabase.storage.from(OFFERS_BUCKET).remove([path]);
+  const { error } = await (supabase.from("leads") as any)
+    .update({ offer_pdf_path: null })
+    .eq("id", leadId);
+  if (error) throw error;
+  await logActivity(leadId, "updated", "Offert-PDF borttagen");
+}
+
+export async function getOfferPdfSignedUrl(path: string, expiresIn = 60 * 10): Promise<string> {
+  const { data, error } = await supabase.storage.from(OFFERS_BUCKET).createSignedUrl(path, expiresIn);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
 export async function fetchLeads(): Promise<Lead[]> {
   const { data, error } = await supabase
     .from("leads")

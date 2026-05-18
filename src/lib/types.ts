@@ -99,6 +99,7 @@ export interface Lead {
   subcontractorName: string | null;
   subcontractorPrice: number | null;
   foremanName: string | null;
+  offerPdfPath: string | null;
 }
 
 /** True om en bokad lead saknar pris eller tilldelning (UE / arbetsledare). */
@@ -142,6 +143,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     subcontractorName: (lp as { subcontractor_name?: string | null }).subcontractor_name ?? null,
     subcontractorPrice: (lp as { subcontractor_price?: number | null }).subcontractor_price ?? null,
     foremanName: (lp as { foreman_name?: string | null }).foreman_name ?? null,
+    offerPdfPath: (lp as { offer_pdf_path?: string | null }).offer_pdf_path ?? null,
   };
 }
 

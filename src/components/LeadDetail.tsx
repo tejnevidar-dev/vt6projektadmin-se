@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { updateLead, updateLeadPipelineStage, deleteLead } from "@/lib/leads-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
+import { OfferPdfCard } from "@/components/OfferPdfCard";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
 import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PREVIOUS_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_BACK_LABELS, PIPELINE_STAGE_LABELS } from "@/lib/types";
 
@@ -249,6 +250,9 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
 
         {/* Sticky footer with actions */}
         <div className="shrink-0 border-t border-border bg-card/95 px-6 py-4 backdrop-blur space-y-3">
+          {lead.pipelineStage === "offererad" && (
+            <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
+          )}
           <div className="rounded-lg border border-border bg-muted/40 p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">Pipeline-status</span>
