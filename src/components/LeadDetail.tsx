@@ -343,6 +343,22 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        <BookingDateDialog
+          open={bookingFor !== null}
+          leadName={lead.name}
+          initialDate={lead.bookingDate}
+          onCancel={() => setBookingFor(null)}
+          onConfirm={async (iso) => {
+            try {
+              await updateLeadPipelineStage(lead.id, "bokad", bookingFor?.from, iso);
+              onUpdated?.();
+              setBookingFor(null);
+              onClose();
+            } catch (err) {
+              console.error("Failed to book lead:", err);
+            }
+          }}
+        />
       </div>
     </>,
     portalRoot
