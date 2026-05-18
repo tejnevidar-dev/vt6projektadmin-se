@@ -10,9 +10,9 @@ import {
   DragOverlay,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { Phone, MapPin, Calendar, Hammer, Droplets, Wrench, Flame } from "lucide-react";
+import { Phone, MapPin, Calendar, Hammer, Droplets, Wrench, Flame, AlertTriangle } from "lucide-react";
 import type { Lead, PipelineStage, JobType, LeadStatus } from "@/lib/types";
-import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS } from "@/lib/types";
+import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, hasIncompleteBooking } from "@/lib/types";
 import { scoreLabel } from "@/lib/lead-scoring";
 import { cn } from "@/lib/utils";
 
@@ -198,6 +198,15 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
           <Flame className="h-3 w-3" />
           {score.label} · {lead.score}
         </span>
+        {hasIncompleteBooking(lead) && (
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive"
+            title="Bokning saknar pris eller tilldelning"
+          >
+            <AlertTriangle className="h-3 w-3" />
+            Saknar info
+          </span>
+        )}
       </div>
     </div>
   );
