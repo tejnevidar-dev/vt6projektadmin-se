@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
 import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import type { Lead, PipelineStage, JobType } from "@/lib/types";
-import { PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS, JOB_TYPES } from "@/lib/types";
-import { KanbanSquare, Table as TableIcon, Search, X, UserCheck, UserPlus } from "lucide-react";
+import { PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS, JOB_TYPES, hasIncompleteBooking } from "@/lib/types";
+import { KanbanSquare, Table as TableIcon, Search, X, UserCheck, UserPlus, AlertTriangle } from "lucide-react";
 
 interface Props {
   stage: PipelineStage;
@@ -32,6 +32,7 @@ function StageContent({ stage, description }: Props) {
   const [jobTypeFilter, setJobTypeFilter] = useState<JobType | "all">("all");
   const [assignedFilter, setAssignedFilter] = useState<string>("all");
   const [createdByFilter, setCreatedByFilter] = useState<string>("all");
+  const [incompleteOnly, setIncompleteOnly] = useState(false);
   const [saljare, setSaljare] = useState<Saljare[]>([]);
 
   useEffect(() => {
@@ -69,13 +70,19 @@ function StageContent({ stage, description }: Props) {
           if (lead.createdBy) return false;
         } else if (lead.createdBy !== createdByFilter) return false;
       }
+      if (incompleteOnly && !hasIncompleteBooking(lead)) return false;
       if (!q) return true;
       return (
         lead.name.toLowerCase().includes(q) ||
         lead.address.toLowerCase().includes(q)
       );
     });
-  }, [stageLeads, search, jobTypeFilter, assignedFilter, createdByFilter]);
+  }, [stageLeads, search, jobTypeFilter, assignedFilter, createdByFilter, incompleteOnly]);
+
+  const incompleteCount = useMemo(
+    () => stageLeads.filter(hasIncompleteBooking).length,
+    [stageLeads]
+  );
 
   const handleStageChange = async (leadId: string, newStage: PipelineStage) => {
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, pipelineStage: newStage } : l)));
@@ -112,7 +119,8 @@ function StageContent({ stage, description }: Props) {
     search.trim() !== "" ||
     jobTypeFilter !== "all" ||
     assignedFilter !== "all" ||
-    createdByFilter !== "all";
+    createdByFilter !== "all" ||
+    incompleteOnly;
 
   return (
     <AppShell title={PIPELINE_STAGE_LABELS[stage]} description={description} actions={headerActions}>
@@ -187,6 +195,24 @@ function StageContent({ stage, description }: Props) {
               </select>
             </div>
 
+            {stage === "bokad" && (
+              <button
+                onClick={() => setIncompleteOnly((v) => !v)}
+                className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+                  incompleteOnly
+                    ? "border-destructive/40 bg-destructive/10 text-destructive"
+                    : "border-border bg-background/60 text-muted-foreground hover:text-foreground"
+                }`}
+                title="Visa endast bokade leads som saknar pris eller tilldelning"
+              >
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Saknar info
+                <span className="rounded-full bg-destructive/15 px-1.5 py-0 text-[10px] font-semibold text-destructive">
+                  {incompleteCount}
+                </span>
+              </button>
+            )}
+
             {hasActiveFilters && (
               <button
                 onClick={() => {
@@ -194,6 +220,7 @@ function StageContent({ stage, description }: Props) {
                   setJobTypeFilter("all");
                   setAssignedFilter("all");
                   setCreatedByFilter("all");
+                  setIncompleteOnly(false);
                 }}
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
               >
