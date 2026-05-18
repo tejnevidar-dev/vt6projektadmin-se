@@ -61,7 +61,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
           </div>
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <div className="text-[14px] font-semibold tracking-tight">Leads</div>
+              <div className="text-[14px] font-semibold tracking-tight">Administration</div>
               <div className="truncate text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-sans">​TAK</div>
             </div>
           )}
