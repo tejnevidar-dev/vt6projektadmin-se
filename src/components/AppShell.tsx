@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", adminOnly: false },
   { to: "/leads", label: "Leads", icon: Users, group: "Arbeta", adminOnly: false },
+  { to: "/offerterade", label: "Offerterade", icon: ClipboardList, group: "Arbeta", adminOnly: false },
   { to: "/bokade", label: "Bokade", icon: CalendarCheck, group: "Arbeta", adminOnly: false },
   { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", adminOnly: false },
   { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", adminOnly: false },
