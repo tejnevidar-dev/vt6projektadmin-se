@@ -92,11 +92,13 @@ export type Database = {
         Row: {
           age: number | null
           assigned_to: string | null
+          assignment_type: string | null
           booking_date: string | null
           created_at: string
           created_by: string | null
           email: string | null
           external_id: string | null
+          foreman_name: string | null
           id: string
           job_type: Database["public"]["Enums"]["job_type"]
           last_contact: string | null
@@ -104,20 +106,25 @@ export type Database = {
           notes: string | null
           phone: string | null
           pipeline_stage: Database["public"]["Enums"]["pipeline_stage"]
+          price: number | null
           property_id: string | null
           score: number | null
           source: Database["public"]["Enums"]["lead_source"]
           status: Database["public"]["Enums"]["lead_status"]
+          subcontractor_name: string | null
+          subcontractor_price: number | null
           updated_at: string
         }
         Insert: {
           age?: number | null
           assigned_to?: string | null
+          assignment_type?: string | null
           booking_date?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
           external_id?: string | null
+          foreman_name?: string | null
           id?: string
           job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
@@ -125,20 +132,25 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
+          price?: number | null
           property_id?: string | null
           score?: number | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
+          subcontractor_name?: string | null
+          subcontractor_price?: number | null
           updated_at?: string
         }
         Update: {
           age?: number | null
           assigned_to?: string | null
+          assignment_type?: string | null
           booking_date?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
           external_id?: string | null
+          foreman_name?: string | null
           id?: string
           job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
@@ -146,10 +158,13 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
+          price?: number | null
           property_id?: string | null
           score?: number | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
+          subcontractor_name?: string | null
+          subcontractor_price?: number | null
           updated_at?: string
         }
         Relationships: [
