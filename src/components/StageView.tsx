@@ -8,7 +8,7 @@ import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
 import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import type { Lead, PipelineStage, JobType } from "@/lib/types";
 import { PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS, JOB_TYPES, hasIncompleteBooking } from "@/lib/types";
-import { KanbanSquare, Table as TableIcon, Search, X, UserCheck, UserPlus, AlertTriangle } from "lucide-react";
+import { KanbanSquare, Table as TableIcon, Search, X, UserCheck, UserPlus, AlertTriangle, Calendar } from "lucide-react";
 
 interface Props {
   stage: PipelineStage;
