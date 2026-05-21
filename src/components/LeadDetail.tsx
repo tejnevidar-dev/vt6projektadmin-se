@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Phone, MapPin, Calendar, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2 } from "lucide-react";
+import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { sv } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
