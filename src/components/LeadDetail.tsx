@@ -382,10 +382,24 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           open={bookingFor !== null}
           leadName={lead.name}
           initialDate={lead.bookingDate}
+          initialPrice={lead.price}
+          initialRotAmount={lead.rotAmount}
+          initialAssignmentType={(lead.assignmentType as "none" | "subcontractor" | "foreman" | null) ?? "none"}
+          initialSubcontractorName={lead.subcontractorName}
+          initialSubcontractorPrice={lead.subcontractorPrice}
+          initialForemanName={lead.foremanName}
           onCancel={() => setBookingFor(null)}
-          onConfirm={async (iso) => {
+          onConfirm={async (details) => {
             try {
-              await updateLeadPipelineStage(lead.id, "bokad", bookingFor?.from, iso);
+              await updateLeadPipelineStage(lead.id, "bokad", bookingFor?.from, {
+                bookingDate: details.isoDate,
+                price: details.price,
+                rotAmount: details.rotAmount,
+                assignmentType: details.assignmentType,
+                subcontractorName: details.subcontractorName,
+                subcontractorPrice: details.subcontractorPrice,
+                foremanName: details.foremanName,
+              });
               onUpdated?.();
               setBookingFor(null);
               onClose();
@@ -394,6 +408,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             }
           }}
         />
+
       </div>
     </>,
     portalRoot
@@ -428,14 +443,20 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
   const [date, setDate] = useState<Date | undefined>(initialDate ?? undefined);
   const [time, setTime] = useState<string>(initialDate ? format(initialDate, "HH:mm") : "08:00");
   const [price, setPrice] = useState<string>(lead.price != null ? String(lead.price) : "");
+  const [rotAmount, setRotAmount] = useState<string>(lead.rotAmount != null ? String(lead.rotAmount) : "");
   const [subName, setSubName] = useState<string>(lead.subcontractorName ?? "");
 
   const reset = () => {
     setDate(initialDate ?? undefined);
     setTime(initialDate ? format(initialDate, "HH:mm") : "08:00");
     setPrice(lead.price != null ? String(lead.price) : "");
+    setRotAmount(lead.rotAmount != null ? String(lead.rotAmount) : "");
     setSubName(lead.subcontractorName ?? "");
   };
+
+  const priceNum = price.trim() === "" ? null : Number(price);
+  const rotNum = rotAmount.trim() === "" ? null : Number(rotAmount);
+  const customerPrice = priceNum != null ? priceNum - (rotNum ?? 0) : null;
 
   const handleSave = async () => {
     setSaving(true);
@@ -450,7 +471,8 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
       const trimmedSub = subName.trim();
       await updateLeadBooking(lead.id, {
         bookingDate,
-        price: price.trim() === "" ? null : Number(price),
+        price: priceNum,
+        rotAmount: rotNum,
         subcontractorName: trimmedSub === "" ? null : trimmedSub,
         assignmentType: trimmedSub === "" ? "none" : "subcontractor",
       });
@@ -462,6 +484,7 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
       setSaving(false);
     }
   };
+
 
   if (!editing) {
     return (
@@ -488,6 +511,23 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
             </span>
           </InfoRow>
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <InfoRow icon={FileText} label="ROT att begära">
+            <span className="font-medium text-warning-foreground">
+              {lead.rotAmount != null
+                ? `${lead.rotAmount.toLocaleString("sv-SE")} kr`
+                : <span className="text-muted-foreground">Ej satt</span>}
+            </span>
+          </InfoRow>
+          <InfoRow icon={FileText} label="Pris för kund">
+            <span className="font-semibold">
+              {lead.price != null
+                ? `${(lead.price - (lead.rotAmount ?? 0)).toLocaleString("sv-SE")} kr`
+                : <span className="text-muted-foreground">Ej satt</span>}
+            </span>
+          </InfoRow>
+        </div>
+
         <InfoRow icon={User} label="Tilldelad underentreprenör">
           <span className="font-medium">
             {lead.subcontractorName
@@ -544,15 +584,33 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
           )}
         </div>
       </Field>
-      <Field label="Pris (kr)">
-        <Input
-          type="number"
-          inputMode="numeric"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          placeholder="t.ex. 150000"
-        />
-      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Pris (kr)">
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="t.ex. 150000"
+          />
+        </Field>
+        <Field label="ROT att begära (kr)">
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={rotAmount}
+            onChange={(e) => setRotAmount(e.target.value)}
+            placeholder="t.ex. 45000"
+          />
+        </Field>
+      </div>
+      <div className="flex items-center justify-between rounded-md bg-background px-3 py-2 text-sm">
+        <span className="text-muted-foreground">Pris för kund</span>
+        <span className="font-semibold text-card-foreground">
+          {customerPrice != null ? `${customerPrice.toLocaleString("sv-SE")} kr` : "—"}
+        </span>
+      </div>
+
       <Field label="Tilldelad underentreprenör">
         <Input
           value={subName}

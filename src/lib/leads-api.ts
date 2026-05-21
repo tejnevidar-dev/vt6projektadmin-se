@@ -17,6 +17,7 @@ const statusLabel: Record<LeadStatus, string> = {
 export interface BookingPatch {
   bookingDate?: string | null;
   price?: number | null;
+  rotAmount?: number | null;
   assignmentType?: string | null;
   subcontractorName?: string | null;
   subcontractorPrice?: number | null;
@@ -33,6 +34,7 @@ export async function updateLeadPipelineStage(
   if (booking) {
     if (booking.bookingDate !== undefined) patch.booking_date = booking.bookingDate;
     if (booking.price !== undefined) patch.price = booking.price;
+    if (booking.rotAmount !== undefined) patch.rot_amount = booking.rotAmount;
     if (booking.assignmentType !== undefined) patch.assignment_type = booking.assignmentType;
     if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
     if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
@@ -47,6 +49,7 @@ export async function updateLeadPipelineStage(
     parts.push(`bokat ${new Date(booking.bookingDate).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}`);
   }
   if (booking?.price != null) parts.push(`pris ${booking.price} kr`);
+  if (booking?.rotAmount != null) parts.push(`ROT ${booking.rotAmount} kr`);
   if (booking?.assignmentType === "subcontractor" && booking.subcontractorName) {
     parts.push(`UE: ${booking.subcontractorName}${booking.subcontractorPrice != null ? ` (${booking.subcontractorPrice} kr)` : ""}`);
   }
@@ -68,6 +71,7 @@ export async function updateLeadBooking(id: string, booking: BookingPatch): Prom
   const patch: Record<string, unknown> = {};
   if (booking.bookingDate !== undefined) patch.booking_date = booking.bookingDate;
   if (booking.price !== undefined) patch.price = booking.price;
+  if (booking.rotAmount !== undefined) patch.rot_amount = booking.rotAmount;
   if (booking.assignmentType !== undefined) patch.assignment_type = booking.assignmentType;
   if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
   if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
@@ -82,6 +86,7 @@ export async function updateLeadBooking(id: string, booking: BookingPatch): Prom
       : "arbetsstart rensad");
   }
   if (booking.price !== undefined) parts.push(booking.price != null ? `pris ${booking.price} kr` : "pris rensat");
+  if (booking.rotAmount !== undefined) parts.push(booking.rotAmount != null ? `ROT ${booking.rotAmount} kr` : "ROT rensat");
   if (booking.subcontractorName !== undefined) {
     parts.push(booking.subcontractorName ? `UE: ${booking.subcontractorName}` : "UE rensad");
   }

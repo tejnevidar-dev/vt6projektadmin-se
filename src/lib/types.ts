@@ -95,6 +95,7 @@ export interface Lead {
   score: number;
   bookingDate: string | null;
   price: number | null;
+  rotAmount: number | null;
   assignmentType: string | null;
   subcontractorName: string | null;
   subcontractorPrice: number | null;
@@ -140,6 +141,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     score: (lp as { score?: number | null }).score ?? 0,
     bookingDate: (lp as { booking_date?: string | null }).booking_date ?? null,
     price: (lp as { price?: number | null }).price ?? null,
+    rotAmount: (lp as { rot_amount?: number | null }).rot_amount ?? null,
     assignmentType: (lp as { assignment_type?: string | null }).assignment_type ?? null,
     subcontractorName: (lp as { subcontractor_name?: string | null }).subcontractor_name ?? null,
     subcontractorPrice: (lp as { subcontractor_price?: number | null }).subcontractor_price ?? null,
