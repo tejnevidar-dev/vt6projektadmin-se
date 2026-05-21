@@ -33,6 +33,7 @@ function StageContent({ stage, description }: Props) {
   const [assignedFilter, setAssignedFilter] = useState<string>("all");
   const [createdByFilter, setCreatedByFilter] = useState<string>("all");
   const [incompleteOnly, setIncompleteOnly] = useState(false);
+  const [bookingSort, setBookingSort] = useState<"none" | "soonest" | "latest">(stage === "bokad" ? "soonest" : "none");
   const [saljare, setSaljare] = useState<Saljare[]>([]);
 
   useEffect(() => {
