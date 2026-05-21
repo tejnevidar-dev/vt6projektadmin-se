@@ -114,7 +114,7 @@ export async function setLeadRotPaid(id: string, rotPaid: boolean): Promise<void
   await logActivity(
     id,
     "updated",
-    rotPaid ? "ROT markerad som betald" : "ROT avmarkerad som betald",
+    rotPaid ? "ROT markerad som begärd" : "ROT avmarkerad som begärd",
     { rot_paid: rotPaid }
   );
 }
