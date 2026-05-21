@@ -584,15 +584,33 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
           )}
         </div>
       </Field>
-      <Field label="Pris (kr)">
-        <Input
-          type="number"
-          inputMode="numeric"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          placeholder="t.ex. 150000"
-        />
-      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Pris (kr)">
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="t.ex. 150000"
+          />
+        </Field>
+        <Field label="ROT att begära (kr)">
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={rotAmount}
+            onChange={(e) => setRotAmount(e.target.value)}
+            placeholder="t.ex. 45000"
+          />
+        </Field>
+      </div>
+      <div className="flex items-center justify-between rounded-md bg-background px-3 py-2 text-sm">
+        <span className="text-muted-foreground">Pris för kund</span>
+        <span className="font-semibold text-card-foreground">
+          {customerPrice != null ? `${customerPrice.toLocaleString("sv-SE")} kr` : "—"}
+        </span>
+      </div>
+
       <Field label="Tilldelad underentreprenör">
         <Input
           value={subName}
