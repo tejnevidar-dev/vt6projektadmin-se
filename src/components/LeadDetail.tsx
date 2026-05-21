@@ -222,7 +222,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             <InfoRow icon={MapPin} label="Adress"><span>{lead.address}</span></InfoRow>
 
             <div className="grid grid-cols-3 gap-4">
-              <InfoRow icon={Calendar} label="Byggnadsår"><span className="font-medium">{lead.buildYear}</span></InfoRow>
+              <InfoRow icon={CalendarIcon} label="Byggnadsår"><span className="font-medium">{lead.buildYear}</span></InfoRow>
               <InfoRow icon={Home} label="Taktyp"><span>{lead.roofType}</span></InfoRow>
               <InfoRow icon={Home} label="Takålder">
                 <span className={`font-medium ${lead.roofAge > 40 ? "text-destructive" : ""}`}>{lead.roofAge} år</span>
