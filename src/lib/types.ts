@@ -102,6 +102,7 @@ export interface Lead {
   foremanName: string | null;
   offerPdfPath: string | null;
   needsOffer: boolean;
+  rotPaid: boolean;
 }
 
 /** True om en bokad lead saknar pris eller tilldelning (UE / arbetsledare). */
@@ -148,6 +149,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     foremanName: (lp as { foreman_name?: string | null }).foreman_name ?? null,
     offerPdfPath: (lp as { offer_pdf_path?: string | null }).offer_pdf_path ?? null,
     needsOffer: (lp as { needs_offer?: boolean | null }).needs_offer ?? false,
+    rotPaid: (lp as { rot_paid?: boolean | null }).rot_paid ?? false,
   };
 }
 
