@@ -400,3 +400,156 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const initialDate = lead.bookingDate ? new Date(lead.bookingDate) : null;
+  const [date, setDate] = useState<Date | undefined>(initialDate ?? undefined);
+  const [time, setTime] = useState<string>(initialDate ? format(initialDate, "HH:mm") : "08:00");
+  const [price, setPrice] = useState<string>(lead.price != null ? String(lead.price) : "");
+  const [subName, setSubName] = useState<string>(lead.subcontractorName ?? "");
+
+  const reset = () => {
+    setDate(initialDate ?? undefined);
+    setTime(initialDate ? format(initialDate, "HH:mm") : "08:00");
+    setPrice(lead.price != null ? String(lead.price) : "");
+    setSubName(lead.subcontractorName ?? "");
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      let bookingDate: string | null = null;
+      if (date) {
+        const [h, m] = time.split(":").map((v) => parseInt(v) || 0);
+        const merged = new Date(date);
+        merged.setHours(h, m, 0, 0);
+        bookingDate = merged.toISOString();
+      }
+      const trimmedSub = subName.trim();
+      await updateLeadBooking(lead.id, {
+        bookingDate,
+        price: price.trim() === "" ? null : Number(price),
+        subcontractorName: trimmedSub === "" ? null : trimmedSub,
+        assignmentType: trimmedSub === "" ? "none" : "subcontractor",
+      });
+      onSaved?.();
+      setEditing(false);
+    } catch (err) {
+      console.error("Failed to save booking:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-semibold uppercase tracking-wide text-warning-foreground">Bokning</div>
+          <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setEditing(true)}>
+            <Pencil className="mr-1 h-3 w-3" /> Redigera
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <InfoRow icon={CalendarIcon} label="Bokad arbetsstart">
+            <span className="font-medium">
+              {lead.bookingDate
+                ? new Date(lead.bookingDate).toLocaleString("sv-SE", { dateStyle: "medium", timeStyle: "short" })
+                : <span className="text-muted-foreground">Ej satt</span>}
+            </span>
+          </InfoRow>
+          <InfoRow icon={FileText} label="Pris">
+            <span className="font-medium">
+              {lead.price != null
+                ? `${lead.price.toLocaleString("sv-SE")} kr`
+                : <span className="text-muted-foreground">Ej satt</span>}
+            </span>
+          </InfoRow>
+        </div>
+        <InfoRow icon={User} label="Tilldelad underentreprenör">
+          <span className="font-medium">
+            {lead.subcontractorName
+              ? lead.subcontractorName
+              : <span className="text-muted-foreground">Ingen tilldelad</span>}
+          </span>
+        </InfoRow>
+        {lead.foremanName && (
+          <InfoRow icon={User} label="Arbetsledare">
+            <span>{lead.foremanName}</span>
+          </InfoRow>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 space-y-3">
+      <div className="text-xs font-semibold uppercase tracking-wide text-warning-foreground">Redigera bokning</div>
+      <Field label="Bokad arbetsstart">
+        <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className={cn("flex-1 justify-start text-left font-normal", !date && "text-muted-foreground")}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "d MMM yyyy", { locale: sv }) : "Välj datum"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                initialFocus
+                locale={sv}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+          <Input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="w-28"
+          />
+          {date && (
+            <Button type="button" size="icon" variant="ghost" onClick={() => setDate(undefined)} title="Rensa">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </Field>
+      <Field label="Pris (kr)">
+        <Input
+          type="number"
+          inputMode="numeric"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          placeholder="t.ex. 150000"
+        />
+      </Field>
+      <Field label="Tilldelad underentreprenör">
+        <Input
+          value={subName}
+          onChange={(e) => setSubName(e.target.value)}
+          placeholder="Namn på underentreprenör"
+          maxLength={120}
+        />
+      </Field>
+      <div className="flex gap-2">
+        <Button className="flex-1" onClick={handleSave} disabled={saving}>
+          <Save className="mr-2 h-4 w-4" />
+          {saving ? "Sparar..." : "Spara"}
+        </Button>
+        <Button variant="outline" className="flex-1" onClick={() => { reset(); setEditing(false); }} disabled={saving}>
+          Avbryt
+        </Button>
+      </div>
+    </div>
+  );
+}
