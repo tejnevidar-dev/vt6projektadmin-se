@@ -88,6 +88,19 @@ export async function updateLeadBooking(id: string, booking: BookingPatch): Prom
   await logActivity(id, "updated", `Bokning uppdaterad (${parts.join(", ")})`, booking as Record<string, unknown>);
 }
 
+export async function setLeadNeedsOffer(id: string, needsOffer: boolean): Promise<void> {
+  const { error } = await (supabase.from("leads") as any)
+    .update({ needs_offer: needsOffer })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "updated",
+    needsOffer ? "Markerad som Att offertera" : "Borttagen från Att offertera",
+    { needs_offer: needsOffer }
+  );
+}
+
 export async function deleteLead(id: string): Promise<void> {
   const { error } = await supabase.from("leads").delete().eq("id", id);
   if (error) throw error;
