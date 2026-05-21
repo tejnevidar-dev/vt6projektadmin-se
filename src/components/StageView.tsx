@@ -59,7 +59,7 @@ function StageContent({ stage, description }: Props) {
 
   const filteredLeads = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return stageLeads.filter((lead) => {
+    const filtered = stageLeads.filter((lead) => {
       if (jobTypeFilter !== "all" && lead.jobType !== jobTypeFilter) return false;
       if (assignedFilter !== "all") {
         if (assignedFilter === "unassigned") {
@@ -78,7 +78,19 @@ function StageContent({ stage, description }: Props) {
         lead.address.toLowerCase().includes(q)
       );
     });
-  }, [stageLeads, search, jobTypeFilter, assignedFilter, createdByFilter, incompleteOnly]);
+    if (bookingSort !== "none") {
+      const dir = bookingSort === "soonest" ? 1 : -1;
+      filtered.sort((a, b) => {
+        const ta = a.bookingDate ? new Date(a.bookingDate).getTime() : null;
+        const tb = b.bookingDate ? new Date(b.bookingDate).getTime() : null;
+        if (ta === null && tb === null) return 0;
+        if (ta === null) return 1;
+        if (tb === null) return -1;
+        return (ta - tb) * dir;
+      });
+    }
+    return filtered;
+  }, [stageLeads, search, jobTypeFilter, assignedFilter, createdByFilter, incompleteOnly, bookingSort]);
 
   const incompleteCount = useMemo(
     () => stageLeads.filter(hasIncompleteBooking).length,
