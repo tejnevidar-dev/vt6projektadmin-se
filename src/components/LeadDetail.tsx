@@ -382,10 +382,24 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           open={bookingFor !== null}
           leadName={lead.name}
           initialDate={lead.bookingDate}
+          initialPrice={lead.price}
+          initialRotAmount={lead.rotAmount}
+          initialAssignmentType={(lead.assignmentType as "none" | "subcontractor" | "foreman" | null) ?? "none"}
+          initialSubcontractorName={lead.subcontractorName}
+          initialSubcontractorPrice={lead.subcontractorPrice}
+          initialForemanName={lead.foremanName}
           onCancel={() => setBookingFor(null)}
-          onConfirm={async (iso) => {
+          onConfirm={async (details) => {
             try {
-              await updateLeadPipelineStage(lead.id, "bokad", bookingFor?.from, iso);
+              await updateLeadPipelineStage(lead.id, "bokad", bookingFor?.from, {
+                bookingDate: details.isoDate,
+                price: details.price,
+                rotAmount: details.rotAmount,
+                assignmentType: details.assignmentType,
+                subcontractorName: details.subcontractorName,
+                subcontractorPrice: details.subcontractorPrice,
+                foremanName: details.foremanName,
+              });
               onUpdated?.();
               setBookingFor(null);
               onClose();
@@ -394,6 +408,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             }
           }}
         />
+
       </div>
     </>,
     portalRoot
