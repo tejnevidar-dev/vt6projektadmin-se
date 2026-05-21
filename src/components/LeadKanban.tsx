@@ -225,7 +225,7 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
         </div>
       )}
       {isBooked && lead.bookingDate && (
-        <div className="mt-2 flex items-center gap-1.5 rounded-md bg-warning/10 px-2 py-1 text-[11px] font-medium text-warning-foreground">
+        <div className="mt-2 flex items-center gap-1.5 rounded-md bg-warning px-2 py-1 text-[11px] font-bold text-warning-foreground shadow-sm">
           <Calendar className="h-3 w-3" />
           {new Date(lead.bookingDate).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}
         </div>
