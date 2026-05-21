@@ -330,6 +330,26 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           </div>
           <Button
             variant="outline"
+            className={cn(
+              "w-full",
+              lead.needsOffer
+                ? "border-warning bg-warning/15 text-warning-foreground hover:bg-warning/25"
+                : ""
+            )}
+            onClick={async () => {
+              try {
+                await setLeadNeedsOffer(lead.id, !lead.needsOffer);
+                onUpdated?.();
+              } catch (err) {
+                console.error("Failed to toggle needs offer:", err);
+              }
+            }}
+          >
+            <FileSignature className="mr-2 h-4 w-4" />
+            {lead.needsOffer ? "Avmarkera Att offertera" : "Markera som Att offertera"}
+          </Button>
+          <Button
+            variant="outline"
             className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => setConfirmDelete(true)}
           >
