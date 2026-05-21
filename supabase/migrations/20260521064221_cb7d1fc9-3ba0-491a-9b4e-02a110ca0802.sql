@@ -1,0 +1,1 @@
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS needs_offer boolean NOT NULL DEFAULT false;

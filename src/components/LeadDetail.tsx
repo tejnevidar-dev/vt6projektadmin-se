@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2 } from "lucide-react";
+import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2, FileSignature } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead } from "@/lib/leads-api";
+import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer } from "@/lib/leads-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
@@ -328,6 +328,26 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               Redigera
             </Button>
           </div>
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full",
+              lead.needsOffer
+                ? "border-warning bg-warning/15 text-warning-foreground hover:bg-warning/25"
+                : ""
+            )}
+            onClick={async () => {
+              try {
+                await setLeadNeedsOffer(lead.id, !lead.needsOffer);
+                onUpdated?.();
+              } catch (err) {
+                console.error("Failed to toggle needs offer:", err);
+              }
+            }}
+          >
+            <FileSignature className="mr-2 h-4 w-4" />
+            {lead.needsOffer ? "Avmarkera Att offertera" : "Markera som Att offertera"}
+          </Button>
           <Button
             variant="outline"
             className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
