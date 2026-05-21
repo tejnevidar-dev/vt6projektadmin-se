@@ -443,14 +443,20 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
   const [date, setDate] = useState<Date | undefined>(initialDate ?? undefined);
   const [time, setTime] = useState<string>(initialDate ? format(initialDate, "HH:mm") : "08:00");
   const [price, setPrice] = useState<string>(lead.price != null ? String(lead.price) : "");
+  const [rotAmount, setRotAmount] = useState<string>(lead.rotAmount != null ? String(lead.rotAmount) : "");
   const [subName, setSubName] = useState<string>(lead.subcontractorName ?? "");
 
   const reset = () => {
     setDate(initialDate ?? undefined);
     setTime(initialDate ? format(initialDate, "HH:mm") : "08:00");
     setPrice(lead.price != null ? String(lead.price) : "");
+    setRotAmount(lead.rotAmount != null ? String(lead.rotAmount) : "");
     setSubName(lead.subcontractorName ?? "");
   };
+
+  const priceNum = price.trim() === "" ? null : Number(price);
+  const rotNum = rotAmount.trim() === "" ? null : Number(rotAmount);
+  const customerPrice = priceNum != null ? priceNum - (rotNum ?? 0) : null;
 
   const handleSave = async () => {
     setSaving(true);
@@ -465,7 +471,8 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
       const trimmedSub = subName.trim();
       await updateLeadBooking(lead.id, {
         bookingDate,
-        price: price.trim() === "" ? null : Number(price),
+        price: priceNum,
+        rotAmount: rotNum,
         subcontractorName: trimmedSub === "" ? null : trimmedSub,
         assignmentType: trimmedSub === "" ? "none" : "subcontractor",
       });
@@ -477,6 +484,7 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
       setSaving(false);
     }
   };
+
 
   if (!editing) {
     return (
