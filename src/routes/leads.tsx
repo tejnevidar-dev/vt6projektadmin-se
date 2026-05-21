@@ -239,7 +239,7 @@ function LeadsContent() {
         </section>
 
         <section className="rounded-xl border border-border/70 bg-card/40">
-          <div className="flex items-center justify-between border-b border-border/60 px-5 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-3">
             <div>
               <h2 className="text-[13px] font-semibold text-foreground">
                 {view === "kanban" ? "Pipeline" : "Lead-tabell"}
@@ -247,17 +247,41 @@ function LeadsContent() {
               <p className="text-[11.5px] text-muted-foreground">
                 {loading
                   ? "Laddar leads..."
-                  : `${filteredLeads.length} av ${jobTypeLeads.length} ${
+                  : `${filteredLeads.filter((l) => l.pipelineStage === activePipeline).length} av ${jobTypeLeads.filter((l) => l.pipelineStage === activePipeline).length} ${
                       activeJobType === "all" ? "leads" : JOB_TYPE_LABELS[activeJobType].toLowerCase()
                     }`}
               </p>
             </div>
+            <div className="flex rounded-md border border-border bg-card/60 p-0.5">
+              {(["inkommande_webb", "saljpanel"] as const).map((stage) => {
+                const count = jobTypeLeads.filter((l) => l.pipelineStage === stage).length;
+                const label = stage === "inkommande_webb" ? "Inkommande webb" : "Säljpanel leads";
+                const active = activePipeline === stage;
+                return (
+                  <button
+                    key={stage}
+                    onClick={() => setActivePipeline(stage)}
+                    className={`flex items-center gap-1.5 rounded px-3 py-1 text-xs font-medium transition-colors ${
+                      active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {label}
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${active ? "bg-primary-foreground/20" : "bg-muted"}`}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <div className={view === "kanban" ? "p-4" : ""}>
             {view === "kanban" ? (
-              <LeadKanban leads={filteredLeads} onSelect={setSelectedLead} onStageChange={handleStageChange} stages={["inkommande_webb", "saljpanel"]} />
+              <LeadKanban
+                leads={filteredLeads.filter((l) => l.pipelineStage === activePipeline)}
+                onSelect={setSelectedLead}
+                onStageChange={handleStageChange}
+                stages={[activePipeline]}
+              />
             ) : (
-              <LeadTable leads={filteredLeads} onSelect={setSelectedLead} />
+              <LeadTable leads={filteredLeads.filter((l) => l.pipelineStage === activePipeline)} onSelect={setSelectedLead} />
             )}
           </div>
         </section>
