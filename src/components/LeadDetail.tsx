@@ -511,6 +511,23 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
             </span>
           </InfoRow>
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <InfoRow icon={FileText} label="ROT att begära">
+            <span className="font-medium text-warning-foreground">
+              {lead.rotAmount != null
+                ? `${lead.rotAmount.toLocaleString("sv-SE")} kr`
+                : <span className="text-muted-foreground">Ej satt</span>}
+            </span>
+          </InfoRow>
+          <InfoRow icon={FileText} label="Pris för kund">
+            <span className="font-semibold">
+              {lead.price != null
+                ? `${(lead.price - (lead.rotAmount ?? 0)).toLocaleString("sv-SE")} kr`
+                : <span className="text-muted-foreground">Ej satt</span>}
+            </span>
+          </InfoRow>
+        </div>
+
         <InfoRow icon={User} label="Tilldelad underentreprenör">
           <span className="font-medium">
             {lead.subcontractorName
