@@ -298,7 +298,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                 }}
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
-                {lead.rotPaid ? "ROT betald ✓" : "Markera ROT som betald"}
+                {lead.rotPaid ? "ROT begärd ✓" : "Markera ROT som begärd"}
               </Button>
             </div>
           )}
