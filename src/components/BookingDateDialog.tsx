@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { sv } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarCheck } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarCheck, CalendarIcon, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type AssignmentType = "none" | "subcontractor" | "foreman";
 
@@ -30,11 +35,15 @@ interface Props {
   onConfirm: (details: BookingDetails) => void | Promise<void>;
 }
 
-function toLocalInput(value?: string | null): string {
-  const d = value ? new Date(value) : new Date(Date.now() + 60 * 60 * 1000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+function getInitialDate(initialDate?: string | null): Date {
+  return initialDate ? new Date(initialDate) : new Date(Date.now() + 60 * 60 * 1000);
 }
+
+const TIME_OPTIONS = Array.from({ length: 24 * 2 }, (_, i) => {
+  const h = Math.floor(i / 2);
+  const m = i % 2 === 0 ? "00" : "30";
+  return `${String(h).padStart(2, "0")}:${m}`;
+});
 
 export function BookingDateDialog({
   open,
@@ -48,7 +57,9 @@ export function BookingDateDialog({
   onCancel,
   onConfirm,
 }: Props) {
-  const [value, setValue] = useState<string>(toLocalInput(initialDate));
+  const initialDt = getInitialDate(initialDate);
+  const [date, setDate] = useState<Date>(initialDt);
+  const [time, setTime] = useState<string>(format(initialDt, "HH:mm"));
   const [price, setPrice] = useState<string>(initialPrice != null ? String(initialPrice) : "");
   const [assignmentType, setAssignmentType] = useState<AssignmentType>(initialAssignmentType ?? "none");
   const [subName, setSubName] = useState<string>(initialSubcontractorName ?? "");
@@ -58,7 +69,9 @@ export function BookingDateDialog({
 
   useEffect(() => {
     if (open) {
-      setValue(toLocalInput(initialDate));
+      const dt = getInitialDate(initialDate);
+      setDate(dt);
+      setTime(format(dt, "HH:mm"));
       setPrice(initialPrice != null ? String(initialPrice) : "");
       setAssignmentType(initialAssignmentType ?? "none");
       setSubName(initialSubcontractorName ?? "");
@@ -69,11 +82,13 @@ export function BookingDateDialog({
   }, [open, initialDate, initialPrice, initialAssignmentType, initialSubcontractorName, initialSubcontractorPrice, initialForemanName]);
 
   const submit = async () => {
-    if (!value) return;
+    if (!date) return;
+    const [h, m] = time.split(":").map(Number);
+    const iso = new Date(date.getFullYear(), date.getMonth(), date.getDate(), h, m).toISOString();
     setSaving(true);
     try {
       await onConfirm({
-        isoDate: new Date(value).toISOString(),
+        isoDate: iso,
         price: price ? parseFloat(price) : null,
         assignmentType,
         subcontractorName: assignmentType === "subcontractor" ? (subName.trim() || null) : null,
@@ -99,14 +114,64 @@ export function BookingDateDialog({
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="booking-date">Datum & tid</Label>
-            <Input
-              id="booking-date"
-              type="datetime-local"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              autoFocus
-            />
+            <Label>Datum & tid</Label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal sm:w-auto",
+                      !date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "PPP", { locale: sv }) : <span>Välj datum</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(d) => d && setDate(d)}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal sm:w-auto",
+                      !time && "text-muted-foreground"
+                    )}
+                  >
+                    <Clock className="mr-2 h-4 w-4" />
+                    {time ? time : <span>Välj tid</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2" align="start">
+                  <div className="max-h-60 w-28 overflow-y-auto">
+                    {TIME_OPTIONS.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setTime(t)}
+                        className={cn(
+                          "w-full rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent",
+                          time === t && "bg-primary text-primary-foreground hover:bg-primary"
+                        )}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -182,7 +247,7 @@ export function BookingDateDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} disabled={saving}>Avbryt</Button>
-          <Button onClick={submit} disabled={!value || saving}>
+          <Button onClick={submit} disabled={!date || !time || saving}>
             {saving ? "Sparar…" : "Bekräfta bokning"}
           </Button>
         </DialogFooter>
@@ -190,3 +255,4 @@ export function BookingDateDialog({
     </Dialog>
   );
 }
+
