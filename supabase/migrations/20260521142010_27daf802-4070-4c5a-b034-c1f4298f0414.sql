@@ -1,0 +1,1 @@
+ALTER TABLE public.leads ADD COLUMN rot_paid boolean NOT NULL DEFAULT false;

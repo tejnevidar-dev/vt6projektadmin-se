@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2, FileSignature } from "lucide-react";
+import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2, FileSignature, ExternalLink, CheckCircle } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer } from "@/lib/leads-api";
+import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer, setLeadRotPaid } from "@/lib/leads-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
@@ -262,6 +262,45 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
         <div className="shrink-0 border-t border-border bg-card/95 px-6 py-4 backdrop-blur space-y-3">
           {lead.pipelineStage === "offererad" && (
             <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
+          )}
+          {lead.pipelineStage === "slutford" && (lead.rotAmount ?? 0) > 0 && (
+            <div className={cn(
+              "rounded-lg border p-3 space-y-2",
+              lead.rotPaid ? "border-success/40 bg-success/10" : "border-warning/40 bg-warning/10"
+            )}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">ROT-avdrag</span>
+                <span className="text-sm font-semibold text-card-foreground">{lead.rotAmount?.toLocaleString("sv-SE")} kr</span>
+              </div>
+              <Button variant="outline" className="w-full" asChild>
+                <a
+                  href="https://www7.skatteverket.se/portal/rotrut/begar-utbetalning/rot/kopare"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Begär ROT hos Skatteverket
+                </a>
+              </Button>
+              <Button
+                variant={lead.rotPaid ? "default" : "outline"}
+                className={cn(
+                  "w-full",
+                  lead.rotPaid ? "bg-success text-success-foreground hover:bg-success/90" : ""
+                )}
+                onClick={async () => {
+                  try {
+                    await setLeadRotPaid(lead.id, !lead.rotPaid);
+                    onUpdated?.();
+                  } catch (err) {
+                    console.error("Failed to toggle rot paid:", err);
+                  }
+                }}
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                {lead.rotPaid ? "ROT betald ✓" : "Markera ROT som betald"}
+              </Button>
+            </div>
           )}
           <LeadDocumentsCard leadId={lead.id} />
           <div className="rounded-lg border border-border bg-muted/40 p-3">

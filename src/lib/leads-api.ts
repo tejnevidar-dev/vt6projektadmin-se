@@ -106,6 +106,19 @@ export async function setLeadNeedsOffer(id: string, needsOffer: boolean): Promis
   );
 }
 
+export async function setLeadRotPaid(id: string, rotPaid: boolean): Promise<void> {
+  const { error } = await (supabase.from("leads") as any)
+    .update({ rot_paid: rotPaid })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "updated",
+    rotPaid ? "ROT markerad som betald" : "ROT avmarkerad som betald",
+    { rot_paid: rotPaid }
+  );
+}
+
 export async function deleteLead(id: string): Promise<void> {
   const { error } = await supabase.from("leads").delete().eq("id", id);
   if (error) throw error;
