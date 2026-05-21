@@ -151,6 +151,7 @@ export type Database = {
           pipeline_stage: Database["public"]["Enums"]["pipeline_stage"]
           price: number | null
           property_id: string | null
+          rot_amount: number | null
           score: number | null
           source: Database["public"]["Enums"]["lead_source"]
           status: Database["public"]["Enums"]["lead_status"]
@@ -179,6 +180,7 @@ export type Database = {
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           price?: number | null
           property_id?: string | null
+          rot_amount?: number | null
           score?: number | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
@@ -207,6 +209,7 @@ export type Database = {
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           price?: number | null
           property_id?: string | null
+          rot_amount?: number | null
           score?: number | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
