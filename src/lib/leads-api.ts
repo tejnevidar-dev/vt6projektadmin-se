@@ -64,6 +64,30 @@ export async function updateLeadPipelineStage(
   );
 }
 
+export async function updateLeadBooking(id: string, booking: BookingPatch): Promise<void> {
+  const patch: Record<string, unknown> = {};
+  if (booking.bookingDate !== undefined) patch.booking_date = booking.bookingDate;
+  if (booking.price !== undefined) patch.price = booking.price;
+  if (booking.assignmentType !== undefined) patch.assignment_type = booking.assignmentType;
+  if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
+  if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
+  if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
+  if (Object.keys(patch).length === 0) return;
+  const { error } = await (supabase.from("leads") as any).update(patch).eq("id", id);
+  if (error) throw error;
+  const parts: string[] = [];
+  if (booking.bookingDate !== undefined) {
+    parts.push(booking.bookingDate
+      ? `arbetsstart ${new Date(booking.bookingDate).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}`
+      : "arbetsstart rensad");
+  }
+  if (booking.price !== undefined) parts.push(booking.price != null ? `pris ${booking.price} kr` : "pris rensat");
+  if (booking.subcontractorName !== undefined) {
+    parts.push(booking.subcontractorName ? `UE: ${booking.subcontractorName}` : "UE rensad");
+  }
+  await logActivity(id, "updated", `Bokning uppdaterad (${parts.join(", ")})`, booking as Record<string, unknown>);
+}
+
 export async function deleteLead(id: string): Promise<void> {
   const { error } = await supabase.from("leads").delete().eq("id", id);
   if (error) throw error;
