@@ -144,6 +144,7 @@ export type Database = {
           job_type: Database["public"]["Enums"]["job_type"]
           last_contact: string | null
           name: string
+          needs_offer: boolean
           notes: string | null
           offer_pdf_path: string | null
           phone: string | null
@@ -171,6 +172,7 @@ export type Database = {
           job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
           name: string
+          needs_offer?: boolean
           notes?: string | null
           offer_pdf_path?: string | null
           phone?: string | null
@@ -198,6 +200,7 @@ export type Database = {
           job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
           name?: string
+          needs_offer?: boolean
           notes?: string | null
           offer_pdf_path?: string | null
           phone?: string | null
