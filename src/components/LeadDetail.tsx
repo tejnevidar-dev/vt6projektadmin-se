@@ -210,7 +210,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
         {/* Scrollable content */}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
               <InfoRow icon={Phone} label="Telefon">
                 <a href={`tel:${lead.phone.replace(/[\s-]/g, "")}`} className="text-primary hover:underline">{lead.phone}</a>
               </InfoRow>
