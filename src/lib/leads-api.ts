@@ -17,6 +17,7 @@ const statusLabel: Record<LeadStatus, string> = {
 export interface BookingPatch {
   bookingDate?: string | null;
   price?: number | null;
+  rotAmount?: number | null;
   assignmentType?: string | null;
   subcontractorName?: string | null;
   subcontractorPrice?: number | null;
