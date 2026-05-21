@@ -184,18 +184,43 @@ export function BookingDateDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="booking-price">Pris (kr)</Label>
-            <Input
-              id="booking-price"
-              type="number"
-              min="0"
-              step="100"
-              placeholder="t.ex. 85000"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
+          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="booking-price">Pris (kr)</Label>
+                <Input
+                  id="booking-price"
+                  type="number"
+                  min="0"
+                  step="100"
+                  placeholder="t.ex. 85000"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="booking-rot">ROT att begära (kr)</Label>
+                <Input
+                  id="booking-rot"
+                  type="number"
+                  min="0"
+                  step="100"
+                  placeholder="t.ex. 25500"
+                  value={rotAmount}
+                  onChange={(e) => setRotAmount(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-md bg-background px-3 py-2 text-sm">
+              <span className="text-muted-foreground">Pris för kund</span>
+              <span className="font-semibold text-card-foreground">
+                {customerPrice != null
+                  ? `${customerPrice.toLocaleString("sv-SE")} kr`
+                  : "—"}
+              </span>
+            </div>
           </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="assignment-type">Tilldela</Label>
