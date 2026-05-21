@@ -16,6 +16,7 @@ export type AssignmentType = "none" | "subcontractor" | "foreman";
 export interface BookingDetails {
   isoDate: string;
   price: number | null;
+  rotAmount: number | null;
   assignmentType: AssignmentType;
   subcontractorName: string | null;
   subcontractorPrice: number | null;
@@ -27,6 +28,7 @@ interface Props {
   leadName?: string;
   initialDate?: string | null;
   initialPrice?: number | null;
+  initialRotAmount?: number | null;
   initialAssignmentType?: AssignmentType;
   initialSubcontractorName?: string | null;
   initialSubcontractorPrice?: number | null;
@@ -50,6 +52,7 @@ export function BookingDateDialog({
   leadName,
   initialDate,
   initialPrice,
+  initialRotAmount,
   initialAssignmentType,
   initialSubcontractorName,
   initialSubcontractorPrice,
@@ -61,6 +64,7 @@ export function BookingDateDialog({
   const [date, setDate] = useState<Date>(initialDt);
   const [time, setTime] = useState<string>(format(initialDt, "HH:mm"));
   const [price, setPrice] = useState<string>(initialPrice != null ? String(initialPrice) : "");
+  const [rotAmount, setRotAmount] = useState<string>(initialRotAmount != null ? String(initialRotAmount) : "");
   const [assignmentType, setAssignmentType] = useState<AssignmentType>(initialAssignmentType ?? "none");
   const [subName, setSubName] = useState<string>(initialSubcontractorName ?? "");
   const [subPrice, setSubPrice] = useState<string>(initialSubcontractorPrice != null ? String(initialSubcontractorPrice) : "");
@@ -73,13 +77,18 @@ export function BookingDateDialog({
       setDate(dt);
       setTime(format(dt, "HH:mm"));
       setPrice(initialPrice != null ? String(initialPrice) : "");
+      setRotAmount(initialRotAmount != null ? String(initialRotAmount) : "");
       setAssignmentType(initialAssignmentType ?? "none");
       setSubName(initialSubcontractorName ?? "");
       setSubPrice(initialSubcontractorPrice != null ? String(initialSubcontractorPrice) : "");
       setForemanName(initialForemanName ?? "");
       setSaving(false);
     }
-  }, [open, initialDate, initialPrice, initialAssignmentType, initialSubcontractorName, initialSubcontractorPrice, initialForemanName]);
+  }, [open, initialDate, initialPrice, initialRotAmount, initialAssignmentType, initialSubcontractorName, initialSubcontractorPrice, initialForemanName]);
+
+  const priceNum = price ? parseFloat(price) : null;
+  const rotNum = rotAmount ? parseFloat(rotAmount) : null;
+  const customerPrice = priceNum != null ? priceNum - (rotNum ?? 0) : null;
 
   const submit = async () => {
     if (!date) return;
@@ -89,7 +98,8 @@ export function BookingDateDialog({
     try {
       await onConfirm({
         isoDate: iso,
-        price: price ? parseFloat(price) : null,
+        price: priceNum,
+        rotAmount: rotNum,
         assignmentType,
         subcontractorName: assignmentType === "subcontractor" ? (subName.trim() || null) : null,
         subcontractorPrice: assignmentType === "subcontractor" && subPrice ? parseFloat(subPrice) : null,
