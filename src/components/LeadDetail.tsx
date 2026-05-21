@@ -224,6 +224,40 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               </InfoRow>
             </div>
 
+            {(lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford") && (
+              <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 space-y-2">
+                <div className="text-xs font-semibold uppercase tracking-wide text-warning-foreground">Bokning</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <InfoRow icon={Calendar} label="Bokad arbetsstart">
+                    <span className="font-medium">
+                      {lead.bookingDate
+                        ? new Date(lead.bookingDate).toLocaleString("sv-SE", { dateStyle: "medium", timeStyle: "short" })
+                        : <span className="text-muted-foreground">Ej satt</span>}
+                    </span>
+                  </InfoRow>
+                  <InfoRow icon={FileText} label="Pris">
+                    <span className="font-medium">
+                      {lead.price != null
+                        ? `${lead.price.toLocaleString("sv-SE")} kr`
+                        : <span className="text-muted-foreground">Ej satt</span>}
+                    </span>
+                  </InfoRow>
+                </div>
+                <InfoRow icon={User} label="Tilldelad underentreprenör">
+                  <span className="font-medium">
+                    {lead.subcontractorName
+                      ? lead.subcontractorName
+                      : <span className="text-muted-foreground">Ingen tilldelad</span>}
+                  </span>
+                </InfoRow>
+                {lead.foremanName && (
+                  <InfoRow icon={User} label="Arbetsledare">
+                    <span>{lead.foremanName}</span>
+                  </InfoRow>
+                )}
+              </div>
+            )}
+
             {lead.hasRoofPermit && (
               <div className="rounded-lg bg-warning/10 p-3">
                 <div className="flex items-center gap-2">
