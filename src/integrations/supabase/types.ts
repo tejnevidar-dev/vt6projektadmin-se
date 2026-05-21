@@ -152,6 +152,7 @@ export type Database = {
           price: number | null
           property_id: string | null
           rot_amount: number | null
+          rot_paid: boolean
           score: number | null
           source: Database["public"]["Enums"]["lead_source"]
           status: Database["public"]["Enums"]["lead_status"]
@@ -181,6 +182,7 @@ export type Database = {
           price?: number | null
           property_id?: string | null
           rot_amount?: number | null
+          rot_paid?: boolean
           score?: number | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
@@ -210,6 +212,7 @@ export type Database = {
           price?: number | null
           property_id?: string | null
           rot_amount?: number | null
+          rot_paid?: boolean
           score?: number | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
