@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2 } from "lucide-react";
+import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2, FileSignature } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead } from "@/lib/leads-api";
+import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer } from "@/lib/leads-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
