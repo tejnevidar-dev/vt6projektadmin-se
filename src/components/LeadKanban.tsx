@@ -144,6 +144,8 @@ function KanbanCard({ lead, onSelect }: { lead: Lead; onSelect: (lead: Lead) => 
 function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean }) {
   const Icon = JOB_ICON[lead.jobType];
   const score = scoreLabel(lead.score);
+  const isBooked = lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford";
+  const incomplete = hasIncompleteBooking(lead);
   return (
     <div
       className={cn(
@@ -162,15 +164,27 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
             </div>
           )}
         </div>
-        <span
-          className={cn(
-            "mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-            STATUS_BADGE[lead.status].className
-          )}
-        >
-          <span className={cn("h-1.5 w-1.5 rounded-full", STATUS_DOT[lead.status])} />
-          {STATUS_BADGE[lead.status].label}
-        </span>
+        {isBooked ? (
+          incomplete && (
+            <span
+              className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive"
+              title="Bokning saknar pris eller tilldelning"
+            >
+              <AlertTriangle className="h-3 w-3" />
+              Saknar info
+            </span>
+          )
+        ) : (
+          <span
+            className={cn(
+              "mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+              STATUS_BADGE[lead.status].className
+            )}
+          >
+            <span className={cn("h-1.5 w-1.5 rounded-full", STATUS_DOT[lead.status])} />
+            {STATUS_BADGE[lead.status].label}
+          </span>
+        )}
       </div>
       <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className="h-3 w-3" />
@@ -187,33 +201,35 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
           </span>
         )}
       </div>
-      {lead.bookingDate && (
+      {!isBooked && (
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+              score.className
+            )}
+            title={`Lead-score ${lead.score}/100`}
+          >
+            <Flame className="h-3 w-3" />
+            {score.label} · {lead.score}
+          </span>
+          {incomplete && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive"
+              title="Bokning saknar pris eller tilldelning"
+            >
+              <AlertTriangle className="h-3 w-3" />
+              Saknar info
+            </span>
+          )}
+        </div>
+      )}
+      {isBooked && lead.bookingDate && (
         <div className="mt-2 flex items-center gap-1.5 rounded-md bg-warning/10 px-2 py-1 text-[11px] font-medium text-warning-foreground">
           <Calendar className="h-3 w-3" />
           {new Date(lead.bookingDate).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}
         </div>
       )}
-      <div className="mt-2 flex items-center justify-between gap-2">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-            score.className
-          )}
-          title={`Lead-score ${lead.score}/100`}
-        >
-          <Flame className="h-3 w-3" />
-          {score.label} · {lead.score}
-        </span>
-        {hasIncompleteBooking(lead) && (
-          <span
-            className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive"
-            title="Bokning saknar pris eller tilldelning"
-          >
-            <AlertTriangle className="h-3 w-3" />
-            Saknar info
-          </span>
-        )}
-      </div>
     </div>
   );
 }
