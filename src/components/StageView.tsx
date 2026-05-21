@@ -209,6 +209,22 @@ function StageContent({ stage, description }: Props) {
             </div>
 
             {stage === "bokad" && (
+              <div className="relative">
+                <Calendar className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <select
+                  value={bookingSort}
+                  onChange={(e) => setBookingSort(e.target.value as "none" | "soonest" | "latest")}
+                  className="h-9 rounded-md border border-input bg-background pl-8 pr-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  title="Sortera på bokad arbetsstart"
+                >
+                  <option value="soonest">Närmast först</option>
+                  <option value="latest">Senast först</option>
+                  <option value="none">Ingen sortering</option>
+                </select>
+              </div>
+            )}
+
+            {stage === "bokad" && (
               <button
                 onClick={() => setIncompleteOnly((v) => !v)}
                 className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
@@ -234,6 +250,7 @@ function StageContent({ stage, description }: Props) {
                   setAssignedFilter("all");
                   setCreatedByFilter("all");
                   setIncompleteOnly(false);
+                  setBookingSort(stage === "bokad" ? "soonest" : "none");
                 }}
                 className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
               >
