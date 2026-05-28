@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, SlidersHorizontal, RotateCcw, UserCheck, UserPlus } from "lucide-react";
+import { Search, SlidersHorizontal, RotateCcw, UserCheck, UserPlus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { REGIONS, MUNICIPALITIES, type LeadStatus } from "@/lib/types";
@@ -18,6 +18,8 @@ interface FilterPanelProps {
   onAssignedFilterChange?: (v: string) => void;
   createdByFilter?: string;
   onCreatedByFilterChange?: (v: string) => void;
+  needsOfferFilter?: "all" | "yes" | "no";
+  onNeedsOfferFilterChange?: (v: "all" | "yes" | "no") => void;
   onReset: () => void;
 }
 
@@ -34,6 +36,8 @@ export function FilterPanel({
   onAssignedFilterChange,
   createdByFilter = "all",
   onCreatedByFilterChange,
+  needsOfferFilter = "all",
+  onNeedsOfferFilterChange,
   onReset,
 }: FilterPanelProps) {
   const municipalities = region ? MUNICIPALITIES[region] || [] : [];
@@ -132,6 +136,22 @@ export function FilterPanel({
               {saljare.map((s) => (
                 <option key={s.id} value={s.id}>Inlagd av: {s.display_name}</option>
               ))}
+            </select>
+          </div>
+        )}
+
+        {onNeedsOfferFilterChange && (
+          <div className="relative">
+            <FileText className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <select
+              value={needsOfferFilter}
+              onChange={(e) => onNeedsOfferFilterChange(e.target.value as "all" | "yes" | "no")}
+              className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              title="Filtrera på offert-status"
+            >
+              <option value="all">Offert: Alla</option>
+              <option value="yes">Att offertera</option>
+              <option value="no">Inte offert</option>
             </select>
           </div>
         )}
