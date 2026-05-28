@@ -237,6 +237,8 @@ function LeadsContent() {
               onAssignedFilterChange={setAssignedFilter}
               createdByFilter={createdByFilter}
               onCreatedByFilterChange={setCreatedByFilter}
+              needsOfferFilter={needsOfferFilter}
+              onNeedsOfferFilterChange={setNeedsOfferFilter}
               onReset={resetFilters}
             />
           </div>
