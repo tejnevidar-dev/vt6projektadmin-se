@@ -116,6 +116,7 @@ function LeadsContent() {
     setStatusFilter("all");
     setAssignedFilter("all");
     setCreatedByFilter("all");
+    setNeedsOfferFilter("all");
   };
 
   const handleStageChange = async (leadId: string, stage: Lead["pipelineStage"]) => {
