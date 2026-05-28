@@ -137,7 +137,24 @@ export function FilterPanel({
                 <option key={s.id} value={s.id}>Inlagd av: {s.display_name}</option>
               ))}
             </select>
+
+        {onNeedsOfferFilterChange && (
+          <div className="relative">
+            <FileText className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <select
+              value={needsOfferFilter}
+              onChange={(e) => onNeedsOfferFilterChange(e.target.value as "all" | "yes" | "no")}
+              className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              title="Filtrera på offert-status"
+            >
+              <option value="all">Offert: Alla</option>
+              <option value="yes">Att offertera</option>
+              <option value="no">Inte offert</option>
+            </select>
           </div>
+        )}
+      </div>
+
         )}
       </div>
 
