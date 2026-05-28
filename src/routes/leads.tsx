@@ -103,9 +103,11 @@ function LeadsContent() {
           if (lead.createdBy) return false;
         } else if (lead.createdBy !== createdByFilter) return false;
       }
+      if (needsOfferFilter === "yes" && !lead.needsOffer) return false;
+      if (needsOfferFilter === "no" && lead.needsOffer) return false;
       return true;
     });
-  }, [jobTypeLeads, search, region, municipality, statusFilter, assignedFilter, createdByFilter]);
+  }, [jobTypeLeads, search, region, municipality, statusFilter, assignedFilter, createdByFilter, needsOfferFilter]);
 
   const resetFilters = () => {
     setSearch("");
