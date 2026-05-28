@@ -45,6 +45,7 @@ function LeadsContent() {
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
   const [assignedFilter, setAssignedFilter] = useState<string>("all");
   const [createdByFilter, setCreatedByFilter] = useState<string>("all");
+  const [needsOfferFilter, setNeedsOfferFilter] = useState<"all" | "yes" | "no">("all");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCsvDialog, setShowCsvDialog] = useState(false);
