@@ -36,6 +36,8 @@ export function FilterPanel({
   onAssignedFilterChange,
   createdByFilter = "all",
   onCreatedByFilterChange,
+  needsOfferFilter = "all",
+  onNeedsOfferFilterChange,
   onReset,
 }: FilterPanelProps) {
   const municipalities = region ? MUNICIPALITIES[region] || [] : [];
