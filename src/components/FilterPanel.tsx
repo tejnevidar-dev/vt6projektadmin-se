@@ -18,6 +18,8 @@ interface FilterPanelProps {
   onAssignedFilterChange?: (v: string) => void;
   createdByFilter?: string;
   onCreatedByFilterChange?: (v: string) => void;
+  needsOfferFilter?: "all" | "yes" | "no";
+  onNeedsOfferFilterChange?: (v: "all" | "yes" | "no") => void;
   onReset: () => void;
 }
 
