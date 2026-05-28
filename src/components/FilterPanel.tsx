@@ -137,6 +137,8 @@ export function FilterPanel({
                 <option key={s.id} value={s.id}>Inlagd av: {s.display_name}</option>
               ))}
             </select>
+          </div>
+        )}
 
         {onNeedsOfferFilterChange && (
           <div className="relative">
@@ -152,9 +154,6 @@ export function FilterPanel({
               <option value="no">Inte offert</option>
             </select>
           </div>
-        )}
-      </div>
-
         )}
       </div>
 
