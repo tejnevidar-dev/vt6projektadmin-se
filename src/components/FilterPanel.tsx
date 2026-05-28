@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, SlidersHorizontal, RotateCcw, UserCheck, UserPlus } from "lucide-react";
+import { Search, SlidersHorizontal, RotateCcw, UserCheck, UserPlus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { REGIONS, MUNICIPALITIES, type LeadStatus } from "@/lib/types";
