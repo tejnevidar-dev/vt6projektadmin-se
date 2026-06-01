@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check } from "lucide-react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type Side } from "@/hooks/use-role";
@@ -33,6 +33,7 @@ const navItems: NavItem[] = [
   { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", side: "extern" },
 
   // Intern (personal)
+  { to: "/jobb", label: "Jobb", icon: Hammer, group: "Arbeta", side: "intern" },
   { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "intern", adminOnly: true },
 
   // Gemensamt (Hantera)
