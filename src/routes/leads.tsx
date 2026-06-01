@@ -261,7 +261,7 @@ function LeadsContent() {
             <div className="flex rounded-md border border-border bg-card/60 p-0.5">
               {(["inkommande_webb", "saljpanel"] as const).map((stage) => {
                 const count = jobTypeLeads.filter((l) => l.pipelineStage === stage).length;
-                const label = stage === "inkommande_webb" ? "Inkommande webb" : "Säljpanel leads";
+                const label = stage === "inkommande_webb" ? "Inkommande webb" : "admin.vt6 leads";
                 const active = activePipeline === stage;
                 return (
                   <button

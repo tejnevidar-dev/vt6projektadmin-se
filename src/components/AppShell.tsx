@@ -57,12 +57,11 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
       >
         <div className="flex h-14 items-center gap-2.5 px-3">
           <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 shadow-[0_3px_10px_-3px_color-mix(in_oklab,var(--primary)_70%,transparent)]">
-            <span className="text-[14px] font-semibold leading-none text-primary-foreground">S</span>
+            <span className="text-[14px] font-semibold leading-none text-primary-foreground">a</span>
           </div>
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <div className="text-[14px] font-semibold tracking-tight">Administration</div>
-              <div className="truncate text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-sans">​TAK</div>
+              <div className="text-[14px] font-semibold tracking-tight">admin.vt6</div>
             </div>
           )}
         </div>
@@ -130,7 +129,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
         {/* Topbar: global, app-level controls */}
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-6 border-b border-border bg-background/85 px-8 backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-2.5 text-[12.5px]">
-            <span className="font-medium text-muted-foreground/80">Administration</span>
+            <span className="font-medium text-muted-foreground/80">admin.vt6</span>
             <Caret className="h-3 w-3 text-muted-foreground/30" />
             <span className="truncate font-semibold text-foreground">{activeNav?.label ?? title}</span>
           </div>

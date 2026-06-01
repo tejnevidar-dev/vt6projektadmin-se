@@ -6,7 +6,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
-  head: () => ({ meta: [{ title: "Inställningar – Säljpanel" }] }),
+  head: () => ({ meta: [{ title: "Inställningar – admin.vt6" }] }),
 });
 
 function SettingsPage() {

@@ -64,7 +64,7 @@ export const Route = createFileRoute("/admin")({
       <AdminPage />
     </RequireAuth>
   ),
-  head: () => ({ meta: [{ title: "Medlemmar – Säljpanel" }] }),
+  head: () => ({ meta: [{ title: "Medlemmar – admin.vt6" }] }),
 });
 
 interface Member {
@@ -248,7 +248,7 @@ function AdminPage() {
   return (
     <AppShell
       title="Medlemmar"
-      description="Hantera vem som har åtkomst till Säljpanel och vilka rättigheter de har."
+      description="Hantera vem som har åtkomst till admin.vt6 och vilka rättigheter de har."
       actions={
         isAdmin ? (
           <Button onClick={() => setInviteOpen(true)} size="sm">
@@ -543,7 +543,7 @@ function AdminPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Ta bort åtkomst?</AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmRemove?.email} kommer inte längre kunna logga in på Säljpanel.
+              {confirmRemove?.email} kommer inte längre kunna logga in på admin.vt6.
               Användarens konto raderas inte – du kan ge åtkomst igen senare.
             </AlertDialogDescription>
           </AlertDialogHeader>
