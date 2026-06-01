@@ -18,6 +18,7 @@ import { Route as OfferteradeRouteImport } from './routes/offerterade'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeadsRouteImport } from './routes/leads'
 import { Route as JobbRouteImport } from './routes/jobb'
+import { Route as EgenkontrollerRouteImport } from './routes/egenkontroller'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BokadeRouteImport } from './routes/bokade'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -72,6 +73,11 @@ const JobbRoute = JobbRouteImport.update({
   path: '/jobb',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EgenkontrollerRoute = EgenkontrollerRouteImport.update({
+  id: '/egenkontroller',
+  path: '/egenkontroller',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
+  '/egenkontroller': typeof EgenkontrollerRoute
   '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
+  '/egenkontroller': typeof EgenkontrollerRoute
   '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
+  '/egenkontroller': typeof EgenkontrollerRoute
   '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
+    | '/egenkontroller'
     | '/jobb'
     | '/leads'
     | '/login'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
+    | '/egenkontroller'
     | '/jobb'
     | '/leads'
     | '/login'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
+    | '/egenkontroller'
     | '/jobb'
     | '/leads'
     | '/login'
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   BokadeRoute: typeof BokadeRoute
   DashboardRoute: typeof DashboardRoute
+  EgenkontrollerRoute: typeof EgenkontrollerRoute
   JobbRoute: typeof JobbRouteWithChildren
   LeadsRoute: typeof LeadsRoute
   LoginRoute: typeof LoginRoute
@@ -316,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobbRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/egenkontroller': {
+      id: '/egenkontroller'
+      path: '/egenkontroller'
+      fullPath: '/egenkontroller'
+      preLoaderRoute: typeof EgenkontrollerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -390,6 +410,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   BokadeRoute: BokadeRoute,
   DashboardRoute: DashboardRoute,
+  EgenkontrollerRoute: EgenkontrollerRoute,
   JobbRoute: JobbRouteWithChildren,
   LeadsRoute: LeadsRoute,
   LoginRoute: LoginRoute,

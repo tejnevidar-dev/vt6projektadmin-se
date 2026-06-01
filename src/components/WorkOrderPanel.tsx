@@ -1,5 +1,16 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { FileText, Upload, Sparkles, Trash2, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
+import {
+  uploadWorkOrder,
+  processWorkOrder,
+  getWorkOrderSignedUrl,
+  deleteWorkOrder,
+  type JobWithLead,
+} from "@/lib/jobs-api";
 
-function WorkOrderPanel({
+export function WorkOrderPanel({
   job,
   canManage,
   onChanged,

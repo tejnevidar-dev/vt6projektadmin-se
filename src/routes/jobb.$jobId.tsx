@@ -21,6 +21,7 @@ import {
   type JobStatus,
 } from "@/lib/jobs-api";
 import { listEmployees, type Employee } from "@/lib/employees-api";
+import { WorkOrderPanel } from "@/components/WorkOrderPanel";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";

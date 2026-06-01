@@ -507,6 +507,9 @@ export type Database = {
           data: Json
           id: string
           job_id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           template_key: string
           updated_at: string
           user_id: string
@@ -517,6 +520,9 @@ export type Database = {
           data?: Json
           id?: string
           job_id: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           template_key?: string
           updated_at?: string
           user_id: string
@@ -527,6 +533,9 @@ export type Database = {
           data?: Json
           id?: string
           job_id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           template_key?: string
           updated_at?: string
           user_id?: string
