@@ -94,70 +94,85 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
         )}
       >
         <div className="flex h-14 items-center px-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={cn(
-                  "group flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors hover:bg-sidebar-accent/60",
-                  collapsed && "justify-center"
-                )}
-                title={collapsed ? `admin.vt6 · ${sideLabel}` : undefined}
-              >
-                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 shadow-[0_3px_10px_-3px_color-mix(in_oklab,var(--primary)_70%,transparent)]">
-                  <span className="text-[14px] font-semibold leading-none text-primary-foreground">a</span>
-                </div>
-                {!collapsed && (
-                  <div className="flex min-w-0 flex-1 items-center justify-between gap-1 leading-tight">
-                    <div className="min-w-0">
-                      <div className="truncate text-[14px] font-semibold tracking-tight">admin.vt6</div>
-                      <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/70">
-                        <SideIcon className="h-2.5 w-2.5" />
-                        {sideLabel}
+          {canSwitch ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    "group flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors hover:bg-sidebar-accent/60",
+                    collapsed && "justify-center"
+                  )}
+                  title={collapsed ? `admin.vt6 · ${sideLabel}` : undefined}
+                >
+                  <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 shadow-[0_3px_10px_-3px_color-mix(in_oklab,var(--primary)_70%,transparent)]">
+                    <span className="text-[14px] font-semibold leading-none text-primary-foreground">a</span>
+                  </div>
+                  {!collapsed && (
+                    <div className="flex min-w-0 flex-1 items-center justify-between gap-1 leading-tight">
+                      <div className="min-w-0">
+                        <div className="truncate text-[14px] font-semibold tracking-tight">admin.vt6</div>
+                        <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/70">
+                          <SideIcon className="h-2.5 w-2.5" />
+                          {sideLabel}
+                        </div>
                       </div>
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70 transition-transform group-data-[state=open]:rotate-180" />
                     </div>
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70 transition-transform group-data-[state=open]:rotate-180" />
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Växla arbetsyta
+                </DropdownMenuLabel>
+                <DropdownMenuItem
+                  disabled={side === "extern"}
+                  onClick={() => handleSwitchSide("extern")}
+                  className="gap-2.5 py-2"
+                >
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Extern</div>
+                    <div className="text-[11px] text-muted-foreground">Sälj &amp; leads</div>
                   </div>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Växla arbetsyta
-              </DropdownMenuLabel>
-              <DropdownMenuItem
-                disabled={!canSwitch && side !== "extern"}
-                onClick={() => handleSwitchSide("extern")}
-                className="gap-2.5 py-2"
-              >
-                <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium">Extern</div>
-                  <div className="text-[11px] text-muted-foreground">Sälj &amp; leads</div>
-                </div>
-                {side === "extern" && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!canSwitch && side !== "intern"}
-                onClick={() => handleSwitchSide("intern")}
-                className="gap-2.5 py-2"
-              >
-                <HardHat className="h-4 w-4 text-muted-foreground" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium">Intern</div>
-                  <div className="text-[11px] text-muted-foreground">Personal &amp; jobb</div>
-                </div>
-                {side === "intern" && <Check className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-              {!canSwitch && (
-                <>
-                  <DropdownMenuSeparator />
-                  <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
-                    Bara administratörer kan växla mellan sidor.
+                  {side === "extern" && <Check className="h-4 w-4 text-primary" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={side === "intern"}
+                  onClick={() => handleSwitchSide("intern")}
+                  className="gap-2.5 py-2"
+                >
+                  <HardHat className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Intern</div>
+                    <div className="text-[11px] text-muted-foreground">Personal &amp; jobb</div>
                   </div>
-                </>
+                  {side === "intern" && <Check className="h-4 w-4 text-primary" />}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div
+              className={cn(
+                "flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5",
+                collapsed && "justify-center"
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              title={collapsed ? `admin.vt6 · ${sideLabel}` : undefined}
+            >
+              <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 shadow-[0_3px_10px_-3px_color-mix(in_oklab,var(--primary)_70%,transparent)]">
+                <span className="text-[14px] font-semibold leading-none text-primary-foreground">a</span>
+              </div>
+              {!collapsed && (
+                <div className="min-w-0 flex-1 leading-tight">
+                  <div className="truncate text-[14px] font-semibold tracking-tight">admin.vt6</div>
+                  <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/70">
+                    <SideIcon className="h-2.5 w-2.5" />
+                    {sideLabel}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
 
