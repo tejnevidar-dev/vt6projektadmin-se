@@ -155,7 +155,21 @@ export interface SelfCheck {
   template_key: string;
   data: Record<string, unknown>;
   completed_at: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  review_notes: string | null;
   created_at: string;
+}
+
+export interface SelfCheckWithContext extends SelfCheck {
+  job: {
+    id: string;
+    address: string | null;
+    customer_name: string | null;
+    assigned_to: string;
+  } | null;
+  property_address: string | null;
+  performer: { display_name: string | null; email: string } | null;
 }
 
 /** List jobs visible to current user (RLS handles filtering). */
