@@ -373,11 +373,57 @@ function AddJobDialog({
             <Label>Anteckningar</Label>
             <Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
+          <div>
+            <Label>Arbetsorder (PDF, valfritt)</Label>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Ladda upp en PDF så tolkar AI vad som ska göras på plats och visar det för arbetsledaren/UE.
+            </p>
+            {workOrderFile ? (
+              <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 p-2">
+                <div className="flex min-w-0 items-center gap-2 text-sm">
+                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{workOrderFile.name}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {(workOrderFile.size / 1024 / 1024).toFixed(1)} MB
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setWorkOrderFile(null)}
+                  disabled={submitting}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card p-4 text-sm text-muted-foreground hover:bg-muted/30">
+                <Upload className="h-4 w-4" />
+                Välj PDF-fil
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    onPickFile(e.target.files?.[0] ?? null);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            )}
+          </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Avbryt</Button>
           <Button onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Sparar…" : "Skapa jobb"}
+            {uploadStage === "creating"
+              ? "Skapar jobb…"
+              : uploadStage === "uploading"
+              ? "Laddar upp PDF…"
+              : uploadStage === "processing"
+              ? "AI tolkar…"
+              : "Skapa jobb"}
           </Button>
         </DialogFooter>
       </DialogContent>
