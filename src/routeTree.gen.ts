@@ -17,10 +17,12 @@ import { Route as PagaendeRouteImport } from './routes/pagaende'
 import { Route as OfferteradeRouteImport } from './routes/offerterade'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeadsRouteImport } from './routes/leads'
+import { Route as JobbRouteImport } from './routes/jobb'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BokadeRouteImport } from './routes/bokade'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
 import { Route as ApiAiPitchRouteImport } from './routes/api/ai-pitch'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
 
@@ -64,6 +66,11 @@ const LeadsRoute = LeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JobbRoute = JobbRouteImport.update({
+  id: '/jobb',
+  path: '/jobb',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -84,6 +91,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JobbJobIdRoute = JobbJobIdRouteImport.update({
+  id: '/$jobId',
+  path: '/$jobId',
+  getParentRoute: () => JobbRoute,
+} as any)
 const ApiAiPitchRoute = ApiAiPitchRouteImport.update({
   id: '/api/ai-pitch',
   path: '/api/ai-pitch',
@@ -101,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
+  '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
   '/offerterade': typeof OfferteradeRoute
@@ -110,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
+  '/jobb/$jobId': typeof JobbJobIdRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -117,6 +131,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
+  '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
   '/offerterade': typeof OfferteradeRoute
@@ -126,6 +141,7 @@ export interface FileRoutesByTo {
   '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
+  '/jobb/$jobId': typeof JobbJobIdRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRoutesById {
@@ -134,6 +150,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
+  '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
   '/offerterade': typeof OfferteradeRoute
@@ -143,6 +160,7 @@ export interface FileRoutesById {
   '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
+  '/jobb/$jobId': typeof JobbJobIdRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRouteTypes {
@@ -152,6 +170,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
+    | '/jobb'
     | '/leads'
     | '/login'
     | '/offerterade'
@@ -161,6 +180,7 @@ export interface FileRouteTypes {
     | '/slutforda'
     | '/webhook-logs'
     | '/api/ai-pitch'
+    | '/jobb/$jobId'
     | '/api/public/roslagstak-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -168,6 +188,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
+    | '/jobb'
     | '/leads'
     | '/login'
     | '/offerterade'
@@ -177,6 +198,7 @@ export interface FileRouteTypes {
     | '/slutforda'
     | '/webhook-logs'
     | '/api/ai-pitch'
+    | '/jobb/$jobId'
     | '/api/public/roslagstak-webhook'
   id:
     | '__root__'
@@ -184,6 +206,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
+    | '/jobb'
     | '/leads'
     | '/login'
     | '/offerterade'
@@ -193,6 +216,7 @@ export interface FileRouteTypes {
     | '/slutforda'
     | '/webhook-logs'
     | '/api/ai-pitch'
+    | '/jobb/$jobId'
     | '/api/public/roslagstak-webhook'
   fileRoutesById: FileRoutesById
 }
@@ -201,6 +225,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   BokadeRoute: typeof BokadeRoute
   DashboardRoute: typeof DashboardRoute
+  JobbRoute: typeof JobbRouteWithChildren
   LeadsRoute: typeof LeadsRoute
   LoginRoute: typeof LoginRoute
   OfferteradeRoute: typeof OfferteradeRoute
@@ -271,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeadsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jobb': {
+      id: '/jobb'
+      path: '/jobb'
+      fullPath: '/jobb'
+      preLoaderRoute: typeof JobbRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -299,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jobb/$jobId': {
+      id: '/jobb/$jobId'
+      path: '/$jobId'
+      fullPath: '/jobb/$jobId'
+      preLoaderRoute: typeof JobbJobIdRouteImport
+      parentRoute: typeof JobbRoute
+    }
     '/api/ai-pitch': {
       id: '/api/ai-pitch'
       path: '/api/ai-pitch'
@@ -316,11 +355,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface JobbRouteChildren {
+  JobbJobIdRoute: typeof JobbJobIdRoute
+}
+
+const JobbRouteChildren: JobbRouteChildren = {
+  JobbJobIdRoute: JobbJobIdRoute,
+}
+
+const JobbRouteWithChildren = JobbRoute._addFileChildren(JobbRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   BokadeRoute: BokadeRoute,
   DashboardRoute: DashboardRoute,
+  JobbRoute: JobbRouteWithChildren,
   LeadsRoute: LeadsRoute,
   LoginRoute: LoginRoute,
   OfferteradeRoute: OfferteradeRoute,
