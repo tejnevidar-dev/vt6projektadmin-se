@@ -6,12 +6,16 @@ export type TimeEntryStatus = "pending" | "approved" | "rejected";
 
 export interface Job {
   id: string;
-  lead_id: string;
+  lead_id: string | null;
   assigned_to: string;
   assignment_type: JobAssignmentType;
   status: JobStatus;
   fixed_price: number | null;
   notes: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  address: string | null;
+  client_company: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,6 +32,37 @@ export interface JobWithLead extends Job {
     address: string;
     municipality: string;
   } | null;
+}
+
+export interface CreateJobInput {
+  assigned_to: string;
+  assignment_type: JobAssignmentType;
+  customer_name: string;
+  customer_phone?: string;
+  address?: string;
+  client_company?: string;
+  fixed_price?: number | null;
+  notes?: string;
+}
+
+export async function createManualJob(input: CreateJobInput): Promise<string> {
+  const { data, error } = await supabase
+    .from("jobs")
+    .insert({
+      assigned_to: input.assigned_to,
+      assignment_type: input.assignment_type,
+      customer_name: input.customer_name,
+      customer_phone: input.customer_phone ?? null,
+      address: input.address ?? null,
+      client_company: input.client_company ?? null,
+      fixed_price:
+        input.assignment_type === "underentreprenor" ? input.fixed_price ?? null : null,
+      notes: input.notes ?? null,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return (data as { id: string }).id;
 }
 
 export interface JobMember {

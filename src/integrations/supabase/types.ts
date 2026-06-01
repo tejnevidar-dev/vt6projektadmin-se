@@ -138,34 +138,46 @@ export type Database = {
       }
       jobs: {
         Row: {
+          address: string | null
           assigned_to: string
           assignment_type: Database["public"]["Enums"]["job_assignment_type"]
+          client_company: string | null
           created_at: string
+          customer_name: string | null
+          customer_phone: string | null
           fixed_price: number | null
           id: string
-          lead_id: string
+          lead_id: string | null
           notes: string | null
           status: Database["public"]["Enums"]["job_status"]
           updated_at: string
         }
         Insert: {
+          address?: string | null
           assigned_to: string
           assignment_type: Database["public"]["Enums"]["job_assignment_type"]
+          client_company?: string | null
           created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
           fixed_price?: number | null
           id?: string
-          lead_id: string
+          lead_id?: string | null
           notes?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           updated_at?: string
         }
         Update: {
+          address?: string | null
           assigned_to?: string
           assignment_type?: Database["public"]["Enums"]["job_assignment_type"]
+          client_company?: string | null
           created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
           fixed_price?: number | null
           id?: string
-          lead_id?: string
+          lead_id?: string | null
           notes?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           updated_at?: string

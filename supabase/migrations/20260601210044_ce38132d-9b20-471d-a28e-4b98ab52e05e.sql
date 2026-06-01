@@ -1,0 +1,6 @@
+ALTER TABLE public.jobs ALTER COLUMN lead_id DROP NOT NULL;
+ALTER TABLE public.jobs
+  ADD COLUMN IF NOT EXISTS customer_name TEXT,
+  ADD COLUMN IF NOT EXISTS customer_phone TEXT,
+  ADD COLUMN IF NOT EXISTS address TEXT,
+  ADD COLUMN IF NOT EXISTS client_company TEXT;
