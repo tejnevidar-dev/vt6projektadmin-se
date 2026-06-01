@@ -388,7 +388,13 @@ export type Database = {
         | "call"
         | "pitch_generated"
         | "updated"
-      app_role: "admin" | "saljare" | "viewer"
+      app_role:
+        | "admin"
+        | "saljare"
+        | "viewer"
+        | "arbetsledare"
+        | "hantverkare"
+        | "underentreprenor"
       job_type: "roof_replacement" | "roof_cleaning" | "light_roof_work"
       lead_source:
         | "field"
@@ -542,7 +548,14 @@ export const Constants = {
         "pitch_generated",
         "updated",
       ],
-      app_role: ["admin", "saljare", "viewer"],
+      app_role: [
+        "admin",
+        "saljare",
+        "viewer",
+        "arbetsledare",
+        "hantverkare",
+        "underentreprenor",
+      ],
       job_type: ["roof_replacement", "roof_cleaning", "light_roof_work"],
       lead_source: [
         "field",
