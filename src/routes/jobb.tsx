@@ -227,6 +227,22 @@ function AddJobDialog({
     }
   }
 
+  function onPickFile(f: File | null) {
+    if (!f) {
+      setWorkOrderFile(null);
+      return;
+    }
+    if (f.type && f.type !== "application/pdf") {
+      toast.error("Endast PDF stöds");
+      return;
+    }
+    if (f.size > 15 * 1024 * 1024) {
+      toast.error("Filen är för stor (max 15 MB)");
+      return;
+    }
+    setWorkOrderFile(f);
+  }
+
   async function handleSubmit() {
     if (!customerName.trim()) {
       toast.error("Ange kundnamn");
@@ -237,6 +253,7 @@ function AddJobDialog({
       return;
     }
     setSubmitting(true);
+    setUploadStage("creating");
     try {
       const id = await createManualJob({
         assigned_to: assignedTo,
@@ -251,7 +268,26 @@ function AddJobDialog({
             : null,
         notes: notes.trim() || undefined,
       });
-      toast.success("Jobb skapat");
+
+      if (workOrderFile) {
+        setUploadStage("uploading");
+        try {
+          await uploadWorkOrder(id, workOrderFile);
+          setUploadStage("processing");
+          toast.success("Jobb skapat – AI tolkar arbetsordern...");
+          try {
+            await processWorkOrder(id);
+            toast.success("AI-sammanfattning klar");
+          } catch (e: any) {
+            toast.error(`Jobb skapat, men AI kunde inte tolka PDF: ${e.message ?? ""}`);
+          }
+        } catch (e: any) {
+          toast.error(`Jobb skapat, men PDF kunde inte laddas upp: ${e.message ?? ""}`);
+        }
+      } else {
+        toast.success("Jobb skapat");
+      }
+
       onOpenChange(false);
       onCreated();
       router.navigate({ to: "/jobb/$jobId", params: { jobId: id } });
@@ -259,6 +295,7 @@ function AddJobDialog({
       toast.error(e.message ?? "Kunde inte skapa jobb");
     } finally {
       setSubmitting(false);
+      setUploadStage("idle");
     }
   }
 
