@@ -186,12 +186,25 @@ function JobDetailPage() {
         </div>
       }
     >
-      <Tabs defaultValue="members">
+      <Tabs defaultValue={job.work_order_summary ? "workorder" : "members"}>
         <TabsList>
+          <TabsTrigger value="workorder">
+            <FileText className="mr-1.5 h-4 w-4" /> Arbetsorder
+          </TabsTrigger>
           <TabsTrigger value="members">Hantverkare ({members.length})</TabsTrigger>
           {!isUE && <TabsTrigger value="time">Timmar ({times.length})</TabsTrigger>}
           <TabsTrigger value="checks">Egenkontroller ({checks.length})</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="workorder" className="mt-4">
+          <WorkOrderPanel
+            job={job}
+            canManage={isAdmin || isOwner}
+            onChanged={reload}
+          />
+        </TabsContent>
+
+
 
         <TabsContent value="members" className="mt-4">
           <div className="flex items-center justify-between mb-3">
