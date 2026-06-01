@@ -144,7 +144,7 @@ function JobDetailPage() {
         <>
           <span>Typ: <strong className="text-foreground">{isUE ? "UE (fast pris)" : "Arbetsledare"}</strong></span>
           <span>Status: <strong className="text-foreground">{STATUS_LABEL[job.status]}</strong></span>
-          {job.client_company && (
+          {isAdmin && job.client_company && (
             <span>Uppdragsgivare: <strong className="text-foreground">{job.client_company}</strong></span>
           )}
           {isAdmin && isUE && job.fixed_price != null && (
