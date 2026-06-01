@@ -298,3 +298,93 @@ export async function listSelfChecks(jobId: string): Promise<SelfCheck[]> {
   if (error) throw error;
   return (data ?? []) as SelfCheck[];
 }
+
+/** List all self-checks visible to current user, with job/address/performer context. */
+export async function listAllSelfChecks(): Promise<SelfCheckWithContext[]> {
+  const { data, error } = await supabase
+    .from("self_checks")
+    .select("*")
+    .order("completed_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const rows = (data ?? []) as SelfCheck[];
+  if (!rows.length) return [];
+
+  const jobIds = Array.from(new Set(rows.map((r) => r.job_id)));
+  const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
+
+  const [{ data: jobs }, { data: profiles }] = await Promise.all([
+    supabase
+      .from("jobs")
+      .select("id, address, customer_name, assigned_to, lead_id")
+      .in("id", jobIds),
+    supabase.from("profiles").select("id, display_name, email").in("id", userIds),
+  ]);
+
+  const leadIds = Array.from(
+    new Set((jobs ?? []).map((j: any) => j.lead_id).filter(Boolean) as string[])
+  );
+  let leadPropMap: Record<string, string | null> = {};
+  if (leadIds.length) {
+    const { data: leads } = await supabase
+      .from("leads")
+      .select("id, property_id")
+      .in("id", leadIds);
+    const propIds = Array.from(
+      new Set((leads ?? []).map((l: any) => l.property_id).filter(Boolean) as string[])
+    );
+    let propAddr: Record<string, string> = {};
+    if (propIds.length) {
+      const { data: props } = await supabase
+        .from("properties")
+        .select("id, address")
+        .in("id", propIds);
+      propAddr = Object.fromEntries((props ?? []).map((p: any) => [p.id, p.address]));
+    }
+    leadPropMap = Object.fromEntries(
+      (leads ?? []).map((l: any) => [l.id, l.property_id ? propAddr[l.property_id] ?? null : null])
+    );
+  }
+
+  const jobMap = Object.fromEntries((jobs ?? []).map((j: any) => [j.id, j]));
+  const profMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p]));
+
+  return rows.map((r) => {
+    const j = jobMap[r.job_id];
+    const propAddress = j?.lead_id ? leadPropMap[j.lead_id] ?? null : null;
+    return {
+      ...r,
+      job: j
+        ? {
+            id: j.id,
+            address: j.address ?? null,
+            customer_name: j.customer_name ?? null,
+            assigned_to: j.assigned_to,
+          }
+        : null,
+      property_address: propAddress,
+      performer: profMap[r.user_id] ?? null,
+    } as SelfCheckWithContext;
+  });
+}
+
+export async function markSelfCheckReviewed(id: string, notes?: string) {
+  const { data: auth } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("self_checks")
+    .update({
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: auth.user?.id ?? null,
+      review_notes: notes ?? null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function unmarkSelfCheckReviewed(id: string) {
+  const { error } = await supabase
+    .from("self_checks")
+    .update({ reviewed_at: null, reviewed_by: null })
+    .eq("id", id);
+  if (error) throw error;
+}
