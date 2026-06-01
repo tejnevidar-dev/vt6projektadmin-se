@@ -1,5 +1,6 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/hooks/use-auth";
+import { WorkspaceProvider } from "@/hooks/use-workspace";
 import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
@@ -79,8 +80,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AuthProvider>
-      <Outlet />
-      <Toaster />
+      <WorkspaceProvider>
+        <Outlet />
+        <Toaster />
+      </WorkspaceProvider>
     </AuthProvider>
   );
 }

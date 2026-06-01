@@ -1,22 +1,45 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat } from "lucide-react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useUserRoles } from "@/hooks/use-role";
+import { useUserRoles, type Side } from "@/hooks/use-role";
+import { useWorkspace } from "@/hooks/use-workspace";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", adminOnly: false },
-  { to: "/leads", label: "Leads", icon: Users, group: "Arbeta", adminOnly: false },
-  { to: "/offerterade", label: "Offerterade", icon: ClipboardList, group: "Arbeta", adminOnly: false },
-  { to: "/bokade", label: "Bokade", icon: CalendarCheck, group: "Arbeta", adminOnly: false },
-  { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", adminOnly: false },
-  { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", adminOnly: false },
-  { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", adminOnly: true },
-  { to: "/admin", label: "Medlemmar", icon: Shield, group: "Hantera", adminOnly: false },
-  { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "Hantera", adminOnly: true },
-  { to: "/settings", label: "Inställningar", icon: Settings, group: "Hantera", adminOnly: false },
-] as const;
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  group: string;
+  side: Side | "both";
+  adminOnly?: boolean;
+};
+
+const navItems: NavItem[] = [
+  // Extern (sälj)
+  { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", side: "extern" },
+  { to: "/leads", label: "Leads", icon: Users, group: "Arbeta", side: "extern" },
+  { to: "/offerterade", label: "Offerterade", icon: ClipboardList, group: "Arbeta", side: "extern" },
+  { to: "/bokade", label: "Bokade", icon: CalendarCheck, group: "Arbeta", side: "extern" },
+  { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", side: "extern" },
+  { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", side: "extern" },
+
+  // Intern (personal)
+  { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "intern", adminOnly: true },
+
+  // Gemensamt (Hantera)
+  { to: "/admin", label: "Medlemmar", icon: Shield, group: "Hantera", side: "both" },
+  { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "Hantera", side: "extern", adminOnly: true },
+  { to: "/settings", label: "Inställningar", icon: Settings, group: "Hantera", side: "both" },
+];
 
 export interface PageHeaderProps {
   title: string;
@@ -34,6 +57,7 @@ interface AppShellProps extends PageHeaderProps {
 export function AppShell({ children, title, description, meta, actions, tabs, topbarActions }: AppShellProps) {
   const { signOut, user } = useAuth();
   const { isAdmin } = useUserRoles();
+  const { side, setSide, canSwitch } = useWorkspace();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [collapsed, setCollapsed] = useState(false);
@@ -43,10 +67,23 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
     navigate({ to: "/login", search: {} });
   };
 
-  const visibleNav = navItems.filter((i) => !i.adminOnly || isAdmin);
+  const visibleNav = navItems.filter((i) => {
+    if (i.adminOnly && !isAdmin) return false;
+    return i.side === "both" || i.side === side;
+  });
   const groups = Array.from(new Set(visibleNav.map((i) => i.group)));
   const activeNav = visibleNav.find((i) => pathname === i.to || (i.to !== "/dashboard" && pathname.startsWith(i.to)));
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
+
+  const sideLabel = side === "intern" ? "Intern" : "Extern";
+  const SideIcon = side === "intern" ? HardHat : Briefcase;
+
+  const handleSwitchSide = (next: Side) => {
+    if (next === side) return;
+    setSide(next);
+    // Skicka användaren till en vettig startsida på den nya sidan
+    navigate({ to: next === "intern" ? "/personal" : "/dashboard" });
+  };
 
   return (
     <div className="relative flex min-h-screen w-full bg-background text-foreground">
@@ -56,16 +93,73 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
           collapsed ? "w-[60px]" : "w-[220px]"
         )}
       >
-        <div className="flex h-14 items-center gap-2.5 px-3">
-          <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 shadow-[0_3px_10px_-3px_color-mix(in_oklab,var(--primary)_70%,transparent)]">
-            <span className="text-[14px] font-semibold leading-none text-primary-foreground">a</span>
-          </div>
-          {!collapsed && (
-            <div className="min-w-0 leading-tight">
-              <div className="text-[14px] font-semibold tracking-tight">admin.vt6</div>
-            </div>
-          )}
+        <div className="flex h-14 items-center px-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(
+                  "group flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors hover:bg-sidebar-accent/60",
+                  collapsed && "justify-center"
+                )}
+                title={collapsed ? `admin.vt6 · ${sideLabel}` : undefined}
+              >
+                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/70 shadow-[0_3px_10px_-3px_color-mix(in_oklab,var(--primary)_70%,transparent)]">
+                  <span className="text-[14px] font-semibold leading-none text-primary-foreground">a</span>
+                </div>
+                {!collapsed && (
+                  <div className="flex min-w-0 flex-1 items-center justify-between gap-1 leading-tight">
+                    <div className="min-w-0">
+                      <div className="truncate text-[14px] font-semibold tracking-tight">admin.vt6</div>
+                      <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/70">
+                        <SideIcon className="h-2.5 w-2.5" />
+                        {sideLabel}
+                      </div>
+                    </div>
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70 transition-transform group-data-[state=open]:rotate-180" />
+                  </div>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Växla arbetsyta
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                disabled={!canSwitch && side !== "extern"}
+                onClick={() => handleSwitchSide("extern")}
+                className="gap-2.5 py-2"
+              >
+                <Briefcase className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Extern</div>
+                  <div className="text-[11px] text-muted-foreground">Sälj &amp; leads</div>
+                </div>
+                {side === "extern" && <Check className="h-4 w-4 text-primary" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!canSwitch && side !== "intern"}
+                onClick={() => handleSwitchSide("intern")}
+                className="gap-2.5 py-2"
+              >
+                <HardHat className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Intern</div>
+                  <div className="text-[11px] text-muted-foreground">Personal &amp; jobb</div>
+                </div>
+                {side === "intern" && <Check className="h-4 w-4 text-primary" />}
+              </DropdownMenuItem>
+              {!canSwitch && (
+                <>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
+                    Bara administratörer kan växla mellan sidor.
+                  </div>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+
 
         <nav className="flex-1 overflow-y-auto px-2 pt-2">
           {groups.map((group) => (
