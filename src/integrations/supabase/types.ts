@@ -104,6 +104,82 @@ export type Database = {
         }
         Relationships: []
       }
+      job_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string | null
+          job_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          job_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          job_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_members_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          assigned_to: string
+          assignment_type: Database["public"]["Enums"]["job_assignment_type"]
+          created_at: string
+          fixed_price: number | null
+          id: string
+          lead_id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["job_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to: string
+          assignment_type: Database["public"]["Enums"]["job_assignment_type"]
+          created_at?: string
+          fixed_price?: number | null
+          id?: string
+          lead_id: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string
+          assignment_type?: Database["public"]["Enums"]["job_assignment_type"]
+          created_at?: string
+          fixed_price?: number | null
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_activities: {
         Row: {
           created_at: string
@@ -403,6 +479,97 @@ export type Database = {
           },
         ]
       }
+      self_checks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          data: Json
+          id: string
+          job_id: string
+          template_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          job_id: string
+          template_key?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          job_id?: string
+          template_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "self_checks_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_entries: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          description: string | null
+          hours: number
+          id: string
+          job_id: string
+          status: Database["public"]["Enums"]["time_entry_status"]
+          updated_at: string
+          user_id: string
+          work_date: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          description?: string | null
+          hours: number
+          id?: string
+          job_id: string
+          status?: Database["public"]["Enums"]["time_entry_status"]
+          updated_at?: string
+          user_id: string
+          work_date: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          description?: string | null
+          hours?: number
+          id?: string
+          job_id?: string
+          status?: Database["public"]["Enums"]["time_entry_status"]
+          updated_at?: string
+          user_id?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -474,6 +641,14 @@ export type Database = {
       }
       is_external_user: { Args: { _user_id: string }; Returns: boolean }
       is_internal_user: { Args: { _user_id: string }; Returns: boolean }
+      is_job_member: {
+        Args: { _job_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_job_owner: {
+        Args: { _job_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       activity_type:
@@ -493,6 +668,8 @@ export type Database = {
         | "hantverkare"
         | "underentreprenor"
       employment_type: "timanstalld" | "fast" | "underentreprenor"
+      job_assignment_type: "arbetsledare" | "underentreprenor"
+      job_status: "ej_paborjad" | "pagaende" | "klar"
       job_type: "roof_replacement" | "roof_cleaning" | "light_roof_work"
       lead_source:
         | "field"
@@ -510,6 +687,7 @@ export type Database = {
         | "pagaende"
         | "slutford"
       salary_adjustment_type: "tillagg" | "avdrag"
+      time_entry_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -656,6 +834,8 @@ export const Constants = {
         "underentreprenor",
       ],
       employment_type: ["timanstalld", "fast", "underentreprenor"],
+      job_assignment_type: ["arbetsledare", "underentreprenor"],
+      job_status: ["ej_paborjad", "pagaende", "klar"],
       job_type: ["roof_replacement", "roof_cleaning", "light_roof_work"],
       lead_source: [
         "field",
@@ -675,6 +855,7 @@ export const Constants = {
         "slutford",
       ],
       salary_adjustment_type: ["tillagg", "avdrag"],
+      time_entry_status: ["pending", "approved", "rejected"],
     },
   },
 } as const
