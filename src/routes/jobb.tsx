@@ -4,6 +4,8 @@ import { AppShell, RequireAuth } from "@/components/AppShell";
 import {
   listJobs,
   createManualJob,
+  uploadWorkOrder,
+  processWorkOrder,
   type JobWithLead,
   type JobStatus,
   type JobAssignmentType,
@@ -37,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, FileText, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/jobb")({
@@ -190,7 +192,9 @@ function AddJobDialog({
   const [clientCompany, setClientCompany] = useState("");
   const [fixedPrice, setFixedPrice] = useState("");
   const [notes, setNotes] = useState("");
+  const [workOrderFile, setWorkOrderFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadStage, setUploadStage] = useState<"idle" | "creating" | "uploading" | "processing">("idle");
 
   useEffect(() => {
     if (!open) return;
@@ -202,6 +206,8 @@ function AddJobDialog({
     setNotes("");
     setAssignedTo("");
     setAssignmentType("arbetsledare");
+    setWorkOrderFile(null);
+    setUploadStage("idle");
     listEmployees()
       .then(setEmployees)
       .catch((e) => toast.error(e.message));
@@ -221,6 +227,22 @@ function AddJobDialog({
     }
   }
 
+  function onPickFile(f: File | null) {
+    if (!f) {
+      setWorkOrderFile(null);
+      return;
+    }
+    if (f.type && f.type !== "application/pdf") {
+      toast.error("Endast PDF stöds");
+      return;
+    }
+    if (f.size > 15 * 1024 * 1024) {
+      toast.error("Filen är för stor (max 15 MB)");
+      return;
+    }
+    setWorkOrderFile(f);
+  }
+
   async function handleSubmit() {
     if (!customerName.trim()) {
       toast.error("Ange kundnamn");
@@ -231,6 +253,7 @@ function AddJobDialog({
       return;
     }
     setSubmitting(true);
+    setUploadStage("creating");
     try {
       const id = await createManualJob({
         assigned_to: assignedTo,
@@ -245,7 +268,26 @@ function AddJobDialog({
             : null,
         notes: notes.trim() || undefined,
       });
-      toast.success("Jobb skapat");
+
+      if (workOrderFile) {
+        setUploadStage("uploading");
+        try {
+          await uploadWorkOrder(id, workOrderFile);
+          setUploadStage("processing");
+          toast.success("Jobb skapat – AI tolkar arbetsordern...");
+          try {
+            await processWorkOrder(id);
+            toast.success("AI-sammanfattning klar");
+          } catch (e: any) {
+            toast.error(`Jobb skapat, men AI kunde inte tolka PDF: ${e.message ?? ""}`);
+          }
+        } catch (e: any) {
+          toast.error(`Jobb skapat, men PDF kunde inte laddas upp: ${e.message ?? ""}`);
+        }
+      } else {
+        toast.success("Jobb skapat");
+      }
+
       onOpenChange(false);
       onCreated();
       router.navigate({ to: "/jobb/$jobId", params: { jobId: id } });
@@ -253,6 +295,7 @@ function AddJobDialog({
       toast.error(e.message ?? "Kunde inte skapa jobb");
     } finally {
       setSubmitting(false);
+      setUploadStage("idle");
     }
   }
 
@@ -330,11 +373,57 @@ function AddJobDialog({
             <Label>Anteckningar</Label>
             <Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
+          <div>
+            <Label>Arbetsorder (PDF, valfritt)</Label>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Ladda upp en PDF så tolkar AI vad som ska göras på plats och visar det för arbetsledaren/UE.
+            </p>
+            {workOrderFile ? (
+              <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 p-2">
+                <div className="flex min-w-0 items-center gap-2 text-sm">
+                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{workOrderFile.name}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {(workOrderFile.size / 1024 / 1024).toFixed(1)} MB
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setWorkOrderFile(null)}
+                  disabled={submitting}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card p-4 text-sm text-muted-foreground hover:bg-muted/30">
+                <Upload className="h-4 w-4" />
+                Välj PDF-fil
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    onPickFile(e.target.files?.[0] ?? null);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            )}
+          </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Avbryt</Button>
           <Button onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Sparar…" : "Skapa jobb"}
+            {uploadStage === "creating"
+              ? "Skapar jobb…"
+              : uploadStage === "uploading"
+              ? "Laddar upp PDF…"
+              : uploadStage === "processing"
+              ? "AI tolkar…"
+              : "Skapa jobb"}
           </Button>
         </DialogFooter>
       </DialogContent>
