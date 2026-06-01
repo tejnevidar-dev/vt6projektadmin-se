@@ -2,7 +2,18 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
-export type AppRole = "admin" | "saljare" | "viewer";
+export type AppRole =
+  | "admin"
+  | "saljare"
+  | "viewer"
+  | "arbetsledare"
+  | "hantverkare"
+  | "underentreprenor";
+
+export type Side = "intern" | "extern";
+
+const EXTERNAL_ROLES: AppRole[] = ["saljare"];
+const INTERNAL_ROLES: AppRole[] = ["arbetsledare", "hantverkare", "underentreprenor"];
 
 export function useUserRoles() {
   const { user } = useAuth();
@@ -31,11 +42,25 @@ export function useUserRoles() {
     };
   }, [user?.id]);
 
+  const isAdmin = roles.includes("admin");
+  const isSaljare = roles.includes("saljare") || isAdmin;
+  const isInternal = isAdmin || roles.some((r) => INTERNAL_ROLES.includes(r));
+  const isExternal = isAdmin || roles.some((r) => EXTERNAL_ROLES.includes(r));
+
   return {
     roles,
     loading,
-    isAdmin: roles.includes("admin"),
-    isSaljare: roles.includes("saljare") || roles.includes("admin"),
-    canEdit: roles.includes("admin") || roles.includes("saljare"),
+    isAdmin,
+    isSaljare,
+    isInternal,
+    isExternal,
+    canEdit: isAdmin || roles.includes("saljare"),
   };
+}
+
+/** Check whether a set of roles allows access to the given side (intern/extern). */
+export function rolesAllowSide(roles: AppRole[], side: Side): boolean {
+  if (roles.includes("admin")) return true;
+  if (side === "intern") return roles.some((r) => INTERNAL_ROLES.includes(r));
+  return roles.some((r) => EXTERNAL_ROLES.includes(r));
 }
