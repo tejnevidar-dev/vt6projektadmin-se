@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      employees: {
+        Row: {
+          active: boolean
+          company_name: string | null
+          created_at: string
+          email: string | null
+          employment_type: Database["public"]["Enums"]["employment_type"]
+          full_name: string
+          hourly_rate: number | null
+          id: string
+          monthly_salary: number | null
+          notes: string | null
+          org_number: string | null
+          personal_number: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          employment_type?: Database["public"]["Enums"]["employment_type"]
+          full_name: string
+          hourly_rate?: number | null
+          id?: string
+          monthly_salary?: number | null
+          notes?: string | null
+          org_number?: string | null
+          personal_number?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          employment_type?: Database["public"]["Enums"]["employment_type"]
+          full_name?: string
+          hourly_rate?: number | null
+          id?: string
+          monthly_salary?: number | null
+          notes?: string | null
+          org_number?: string | null
+          personal_number?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           created_at: string
@@ -308,6 +362,47 @@ export type Database = {
         }
         Relationships: []
       }
+      salary_adjustments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          id: string
+          period_month: string
+          reason: string
+          type: Database["public"]["Enums"]["salary_adjustment_type"]
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          period_month: string
+          reason: string
+          type: Database["public"]["Enums"]["salary_adjustment_type"]
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          period_month?: string
+          reason?: string
+          type?: Database["public"]["Enums"]["salary_adjustment_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_adjustments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -377,6 +472,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_external_user: { Args: { _user_id: string }; Returns: boolean }
+      is_internal_user: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       activity_type:
@@ -388,7 +485,14 @@ export type Database = {
         | "call"
         | "pitch_generated"
         | "updated"
-      app_role: "admin" | "saljare" | "viewer"
+      app_role:
+        | "admin"
+        | "saljare"
+        | "viewer"
+        | "arbetsledare"
+        | "hantverkare"
+        | "underentreprenor"
+      employment_type: "timanstalld" | "fast" | "underentreprenor"
       job_type: "roof_replacement" | "roof_cleaning" | "light_roof_work"
       lead_source:
         | "field"
@@ -405,6 +509,7 @@ export type Database = {
         | "bokad"
         | "pagaende"
         | "slutford"
+      salary_adjustment_type: "tillagg" | "avdrag"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -542,7 +647,15 @@ export const Constants = {
         "pitch_generated",
         "updated",
       ],
-      app_role: ["admin", "saljare", "viewer"],
+      app_role: [
+        "admin",
+        "saljare",
+        "viewer",
+        "arbetsledare",
+        "hantverkare",
+        "underentreprenor",
+      ],
+      employment_type: ["timanstalld", "fast", "underentreprenor"],
       job_type: ["roof_replacement", "roof_cleaning", "light_roof_work"],
       lead_source: [
         "field",
@@ -561,6 +674,7 @@ export const Constants = {
         "pagaende",
         "slutford",
       ],
+      salary_adjustment_type: ["tillagg", "avdrag"],
     },
   },
 } as const

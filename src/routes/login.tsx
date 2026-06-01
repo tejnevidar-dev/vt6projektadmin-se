@@ -2,11 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { rolesAllowSide, type AppRole, type Side } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home } from "lucide-react";
+import { Briefcase, HardHat } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -15,15 +17,16 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Logga in – admin.vt6" },
-      { name: "description", content: "Logga in på admin.vt6 för att hantera dina leads." },
+      { name: "description", content: "Logga in på admin.vt6." },
     ],
   }),
 });
 
 function LoginPage() {
-  const { signIn, signUp, isAuthenticated } = useAuth();
+  const { signIn, signUp, signOut, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { invite } = Route.useSearch();
+  const [side, setSide] = useState<Side>("extern");
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,6 +48,12 @@ function LoginPage() {
         if (data) {
           setInviteInfo(data as any);
           setEmail((data as any).email);
+          // Auto-välj sida baserat på inbjudningens roll
+          if (rolesAllowSide([(data as any).role as AppRole], "intern")) {
+            setSide("intern");
+          } else {
+            setSide("extern");
+          }
         } else {
           setError("Inbjudan är ogiltig eller har gått ut.");
         }
@@ -70,10 +79,32 @@ function LoginPage() {
         } else {
           navigate({ to: "/" });
         }
-      } else {
-        await signIn(email, password);
-        navigate({ to: "/" });
+        return;
       }
+
+      await signIn(email, password);
+
+      // Verifiera att kontot får logga in på vald sida
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Kunde inte verifiera kontot.");
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid);
+      const userRoles = (roleRows ?? []).map((r: any) => r.role as AppRole);
+
+      if (!rolesAllowSide(userRoles, side)) {
+        await signOut();
+        setError(
+          side === "intern"
+            ? "Detta konto har inte tillgång till intern-sidan. Logga in som extern istället."
+            : "Detta konto har inte tillgång till extern-sidan. Logga in som intern istället."
+        );
+        return;
+      }
+
+      navigate({ to: "/" });
     } catch (err: any) {
       setError(err.message || "Något gick fel");
     } finally {
@@ -81,23 +112,69 @@ function LoginPage() {
     }
   };
 
-  const roleLabel = (r: string) => r === "admin" ? "Administratör" : r === "saljare" ? "Säljare" : "Viewer";
+  const roleLabel = (r: string) =>
+    ({
+      admin: "Administratör",
+      saljare: "Säljare",
+      viewer: "Viewer",
+      arbetsledare: "Arbetsledare",
+      hantverkare: "Hantverkare",
+      underentreprenor: "Underentreprenör",
+    } as Record<string, string>)[r] ?? r;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <Home className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <CardTitle>{isSignUp ? "Skapa konto" : "Logga in"}</CardTitle>
+          <CardTitle className="text-xl">admin.vt6</CardTitle>
           <CardDescription>
             {inviteInfo
               ? `Du har blivit inbjuden som ${roleLabel(inviteInfo.role)}`
-              : isSignUp ? "Registrera ett nytt konto" : "Logga in på admin.vt6"}
+              : isSignUp
+              ? "Skapa nytt konto"
+              : "Logga in"}
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Side selector */}
+          {!isSignUp && (
+            <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg border border-border bg-muted/40 p-1">
+              <button
+                type="button"
+                onClick={() => { setSide("extern"); setError(""); }}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  side === "extern"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Briefcase className="h-4 w-4" />
+                Extern
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSide("intern"); setError(""); }}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  side === "intern"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <HardHat className="h-4 w-4" />
+                Intern
+              </button>
+            </div>
+          )}
+          {!isSignUp && (
+            <p className="mb-4 text-center text-xs text-muted-foreground">
+              {side === "extern"
+                ? "Säljare och administratörer"
+                : "Personal: arbetsledare, hantverkare, UE"}
+            </p>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">E-post</Label>
@@ -126,7 +203,7 @@ function LoginPage() {
             {error && <p className="text-sm text-destructive">{error}</p>}
             {message && <p className="text-sm text-green-600">{message}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Vänta..." : isSignUp ? "Skapa konto" : "Logga in"}
+              {loading ? "Vänta..." : isSignUp ? "Skapa konto" : `Logga in som ${side}`}
             </Button>
           </form>
           {!invite && (
