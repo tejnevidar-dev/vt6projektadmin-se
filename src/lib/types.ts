@@ -12,7 +12,7 @@ export const PIPELINE_STAGES: PipelineStage[] = ["inkommande_webb", "saljpanel",
 
 export const PIPELINE_STAGE_LABELS: Record<PipelineStage, string> = {
   inkommande_webb: "Inkommande webb",
-  saljpanel: "Säljpanel leads",
+  saljpanel: "admin.vt6 leads",
   offererad: "Offerterade",
   bokad: "Bokade",
   pagaende: "Pågående",
@@ -41,14 +41,14 @@ export const PREVIOUS_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null
 export const PIPELINE_BACK_LABELS: Record<PipelineStage, string> = {
   inkommande_webb: "Tillbaka",
   saljpanel: "Tillbaka till Inkommande webb",
-  offererad: "Tillbaka till Säljpanel",
+  offererad: "Tillbaka till admin.vt6",
   bokad: "Tillbaka till Offerterade",
   pagaende: "Tillbaka till Bokade",
   slutford: "Tillbaka till Pågående",
 };
 
 export const PIPELINE_ACTION_LABELS: Record<PipelineStage, string> = {
-  inkommande_webb: "Flytta till Säljpanel",
+  inkommande_webb: "Flytta till admin.vt6",
   saljpanel: "Flytta till Offerterade",
   offererad: "Flytta till Bokade",
   bokad: "Flytta till Pågående",

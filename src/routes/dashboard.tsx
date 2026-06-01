@@ -23,7 +23,7 @@ import { LeadDetail } from "@/components/LeadDetail";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
-  head: () => ({ meta: [{ title: "Översikt – Säljpanel" }] }),
+  head: () => ({ meta: [{ title: "Översikt – admin.vt6" }] }),
 });
 
 function DashboardPage() {

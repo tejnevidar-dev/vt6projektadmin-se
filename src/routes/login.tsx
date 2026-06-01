@@ -14,8 +14,8 @@ export const Route = createFileRoute("/login")({
     typeof search.invite === "string" ? { invite: search.invite } : {},
   head: () => ({
     meta: [
-      { title: "Logga in – Säljpanel" },
-      { name: "description", content: "Logga in på Säljpanel för att hantera dina leads." },
+      { title: "Logga in – admin.vt6" },
+      { name: "description", content: "Logga in på admin.vt6 för att hantera dina leads." },
     ],
   }),
 });
@@ -94,7 +94,7 @@ function LoginPage() {
           <CardDescription>
             {inviteInfo
               ? `Du har blivit inbjuden som ${roleLabel(inviteInfo.role)}`
-              : isSignUp ? "Registrera ett nytt konto" : "Logga in på Säljpanel"}
+              : isSignUp ? "Registrera ett nytt konto" : "Logga in på admin.vt6"}
           </CardDescription>
         </CardHeader>
         <CardContent>
