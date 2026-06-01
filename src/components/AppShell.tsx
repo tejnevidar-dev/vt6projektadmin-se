@@ -34,6 +34,7 @@ const navItems: NavItem[] = [
 
   // Intern (personal)
   { to: "/jobb", label: "Jobb", icon: Hammer, group: "Arbeta", side: "intern" },
+  { to: "/egenkontroller", label: "Egenkontroller", icon: ClipboardList, group: "Arbeta", side: "intern" },
   { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "intern", adminOnly: true },
 
   // Gemensamt (Hantera)
