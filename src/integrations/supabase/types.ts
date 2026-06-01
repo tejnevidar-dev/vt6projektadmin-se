@@ -151,6 +151,9 @@ export type Database = {
           notes: string | null
           status: Database["public"]["Enums"]["job_status"]
           updated_at: string
+          work_order_pdf_path: string | null
+          work_order_processed_at: string | null
+          work_order_summary: string | null
         }
         Insert: {
           address?: string | null
@@ -166,6 +169,9 @@ export type Database = {
           notes?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           updated_at?: string
+          work_order_pdf_path?: string | null
+          work_order_processed_at?: string | null
+          work_order_summary?: string | null
         }
         Update: {
           address?: string | null
@@ -181,6 +187,9 @@ export type Database = {
           notes?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           updated_at?: string
+          work_order_pdf_path?: string | null
+          work_order_processed_at?: string | null
+          work_order_summary?: string | null
         }
         Relationships: [
           {

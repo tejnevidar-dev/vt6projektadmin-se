@@ -136,7 +136,7 @@ function JobsPage() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{adress}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {j.lead_id ? "Lead" : j.client_company ? `UE åt ${j.client_company}` : "Manuellt"}
+                    {j.lead_id ? "Lead" : isAdmin && j.client_company ? `UE åt ${j.client_company}` : "Manuellt"}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
@@ -309,7 +309,7 @@ function AddJobDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="arbetsledare">Arbetsledare (timpris)</SelectItem>
+                  <SelectItem value="arbetsledare">Arbetsledare (timrapportering)</SelectItem>
                   <SelectItem value="underentreprenor">UE (fast pris)</SelectItem>
                 </SelectContent>
               </Select>

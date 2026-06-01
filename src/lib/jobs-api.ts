@@ -16,8 +16,69 @@ export interface Job {
   customer_phone: string | null;
   address: string | null;
   client_company: string | null;
+  work_order_pdf_path: string | null;
+  work_order_summary: string | null;
+  work_order_processed_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/* ===== Work orders (PDF + AI summary) ===== */
+
+export async function uploadWorkOrder(jobId: string, file: File): Promise<string> {
+  const path = `${jobId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  const { error: upErr } = await supabase.storage
+    .from("work-orders")
+    .upload(path, file, { contentType: file.type || "application/pdf", upsert: false });
+  if (upErr) throw upErr;
+  const { error: dbErr } = await supabase
+    .from("jobs")
+    .update({
+      work_order_pdf_path: path,
+      work_order_summary: null,
+      work_order_processed_at: null,
+    })
+    .eq("id", jobId);
+  if (dbErr) throw dbErr;
+  return path;
+}
+
+export async function getWorkOrderSignedUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from("work-orders")
+    .createSignedUrl(path, 60 * 60);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function processWorkOrder(jobId: string): Promise<string> {
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  if (!token) throw new Error("Inte inloggad");
+  const resp = await fetch("/api/process-work-order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ jobId }),
+  });
+  const json = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error((json as { error?: string }).error ?? "AI-fel");
+  return (json as { summary: string }).summary;
+}
+
+export async function deleteWorkOrder(jobId: string, path: string) {
+  await supabase.storage.from("work-orders").remove([path]);
+  const { error } = await supabase
+    .from("jobs")
+    .update({
+      work_order_pdf_path: null,
+      work_order_summary: null,
+      work_order_processed_at: null,
+    })
+    .eq("id", jobId);
+  if (error) throw error;
 }
 
 export interface JobWithLead extends Job {

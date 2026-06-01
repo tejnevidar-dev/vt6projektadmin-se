@@ -10,6 +10,10 @@ import {
   removeJobMember,
   addTimeEntry,
   updateJobStatus,
+  uploadWorkOrder,
+  processWorkOrder,
+  getWorkOrderSignedUrl,
+  deleteWorkOrder,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
@@ -38,7 +42,17 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, UserPlus, Plus, Trash2, ClipboardCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  UserPlus,
+  Plus,
+  Trash2,
+  ClipboardCheck,
+  FileText,
+  Upload,
+  Sparkles,
+  ExternalLink,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/jobb/$jobId")({
@@ -144,7 +158,7 @@ function JobDetailPage() {
         <>
           <span>Typ: <strong className="text-foreground">{isUE ? "UE (fast pris)" : "Arbetsledare"}</strong></span>
           <span>Status: <strong className="text-foreground">{STATUS_LABEL[job.status]}</strong></span>
-          {job.client_company && (
+          {isAdmin && job.client_company && (
             <span>Uppdragsgivare: <strong className="text-foreground">{job.client_company}</strong></span>
           )}
           {isAdmin && isUE && job.fixed_price != null && (
@@ -172,12 +186,25 @@ function JobDetailPage() {
         </div>
       }
     >
-      <Tabs defaultValue="members">
+      <Tabs defaultValue={job.work_order_summary ? "workorder" : "members"}>
         <TabsList>
+          <TabsTrigger value="workorder">
+            <FileText className="mr-1.5 h-4 w-4" /> Arbetsorder
+          </TabsTrigger>
           <TabsTrigger value="members">Hantverkare ({members.length})</TabsTrigger>
           {!isUE && <TabsTrigger value="time">Timmar ({times.length})</TabsTrigger>}
           <TabsTrigger value="checks">Egenkontroller ({checks.length})</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="workorder" className="mt-4">
+          <WorkOrderPanel
+            job={job}
+            canManage={isAdmin || isOwner}
+            onChanged={reload}
+          />
+        </TabsContent>
+
+
 
         <TabsContent value="members" className="mt-4">
           <div className="flex items-center justify-between mb-3">

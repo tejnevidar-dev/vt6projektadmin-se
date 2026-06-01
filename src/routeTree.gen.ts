@@ -23,6 +23,7 @@ import { Route as BokadeRouteImport } from './routes/bokade'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
+import { Route as ApiProcessWorkOrderRouteImport } from './routes/api/process-work-order'
 import { Route as ApiAiPitchRouteImport } from './routes/api/ai-pitch'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
 
@@ -96,6 +97,11 @@ const JobbJobIdRoute = JobbJobIdRouteImport.update({
   path: '/$jobId',
   getParentRoute: () => JobbRoute,
 } as any)
+const ApiProcessWorkOrderRoute = ApiProcessWorkOrderRouteImport.update({
+  id: '/api/process-work-order',
+  path: '/api/process-work-order',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiPitchRoute = ApiAiPitchRouteImport.update({
   id: '/api/ai-pitch',
   path: '/api/ai-pitch',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
+  '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
+  '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/slutforda': typeof SlutfordaRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
+  '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/slutforda'
     | '/webhook-logs'
     | '/api/ai-pitch'
+    | '/api/process-work-order'
     | '/jobb/$jobId'
     | '/api/public/roslagstak-webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/slutforda'
     | '/webhook-logs'
     | '/api/ai-pitch'
+    | '/api/process-work-order'
     | '/jobb/$jobId'
     | '/api/public/roslagstak-webhook'
   id:
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/slutforda'
     | '/webhook-logs'
     | '/api/ai-pitch'
+    | '/api/process-work-order'
     | '/jobb/$jobId'
     | '/api/public/roslagstak-webhook'
   fileRoutesById: FileRoutesById
@@ -235,6 +247,7 @@ export interface RootRouteChildren {
   SlutfordaRoute: typeof SlutfordaRoute
   WebhookLogsRoute: typeof WebhookLogsRoute
   ApiAiPitchRoute: typeof ApiAiPitchRoute
+  ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
 }
 
@@ -338,6 +351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobbJobIdRouteImport
       parentRoute: typeof JobbRoute
     }
+    '/api/process-work-order': {
+      id: '/api/process-work-order'
+      path: '/api/process-work-order'
+      fullPath: '/api/process-work-order'
+      preLoaderRoute: typeof ApiProcessWorkOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai-pitch': {
       id: '/api/ai-pitch'
       path: '/api/ai-pitch'
@@ -380,6 +400,7 @@ const rootRouteChildren: RootRouteChildren = {
   SlutfordaRoute: SlutfordaRoute,
   WebhookLogsRoute: WebhookLogsRoute,
   ApiAiPitchRoute: ApiAiPitchRoute,
+  ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
 }
 export const routeTree = rootRouteImport
