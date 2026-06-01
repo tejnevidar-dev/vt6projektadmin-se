@@ -192,7 +192,9 @@ function AddJobDialog({
   const [clientCompany, setClientCompany] = useState("");
   const [fixedPrice, setFixedPrice] = useState("");
   const [notes, setNotes] = useState("");
+  const [workOrderFile, setWorkOrderFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadStage, setUploadStage] = useState<"idle" | "creating" | "uploading" | "processing">("idle");
 
   useEffect(() => {
     if (!open) return;
@@ -204,6 +206,8 @@ function AddJobDialog({
     setNotes("");
     setAssignedTo("");
     setAssignmentType("arbetsledare");
+    setWorkOrderFile(null);
+    setUploadStage("idle");
     listEmployees()
       .then(setEmployees)
       .catch((e) => toast.error(e.message));
