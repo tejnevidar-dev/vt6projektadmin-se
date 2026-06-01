@@ -4,6 +4,8 @@ import { AppShell, RequireAuth } from "@/components/AppShell";
 import {
   listJobs,
   createManualJob,
+  uploadWorkOrder,
+  processWorkOrder,
   type JobWithLead,
   type JobStatus,
   type JobAssignmentType,
