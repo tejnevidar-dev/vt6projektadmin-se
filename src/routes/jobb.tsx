@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, FileText, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/jobb")({
