@@ -309,7 +309,7 @@ function AddJobDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="arbetsledare">Arbetsledare (timpris)</SelectItem>
+                  <SelectItem value="arbetsledare">Arbetsledare (timrapportering)</SelectItem>
                   <SelectItem value="underentreprenor">UE (fast pris)</SelectItem>
                 </SelectContent>
               </Select>
