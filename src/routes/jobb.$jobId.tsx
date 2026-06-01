@@ -10,6 +10,10 @@ import {
   removeJobMember,
   addTimeEntry,
   updateJobStatus,
+  uploadWorkOrder,
+  processWorkOrder,
+  getWorkOrderSignedUrl,
+  deleteWorkOrder,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
@@ -38,7 +42,17 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, UserPlus, Plus, Trash2, ClipboardCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  UserPlus,
+  Plus,
+  Trash2,
+  ClipboardCheck,
+  FileText,
+  Upload,
+  Sparkles,
+  ExternalLink,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/jobb/$jobId")({
