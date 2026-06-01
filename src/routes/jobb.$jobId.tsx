@@ -131,14 +131,22 @@ function JobDetailPage() {
     );
   }
 
+  const titleName = job.lead?.name ?? job.customer_name ?? "Jobb";
+  const descAddr = job.property
+    ? `${job.property.address}, ${job.property.municipality}`
+    : job.address ?? undefined;
+
   return (
     <AppShell
-      title={job.lead?.name ?? "Jobb"}
-      description={job.property ? `${job.property.address}, ${job.property.municipality}` : undefined}
+      title={titleName}
+      description={descAddr}
       meta={
         <>
           <span>Typ: <strong className="text-foreground">{isUE ? "UE (fast pris)" : "Arbetsledare"}</strong></span>
           <span>Status: <strong className="text-foreground">{STATUS_LABEL[job.status]}</strong></span>
+          {job.client_company && (
+            <span>Uppdragsgivare: <strong className="text-foreground">{job.client_company}</strong></span>
+          )}
           {isAdmin && isUE && job.fixed_price != null && (
             <span>Pris: <strong className="text-foreground">{Number(job.fixed_price).toLocaleString("sv-SE")} kr</strong></span>
           )}
