@@ -268,12 +268,15 @@ function AddJobDialog({
         customer_phone: customerPhone.trim() || undefined,
         address: address.trim() || undefined,
         client_company: clientCompany.trim() || undefined,
+        client_contact_name: clientContactName.trim() || undefined,
+        client_email: clientEmail.trim() || undefined,
         fixed_price:
           assignmentType === "underentreprenor" && fixedPrice
             ? Number(fixedPrice)
             : null,
         notes: notes.trim() || undefined,
       });
+
 
       if (workOrderFile) {
         setUploadStage("uploading");
