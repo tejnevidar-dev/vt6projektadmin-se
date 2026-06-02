@@ -142,6 +142,8 @@ export type Database = {
           assigned_to: string
           assignment_type: Database["public"]["Enums"]["job_assignment_type"]
           client_company: string | null
+          client_contact_name: string | null
+          client_email: string | null
           created_at: string
           customer_name: string | null
           customer_phone: string | null
@@ -149,6 +151,8 @@ export type Database = {
           id: string
           lead_id: string | null
           notes: string | null
+          self_checks_emailed_at: string | null
+          self_checks_emailed_to: string | null
           status: Database["public"]["Enums"]["job_status"]
           updated_at: string
           work_order_pdf_path: string | null
@@ -160,6 +164,8 @@ export type Database = {
           assigned_to: string
           assignment_type: Database["public"]["Enums"]["job_assignment_type"]
           client_company?: string | null
+          client_contact_name?: string | null
+          client_email?: string | null
           created_at?: string
           customer_name?: string | null
           customer_phone?: string | null
@@ -167,6 +173,8 @@ export type Database = {
           id?: string
           lead_id?: string | null
           notes?: string | null
+          self_checks_emailed_at?: string | null
+          self_checks_emailed_to?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           updated_at?: string
           work_order_pdf_path?: string | null
@@ -178,6 +186,8 @@ export type Database = {
           assigned_to?: string
           assignment_type?: Database["public"]["Enums"]["job_assignment_type"]
           client_company?: string | null
+          client_contact_name?: string | null
+          client_email?: string | null
           created_at?: string
           customer_name?: string | null
           customer_phone?: string | null
@@ -185,6 +195,8 @@ export type Database = {
           id?: string
           lead_id?: string | null
           notes?: string | null
+          self_checks_emailed_at?: string | null
+          self_checks_emailed_to?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           updated_at?: string
           work_order_pdf_path?: string | null
