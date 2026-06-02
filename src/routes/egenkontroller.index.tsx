@@ -27,7 +27,7 @@ import {
   type SelfCheckWithContext,
 } from "@/lib/jobs-api";
 
-export const Route = createFileRoute("/egenkontroller")({
+export const Route = createFileRoute("/egenkontroller/")({
   component: () => (
     <RequireAuth>
       <EgenkontrollerPage />
