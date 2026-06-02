@@ -124,11 +124,25 @@ function JobDetailPage() {
     try {
       await updateJobStatus(job.id, next);
       toast.success("Status uppdaterad");
+
+      // Auto-send self-checks to client when project marked as klar
+      if (next === "klar" && job.client_email && !job.self_checks_emailed_at) {
+        try {
+          const res = await sendSelfChecksToClient(job.id);
+          toast.success(`Egenkontroller mejlade till ${res.to} (${res.count} st)`);
+        } catch (e: any) {
+          toast.error(`Status uppdaterad, men kunde inte mejla beställaren: ${e.message ?? ""}`);
+        }
+      } else if (next === "klar" && !job.client_email) {
+        toast.message("Ingen beställarmejl angiven – egenkontroller skickades inte automatiskt");
+      }
+
       void reload();
     } catch (e: any) {
       toast.error(e.message);
     }
   }
+
 
   if (loading) {
     return (
