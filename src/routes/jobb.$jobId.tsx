@@ -181,6 +181,9 @@ function JobDetailPage() {
           {isAdmin && isUE && job.fixed_price != null && (
             <span>Pris: <strong className="text-foreground">{Number(job.fixed_price).toLocaleString("sv-SE")} kr</strong></span>
           )}
+          {job.self_checks_emailed_at && job.self_checks_emailed_to && (
+            <span>Mejlat: <strong className="text-foreground">{new Date(job.self_checks_emailed_at).toLocaleDateString("sv-SE")} till {job.self_checks_emailed_to}</strong></span>
+          )}
         </>
       }
       actions={
