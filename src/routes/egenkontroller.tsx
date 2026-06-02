@@ -139,6 +139,9 @@ function EgenkontrollerPage() {
         <TabsList>
           <TabsTrigger value="queue">Att granska ({queue.length})</TabsTrigger>
           <TabsTrigger value="all">Alla ({filtered.length})</TabsTrigger>
+          <TabsTrigger value="instructions">
+            <BookOpen className="mr-1.5 h-3.5 w-3.5" /> Montageinstruktioner
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="mt-4">
