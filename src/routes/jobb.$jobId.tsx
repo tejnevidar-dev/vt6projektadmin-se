@@ -130,15 +130,15 @@ function JobDetailPage() {
 
   if (loading) {
     return (
-      <AppShell title="Jobb">
+      <AppShell title="Projekt">
         <p className="text-muted-foreground">Laddar…</p>
       </AppShell>
     );
   }
   if (!job) {
     return (
-      <AppShell title="Jobb">
-        <p className="text-muted-foreground">Jobbet hittades inte eller så har du inte åtkomst.</p>
+      <AppShell title="Projekt">
+        <p className="text-muted-foreground">Projektet hittades inte eller så har du inte åtkomst.</p>
         <Link to="/jobb" className="mt-4 inline-flex items-center gap-1 text-sm text-primary">
           <ArrowLeft className="h-4 w-4" /> Tillbaka
         </Link>
@@ -146,7 +146,7 @@ function JobDetailPage() {
     );
   }
 
-  const titleName = job.lead?.name ?? job.customer_name ?? "Jobb";
+  const titleName = job.lead?.name ?? job.customer_name ?? "Projekt";
   const descAddr = job.property
     ? `${job.property.address}, ${job.property.municipality}`
     : job.address ?? undefined;
@@ -170,7 +170,7 @@ function JobDetailPage() {
       actions={
         <div className="flex gap-2">
           <Link to="/jobb" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Alla jobb
+            <ArrowLeft className="h-4 w-4" /> Alla projekt
           </Link>
           {(isOwner || isAdmin) && (
             <Select value={job.status} onValueChange={(v) => handleStatus(v as JobStatus)}>
@@ -210,7 +210,7 @@ function JobDetailPage() {
         <TabsContent value="members" className="mt-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-muted-foreground">
-              Inbjudna hantverkare som kan rapportera timmar och fylla i egenkontroller på detta jobb.
+              Inbjudna hantverkare som kan rapportera timmar och fylla i egenkontroller på detta projekt.
             </p>
             {canInvite && (
               <Button size="sm" onClick={() => setInviteOpen(true)}>
@@ -235,7 +235,7 @@ function JobDetailPage() {
                     size="icon"
                     variant="ghost"
                     onClick={async () => {
-                      if (!confirm("Ta bort från jobbet?")) return;
+                      if (!confirm("Ta bort från projektet?")) return;
                       try {
                         await removeJobMember(m.id);
                         toast.success("Borttagen");
@@ -257,7 +257,7 @@ function JobDetailPage() {
           <TabsContent value="time" className="mt-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm text-muted-foreground">
-                Timmar rapporterade på detta jobb. Godkänns av arbetsledare innan löneutbetalning.
+                Timmar rapporterade på detta projekt. Godkänns av arbetsledare innan löneutbetalning.
               </p>
               {canLogTime && (
                 <Button size="sm" onClick={() => setTimeOpen(true)}>
@@ -291,7 +291,7 @@ function JobDetailPage() {
             <ClipboardCheck className="mx-auto mb-3 h-8 w-8 text-muted-foreground/50" />
             <p className="text-sm font-medium">Egenkontroll-mall byggs senare</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Här kommer en fast checklista per jobbtyp som hantverkare måste fylla i för att timmar ska kunna godkännas.
+              Här kommer en fast checklista per projekttyp som hantverkare måste fylla i för att timmar ska kunna godkännas.
             </p>
           </div>
         </TabsContent>

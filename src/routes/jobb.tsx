@@ -48,7 +48,7 @@ export const Route = createFileRoute("/jobb")({
       <JobsPage />
     </RequireAuth>
   ),
-  head: () => ({ meta: [{ title: "Jobb – admin.vt6" }] }),
+  head: () => ({ meta: [{ title: "Projekt – admin.vt6" }] }),
 });
 
 const STATUS_LABEL: Record<JobStatus, string> = {
@@ -79,21 +79,21 @@ function JobsPage() {
   }, []);
 
   const isHantverkare = roles.includes("hantverkare") && !isAdmin;
-  const title = isHantverkare ? "Mina jobb" : "Jobb";
+  const title = isHantverkare ? "Mina projekt" : "Projekt";
 
   return (
     <AppShell
       title={title}
       description={
         isAdmin
-          ? "Alla aktiva jobb. Skapas automatiskt från bokade leads eller läggs in manuellt."
-          : "Jobb du är tilldelad eller inbjuden till."
+          ? "Alla aktiva projekt. Skapas automatiskt från bokade leads eller läggs in manuellt."
+          : "Projekt du är tilldelad eller inbjuden till."
       }
       meta={<span>Totalt: <strong className="text-foreground">{jobs.length}</strong></span>}
       actions={
         isAdmin ? (
           <Button size="sm" onClick={() => setAddOpen(true)}>
-            <Plus className="mr-1.5 h-4 w-4" /> Lägg till jobb
+            <Plus className="mr-1.5 h-4 w-4" /> Lägg till projekt
           </Button>
         ) : undefined
       }
@@ -120,7 +120,7 @@ function JobsPage() {
             {!loading && jobs.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
-                  Inga jobb än. Boka ett lead eller lägg in ett jobb manuellt.
+                  Inga projekt än. Boka ett lead eller lägg in ett projekt manuellt.
                 </TableCell>
               </TableRow>
             )}
@@ -303,7 +303,7 @@ function AddJobDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Lägg till jobb manuellt</DialogTitle>
+          <DialogTitle>Lägg till projekt manuellt</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div>
@@ -418,12 +418,12 @@ function AddJobDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Avbryt</Button>
           <Button onClick={handleSubmit} disabled={submitting}>
             {uploadStage === "creating"
-              ? "Skapar jobb…"
+              ? "Skapar projekt…"
               : uploadStage === "uploading"
               ? "Laddar upp PDF…"
               : uploadStage === "processing"
               ? "AI tolkar…"
-              : "Skapa jobb"}
+              : "Skapa projekt"}
           </Button>
         </DialogFooter>
       </DialogContent>

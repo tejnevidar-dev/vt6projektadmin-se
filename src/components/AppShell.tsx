@@ -33,7 +33,7 @@ const navItems: NavItem[] = [
   { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", side: "extern" },
 
   // Intern (personal)
-  { to: "/jobb", label: "Jobb", icon: Hammer, group: "Arbeta", side: "intern" },
+  { to: "/jobb", label: "Projekt", icon: Hammer, group: "Arbeta", side: "intern" },
   { to: "/egenkontroller", label: "Egenkontroller", icon: ClipboardList, group: "Arbeta", side: "intern" },
   { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "intern", adminOnly: true },
 
