@@ -13,13 +13,22 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Search, CheckCircle2, AlertCircle, Clock, ExternalLink } from "lucide-react";
+import {
+  Search,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  ExternalLink,
+  BookOpen,
+  Video,
+} from "lucide-react";
 import {
   listAllSelfChecks,
   markSelfCheckReviewed,
   unmarkSelfCheckReviewed,
   type SelfCheckWithContext,
 } from "@/lib/jobs-api";
+import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
 
 export const Route = createFileRoute("/egenkontroller")({
   component: () => (
