@@ -355,7 +355,3 @@ function ChecksTable({
       </table>
     </div>
   );
-}
-
-function InstructionsView() {
-  return (
