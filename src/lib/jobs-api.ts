@@ -502,3 +502,41 @@ export async function unmarkSelfCheckReviewed(id: string) {
     .eq("id", id);
   if (error) throw error;
 }
+
+// ============ Self-check instructions (admin-editable) ============
+
+export interface SelfCheckInstructionRow {
+  id: string;
+  template_key: string;
+  field_label: string | null;
+  instruction: string;
+  updated_at: string;
+}
+
+export async function listSelfCheckInstructions(): Promise<SelfCheckInstructionRow[]> {
+  const { data, error } = await supabase
+    .from("self_check_instructions")
+    .select("id,template_key,field_label,instruction,updated_at");
+  if (error) throw error;
+  return (data ?? []) as SelfCheckInstructionRow[];
+}
+
+export async function upsertSelfCheckInstruction(args: {
+  template_key: string;
+  field_label: string | null;
+  instruction: string;
+}) {
+  const { data: auth } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("self_check_instructions")
+    .upsert(
+      {
+        template_key: args.template_key,
+        field_label: args.field_label,
+        instruction: args.instruction,
+        updated_by: auth.user?.id ?? null,
+      },
+      { onConflict: "template_key,field_label" },
+    );
+  if (error) throw error;
+}
