@@ -15,6 +15,7 @@ import {
   getWorkOrderSignedUrl,
   deleteWorkOrder,
   sendSelfChecksToClient,
+  updateJobClientInfo,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
