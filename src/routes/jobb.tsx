@@ -190,6 +190,8 @@ function AddJobDialog({
   const [customerPhone, setCustomerPhone] = useState("");
   const [address, setAddress] = useState("");
   const [clientCompany, setClientCompany] = useState("");
+  const [clientContactName, setClientContactName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
   const [fixedPrice, setFixedPrice] = useState("");
   const [notes, setNotes] = useState("");
   const [workOrderFile, setWorkOrderFile] = useState<File | null>(null);
@@ -202,6 +204,8 @@ function AddJobDialog({
     setCustomerPhone("");
     setAddress("");
     setClientCompany("");
+    setClientContactName("");
+    setClientEmail("");
     setFixedPrice("");
     setNotes("");
     setAssignedTo("");
@@ -212,6 +216,8 @@ function AddJobDialog({
       .then(setEmployees)
       .catch((e) => toast.error(e.message));
   }, [open]);
+
+
 
   // Only employees with a linked user_id can own a job
   const candidates = employees.filter((e) => e.active && !!e.user_id);
