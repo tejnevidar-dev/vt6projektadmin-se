@@ -15,6 +15,7 @@ import {
   getWorkOrderSignedUrl,
   deleteWorkOrder,
   sendSelfChecksToClient,
+  updateJobClientInfo,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
@@ -55,6 +56,7 @@ import {
   Upload,
   Sparkles,
   ExternalLink,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -83,6 +85,7 @@ function JobDetailPage() {
   const [checks, setChecks] = useState<SelfCheck[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
+  const [clientOpen, setClientOpen] = useState(false);
 
   async function reload() {
     setLoading(true);
@@ -175,8 +178,14 @@ function JobDetailPage() {
         <>
           <span>Typ: <strong className="text-foreground">{isUE ? "UE (fast pris)" : "Arbetsledare"}</strong></span>
           <span>Status: <strong className="text-foreground">{STATUS_LABEL[job.status]}</strong></span>
-          {isAdmin && job.client_company && (
-            <span>Uppdragsgivare: <strong className="text-foreground">{job.client_company}</strong></span>
+          {isAdmin && (
+            <span className="inline-flex items-center gap-1">
+              Uppdragsgivare: <strong className="text-foreground">{job.client_company ?? "—"}</strong>
+              {job.client_email && <span className="text-muted-foreground">({job.client_email})</span>}
+              <Button size="icon" variant="ghost" className="h-5 w-5 ml-1" onClick={() => setClientOpen(true)}>
+                <Pencil className="h-3 w-3" />
+              </Button>
+            </span>
           )}
           {isAdmin && isUE && job.fixed_price != null && (
             <span>Pris: <strong className="text-foreground">{Number(job.fixed_price).toLocaleString("sv-SE")} kr</strong></span>
@@ -345,6 +354,25 @@ function JobDetailPage() {
           }
         }}
       />
+      <ClientInfoDialog
+        open={clientOpen}
+        onOpenChange={setClientOpen}
+        initial={{
+          client_company: job.client_company,
+          client_contact_name: job.client_contact_name,
+          client_email: job.client_email,
+        }}
+        onSubmit={async (info) => {
+          try {
+            await updateJobClientInfo(job.id, info);
+            toast.success("Beställaruppgifter uppdaterade");
+            setClientOpen(false);
+            void reload();
+          } catch (e: any) {
+            toast.error(e.message);
+          }
+        }}
+      />
     </AppShell>
   );
 }
@@ -462,6 +490,70 @@ function TimeDialog({
               }
               onSubmit(date, h, desc || undefined);
             }}
+          >
+            Spara
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ClientInfoDialog({
+  open,
+  onOpenChange,
+  initial,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  initial: { client_company: string | null; client_contact_name: string | null; client_email: string | null };
+  onSubmit: (info: { client_company: string | null; client_contact_name: string | null; client_email: string | null }) => void;
+}) {
+  const [company, setCompany] = useState("");
+  const [contact, setContact] = useState("");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setCompany(initial.client_company ?? "");
+      setContact(initial.client_contact_name ?? "");
+      setEmail(initial.client_email ?? "");
+    }
+  }, [open, initial]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Redigera beställaruppgifter</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Företagsnamn</Label>
+            <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="t.ex. Roslagstak AB" />
+            <p className="mt-1 text-xs text-muted-foreground">Visas som "Hej [Företagsnamn]!" i mejlet.</p>
+          </div>
+          <div>
+            <Label>Kontaktperson</Label>
+            <Input value={contact} onChange={(e) => setContact(e.target.value)} />
+          </div>
+          <div>
+            <Label>E-postadress</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="bestallare@foretag.se" />
+            <p className="mt-1 text-xs text-muted-foreground">Egenkontrollerna mejlas hit när projektet markeras klart.</p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
+          <Button
+            onClick={() =>
+              onSubmit({
+                client_company: company.trim() || null,
+                client_contact_name: contact.trim() || null,
+                client_email: email.trim() || null,
+              })
+            }
           >
             Spara
           </Button>

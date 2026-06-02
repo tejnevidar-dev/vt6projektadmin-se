@@ -261,6 +261,21 @@ export async function updateJobStatus(id: string, status: JobStatus) {
   if (error) throw error;
 }
 
+export async function updateJobClientInfo(
+  id: string,
+  info: { client_company: string | null; client_contact_name: string | null; client_email: string | null }
+) {
+  const { error } = await supabase
+    .from("jobs")
+    .update({
+      client_company: info.client_company,
+      client_contact_name: info.client_contact_name,
+      client_email: info.client_email,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 /* ===== Members ===== */
 export async function listJobMembers(jobId: string): Promise<JobMember[]> {
   const { data, error } = await supabase
