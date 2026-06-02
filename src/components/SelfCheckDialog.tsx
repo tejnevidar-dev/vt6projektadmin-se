@@ -43,33 +43,46 @@ interface Props {
   onSaved: () => void;
 }
 
+type ImagesByField = Record<string, SelfCheckImage[]>;
+
+const LEGACY_IMAGE_BUCKET = "__övrigt";
+
 export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }: Props) {
   const [templateKey, setTemplateKey] = useState<string>(
     existing?.template_key ?? SELF_CHECK_TEMPLATES[0].key
   );
   const [values, setValues] = useState<Record<string, unknown>>({});
-  const [images, setImages] = useState<SelfCheckImage[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [imagesByField, setImagesByField] = useState<ImagesByField>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     if (existing) {
       setTemplateKey(existing.template_key);
-      const d = (existing.data as Record<string, unknown>) ?? {};
-      const imgs = (d.images as SelfCheckImage[] | undefined) ?? [];
-      setImages(imgs);
-      const { images: _omit, ...rest } = d as Record<string, unknown>;
-      setValues(rest);
+      const d = { ...((existing.data as Record<string, unknown>) ?? {}) };
+      const byField = (d.imagesByField as ImagesByField | undefined) ?? {};
+      const legacy = (d.images as SelfCheckImage[] | undefined) ?? [];
+      const merged: ImagesByField = { ...byField };
+      if (legacy.length > 0) {
+        merged[LEGACY_IMAGE_BUCKET] = [
+          ...(merged[LEGACY_IMAGE_BUCKET] ?? []),
+          ...legacy,
+        ];
+      }
+      setImagesByField(merged);
+      delete d.imagesByField;
+      delete d.images;
+      setValues(d);
     } else {
       setTemplateKey(SELF_CHECK_TEMPLATES[0].key);
       setValues({});
-      setImages([]);
+      setImagesByField({});
     }
   }, [open, existing]);
 
   const template: SelfCheckTemplate | undefined = getSelfCheckTemplate(templateKey);
   const readOnly = !!existing?.completed_at;
+  const totalImages = Object.values(imagesByField).reduce((n, arr) => n + arr.length, 0);
 
   async function handleSave(submit: boolean) {
     if (!template) return;
@@ -80,14 +93,14 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }
           return;
         }
       }
-      if (template.requiresImages && images.length === 0) {
+      if (template.requiresImages && totalImages === 0) {
         toast.error("Du måste ladda upp minst en bild innan inlämning");
         return;
       }
     }
     setSaving(true);
     try {
-      const payload = { ...values, images };
+      const payload = { ...values, imagesByField };
       if (existing) {
         await updateSelfCheck(existing.id, { data: payload, submit });
       } else {
@@ -108,9 +121,8 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }
     }
   }
 
-  async function handleFiles(files: FileList | null) {
+  async function addImagesToField(fieldLabel: string, files: FileList | null) {
     if (!files || files.length === 0) return;
-    setUploading(true);
     try {
       const uploaded: SelfCheckImage[] = [];
       for (const f of Array.from(files)) {
@@ -121,18 +133,22 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }
         const img = await uploadSelfCheckImage(jobId, f);
         uploaded.push(img);
       }
-      setImages((prev) => [...prev, ...uploaded]);
+      setImagesByField((prev) => ({
+        ...prev,
+        [fieldLabel]: [...(prev[fieldLabel] ?? []), ...uploaded],
+      }));
     } catch (e: any) {
       toast.error(e.message);
-    } finally {
-      setUploading(false);
     }
   }
 
-  async function removeImage(path: string) {
+  async function removeImage(fieldLabel: string, path: string) {
     try {
       await deleteSelfCheckImage(path);
-      setImages((prev) => prev.filter((i) => i.path !== path));
+      setImagesByField((prev) => ({
+        ...prev,
+        [fieldLabel]: (prev[fieldLabel] ?? []).filter((i) => i.path !== path),
+      }));
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -196,116 +212,41 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }
             </div>
           )}
 
-          <div className="space-y-3">
-            {template?.fields.map((f) => {
-              const val = values[f.label];
-              const instructionNode = f.instruction ? (
-                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  {f.instruction}
-                </p>
-              ) : null;
-
-              if (f.type === "checkbox") {
-                return (
-                  <label
-                    key={f.label}
-                    className="flex items-start gap-3 rounded-md border border-border bg-card p-3 text-sm"
-                  >
-                    <Checkbox
-                      className="mt-0.5"
-                      checked={!!val}
-                      disabled={readOnly}
-                      onCheckedChange={(c) =>
-                        setValues((v) => ({ ...v, [f.label]: c === true }))
-                      }
-                    />
-                    <span className="flex-1">
-                      <span className="font-medium">{f.label}</span>
-                      {instructionNode}
-                    </span>
-                  </label>
-                );
-              }
-              if (f.type === "textarea") {
-                return (
-                  <div key={f.label}>
-                    <Label>{f.label}</Label>
-                    {instructionNode}
-                    <Textarea
-                      rows={3}
-                      className="mt-1"
-                      value={(val as string) ?? ""}
-                      disabled={readOnly}
-                      onChange={(e) =>
-                        setValues((v) => ({ ...v, [f.label]: e.target.value }))
-                      }
-                    />
-                  </div>
-                );
-              }
-              return (
-                <div key={f.label}>
-                  <Label>{f.label}</Label>
-                  {instructionNode}
-                  <Input
-                    className="mt-1"
-                    value={(val as string) ?? ""}
-                    disabled={readOnly}
-                    onChange={(e) =>
-                      setValues((v) => ({ ...v, [f.label]: e.target.value }))
-                    }
-                  />
-                </div>
-              );
-            })}
-          </div>
-
           {template?.requiresImages && (
-            <div className="rounded-md border border-border bg-card p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium">Bilder (obligatoriskt)</div>
-                  <p className="text-xs text-muted-foreground">
-                    Ladda upp minst en bild som dokumenterar arbetet.
-                  </p>
-                </div>
-                {!readOnly && (
-                  <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent">
-                    <Upload className="h-3.5 w-3.5" />
-                    {uploading ? "Laddar upp..." : "Lägg till"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      disabled={uploading}
-                      onChange={(e) => {
-                        handleFiles(e.target.files);
-                        e.target.value = "";
-                      }}
-                    />
-                  </label>
-                )}
-              </div>
-
-              {images.length > 0 ? (
-                <ul className="mt-3 space-y-1.5">
-                  {images.map((img) => (
-                    <SelfCheckImageRow
-                      key={img.path}
-                      image={img}
-                      readOnly={readOnly}
-                      onRemove={() => removeImage(img.path)}
-                    />
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Inga bilder uppladdade ännu.
-                </p>
-              )}
+            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
+              För denna mall krävs minst en uppladdad bild innan inlämning. Lägg bilderna på rätt
+              moment nedan så går det snabbt att hitta dem senare.
             </div>
           )}
+
+          <div className="space-y-3">
+            {template?.fields.map((f) => (
+              <FieldRow
+                key={f.label}
+                field={f}
+                value={values[f.label]}
+                onChange={(val) => setValues((v) => ({ ...v, [f.label]: val }))}
+                images={imagesByField[f.label] ?? []}
+                onAddImages={(files) => addImagesToField(f.label, files)}
+                onRemoveImage={(path) => removeImage(f.label, path)}
+                readOnly={readOnly}
+              />
+            ))}
+
+            {(imagesByField[LEGACY_IMAGE_BUCKET]?.length ?? 0) > 0 && (
+              <div className="rounded-md border border-border bg-card p-3">
+                <div className="text-sm font-medium">Övriga bilder</div>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Bilder från tidigare uppladdningar utan kopplat moment.
+                </p>
+                <ImageList
+                  images={imagesByField[LEGACY_IMAGE_BUCKET] ?? []}
+                  readOnly={readOnly}
+                  onRemove={(p) => removeImage(LEGACY_IMAGE_BUCKET, p)}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         <DialogFooter>
@@ -325,6 +266,170 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function FieldRow({
+  field,
+  value,
+  onChange,
+  images,
+  onAddImages,
+  onRemoveImage,
+  readOnly,
+}: {
+  field: { label: string; type: "checkbox" | "text" | "textarea"; instruction?: string };
+  value: unknown;
+  onChange: (v: unknown) => void;
+  images: SelfCheckImage[];
+  onAddImages: (files: FileList | null) => void;
+  onRemoveImage: (path: string) => void;
+  readOnly: boolean;
+}) {
+  const instructionNode = field.instruction ? (
+    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{field.instruction}</p>
+  ) : null;
+
+  const imageAttachments = (
+    <ImageAttachments
+      fieldLabel={field.label}
+      images={images}
+      onAddImages={onAddImages}
+      onRemoveImage={onRemoveImage}
+      readOnly={readOnly}
+    />
+  );
+
+  if (field.type === "checkbox") {
+    return (
+      <div className="rounded-md border border-border bg-card p-3 text-sm">
+        <label className="flex items-start gap-3">
+          <Checkbox
+            className="mt-0.5"
+            checked={!!value}
+            disabled={readOnly}
+            onCheckedChange={(c) => onChange(c === true)}
+          />
+          <span className="flex-1">
+            <span className="font-medium">{field.label}</span>
+            {instructionNode}
+          </span>
+        </label>
+        {imageAttachments}
+      </div>
+    );
+  }
+  if (field.type === "textarea") {
+    return (
+      <div className="rounded-md border border-border bg-card p-3">
+        <Label className="font-medium">{field.label}</Label>
+        {instructionNode}
+        <Textarea
+          rows={3}
+          className="mt-1"
+          value={(value as string) ?? ""}
+          disabled={readOnly}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {imageAttachments}
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-md border border-border bg-card p-3">
+      <Label className="font-medium">{field.label}</Label>
+      {instructionNode}
+      <Input
+        className="mt-1"
+        value={(value as string) ?? ""}
+        disabled={readOnly}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {imageAttachments}
+    </div>
+  );
+}
+
+function ImageAttachments({
+  fieldLabel,
+  images,
+  onAddImages,
+  onRemoveImage,
+  readOnly,
+}: {
+  fieldLabel: string;
+  images: SelfCheckImage[];
+  onAddImages: (files: FileList | null) => void;
+  onRemoveImage: (path: string) => void;
+  readOnly: boolean;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const inputId = `imgs-${fieldLabel.replace(/\s+/g, "-")}`;
+
+  async function handle(files: FileList | null) {
+    setUploading(true);
+    try {
+      await onAddImages(files);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="mt-2 border-t border-dashed border-border pt-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          Bilder ({images.length})
+        </span>
+        {!readOnly && (
+          <label
+            htmlFor={inputId}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2 py-0.5 text-[11px] font-medium hover:bg-accent"
+          >
+            <Upload className="h-3 w-3" />
+            {uploading ? "Laddar upp..." : "Lägg till bild"}
+            <input
+              id={inputId}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              disabled={uploading}
+              onChange={(e) => {
+                void handle(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        )}
+      </div>
+      {images.length > 0 && (
+        <ImageList images={images} readOnly={readOnly} onRemove={onRemoveImage} />
+      )}
+    </div>
+  );
+}
+
+function ImageList({
+  images,
+  readOnly,
+  onRemove,
+}: {
+  images: SelfCheckImage[];
+  readOnly: boolean;
+  onRemove: (path: string) => void;
+}) {
+  return (
+    <ul className="mt-1.5 space-y-1">
+      {images.map((img) => (
+        <SelfCheckImageRow
+          key={img.path}
+          image={img}
+          readOnly={readOnly}
+          onRemove={() => onRemove(img.path)}
+        />
+      ))}
+    </ul>
   );
 }
 
@@ -349,7 +454,7 @@ function SelfCheckImageRow({
   }, [image.path]);
 
   return (
-    <li className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2 py-1.5 text-xs">
+    <li className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2 py-1 text-xs">
       <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
       {url ? (
         <a
