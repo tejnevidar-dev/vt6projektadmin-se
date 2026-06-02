@@ -185,10 +185,11 @@ export const Route = createFileRoute("/api/send-self-checks")({
 <body style="margin:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a">
   <div style="max-width:680px;margin:0 auto;padding:24px">
     <div style="background:#ffffff;border-radius:12px;padding:28px;border:1px solid #e5e7eb">
-      <h1 style="margin:0 0 6px;font-size:22px">Egenkontroller – ${escapeHtml(projectLabel)}</h1>
-      <p style="margin:0 0 20px;color:#475569;font-size:14px">
-        ${clientLine ? `Hej ${escapeHtml(clientLine)},<br/>` : "Hej,<br/>"}
-        projektet är markerat som avslutat. Här kommer egenkontrollerna för uppdraget.
+      <p style="margin:0 0 20px;color:#475569;font-size:14px;line-height:1.6">
+        ${job.client_company ? `Hej ${escapeHtml(job.client_company)}!<br/><br/>` : "Hej!<br/><br/>"}
+        Nu är projektet på "${escapeHtml(job.address || "")}" avslutat och vi tackar ödmjukt för förtroendet och hoppas på många fler lika lyckade projekt i framtiden.<br/><br/>
+        Ni finner alla egenkontroller för "${escapeHtml(job.address || "")}" bifogade i detta mail.<br/><br/>
+        Vänligen kontakta eran kontaktperson för projekt om det uppstår frågetecken som rör egenkontroller.
       </p>
       ${
         job.address
