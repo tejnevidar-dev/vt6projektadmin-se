@@ -85,6 +85,7 @@ function JobDetailPage() {
   const [checks, setChecks] = useState<SelfCheck[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
+  const [clientOpen, setClientOpen] = useState(false);
 
   async function reload() {
     setLoading(true);
