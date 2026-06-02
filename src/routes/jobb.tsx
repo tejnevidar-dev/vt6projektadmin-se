@@ -329,10 +329,27 @@ function AddJobDialog({
               <Input value={address} onChange={(e) => setAddress(e.target.value)} />
             </div>
           </div>
-          <div>
-            <Label>Uppdragsgivare (om vi är UE åt annan aktör)</Label>
-            <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="t.ex. Takbolaget AB" />
+          <div className="rounded-md border border-border/60 bg-muted/30 p-3 space-y-3">
+            <div className="text-sm font-medium">Beställare (om vi är UE)</div>
+            <div>
+              <Label>Företag</Label>
+              <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="t.ex. Takbolaget AB" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Kontaktperson</Label>
+                <Input value={clientContactName} onChange={(e) => setClientContactName(e.target.value)} placeholder="Förnamn Efternamn" />
+              </div>
+              <div>
+                <Label>E-post</Label>
+                <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="bestallare@exempel.se" />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              När projektet markeras som <strong>Klar</strong> mejlas alla egenkontroller automatiskt till beställarens e-post.
+            </p>
           </div>
+
           <div>
             <Label>Tilldela till *</Label>
             <Select value={assignedTo} onValueChange={pickAssignee}>
