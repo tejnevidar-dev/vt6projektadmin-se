@@ -361,7 +361,7 @@ export async function createSelfCheck(input: {
       job_id: input.job_id,
       user_id: auth.user!.id,
       template_key: input.template_key,
-      data: input.data,
+      data: input.data as never,
       completed_at: input.submit ? new Date().toISOString() : null,
     })
     .select("*")
@@ -376,8 +376,9 @@ export async function updateSelfCheck(
 ) {
   const patch: Record<string, unknown> = { data: input.data };
   if (input.submit) patch.completed_at = new Date().toISOString();
-  const { error } = await supabase.from("self_checks").update(patch).eq("id", id);
+  const { error } = await supabase.from("self_checks").update(patch as never).eq("id", id);
   if (error) throw error;
+}
 }
 
 export async function deleteSelfCheck(id: string) {
