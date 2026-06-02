@@ -43,7 +43,7 @@ function EgenkontrollerPage() {
   const [items, setItems] = useState<SelfCheckWithContext[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<"queue" | "all" | "instructions">("queue");
+  const [tab, setTab] = useState<"queue" | "all">("queue");
   const [reviewItem, setReviewItem] = useState<SelfCheckWithContext | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
