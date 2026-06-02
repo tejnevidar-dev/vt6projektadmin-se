@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
+type NavChild = { to: string; label: string };
+
 type NavItem = {
   to: string;
   label: string;
@@ -21,6 +23,7 @@ type NavItem = {
   group: string;
   side: Side | "both";
   adminOnly?: boolean;
+  children?: NavChild[];
 };
 
 const navItems: NavItem[] = [
@@ -34,7 +37,17 @@ const navItems: NavItem[] = [
 
   // Intern (personal)
   { to: "/jobb", label: "Projekt", icon: Hammer, group: "Arbeta", side: "intern" },
-  { to: "/egenkontroller", label: "Egenkontroller", icon: ClipboardList, group: "Arbeta", side: "intern" },
+  {
+    to: "/egenkontroller",
+    label: "Egenkontroller",
+    icon: ClipboardList,
+    group: "Arbeta",
+    side: "intern",
+    children: [
+      { to: "/egenkontroller", label: "Granska egenkontroller" },
+      { to: "/egenkontroller/instruktioner", label: "Hantera instruktioner" },
+    ],
+  },
   { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "intern", adminOnly: true },
 
   // Gemensamt (Hantera)
