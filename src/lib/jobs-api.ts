@@ -379,7 +379,6 @@ export async function updateSelfCheck(
   const { error } = await supabase.from("self_checks").update(patch as never).eq("id", id);
   if (error) throw error;
 }
-}
 
 export async function deleteSelfCheck(id: string) {
   const { error } = await supabase.from("self_checks").delete().eq("id", id);
