@@ -498,3 +498,67 @@ function TimeDialog({
     </Dialog>
   );
 }
+
+function ClientInfoDialog({
+  open,
+  onOpenChange,
+  initial,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  initial: { client_company: string | null; client_contact_name: string | null; client_email: string | null };
+  onSubmit: (info: { client_company: string | null; client_contact_name: string | null; client_email: string | null }) => void;
+}) {
+  const [company, setCompany] = useState("");
+  const [contact, setContact] = useState("");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setCompany(initial.client_company ?? "");
+      setContact(initial.client_contact_name ?? "");
+      setEmail(initial.client_email ?? "");
+    }
+  }, [open, initial]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Redigera beställaruppgifter</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Företagsnamn</Label>
+            <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="t.ex. Roslagstak AB" />
+            <p className="mt-1 text-xs text-muted-foreground">Visas som "Hej [Företagsnamn]!" i mejlet.</p>
+          </div>
+          <div>
+            <Label>Kontaktperson</Label>
+            <Input value={contact} onChange={(e) => setContact(e.target.value)} />
+          </div>
+          <div>
+            <Label>E-postadress</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="bestallare@foretag.se" />
+            <p className="mt-1 text-xs text-muted-foreground">Egenkontrollerna mejlas hit när projektet markeras klart.</p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
+          <Button
+            onClick={() =>
+              onSubmit({
+                client_company: company.trim() || null,
+                client_contact_name: contact.trim() || null,
+                client_email: email.trim() || null,
+              })
+            }
+          >
+            Spara
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
