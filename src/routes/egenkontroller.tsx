@@ -19,8 +19,6 @@ import {
   AlertCircle,
   Clock,
   ExternalLink,
-  BookOpen,
-  Video,
 } from "lucide-react";
 import {
   listAllSelfChecks,
@@ -28,7 +26,6 @@ import {
   unmarkSelfCheckReviewed,
   type SelfCheckWithContext,
 } from "@/lib/jobs-api";
-import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
 
 export const Route = createFileRoute("/egenkontroller")({
   component: () => (
