@@ -232,15 +232,21 @@ export const Route = createFileRoute("/api/send-self-checks")({
           auth: { persistSession: false, autoRefreshToken: false },
         });
 
-        const { data: checks, error: scErr } = await admin
+        const { data: allChecks, error: scErr } = await admin
           .from("self_checks")
           .select("id, template_key, data, completed_at, created_at, user_id")
           .eq("job_id", jobId)
           .order("created_at", { ascending: true });
         if (scErr) return jsonResponse({ error: scErr.message }, 500);
-        if (!checks || checks.length === 0) {
+        // Interna mallar (ställning, säkerhet) skickas inte till beställaren.
+        const CLIENT_TEMPLATES = new Set(["tak", "plat"]);
+        const checks = (allChecks ?? []).filter((c) => CLIENT_TEMPLATES.has(c.template_key));
+        if (checks.length === 0) {
           return jsonResponse(
-            { error: "Det finns inga egenkontroller på det här projektet" },
+            {
+              error:
+                "Det finns inga egenkontroller att skicka till beställaren (endast Takarbete och Plåtarbete skickas).",
+            },
             400,
           );
         }
