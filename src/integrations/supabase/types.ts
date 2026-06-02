@@ -512,6 +512,36 @@ export type Database = {
           },
         ]
       }
+      self_check_instructions: {
+        Row: {
+          created_at: string
+          field_label: string | null
+          id: string
+          instruction: string
+          template_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          field_label?: string | null
+          id?: string
+          instruction?: string
+          template_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          field_label?: string | null
+          id?: string
+          instruction?: string
+          template_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       self_checks: {
         Row: {
           completed_at: string | null
