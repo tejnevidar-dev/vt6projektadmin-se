@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,48 +31,128 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function renderValue(val: unknown): string {
-  if (val === null || val === undefined || val === "") return "<em>–</em>";
+function stringifyValue(val: unknown): string {
+  if (val === null || val === undefined || val === "") return "–";
   if (typeof val === "boolean") return val ? "Ja" : "Nej";
-  if (typeof val === "string" || typeof val === "number") return escapeHtml(String(val));
-  return `<pre style="white-space:pre-wrap;font-family:inherit;margin:0">${escapeHtml(
-    JSON.stringify(val, null, 2),
-  )}</pre>`;
+  if (typeof val === "string" || typeof val === "number") return String(val);
+  try {
+    return JSON.stringify(val, null, 2);
+  } catch {
+    return String(val);
+  }
 }
 
-function renderSelfCheck(idx: number, sc: {
-  template_key: string;
-  data: Record<string, unknown>;
-  completed_at: string | null;
-  created_at: string;
-  performer_name?: string | null;
-}): string {
-  const when = sc.completed_at ?? sc.created_at;
-  const dt = new Date(when).toLocaleString("sv-SE");
-  const rows = Object.entries(sc.data ?? {})
-    .map(
-      ([k, v]) => `
-        <tr>
-          <td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:600;vertical-align:top;width:38%">${escapeHtml(k)}</td>
-          <td style="padding:6px 10px;border-bottom:1px solid #eee">${renderValue(v)}</td>
-        </tr>`,
-    )
-    .join("");
+function sanitize(s: string): string {
+  // Standard Helvetica only supports WinAnsi; strip anything outside.
+  return s.replace(/[^\x00-\xFF]/g, "?");
+}
 
-  return `
-    <div style="margin:0 0 24px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
-      <div style="background:#f8fafc;padding:10px 14px;border-bottom:1px solid #e5e7eb">
-        <strong>Egenkontroll #${idx + 1}</strong>
-        <span style="color:#64748b;margin-left:8px">${escapeHtml(sc.template_key)}</span>
-        <span style="float:right;color:#64748b;font-size:13px">${escapeHtml(dt)}</span>
-        ${
-          sc.performer_name
-            ? `<div style="color:#64748b;font-size:13px;margin-top:2px">Utförd av: ${escapeHtml(sc.performer_name)}</div>`
-            : ""
+function slugify(s: string): string {
+  return (
+    (s || "egenkontroll")
+      .toLowerCase()
+      .replace(/[åä]/g, "a")
+      .replace(/ö/g, "o")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "egenkontroll"
+  );
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+async function buildSelfCheckPdf(args: {
+  index: number;
+  jobAddress: string;
+  customerName: string | null;
+  templateKey: string;
+  data: Record<string, unknown>;
+  completedAt: string | null;
+  createdAt: string;
+  performerName: string | null;
+}): Promise<Uint8Array> {
+  const pdf = await PDFDocument.create();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+  const PAGE: [number, number] = [595.28, 841.89]; // A4
+  let page = pdf.addPage(PAGE);
+  const margin = 50;
+  const maxWidth = page.getWidth() - margin * 2;
+  let y = page.getHeight() - margin;
+
+  const draw = (
+    text: string,
+    opts: { font?: typeof font; size?: number; color?: ReturnType<typeof rgb> } = {},
+  ) => {
+    const f = opts.font ?? font;
+    const size = opts.size ?? 11;
+    const color = opts.color ?? rgb(0, 0, 0);
+    const safe = sanitize(text);
+    for (const rawLine of safe.split(/\n/)) {
+      const words = rawLine.split(/\s+/);
+      let line = "";
+      const lines: string[] = [];
+      for (const w of words) {
+        const test = line ? line + " " + w : w;
+        if (f.widthOfTextAtSize(test, size) > maxWidth && line) {
+          lines.push(line);
+          line = w;
+        } else {
+          line = test;
         }
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:14px">${rows || `<tr><td style="padding:10px;color:#64748b">Inga ifyllda fält</td></tr>`}</table>
-    </div>`;
+      }
+      if (line) lines.push(line);
+      if (lines.length === 0) lines.push("");
+      for (const l of lines) {
+        if (y < margin + size) {
+          page = pdf.addPage(PAGE);
+          y = page.getHeight() - margin;
+        }
+        page.drawText(l, { x: margin, y, size, font: f, color });
+        y -= size + 4;
+      }
+    }
+  };
+
+  draw(`Egenkontroll #${args.index + 1}`, { font: bold, size: 18 });
+  y -= 6;
+  draw(`Mall: ${args.templateKey}`, { size: 10, color: rgb(0.3, 0.3, 0.3) });
+  if (args.jobAddress)
+    draw(`Adress: ${args.jobAddress}`, { size: 10, color: rgb(0.3, 0.3, 0.3) });
+  if (args.customerName)
+    draw(`Objekt: ${args.customerName}`, { size: 10, color: rgb(0.3, 0.3, 0.3) });
+  const when = args.completedAt ?? args.createdAt;
+  draw(`Datum: ${new Date(when).toLocaleString("sv-SE")}`, {
+    size: 10,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+  if (args.performerName)
+    draw(`Utford av: ${args.performerName}`, { size: 10, color: rgb(0.3, 0.3, 0.3) });
+
+  y -= 10;
+  draw("Falt", { font: bold, size: 12 });
+  y -= 4;
+
+  const entries = Object.entries(args.data ?? {});
+  if (entries.length === 0) {
+    draw("Inga ifyllda falt", { size: 11, color: rgb(0.4, 0.4, 0.4) });
+  } else {
+    for (const [k, v] of entries) {
+      draw(k, { font: bold, size: 11 });
+      draw(stringifyValue(v), { size: 11 });
+      y -= 4;
+    }
+  }
+
+  return pdf.save();
 }
 
 export const Route = createFileRoute("/api/send-self-checks")({
@@ -87,7 +168,8 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const token = authHeader.slice(7);
 
         const supabaseUrl = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
-        const anonKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const anonKey =
+          process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         const lovableKey = process.env.LOVABLE_API_KEY;
         const resendKey = process.env.RESEND_API_KEY;
@@ -111,7 +193,6 @@ export const Route = createFileRoute("/api/send-self-checks")({
         if (!parsed.success) return jsonResponse({ error: "Invalid input" }, 400);
         const { jobId } = parsed.data;
 
-        // Verify access to job via RLS
         const { data: job, error: jobErr } = await userClient
           .from("jobs")
           .select(
@@ -127,8 +208,13 @@ export const Route = createFileRoute("/api/send-self-checks")({
             400,
           );
         }
+        if (!job.address) {
+          return jsonResponse(
+            { error: "Adress saknas på projektet" },
+            400,
+          );
+        }
 
-        // Use service role to fetch all self-checks for the job
         const admin = createClient(supabaseUrl, serviceKey, {
           auth: { persistSession: false, autoRefreshToken: false },
         });
@@ -146,8 +232,9 @@ export const Route = createFileRoute("/api/send-self-checks")({
           );
         }
 
-        // Resolve performer names
-        const userIds = Array.from(new Set(checks.map((c) => c.user_id).filter(Boolean) as string[]));
+        const userIds = Array.from(
+          new Set(checks.map((c) => c.user_id).filter(Boolean) as string[]),
+        );
         let nameMap: Record<string, string> = {};
         if (userIds.length) {
           const { data: profs } = await admin
@@ -155,63 +242,47 @@ export const Route = createFileRoute("/api/send-self-checks")({
             .select("id, display_name, email")
             .in("id", userIds);
           nameMap = Object.fromEntries(
-            (profs ?? []).map((p: { id: string; display_name: string | null; email: string }) => [
-              p.id,
-              p.display_name || p.email,
-            ]),
+            (profs ?? []).map(
+              (p: { id: string; display_name: string | null; email: string }) => [
+                p.id,
+                p.display_name || p.email,
+              ],
+            ),
           );
         }
 
-        const projectLabel = [job.customer_name, job.address].filter(Boolean).join(" – ") || "Projekt";
-        const clientLine = [job.client_contact_name, job.client_company]
-          .filter(Boolean)
-          .join(", ");
+        // Build one PDF per self-check
+        const attachments: { filename: string; content: string }[] = [];
+        for (let i = 0; i < checks.length; i++) {
+          const sc = checks[i];
+          const bytes = await buildSelfCheckPdf({
+            index: i,
+            jobAddress: job.address ?? "",
+            customerName: job.customer_name ?? null,
+            templateKey: sc.template_key,
+            data: (sc.data as Record<string, unknown>) ?? {},
+            completedAt: sc.completed_at,
+            createdAt: sc.created_at,
+            performerName: sc.user_id ? nameMap[sc.user_id] ?? null : null,
+          });
+          const filename = `egenkontroll-${i + 1}-${slugify(sc.template_key)}.pdf`;
+          attachments.push({ filename, content: bytesToBase64(bytes) });
+        }
 
-        const checksHtml = checks
-          .map((sc, i) =>
-            renderSelfCheck(i, {
-              template_key: sc.template_key,
-              data: (sc.data as Record<string, unknown>) ?? {},
-              completed_at: sc.completed_at,
-              created_at: sc.created_at,
-              performer_name: sc.user_id ? nameMap[sc.user_id] ?? null : null,
-            }),
-          )
-          .join("");
-
+        const greetName = job.client_company || job.client_contact_name || "";
+        const addr = job.address;
         const html = `
 <!doctype html>
 <html lang="sv">
-<body style="margin:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a">
-  <div style="max-width:680px;margin:0 auto;padding:24px">
-    <div style="background:#ffffff;border-radius:12px;padding:28px;border:1px solid #e5e7eb">
-      <p style="margin:0 0 20px;color:#475569;font-size:14px;line-height:1.6">
-        ${job.client_company ? `Hej ${escapeHtml(job.client_company)}!<br/><br/>` : "Hej!<br/><br/>"}
-        Nu är projektet på "${escapeHtml(job.address || "")}" avslutat och vi tackar ödmjukt för förtroendet och hoppas på många fler lika lyckade projekt i framtiden.<br/><br/>
-        Ni finner alla egenkontroller för "${escapeHtml(job.address || "")}" bifogade i detta mail.<br/><br/>
-        Vänligen kontakta eran kontaktperson för projekt om det uppstår frågetecken som rör egenkontroller.
-      </p>
-      ${
-        job.address
-          ? `<p style="margin:0 0 4px;font-size:14px"><strong>Adress:</strong> ${escapeHtml(job.address)}</p>`
-          : ""
-      }
-      ${
-        job.customer_name
-          ? `<p style="margin:0 0 20px;font-size:14px"><strong>Objekt:</strong> ${escapeHtml(job.customer_name)}</p>`
-          : ""
-      }
-      <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0 20px"/>
-      ${checksHtml}
-      <p style="margin:24px 0 0;color:#64748b;font-size:12px">
-        Skickat automatiskt från VT6 när projektet markerades som klart.
-      </p>
-    </div>
-  </div>
+<body style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a;font-size:14px;line-height:1.6">
+  <p>Hej${greetName ? ` ${escapeHtml(greetName)}` : ""}!</p>
+  <p>Nu är projektet på "${escapeHtml(addr)}" avslutat och vi tackar ödmjukt för förtroendet och hoppas på många fler lika lyckade projekt i framtiden.</p>
+  <p>Ni finner alla egenkontroller för "${escapeHtml(addr)}" bifogade i detta mail.</p>
+  <p>Vänligen kontakta eran kontaktperson för projekt om det uppstår frågetecken som rör egenkontroller.</p>
 </body>
 </html>`.trim();
 
-        const subject = `Egenkontroller – ${projectLabel}`;
+        const subject = addr;
 
         const sendResp = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
           method: "POST",
@@ -225,6 +296,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
             to: [job.client_email],
             subject,
             html,
+            attachments,
           }),
         });
         const sendBody = await sendResp.json().catch(() => ({}));
