@@ -303,7 +303,7 @@ function AddJobDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Lägg till jobb manuellt</DialogTitle>
+          <DialogTitle>Lägg till projekt manuellt</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div>

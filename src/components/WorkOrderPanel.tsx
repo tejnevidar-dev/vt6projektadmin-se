@@ -182,7 +182,7 @@ export function WorkOrderPanel({
             <p className="mt-1 text-xs text-muted-foreground">
               {canManage
                 ? "Ladda upp en PDF-arbetsorder så tolkar AI vad som ska göras på plats."
-                : "Admin har inte laddat upp en arbetsorder för detta jobb än."}
+                : "Admin har inte laddat upp en arbetsorder för detta projekt än."}
             </p>
           </div>
         )
