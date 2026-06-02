@@ -107,6 +107,8 @@ export interface CreateJobInput {
   customer_phone?: string;
   address?: string;
   client_company?: string;
+  client_contact_name?: string;
+  client_email?: string;
   fixed_price?: number | null;
   notes?: string;
 }
@@ -121,6 +123,8 @@ export async function createManualJob(input: CreateJobInput): Promise<string> {
       customer_phone: input.customer_phone ?? null,
       address: input.address ?? null,
       client_company: input.client_company ?? null,
+      client_contact_name: input.client_contact_name ?? null,
+      client_email: input.client_email ?? null,
       fixed_price:
         input.assignment_type === "underentreprenor" ? input.fixed_price ?? null : null,
       notes: input.notes ?? null,
@@ -130,6 +134,31 @@ export async function createManualJob(input: CreateJobInput): Promise<string> {
   if (error) throw error;
   return (data as { id: string }).id;
 }
+
+/** Send all self-checks for a job to the client's email address. */
+export async function sendSelfChecksToClient(
+  jobId: string,
+): Promise<{ to: string; count: number }> {
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  if (!token) throw new Error("Inte inloggad");
+  const resp = await fetch("/api/send-self-checks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ jobId }),
+  });
+  const json = (await resp.json().catch(() => ({}))) as {
+    error?: string;
+    to?: string;
+    count?: number;
+  };
+  if (!resp.ok) throw new Error(json.error ?? "Kunde inte skicka egenkontroller");
+  return { to: json.to ?? "", count: json.count ?? 0 };
+}
+
 
 export interface JobMember {
   id: string;
