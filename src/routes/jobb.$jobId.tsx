@@ -354,6 +354,25 @@ function JobDetailPage() {
           }
         }}
       />
+      <ClientInfoDialog
+        open={clientOpen}
+        onOpenChange={setClientOpen}
+        initial={{
+          client_company: job.client_company,
+          client_contact_name: job.client_contact_name,
+          client_email: job.client_email,
+        }}
+        onSubmit={async (info) => {
+          try {
+            await updateJobClientInfo(job.id, info);
+            toast.success("Beställaruppgifter uppdaterade");
+            setClientOpen(false);
+            void reload();
+          } catch (e: any) {
+            toast.error(e.message);
+          }
+        }}
+      />
     </AppShell>
   );
 }
