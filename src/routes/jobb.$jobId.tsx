@@ -56,6 +56,7 @@ import {
   Upload,
   Sparkles,
   ExternalLink,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
