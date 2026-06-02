@@ -566,3 +566,117 @@ function ClientInfoDialog({
     </Dialog>
   );
 }
+
+function ChecksTab({
+  jobId,
+  checks,
+  currentUserId,
+  canCreate,
+  isAdmin,
+  onChanged,
+}: {
+  jobId: string;
+  checks: SelfCheck[];
+  currentUserId: string | null;
+  canCreate: boolean;
+  isAdmin: boolean;
+  onChanged: () => void;
+}) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<SelfCheck | null>(null);
+
+  function openNew() {
+    setEditing(null);
+    setDialogOpen(true);
+  }
+  function openExisting(c: SelfCheck) {
+    setEditing(c);
+    setDialogOpen(true);
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-muted-foreground">
+          Hantverkare fyller i egenkontroller per arbetstyp. Inlämnade kontroller granskas av admin
+          och mejlas till beställaren när projektet markeras klart.
+        </p>
+        {canCreate && (
+          <Button size="sm" onClick={openNew}>
+            <Plus className="mr-1.5 h-4 w-4" /> Ny egenkontroll
+          </Button>
+        )}
+      </div>
+
+      <div className="rounded-lg border border-border bg-card divide-y divide-border">
+        {checks.length === 0 && (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            <ClipboardCheck className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
+            Inga egenkontroller registrerade än.
+          </div>
+        )}
+        {checks.map((c) => {
+          const isDraft = !c.completed_at;
+          const isMine = c.user_id === currentUserId;
+          const canEdit = isDraft && (isMine || isAdmin);
+          const canDelete = isAdmin || (isDraft && isMine);
+          return (
+            <div
+              key={c.id}
+              className="flex items-center justify-between p-3 hover:bg-muted/30 transition cursor-pointer"
+              onClick={() => openExisting(c)}
+            >
+              <div>
+                <div className="font-medium text-sm">
+                  {getSelfCheckTemplateLabel(c.template_key)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {new Date(c.completed_at ?? c.created_at).toLocaleString("sv-SE")}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {c.reviewed_at ? (
+                  <Badge variant="default">Granskad</Badge>
+                ) : c.completed_at ? (
+                  <Badge variant="secondary">Inlämnad</Badge>
+                ) : (
+                  <Badge variant="outline">Utkast</Badge>
+                )}
+                {canDelete && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!confirm("Ta bort egenkontrollen?")) return;
+                      try {
+                        await deleteSelfCheck(c.id);
+                        toast.success("Borttagen");
+                        onChanged();
+                      } catch (err: any) {
+                        toast.error(err.message);
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
+                {!canEdit && !canDelete && (
+                  <span className="text-xs text-muted-foreground">Visa</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <SelfCheckDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        jobId={jobId}
+        existing={editing}
+        onSaved={onChanged}
+      />
+    </>
+  );
+}
