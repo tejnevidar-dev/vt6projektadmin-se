@@ -366,3 +366,75 @@ function ChecksTable({
     </div>
   );
 }
+
+function InstructionsView() {
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+        <div className="mb-1 flex items-center gap-2 font-medium text-foreground">
+          <BookOpen className="h-4 w-4" />
+          Montageinstruktioner
+        </div>
+        <p>
+          Här samlar vi instruktioner för varje moment i mallarna. Texten fyller ni i löpande –
+          det som skrivs här visas också inne i egenkontrollerna på respektive projekt.
+          Bilduppladdning sker inte här, utan på projektets egenkontroll-flik där varje moment
+          har sin egen plats för bilder.
+        </p>
+      </div>
+
+      {SELF_CHECK_TEMPLATES.map((tpl) => (
+        <div key={tpl.key} className="overflow-hidden rounded-lg border border-border bg-card">
+          <div className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="text-base font-semibold">{tpl.name}</h3>
+              <span className="text-xs text-muted-foreground">
+                {tpl.sentToClient ? "Skickas till beställaren" : "Intern – endast för oss"}
+              </span>
+            </div>
+            {tpl.description && (
+              <p className="mt-0.5 text-xs text-muted-foreground">{tpl.description}</p>
+            )}
+            {tpl.videoUrl && (
+              <a
+                href={tpl.videoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                <Video className="h-3.5 w-3.5" />
+                {tpl.videoLabel ?? "Se instruktionsvideo"}
+              </a>
+            )}
+          </div>
+
+          {tpl.instructions && (
+            <div className="border-b border-border bg-primary/5 px-4 py-3 text-sm leading-relaxed">
+              <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                Övergripande instruktion
+              </div>
+              <p className="whitespace-pre-wrap text-foreground/90">{tpl.instructions}</p>
+            </div>
+          )}
+
+          <ul className="divide-y divide-border">
+            {tpl.fields.map((f) => (
+              <li key={f.label} className="px-4 py-3">
+                <div className="text-sm font-medium">{f.label}</div>
+                {f.instruction ? (
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    {f.instruction}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs italic text-muted-foreground/70">
+                    Instruktion kommer här – fyll i senare.
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
