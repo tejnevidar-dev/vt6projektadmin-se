@@ -107,9 +107,9 @@ const JobbJobIdRoute = JobbJobIdRouteImport.update({
 } as any)
 const EgenkontrollerInstruktionerRoute =
   EgenkontrollerInstruktionerRouteImport.update({
-    id: '/instruktioner',
-    path: '/instruktioner',
-    getParentRoute: () => EgenkontrollerRoute,
+    id: '/egenkontroller/instruktioner',
+    path: '/egenkontroller/instruktioner',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const ApiSendSelfChecksRoute = ApiSendSelfChecksRouteImport.update({
   id: '/api/send-self-checks',
@@ -286,6 +286,7 @@ export interface RootRouteChildren {
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
   ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
+  EgenkontrollerInstruktionerRoute: typeof EgenkontrollerInstruktionerRoute
   EgenkontrollerIndexRoute: typeof EgenkontrollerIndexRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -399,10 +400,10 @@ declare module '@tanstack/react-router' {
     }
     '/egenkontroller/instruktioner': {
       id: '/egenkontroller/instruktioner'
-      path: '/instruktioner'
+      path: '/egenkontroller/instruktioner'
       fullPath: '/egenkontroller/instruktioner'
       preLoaderRoute: typeof EgenkontrollerInstruktionerRouteImport
-      parentRoute: typeof EgenkontrollerRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/send-self-checks': {
       id: '/api/send-self-checks'
@@ -462,6 +463,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
   ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
+  EgenkontrollerInstruktionerRoute: EgenkontrollerInstruktionerRoute,
   EgenkontrollerIndexRoute: EgenkontrollerIndexRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
 }
