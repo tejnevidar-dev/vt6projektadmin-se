@@ -14,12 +14,14 @@ import {
   processWorkOrder,
   getWorkOrderSignedUrl,
   deleteWorkOrder,
+  sendSelfChecksToClient,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
   type SelfCheck,
   type JobStatus,
 } from "@/lib/jobs-api";
+
 import { listEmployees, type Employee } from "@/lib/employees-api";
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
 import { useAuth } from "@/hooks/use-auth";
