@@ -136,9 +136,6 @@ function EgenkontrollerPage() {
         <TabsList>
           <TabsTrigger value="queue">Att granska ({queue.length})</TabsTrigger>
           <TabsTrigger value="all">Alla ({filtered.length})</TabsTrigger>
-          <TabsTrigger value="instructions">
-            <BookOpen className="mr-1.5 h-3.5 w-3.5" /> Montageinstruktioner
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="mt-4">
@@ -170,10 +167,6 @@ function EgenkontrollerPage() {
           {filtered.length === 0 && !loading && (
             <EmptyState text="Inga egenkontroller matchar filtret." />
           )}
-        </TabsContent>
-
-        <TabsContent value="instructions" className="mt-4">
-          <InstructionsView />
         </TabsContent>
       </Tabs>
 
