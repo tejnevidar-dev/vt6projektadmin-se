@@ -16,12 +16,15 @@ import {
   deleteWorkOrder,
   sendSelfChecksToClient,
   updateJobClientInfo,
+  deleteSelfCheck,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
   type SelfCheck,
   type JobStatus,
 } from "@/lib/jobs-api";
+import { SelfCheckDialog } from "@/components/SelfCheckDialog";
+import { getSelfCheckTemplateLabel } from "@/lib/self-check-templates";
 
 import { listEmployees, type Employee } from "@/lib/employees-api";
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
@@ -315,13 +318,14 @@ function JobDetailPage() {
         )}
 
         <TabsContent value="checks" className="mt-4">
-          <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-            <ClipboardCheck className="mx-auto mb-3 h-8 w-8 text-muted-foreground/50" />
-            <p className="text-sm font-medium">Egenkontroll-mall byggs senare</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Här kommer en fast checklista per projekttyp som hantverkare måste fylla i för att timmar ska kunna godkännas.
-            </p>
-          </div>
+          <ChecksTab
+            jobId={job.id}
+            checks={checks}
+            currentUserId={user?.id ?? null}
+            canCreate={isOwner || isAdmin || members.some((m) => m.user_id === user?.id)}
+            isAdmin={isAdmin}
+            onChanged={reload}
+          />
         </TabsContent>
       </Tabs>
 
@@ -560,5 +564,119 @@ function ClientInfoDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ChecksTab({
+  jobId,
+  checks,
+  currentUserId,
+  canCreate,
+  isAdmin,
+  onChanged,
+}: {
+  jobId: string;
+  checks: SelfCheck[];
+  currentUserId: string | null;
+  canCreate: boolean;
+  isAdmin: boolean;
+  onChanged: () => void;
+}) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<SelfCheck | null>(null);
+
+  function openNew() {
+    setEditing(null);
+    setDialogOpen(true);
+  }
+  function openExisting(c: SelfCheck) {
+    setEditing(c);
+    setDialogOpen(true);
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-muted-foreground">
+          Hantverkare fyller i egenkontroller per arbetstyp. Inlämnade kontroller granskas av admin
+          och mejlas till beställaren när projektet markeras klart.
+        </p>
+        {canCreate && (
+          <Button size="sm" onClick={openNew}>
+            <Plus className="mr-1.5 h-4 w-4" /> Ny egenkontroll
+          </Button>
+        )}
+      </div>
+
+      <div className="rounded-lg border border-border bg-card divide-y divide-border">
+        {checks.length === 0 && (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            <ClipboardCheck className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
+            Inga egenkontroller registrerade än.
+          </div>
+        )}
+        {checks.map((c) => {
+          const isDraft = !c.completed_at;
+          const isMine = c.user_id === currentUserId;
+          const canEdit = isDraft && (isMine || isAdmin);
+          const canDelete = isAdmin || (isDraft && isMine);
+          return (
+            <div
+              key={c.id}
+              className="flex items-center justify-between p-3 hover:bg-muted/30 transition cursor-pointer"
+              onClick={() => openExisting(c)}
+            >
+              <div>
+                <div className="font-medium text-sm">
+                  {getSelfCheckTemplateLabel(c.template_key)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {new Date(c.completed_at ?? c.created_at).toLocaleString("sv-SE")}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {c.reviewed_at ? (
+                  <Badge variant="default">Granskad</Badge>
+                ) : c.completed_at ? (
+                  <Badge variant="secondary">Inlämnad</Badge>
+                ) : (
+                  <Badge variant="outline">Utkast</Badge>
+                )}
+                {canDelete && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!confirm("Ta bort egenkontrollen?")) return;
+                      try {
+                        await deleteSelfCheck(c.id);
+                        toast.success("Borttagen");
+                        onChanged();
+                      } catch (err: any) {
+                        toast.error(err.message);
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
+                {!canEdit && !canDelete && (
+                  <span className="text-xs text-muted-foreground">Visa</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <SelfCheckDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        jobId={jobId}
+        existing={editing}
+        onSaved={onChanged}
+      />
+    </>
   );
 }
