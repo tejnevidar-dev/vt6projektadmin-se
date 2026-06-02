@@ -532,7 +532,7 @@ export async function upsertSelfCheckInstruction(args: {
     .upsert(
       {
         template_key: args.template_key,
-        field_label: args.field_label,
+        field_label: args.field_label ?? "",
         instruction: args.instruction,
         updated_by: auth.user?.id ?? null,
       },
