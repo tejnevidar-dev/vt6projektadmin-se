@@ -174,6 +174,10 @@ function EgenkontrollerPage() {
             <EmptyState text="Inga egenkontroller matchar filtret." />
           )}
         </TabsContent>
+
+        <TabsContent value="instructions" className="mt-4">
+          <InstructionsView />
+        </TabsContent>
       </Tabs>
 
       <Dialog
