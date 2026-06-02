@@ -24,6 +24,7 @@ import { Route as BokadeRouteImport } from './routes/bokade'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
+import { Route as ApiSendSelfChecksRouteImport } from './routes/api/send-self-checks'
 import { Route as ApiProcessWorkOrderRouteImport } from './routes/api/process-work-order'
 import { Route as ApiAiPitchRouteImport } from './routes/api/ai-pitch'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
@@ -103,6 +104,11 @@ const JobbJobIdRoute = JobbJobIdRouteImport.update({
   path: '/$jobId',
   getParentRoute: () => JobbRoute,
 } as any)
+const ApiSendSelfChecksRoute = ApiSendSelfChecksRouteImport.update({
+  id: '/api/send-self-checks',
+  path: '/api/send-self-checks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProcessWorkOrderRoute = ApiProcessWorkOrderRouteImport.update({
   id: '/api/process-work-order',
   path: '/api/process-work-order',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
+  '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
+  '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
+  '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
+    | '/api/send-self-checks'
     | '/jobb/$jobId'
     | '/api/public/roslagstak-webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
+    | '/api/send-self-checks'
     | '/jobb/$jobId'
     | '/api/public/roslagstak-webhook'
   id:
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
+    | '/api/send-self-checks'
     | '/jobb/$jobId'
     | '/api/public/roslagstak-webhook'
   fileRoutesById: FileRoutesById
@@ -261,6 +273,7 @@ export interface RootRouteChildren {
   WebhookLogsRoute: typeof WebhookLogsRoute
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
+  ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
 }
 
@@ -371,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobbJobIdRouteImport
       parentRoute: typeof JobbRoute
     }
+    '/api/send-self-checks': {
+      id: '/api/send-self-checks'
+      path: '/api/send-self-checks'
+      fullPath: '/api/send-self-checks'
+      preLoaderRoute: typeof ApiSendSelfChecksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/process-work-order': {
       id: '/api/process-work-order'
       path: '/api/process-work-order'
@@ -422,6 +442,7 @@ const rootRouteChildren: RootRouteChildren = {
   WebhookLogsRoute: WebhookLogsRoute,
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
+  ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
 }
 export const routeTree = rootRouteImport

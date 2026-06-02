@@ -16,12 +16,17 @@ export interface Job {
   customer_phone: string | null;
   address: string | null;
   client_company: string | null;
+  client_contact_name: string | null;
+  client_email: string | null;
+  self_checks_emailed_at: string | null;
+  self_checks_emailed_to: string | null;
   work_order_pdf_path: string | null;
   work_order_summary: string | null;
   work_order_processed_at: string | null;
   created_at: string;
   updated_at: string;
 }
+
 
 /* ===== Work orders (PDF + AI summary) ===== */
 
