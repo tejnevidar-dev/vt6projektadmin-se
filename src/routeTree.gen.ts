@@ -18,6 +18,7 @@ import { Route as OfferteradeRouteImport } from './routes/offerterade'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeadsRouteImport } from './routes/leads'
 import { Route as JobbRouteImport } from './routes/jobb'
+import { Route as EgenkontrollerRouteImport } from './routes/egenkontroller'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BokadeRouteImport } from './routes/bokade'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -75,6 +76,11 @@ const JobbRoute = JobbRouteImport.update({
   path: '/jobb',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EgenkontrollerRoute = EgenkontrollerRouteImport.update({
+  id: '/egenkontroller',
+  path: '/egenkontroller',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -96,9 +102,9 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const EgenkontrollerIndexRoute = EgenkontrollerIndexRouteImport.update({
-  id: '/egenkontroller/',
-  path: '/egenkontroller/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => EgenkontrollerRoute,
 } as any)
 const JobbJobIdRoute = JobbJobIdRouteImport.update({
   id: '/$jobId',
@@ -107,9 +113,9 @@ const JobbJobIdRoute = JobbJobIdRouteImport.update({
 } as any)
 const EgenkontrollerInstruktionerRoute =
   EgenkontrollerInstruktionerRouteImport.update({
-    id: '/egenkontroller/instruktioner',
-    path: '/egenkontroller/instruktioner',
-    getParentRoute: () => rootRouteImport,
+    id: '/instruktioner',
+    path: '/instruktioner',
+    getParentRoute: () => EgenkontrollerRoute,
   } as any)
 const ApiSendSelfChecksRoute = ApiSendSelfChecksRouteImport.update({
   id: '/api/send-self-checks',
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
+  '/egenkontroller': typeof EgenkontrollerRouteWithChildren
   '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
@@ -183,6 +190,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
+  '/egenkontroller': typeof EgenkontrollerRouteWithChildren
   '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
@@ -207,6 +215,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
+    | '/egenkontroller'
     | '/jobb'
     | '/leads'
     | '/login'
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
+    | '/egenkontroller'
     | '/jobb'
     | '/leads'
     | '/login'
@@ -274,6 +284,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   BokadeRoute: typeof BokadeRoute
   DashboardRoute: typeof DashboardRoute
+  EgenkontrollerRoute: typeof EgenkontrollerRouteWithChildren
   JobbRoute: typeof JobbRouteWithChildren
   LeadsRoute: typeof LeadsRoute
   LoginRoute: typeof LoginRoute
@@ -286,8 +297,6 @@ export interface RootRouteChildren {
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
   ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
-  EgenkontrollerInstruktionerRoute: typeof EgenkontrollerInstruktionerRoute
-  EgenkontrollerIndexRoute: typeof EgenkontrollerIndexRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
 }
 
@@ -356,6 +365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobbRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/egenkontroller': {
+      id: '/egenkontroller'
+      path: '/egenkontroller'
+      fullPath: '/egenkontroller'
+      preLoaderRoute: typeof EgenkontrollerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -386,10 +402,10 @@ declare module '@tanstack/react-router' {
     }
     '/egenkontroller/': {
       id: '/egenkontroller/'
-      path: '/egenkontroller'
+      path: '/'
       fullPath: '/egenkontroller/'
       preLoaderRoute: typeof EgenkontrollerIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof EgenkontrollerRoute
     }
     '/jobb/$jobId': {
       id: '/jobb/$jobId'
@@ -400,10 +416,10 @@ declare module '@tanstack/react-router' {
     }
     '/egenkontroller/instruktioner': {
       id: '/egenkontroller/instruktioner'
-      path: '/egenkontroller/instruktioner'
+      path: '/instruktioner'
       fullPath: '/egenkontroller/instruktioner'
       preLoaderRoute: typeof EgenkontrollerInstruktionerRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof EgenkontrollerRoute
     }
     '/api/send-self-checks': {
       id: '/api/send-self-checks'
@@ -436,6 +452,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface EgenkontrollerRouteChildren {
+  EgenkontrollerInstruktionerRoute: typeof EgenkontrollerInstruktionerRoute
+  EgenkontrollerIndexRoute: typeof EgenkontrollerIndexRoute
+}
+
+const EgenkontrollerRouteChildren: EgenkontrollerRouteChildren = {
+  EgenkontrollerInstruktionerRoute: EgenkontrollerInstruktionerRoute,
+  EgenkontrollerIndexRoute: EgenkontrollerIndexRoute,
+}
+
+const EgenkontrollerRouteWithChildren = EgenkontrollerRoute._addFileChildren(
+  EgenkontrollerRouteChildren,
+)
+
 interface JobbRouteChildren {
   JobbJobIdRoute: typeof JobbJobIdRoute
 }
@@ -451,6 +481,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   BokadeRoute: BokadeRoute,
   DashboardRoute: DashboardRoute,
+  EgenkontrollerRoute: EgenkontrollerRouteWithChildren,
   JobbRoute: JobbRouteWithChildren,
   LeadsRoute: LeadsRoute,
   LoginRoute: LoginRoute,
@@ -463,8 +494,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
   ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
-  EgenkontrollerInstruktionerRoute: EgenkontrollerInstruktionerRoute,
-  EgenkontrollerIndexRoute: EgenkontrollerIndexRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
 }
 export const routeTree = rootRouteImport
