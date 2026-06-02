@@ -178,8 +178,14 @@ function JobDetailPage() {
         <>
           <span>Typ: <strong className="text-foreground">{isUE ? "UE (fast pris)" : "Arbetsledare"}</strong></span>
           <span>Status: <strong className="text-foreground">{STATUS_LABEL[job.status]}</strong></span>
-          {isAdmin && job.client_company && (
-            <span>Uppdragsgivare: <strong className="text-foreground">{job.client_company}</strong></span>
+          {isAdmin && (
+            <span className="inline-flex items-center gap-1">
+              Uppdragsgivare: <strong className="text-foreground">{job.client_company ?? "—"}</strong>
+              {job.client_email && <span className="text-muted-foreground">({job.client_email})</span>}
+              <Button size="icon" variant="ghost" className="h-5 w-5 ml-1" onClick={() => setClientOpen(true)}>
+                <Pencil className="h-3 w-3" />
+              </Button>
+            </span>
           )}
           {isAdmin && isUE && job.fixed_price != null && (
             <span>Pris: <strong className="text-foreground">{Number(job.fixed_price).toLocaleString("sv-SE")} kr</strong></span>
