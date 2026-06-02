@@ -137,7 +137,7 @@ async function buildSelfCheckPdf(args: {
 
   draw(`Egenkontroll #${args.index + 1}`, { font: bold, size: 18 });
   y -= 6;
-  draw(`Mall: ${args.templateKey}`, { size: 10, color: rgb(0.3, 0.3, 0.3) });
+  draw(`Mall: ${templateLabel(args.templateKey)}`, { size: 10, color: rgb(0.3, 0.3, 0.3) });
   if (args.jobAddress)
     draw(`Adress: ${args.jobAddress}`, { size: 10, color: rgb(0.3, 0.3, 0.3) });
   if (args.customerName)
