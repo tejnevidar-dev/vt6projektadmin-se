@@ -59,6 +59,19 @@ function slugify(s: string): string {
   );
 }
 
+const TEMPLATE_LABELS: Record<string, string> = {
+  tak: "Takarbete",
+  plat: "Platarbete",
+  sakerhet: "Sakerhet",
+  stallning: "Stallning",
+  default: "Egenkontroll",
+};
+function templateLabel(key: string): string {
+  return TEMPLATE_LABELS[key] ?? key;
+}
+
+
+
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = "";
   const chunk = 0x8000;
