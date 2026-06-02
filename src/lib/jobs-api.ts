@@ -182,17 +182,45 @@ export interface TimeEntry {
   created_at: string;
 }
 
+export interface SelfCheckImage {
+  path: string;
+  name: string;
+}
+
 export interface SelfCheck {
   id: string;
   job_id: string;
   user_id: string;
   template_key: string;
-  data: Record<string, unknown>;
+  data: Record<string, unknown> & { images?: SelfCheckImage[] };
   completed_at: string | null;
   reviewed_at: string | null;
   reviewed_by: string | null;
   review_notes: string | null;
   created_at: string;
+}
+
+/** Upload an image attached to a self-check. Returns the storage path + original filename. */
+export async function uploadSelfCheckImage(jobId: string, file: File): Promise<SelfCheckImage> {
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `${jobId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+  const { error } = await supabase.storage
+    .from("self-check-images")
+    .upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
+  if (error) throw error;
+  return { path, name: file.name };
+}
+
+export async function getSelfCheckImageUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from("self-check-images")
+    .createSignedUrl(path, 60 * 60);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function deleteSelfCheckImage(path: string): Promise<void> {
+  await supabase.storage.from("self-check-images").remove([path]);
 }
 
 export interface SelfCheckWithContext extends SelfCheck {
