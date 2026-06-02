@@ -315,13 +315,14 @@ function JobDetailPage() {
         )}
 
         <TabsContent value="checks" className="mt-4">
-          <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-            <ClipboardCheck className="mx-auto mb-3 h-8 w-8 text-muted-foreground/50" />
-            <p className="text-sm font-medium">Egenkontroll-mall byggs senare</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Här kommer en fast checklista per projekttyp som hantverkare måste fylla i för att timmar ska kunna godkännas.
-            </p>
-          </div>
+          <ChecksTab
+            jobId={job.id}
+            checks={checks}
+            currentUserId={user?.id ?? null}
+            canCreate={isOwner || isAdmin || members.some((m) => m.user_id === user?.id)}
+            isAdmin={isAdmin}
+            onChanged={reload}
+          />
         </TabsContent>
       </Tabs>
 
