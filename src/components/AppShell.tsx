@@ -203,22 +203,50 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
                 {visibleNav.filter((i) => i.group === group).map((item) => {
                   const active = item === activeNav;
                   const Icon = item.icon;
+                  const showChildren = !collapsed && item.children && active;
                   return (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className={cn(
-                        "group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors",
-                        active
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                    <div key={item.to}>
+                      <Link
+                        to={item.to}
+                        className={cn(
+                          "group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors",
+                          active
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                        )}
+                        title={collapsed ? item.label : undefined}
+                      >
+                        {active && <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-r-full bg-primary" />}
+                        <Icon className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "text-sidebar-foreground/55 group-hover:text-sidebar-foreground")} />
+                        {!collapsed && <span className="truncate font-medium">{item.label}</span>}
+                      </Link>
+                      {showChildren && (
+                        <div className="ml-6 mt-0.5 space-y-px border-l border-sidebar-border/60 pl-2">
+                          {item.children!.map((child) => {
+                            const childActive =
+                              pathname === child.to ||
+                              (child.to !== item.to && pathname.startsWith(child.to + "/"));
+                            // For the index child (same path as parent), only "active" when exactly equal
+                            const isIndexChild = child.to === item.to;
+                            const isActive = isIndexChild ? pathname === child.to : childActive;
+                            return (
+                              <Link
+                                key={child.to}
+                                to={child.to}
+                                className={cn(
+                                  "block rounded-md px-2 py-1 text-[12.5px] transition-colors",
+                                  isActive
+                                    ? "bg-sidebar-accent/70 text-sidebar-accent-foreground font-medium"
+                                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground"
+                                )}
+                              >
+                                {child.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
                       )}
-                      title={collapsed ? item.label : undefined}
-                    >
-                      {active && <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-r-full bg-primary" />}
-                      <Icon className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "text-sidebar-foreground/55 group-hover:text-sidebar-foreground")} />
-                      {!collapsed && <span className="truncate font-medium">{item.label}</span>}
-                    </Link>
+                    </div>
                   );
                 })}
               </div>
