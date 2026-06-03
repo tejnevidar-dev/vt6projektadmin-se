@@ -263,6 +263,30 @@ function EmployeeDialog({
       } else {
         await createEmployee(payload);
         toast.success("Tillagd");
+        if (payload.email && payload.active) {
+          const role =
+            payload.employment_type === "underentreprenor"
+              ? "underentreprenor"
+              : "hantverkare";
+          try {
+            const { sendEmployeeInvite } = await import("@/lib/employee-invite.functions");
+            const res = await sendEmployeeInvite({
+              data: {
+                email: payload.email,
+                role,
+                displayName: payload.full_name,
+                redirectTo: `${window.location.origin}/login`,
+              },
+            });
+            if (res?.alreadyRegistered) {
+              toast.info("E-posten är redan registrerad – ingen ny inbjudan skickad");
+            } else {
+              toast.success("Inbjudningsmail skickat");
+            }
+          } catch (e: any) {
+            toast.error(`Personalen skapades men inbjudan misslyckades: ${e.message ?? e}`);
+          }
+        }
       }
       onSaved();
     } catch (e: any) {
