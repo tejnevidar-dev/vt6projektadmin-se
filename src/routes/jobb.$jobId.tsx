@@ -240,6 +240,26 @@ function JobDetailPage() {
         </div>
       }
     >
+      <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-lg border border-border bg-card p-3">
+          <div className="text-xs text-muted-foreground">Uppskattade timmar</div>
+          <div className="text-lg font-semibold text-foreground">
+            {estimatedHours != null ? `${estimatedHours.toFixed(1)} h` : "—"}
+          </div>
+          <div className="text-xs text-muted-foreground">Baserat på 600 kr/h</div>
+        </div>
+        <div className="rounded-lg border border-border bg-card p-3">
+          <div className="text-xs text-muted-foreground">Loggade timmar</div>
+          <div className="text-lg font-semibold text-foreground">{loggedHours.toFixed(1)} h</div>
+        </div>
+        <div className="rounded-lg border border-border bg-card p-3">
+          <div className="text-xs text-muted-foreground">Timmar kvar</div>
+          <div className={`text-lg font-semibold ${remainingHours != null && remainingHours < 0 ? "text-destructive" : "text-foreground"}`}>
+            {remainingHours != null ? `${remainingHours.toFixed(1)} h` : "—"}
+          </div>
+        </div>
+      </div>
+
       <Tabs defaultValue={job.work_order_summary ? "workorder" : "members"}>
         <TabsList>
           <TabsTrigger value="workorder">
