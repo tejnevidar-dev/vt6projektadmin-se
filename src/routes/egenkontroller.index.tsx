@@ -22,24 +22,45 @@ import {
 } from "lucide-react";
 import {
   listAllSelfChecks,
+  listJobs,
+  listSelfChecks,
   markSelfCheckReviewed,
   unmarkSelfCheckReviewed,
+  type JobWithLead,
+  type SelfCheck,
   type SelfCheckWithContext,
 } from "@/lib/jobs-api";
+import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
+import { useUserRoles } from "@/hooks/use-role";
 
 export const Route = createFileRoute("/egenkontroller/")({
   component: () => (
     <RequireAuth>
-      <EgenkontrollerPage />
+      <EgenkontrollerGate />
     </RequireAuth>
   ),
 });
+
+function EgenkontrollerGate() {
+  const { isAdmin, loading } = useUserRoles();
+  if (loading) {
+    return (
+      <AppShell title="Egenkontroller">
+        <p className="text-sm text-muted-foreground">Laddar...</p>
+      </AppShell>
+    );
+  }
+  return isAdmin ? <AdminReviewPage /> : <CompleteSelfChecksPage />;
+}
 
 function addressOf(c: SelfCheckWithContext): string {
   return c.property_address ?? c.job?.address ?? "—";
 }
 
-function EgenkontrollerPage() {
+/* ============================================================
+   ADMIN: Granska egenkontroller (befintlig vy)
+============================================================ */
+function AdminReviewPage() {
   const [items, setItems] = useState<SelfCheckWithContext[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -104,7 +125,7 @@ function EgenkontrollerPage() {
 
   return (
     <AppShell
-      title="Egenkontroller"
+      title="Granska egenkontroller"
       description="Granska och följ upp egenkontroller från hantverkare, arbetsledare och UE."
       meta={
         <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -241,6 +262,163 @@ function EgenkontrollerPage() {
     </AppShell>
   );
 }
+
+/* ============================================================
+   HANTVERKARE / ARBETSLEDARE / UE: Komplettera egenkontroller
+============================================================ */
+
+interface JobChecksSummary {
+  job: JobWithLead;
+  completedKeys: Set<string>;
+  inProgressKeys: Set<string>;
+  missingKeys: string[];
+}
+
+function CompleteSelfChecksPage() {
+  const [summaries, setSummaries] = useState<JobChecksSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const jobs = await listJobs();
+      const activeJobs = jobs.filter((j) => j.status !== "klar");
+      const results: JobChecksSummary[] = await Promise.all(
+        activeJobs.map(async (job) => {
+          const checks = await listSelfChecks(job.id);
+          const completedKeys = new Set<string>();
+          const inProgressKeys = new Set<string>();
+          for (const c of checks) {
+            if (c.completed_at) completedKeys.add(c.template_key);
+            else inProgressKeys.add(c.template_key);
+          }
+          const missingKeys = SELF_CHECK_TEMPLATES.map((t) => t.key).filter(
+            (k) => !completedKeys.has(k),
+          );
+          return { job, completedKeys, inProgressKeys, missingKeys };
+        }),
+      );
+      // Sort: jobs with most missing first
+      results.sort((a, b) => b.missingKeys.length - a.missingKeys.length);
+      setSummaries(results);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const totalMissing = summaries.reduce((s, x) => s + x.missingKeys.length, 0);
+  const readyToFinish = summaries.filter((s) => s.missingKeys.length === 0);
+
+  return (
+    <AppShell
+      title="Komplettera egenkontroller"
+      description="Här ser du vilka egenkontroller du behöver fylla i för att kunna avsluta dina aktiva projekt. Alla egenkontroller måste vara inlämnade innan projektet kan markeras som klart och dina timmar kan registreras."
+      meta={
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <Badge tone="muted">
+            {summaries.length} aktiva projekt
+          </Badge>
+          <Badge tone="warning">
+            <AlertCircle className="h-3 w-3" /> {totalMissing} egenkontroller saknas
+          </Badge>
+          <Badge tone="success">
+            <CheckCircle2 className="h-3 w-3" /> {readyToFinish.length} redo att avslutas
+          </Badge>
+        </div>
+      }
+    >
+      {loading ? (
+        <EmptyState text="Laddar..." />
+      ) : summaries.length === 0 ? (
+        <EmptyState text="Du har inga aktiva projekt." />
+      ) : (
+        <div className="space-y-4">
+          {summaries.map((s) => (
+            <JobChecklistCard key={s.job.id} summary={s} />
+          ))}
+        </div>
+      )}
+    </AppShell>
+  );
+}
+
+function JobChecklistCard({ summary }: { summary: JobChecksSummary }) {
+  const { job, completedKeys, inProgressKeys, missingKeys } = summary;
+  const address = job.property?.address ?? job.address ?? "—";
+  const allDone = missingKeys.length === 0;
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-semibold">{address}</h3>
+            {allDone ? (
+              <Badge tone="success">
+                <CheckCircle2 className="h-3 w-3" /> Klar att avslutas
+              </Badge>
+            ) : (
+              <Badge tone="warning">
+                <AlertCircle className="h-3 w-3" /> {missingKeys.length} saknas
+              </Badge>
+            )}
+          </div>
+          {job.customer_name && (
+            <p className="mt-0.5 text-xs text-muted-foreground">{job.customer_name}</p>
+          )}
+        </div>
+        <Button asChild size="sm" variant="outline">
+          <Link to="/jobb/$jobId" params={{ jobId: job.id }}>
+            Öppna projekt <ExternalLink className="ml-1 h-3.5 w-3.5" />
+          </Link>
+        </Button>
+      </div>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        {SELF_CHECK_TEMPLATES.map((tpl) => {
+          const isDone = completedKeys.has(tpl.key);
+          const isStarted = inProgressKeys.has(tpl.key);
+          return (
+            <div
+              key={tpl.key}
+              className={`flex items-center justify-between rounded-md border px-3 py-2 text-sm ${
+                isDone
+                  ? "border-emerald-500/30 bg-emerald-500/5"
+                  : isStarted
+                  ? "border-amber-500/30 bg-amber-500/5"
+                  : "border-border bg-muted/20"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {isDone ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                ) : isStarted ? (
+                  <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                )}
+                <span className="font-medium">{tpl.name}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {isDone ? "Inlämnad" : isStarted ? "Påbörjad" : "Saknas"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   Shared bits
+============================================================ */
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
