@@ -43,7 +43,7 @@ import {
 import { Plus, FileText, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/jobb")({
+export const Route = createFileRoute("/jobb/")({
   component: () => (
     <RequireAuth>
       <JobsPage />

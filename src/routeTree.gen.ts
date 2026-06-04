@@ -17,12 +17,12 @@ import { Route as PagaendeRouteImport } from './routes/pagaende'
 import { Route as OfferteradeRouteImport } from './routes/offerterade'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeadsRouteImport } from './routes/leads'
-import { Route as JobbRouteImport } from './routes/jobb'
 import { Route as EgenkontrollerRouteImport } from './routes/egenkontroller'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BokadeRouteImport } from './routes/bokade'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JobbIndexRouteImport } from './routes/jobb.index'
 import { Route as EgenkontrollerIndexRouteImport } from './routes/egenkontroller.index'
 import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
 import { Route as EgenkontrollerInstruktionerRouteImport } from './routes/egenkontroller.instruktioner'
@@ -71,11 +71,6 @@ const LeadsRoute = LeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JobbRoute = JobbRouteImport.update({
-  id: '/jobb',
-  path: '/jobb',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const EgenkontrollerRoute = EgenkontrollerRouteImport.update({
   id: '/egenkontroller',
   path: '/egenkontroller',
@@ -99,6 +94,11 @@ const AdminRoute = AdminRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobbIndexRoute = JobbIndexRouteImport.update({
+  id: '/jobb/',
+  path: '/jobb/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EgenkontrollerIndexRoute = EgenkontrollerIndexRouteImport.update({
@@ -145,7 +145,6 @@ export interface FileRoutesByFullPath {
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
   '/egenkontroller': typeof EgenkontrollerRouteWithChildren
-  '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
   '/offerterade': typeof OfferteradeRoute
@@ -160,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
+  '/jobb/': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -167,7 +167,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
-  '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
   '/offerterade': typeof OfferteradeRoute
@@ -182,6 +181,7 @@ export interface FileRoutesByTo {
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/egenkontroller': typeof EgenkontrollerIndexRoute
+  '/jobb': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRoutesById {
@@ -191,7 +191,6 @@ export interface FileRoutesById {
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
   '/egenkontroller': typeof EgenkontrollerRouteWithChildren
-  '/jobb': typeof JobbRouteWithChildren
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
   '/offerterade': typeof OfferteradeRoute
@@ -206,6 +205,7 @@ export interface FileRoutesById {
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
+  '/jobb/': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
 }
 export interface FileRouteTypes {
@@ -216,7 +216,6 @@ export interface FileRouteTypes {
     | '/bokade'
     | '/dashboard'
     | '/egenkontroller'
-    | '/jobb'
     | '/leads'
     | '/login'
     | '/offerterade'
@@ -231,6 +230,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/instruktioner'
     | '/jobb/$jobId'
     | '/egenkontroller/'
+    | '/jobb/'
     | '/api/public/roslagstak-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -238,7 +238,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
-    | '/jobb'
     | '/leads'
     | '/login'
     | '/offerterade'
@@ -253,6 +252,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/instruktioner'
     | '/jobb/$jobId'
     | '/egenkontroller'
+    | '/jobb'
     | '/api/public/roslagstak-webhook'
   id:
     | '__root__'
@@ -261,7 +261,6 @@ export interface FileRouteTypes {
     | '/bokade'
     | '/dashboard'
     | '/egenkontroller'
-    | '/jobb'
     | '/leads'
     | '/login'
     | '/offerterade'
@@ -276,6 +275,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/instruktioner'
     | '/jobb/$jobId'
     | '/egenkontroller/'
+    | '/jobb/'
     | '/api/public/roslagstak-webhook'
   fileRoutesById: FileRoutesById
 }
@@ -285,7 +285,6 @@ export interface RootRouteChildren {
   BokadeRoute: typeof BokadeRoute
   DashboardRoute: typeof DashboardRoute
   EgenkontrollerRoute: typeof EgenkontrollerRouteWithChildren
-  JobbRoute: typeof JobbRouteWithChildren
   LeadsRoute: typeof LeadsRoute
   LoginRoute: typeof LoginRoute
   OfferteradeRoute: typeof OfferteradeRoute
@@ -297,6 +296,7 @@ export interface RootRouteChildren {
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
   ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
+  JobbIndexRoute: typeof JobbIndexRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
 }
 
@@ -358,13 +358,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeadsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobb': {
-      id: '/jobb'
-      path: '/jobb'
-      fullPath: '/jobb'
-      preLoaderRoute: typeof JobbRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/egenkontroller': {
       id: '/egenkontroller'
       path: '/egenkontroller'
@@ -398,6 +391,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobb/': {
+      id: '/jobb/'
+      path: '/jobb'
+      fullPath: '/jobb/'
+      preLoaderRoute: typeof JobbIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/egenkontroller/': {
@@ -466,23 +466,12 @@ const EgenkontrollerRouteWithChildren = EgenkontrollerRoute._addFileChildren(
   EgenkontrollerRouteChildren,
 )
 
-interface JobbRouteChildren {
-  JobbJobIdRoute: typeof JobbJobIdRoute
-}
-
-const JobbRouteChildren: JobbRouteChildren = {
-  JobbJobIdRoute: JobbJobIdRoute,
-}
-
-const JobbRouteWithChildren = JobbRoute._addFileChildren(JobbRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   BokadeRoute: BokadeRoute,
   DashboardRoute: DashboardRoute,
   EgenkontrollerRoute: EgenkontrollerRouteWithChildren,
-  JobbRoute: JobbRouteWithChildren,
   LeadsRoute: LeadsRoute,
   LoginRoute: LoginRoute,
   OfferteradeRoute: OfferteradeRoute,
@@ -494,8 +483,19 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
   ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
+  JobbIndexRoute: JobbIndexRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
