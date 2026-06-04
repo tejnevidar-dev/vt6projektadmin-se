@@ -12,6 +12,7 @@ import {
 } from "@/lib/jobs-api";
 import { listEmployees, type Employee } from "@/lib/employees-api";
 import { useUserRoles } from "@/hooks/use-role";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Table,
   TableBody,
@@ -183,6 +184,8 @@ function AddJobDialog({
   onCreated: () => void;
 }) {
   const router = useRouter();
+  const { user } = useAuth();
+  const { isAdmin } = useUserRoles();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [assignedTo, setAssignedTo] = useState<string>("");
   const [assignmentType, setAssignmentType] = useState<JobAssignmentType>("arbetsledare");
@@ -220,7 +223,33 @@ function AddJobDialog({
 
 
   // Only employees with a linked user_id can own a job
-  const candidates = employees.filter((e) => e.active && !!e.user_id);
+  const employeeCandidates = employees.filter((e) => e.active && !!e.user_id);
+
+  // Admins can assign jobs to themselves as arbetsledare even if not in employees
+  const adminSelfCandidate: Employee | null =
+    isAdmin && user && !employeeCandidates.some((e) => e.user_id === user.id)
+      ? {
+          id: `self-${user.id}`,
+          user_id: user.id,
+          full_name: `${user.email ?? "Jag"} (admin)`,
+          email: user.email ?? null,
+          phone: null,
+          personal_number: null,
+          employment_type: "fast",
+          hourly_rate: null,
+          monthly_salary: null,
+          company_name: null,
+          org_number: null,
+          active: true,
+          notes: null,
+          created_at: "",
+          updated_at: "",
+        }
+      : null;
+
+  const candidates: Employee[] = adminSelfCandidate
+    ? [adminSelfCandidate, ...employeeCandidates]
+    : employeeCandidates;
 
   // Auto-pick assignment_type based on employment_type when user picks an assignee
   function pickAssignee(userId: string) {
