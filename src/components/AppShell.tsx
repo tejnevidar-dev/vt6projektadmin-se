@@ -44,8 +44,8 @@ const navItems: NavItem[] = [
     group: "Arbeta",
     side: "intern",
     children: [
-      { to: "/egenkontroller", label: "Granska egenkontroller" },
-      { to: "/egenkontroller/instruktioner", label: "Montageinstruktioner" },
+      { to: "/egenkontroller", label: isAdmin ? "Granska egenkontroller" : "Komplettera egenkontroller" },
+      ...(isAdmin ? [{ to: "/egenkontroller/instruktioner", label: "Montageinstruktioner" }] : []),
     ],
   },
   { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "intern", adminOnly: true },
