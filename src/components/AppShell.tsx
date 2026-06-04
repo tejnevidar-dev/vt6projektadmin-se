@@ -26,35 +26,37 @@ type NavItem = {
   children?: NavChild[];
 };
 
-const navItems: NavItem[] = [
-  // Extern (sälj)
-  { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", side: "extern" },
-  { to: "/leads", label: "Leads", icon: Users, group: "Arbeta", side: "extern" },
-  { to: "/offerterade", label: "Offerterade", icon: ClipboardList, group: "Arbeta", side: "extern" },
-  { to: "/bokade", label: "Bokade", icon: CalendarCheck, group: "Arbeta", side: "extern" },
-  { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", side: "extern" },
-  { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", side: "extern" },
+function buildNavItems(isAdmin: boolean): NavItem[] {
+  return [
+    // Extern (sälj)
+    { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", side: "extern" },
+    { to: "/leads", label: "Leads", icon: Users, group: "Arbeta", side: "extern" },
+    { to: "/offerterade", label: "Offerterade", icon: ClipboardList, group: "Arbeta", side: "extern" },
+    { to: "/bokade", label: "Bokade", icon: CalendarCheck, group: "Arbeta", side: "extern" },
+    { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", side: "extern" },
+    { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", side: "extern" },
 
-  // Intern (personal)
-  { to: "/jobb", label: "Projekt", icon: Hammer, group: "Arbeta", side: "intern" },
-  {
-    to: "/egenkontroller",
-    label: "Egenkontroller",
-    icon: ClipboardList,
-    group: "Arbeta",
-    side: "intern",
-    children: [
-      { to: "/egenkontroller", label: isAdmin ? "Granska egenkontroller" : "Komplettera egenkontroller" },
-      ...(isAdmin ? [{ to: "/egenkontroller/instruktioner", label: "Montageinstruktioner" }] : []),
-    ],
-  },
-  { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "intern", adminOnly: true },
+    // Intern (personal)
+    { to: "/jobb", label: "Projekt", icon: Hammer, group: "Arbeta", side: "intern" },
+    {
+      to: "/egenkontroller",
+      label: "Egenkontroller",
+      icon: ClipboardList,
+      group: "Arbeta",
+      side: "intern",
+      children: [
+        { to: "/egenkontroller", label: isAdmin ? "Granska egenkontroller" : "Komplettera egenkontroller" },
+        ...(isAdmin ? [{ to: "/egenkontroller/instruktioner", label: "Montageinstruktioner" }] : []),
+      ],
+    },
+    { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "intern", adminOnly: true },
 
-  // Gemensamt (Hantera)
-  { to: "/admin", label: "Medlemmar", icon: Shield, group: "Hantera", side: "both" },
-  { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "Hantera", side: "extern", adminOnly: true },
-  { to: "/settings", label: "Inställningar", icon: Settings, group: "Hantera", side: "both" },
-];
+    // Gemensamt (Hantera)
+    { to: "/admin", label: "Medlemmar", icon: Shield, group: "Hantera", side: "both" },
+    { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "Hantera", side: "extern", adminOnly: true },
+    { to: "/settings", label: "Inställningar", icon: Settings, group: "Hantera", side: "both" },
+  ];
+}
 
 export interface PageHeaderProps {
   title: string;
