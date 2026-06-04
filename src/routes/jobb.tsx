@@ -12,6 +12,7 @@ import {
 } from "@/lib/jobs-api";
 import { listEmployees, type Employee } from "@/lib/employees-api";
 import { useUserRoles } from "@/hooks/use-role";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Table,
   TableBody,
