@@ -704,16 +704,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_external_user: { Args: { _user_id: string }; Returns: boolean }
-      is_internal_user: { Args: { _user_id: string }; Returns: boolean }
-      is_job_member: {
-        Args: { _job_id: string; _user_id: string }
-        Returns: boolean
-      }
-      is_job_owner: {
-        Args: { _job_id: string; _user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       activity_type:
