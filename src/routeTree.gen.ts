@@ -107,9 +107,9 @@ const EgenkontrollerIndexRoute = EgenkontrollerIndexRouteImport.update({
   getParentRoute: () => EgenkontrollerRoute,
 } as any)
 const JobbJobIdRoute = JobbJobIdRouteImport.update({
-  id: '/$jobId',
-  path: '/$jobId',
-  getParentRoute: () => JobbRoute,
+  id: '/jobb/$jobId',
+  path: '/jobb/$jobId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EgenkontrollerInstruktionerRoute =
   EgenkontrollerInstruktionerRouteImport.update({
@@ -296,6 +296,7 @@ export interface RootRouteChildren {
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
   ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
+  JobbJobIdRoute: typeof JobbJobIdRoute
   JobbIndexRoute: typeof JobbIndexRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
 }
@@ -409,10 +410,10 @@ declare module '@tanstack/react-router' {
     }
     '/jobb/$jobId': {
       id: '/jobb/$jobId'
-      path: '/$jobId'
+      path: '/jobb/$jobId'
       fullPath: '/jobb/$jobId'
       preLoaderRoute: typeof JobbJobIdRouteImport
-      parentRoute: typeof JobbRoute
+      parentRoute: typeof rootRouteImport
     }
     '/egenkontroller/instruktioner': {
       id: '/egenkontroller/instruktioner'
@@ -483,19 +484,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
   ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
+  JobbJobIdRoute: JobbJobIdRoute,
   JobbIndexRoute: JobbIndexRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
