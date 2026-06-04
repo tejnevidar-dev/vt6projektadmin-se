@@ -93,6 +93,7 @@ export interface JobWithLead extends Job {
     phone: string | null;
     job_type: string;
     property_id: string | null;
+    price: number | null;
   } | null;
   property?: {
     address: string;
