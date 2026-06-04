@@ -93,6 +93,7 @@ export interface JobWithLead extends Job {
     phone: string | null;
     job_type: string;
     property_id: string | null;
+    price: number | null;
   } | null;
   property?: {
     address: string;
@@ -238,7 +239,7 @@ export interface SelfCheckWithContext extends SelfCheck {
 export async function listJobs(): Promise<JobWithLead[]> {
   const { data, error } = await supabase
     .from("jobs")
-    .select("*, lead:leads(id, name, phone, job_type, property_id)")
+    .select("*, lead:leads(id, name, phone, job_type, property_id, price)")
     .order("created_at", { ascending: false });
   if (error) throw error;
 
@@ -266,7 +267,7 @@ export async function listJobs(): Promise<JobWithLead[]> {
 export async function getJob(id: string): Promise<JobWithLead | null> {
   const { data, error } = await supabase
     .from("jobs")
-    .select("*, lead:leads(id, name, phone, job_type, property_id)")
+    .select("*, lead:leads(id, name, phone, job_type, property_id, price)")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
