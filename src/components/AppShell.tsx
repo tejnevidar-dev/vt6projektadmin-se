@@ -84,6 +84,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
     navigate({ to: "/login", search: {} });
   };
 
+  const navItems = buildNavItems(isAdmin);
   const visibleNav = navItems.filter((i) => {
     if (i.adminOnly && !isAdmin) return false;
     return i.side === "both" || i.side === side;
