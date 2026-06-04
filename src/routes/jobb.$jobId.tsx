@@ -173,13 +173,35 @@ function JobDetailPage() {
     ? `${job.property.address}, ${job.property.municipality}`
     : job.address ?? undefined;
 
+  // Your role label (the role of the logged-in user on this project)
+  const ROLE_LABEL: Record<string, string> = {
+    admin: "Admin",
+    saljare: "Säljare",
+    arbetsledare: "Arbetsledare",
+    hantverkare: "Hantverkare",
+    underentreprenor: "Underentreprenör",
+    viewer: "Tittare",
+  };
+  const priorityRoles = ["admin", "arbetsledare", "underentreprenor", "hantverkare", "saljare", "viewer"];
+  const myRole = priorityRoles.find((r) => roles.includes(r as any)) ?? "—";
+  const myRoleLabel = ROLE_LABEL[myRole] ?? myRole;
+
+  // Hours budget: 600 kr/h. Price source: job.fixed_price (UE) or lead.price.
+  const HOURLY_RATE = 600;
+  const projectPrice = job.fixed_price ?? job.lead?.price ?? null;
+  const estimatedHours = projectPrice != null ? projectPrice / HOURLY_RATE : null;
+  const loggedHours = times
+    .filter((t) => t.status !== "rejected")
+    .reduce((sum, t) => sum + Number(t.hours || 0), 0);
+  const remainingHours = estimatedHours != null ? estimatedHours - loggedHours : null;
+
   return (
     <AppShell
       title={titleName}
       description={descAddr}
       meta={
         <>
-          <span>Typ: <strong className="text-foreground">{isUE ? "UE (fast pris)" : "Arbetsledare"}</strong></span>
+          <span>Din roll: <strong className="text-foreground">{myRoleLabel}</strong></span>
           <span>Status: <strong className="text-foreground">{STATUS_LABEL[job.status]}</strong></span>
           {isAdmin && (
             <span className="inline-flex items-center gap-1">
@@ -193,7 +215,7 @@ function JobDetailPage() {
           {isAdmin && isUE && job.fixed_price != null && (
             <span>Pris: <strong className="text-foreground">{Number(job.fixed_price).toLocaleString("sv-SE")} kr</strong></span>
           )}
-          {job.self_checks_emailed_at && job.self_checks_emailed_to && (
+          {isAdmin && job.self_checks_emailed_at && job.self_checks_emailed_to && (
             <span>Mejlat: <strong className="text-foreground">{new Date(job.self_checks_emailed_at).toLocaleDateString("sv-SE")} till {job.self_checks_emailed_to}</strong></span>
           )}
         </>
