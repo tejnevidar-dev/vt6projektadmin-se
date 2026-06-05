@@ -24,7 +24,7 @@ import {
   type JobStatus,
 } from "@/lib/jobs-api";
 import { SelfCheckDialog } from "@/components/SelfCheckDialog";
-import { getSelfCheckTemplateLabel } from "@/lib/self-check-templates";
+import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel } from "@/lib/self-check-templates";
 
 import { listEmployees, type Employee } from "@/lib/employees-api";
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
