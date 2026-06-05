@@ -127,6 +127,18 @@ function JobDetailPage() {
 
   async function handleStatus(next: JobStatus) {
     if (!job) return;
+    if (next === "klar") {
+      const submittedKeys = new Set(
+        checks.filter((c) => c.completed_at).map((c) => c.template_key),
+      );
+      const missing = SELF_CHECK_TEMPLATES.filter((t) => !submittedKeys.has(t.key));
+      if (missing.length > 0) {
+        toast.error(
+          `Kan inte avsluta: egenkontroll saknas för ${missing.map((m) => m.name).join(", ")}. Alla egenkontroller måste vara inlämnade innan projektet kan markeras som klart och timmar registreras.`,
+        );
+        return;
+      }
+    }
     try {
       await updateJobStatus(job.id, next);
       toast.success("Status uppdaterad");
