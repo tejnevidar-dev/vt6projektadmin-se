@@ -24,7 +24,7 @@ import {
   type JobStatus,
 } from "@/lib/jobs-api";
 import { SelfCheckDialog } from "@/components/SelfCheckDialog";
-import { getSelfCheckTemplateLabel } from "@/lib/self-check-templates";
+import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel } from "@/lib/self-check-templates";
 
 import { listEmployees, type Employee } from "@/lib/employees-api";
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
@@ -127,6 +127,18 @@ function JobDetailPage() {
 
   async function handleStatus(next: JobStatus) {
     if (!job) return;
+    if (next === "klar") {
+      const submittedKeys = new Set(
+        checks.filter((c) => c.completed_at).map((c) => c.template_key),
+      );
+      const missing = SELF_CHECK_TEMPLATES.filter((t) => !submittedKeys.has(t.key));
+      if (missing.length > 0) {
+        toast.error(
+          `Kan inte avsluta: egenkontroll saknas för ${missing.map((m) => m.name).join(", ")}. Alla egenkontroller måste vara inlämnade innan projektet kan markeras som klart och timmar registreras.`,
+        );
+        return;
+      }
+    }
     try {
       await updateJobStatus(job.id, next);
       toast.success("Status uppdaterad");
@@ -626,97 +638,143 @@ function ChecksTab({
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SelfCheck | null>(null);
+  const [newTemplateKey, setNewTemplateKey] = useState<string | undefined>(undefined);
+  const [activeTab, setActiveTab] = useState<string>(SELF_CHECK_TEMPLATES[0].key);
 
-  function openNew() {
+  function openNewForTemplate(key: string) {
     setEditing(null);
+    setNewTemplateKey(key);
     setDialogOpen(true);
   }
   function openExisting(c: SelfCheck) {
     setEditing(c);
+    setNewTemplateKey(undefined);
     setDialogOpen(true);
   }
 
+  const submittedKeys = new Set(checks.filter((c) => c.completed_at).map((c) => c.template_key));
+  const missingCount = SELF_CHECK_TEMPLATES.filter((t) => !submittedKeys.has(t.key)).length;
+
   return (
     <>
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3 space-y-2">
         <p className="text-sm text-muted-foreground">
-          Hantverkare fyller i egenkontroller per arbetstyp. Inlämnade kontroller granskas av admin
-          och mejlas till beställaren när projektet markeras klart.
+          Varje moment har en egen flik. Alla moment måste vara inlämnade innan projektet kan
+          markeras som klart och timmar registreras.
         </p>
-        {canCreate && (
-          <Button size="sm" onClick={openNew}>
-            <Plus className="mr-1.5 h-4 w-4" /> Ny egenkontroll
-          </Button>
+        {missingCount > 0 && (
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+            {missingCount} moment saknar inlämnad egenkontroll.
+          </div>
         )}
       </div>
 
-      <div className="rounded-lg border border-border bg-card divide-y divide-border">
-        {checks.length === 0 && (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            <ClipboardCheck className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
-            Inga egenkontroller registrerade än.
-          </div>
-        )}
-        {checks.map((c) => {
-          const isDraft = !c.completed_at;
-          const isMine = c.user_id === currentUserId;
-          const canEdit = isDraft && (isMine || isAdmin);
-          const canDelete = isAdmin || (isDraft && isMine);
-          return (
-            <div
-              key={c.id}
-              className="flex items-center justify-between p-3 hover:bg-muted/30 transition cursor-pointer"
-              onClick={() => openExisting(c)}
-            >
-              <div>
-                <div className="font-medium text-sm">
-                  {getSelfCheckTemplateLabel(c.template_key)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {new Date(c.completed_at ?? c.created_at).toLocaleString("sv-SE")}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {c.reviewed_at ? (
-                  <Badge variant="default">Granskad</Badge>
-                ) : c.completed_at ? (
-                  <Badge variant="secondary">Inlämnad</Badge>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="flex flex-wrap h-auto">
+          {SELF_CHECK_TEMPLATES.map((t) => {
+            const tplChecks = checks.filter((c) => c.template_key === t.key);
+            const submitted = tplChecks.some((c) => c.completed_at);
+            return (
+              <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
+                {t.name}
+                {submitted ? (
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 ) : (
-                  <Badge variant="outline">Utkast</Badge>
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
                 )}
-                {canDelete && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      if (!confirm("Ta bort egenkontrollen?")) return;
-                      try {
-                        await deleteSelfCheck(c.id);
-                        toast.success("Borttagen");
-                        onChanged();
-                      } catch (err: any) {
-                        toast.error(err.message);
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+
+        {SELF_CHECK_TEMPLATES.map((t) => {
+          const tplChecks = checks.filter((c) => c.template_key === t.key);
+          const hasSubmitted = tplChecks.some((c) => c.completed_at);
+          return (
+            <TabsContent key={t.key} value={t.key} className="mt-4">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-medium">{t.name}</div>
+                  <p className="text-xs text-muted-foreground">{t.description}</p>
+                </div>
+                {canCreate && (
+                  <Button size="sm" onClick={() => openNewForTemplate(t.key)}>
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    {hasSubmitted ? "Ny" : "Komplettera"}
                   </Button>
                 )}
-                {!canEdit && !canDelete && (
-                  <span className="text-xs text-muted-foreground">Visa</span>
-                )}
               </div>
-            </div>
+
+              <div className="rounded-lg border border-border bg-card divide-y divide-border">
+                {tplChecks.length === 0 && (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    <ClipboardCheck className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
+                    Ingen egenkontroll inlämnad för {t.name} än.
+                  </div>
+                )}
+                {tplChecks.map((c) => {
+                  const isDraft = !c.completed_at;
+                  const isMine = c.user_id === currentUserId;
+                  const canEdit = isDraft && (isMine || isAdmin);
+                  const canDelete = isAdmin || (isDraft && isMine);
+                  return (
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between p-3 hover:bg-muted/30 transition cursor-pointer"
+                      onClick={() => openExisting(c)}
+                    >
+                      <div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(c.completed_at ?? c.created_at).toLocaleString("sv-SE")}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {c.reviewed_at ? (
+                          <Badge variant="default">Granskad</Badge>
+                        ) : c.completed_at ? (
+                          <Badge variant="secondary">Inlämnad</Badge>
+                        ) : (
+                          <Badge variant="outline">Utkast</Badge>
+                        )}
+                        {canDelete && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (!confirm("Ta bort egenkontrollen?")) return;
+                              try {
+                                await deleteSelfCheck(c.id);
+                                toast.success("Borttagen");
+                                onChanged();
+                              } catch (err: any) {
+                                toast.error(err.message);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                        {!canEdit && !canDelete && (
+                          <span className="text-xs text-muted-foreground">Visa</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </TabsContent>
           );
         })}
-      </div>
+      </Tabs>
 
       <SelfCheckDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         jobId={jobId}
         existing={editing}
+        initialTemplateKey={newTemplateKey}
+        lockTemplate={!!newTemplateKey}
         onSaved={onChanged}
       />
     </>

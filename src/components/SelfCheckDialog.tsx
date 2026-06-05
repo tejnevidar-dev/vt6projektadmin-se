@@ -40,6 +40,8 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   jobId: string;
   existing?: SelfCheck | null;
+  initialTemplateKey?: string;
+  lockTemplate?: boolean;
   onSaved: () => void;
 }
 
@@ -47,9 +49,9 @@ type ImagesByField = Record<string, SelfCheckImage[]>;
 
 const LEGACY_IMAGE_BUCKET = "__övrigt";
 
-export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }: Props) {
+export function SelfCheckDialog({ open, onOpenChange, jobId, existing, initialTemplateKey, lockTemplate, onSaved }: Props) {
   const [templateKey, setTemplateKey] = useState<string>(
-    existing?.template_key ?? SELF_CHECK_TEMPLATES[0].key
+    existing?.template_key ?? initialTemplateKey ?? SELF_CHECK_TEMPLATES[0].key
   );
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [imagesByField, setImagesByField] = useState<ImagesByField>({});
@@ -74,11 +76,11 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }
       delete d.images;
       setValues(d);
     } else {
-      setTemplateKey(SELF_CHECK_TEMPLATES[0].key);
+      setTemplateKey(initialTemplateKey ?? SELF_CHECK_TEMPLATES[0].key);
       setValues({});
       setImagesByField({});
     }
-  }, [open, existing]);
+  }, [open, existing, initialTemplateKey]);
 
   const template: SelfCheckTemplate | undefined = getSelfCheckTemplate(templateKey);
   const readOnly = !!existing?.completed_at;
@@ -165,7 +167,7 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }
         </DialogHeader>
 
         <div className="space-y-4">
-          {!existing && (
+          {!existing && !lockTemplate && (
             <div>
               <Label>Mall</Label>
               <Select value={templateKey} onValueChange={setTemplateKey}>
@@ -183,6 +185,13 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }
               {template?.description && (
                 <p className="mt-1 text-xs text-muted-foreground">{template.description}</p>
               )}
+            </div>
+          )}
+
+          {!existing && lockTemplate && template && (
+            <div className="rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
+              Mall: <strong className="text-foreground">{template.name}</strong>
+              {template.description && <p className="mt-1">{template.description}</p>}
             </div>
           )}
 
