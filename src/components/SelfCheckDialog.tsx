@@ -49,9 +49,9 @@ type ImagesByField = Record<string, SelfCheckImage[]>;
 
 const LEGACY_IMAGE_BUCKET = "__övrigt";
 
-export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }: Props) {
+export function SelfCheckDialog({ open, onOpenChange, jobId, existing, initialTemplateKey, lockTemplate, onSaved }: Props) {
   const [templateKey, setTemplateKey] = useState<string>(
-    existing?.template_key ?? SELF_CHECK_TEMPLATES[0].key
+    existing?.template_key ?? initialTemplateKey ?? SELF_CHECK_TEMPLATES[0].key
   );
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [imagesByField, setImagesByField] = useState<ImagesByField>({});
@@ -76,11 +76,11 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, onSaved }
       delete d.images;
       setValues(d);
     } else {
-      setTemplateKey(SELF_CHECK_TEMPLATES[0].key);
+      setTemplateKey(initialTemplateKey ?? SELF_CHECK_TEMPLATES[0].key);
       setValues({});
       setImagesByField({});
     }
-  }, [open, existing]);
+  }, [open, existing, initialTemplateKey]);
 
   const template: SelfCheckTemplate | undefined = getSelfCheckTemplate(templateKey);
   const readOnly = !!existing?.completed_at;
