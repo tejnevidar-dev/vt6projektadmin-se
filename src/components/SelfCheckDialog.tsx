@@ -40,6 +40,8 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   jobId: string;
   existing?: SelfCheck | null;
+  initialTemplateKey?: string;
+  lockTemplate?: boolean;
   onSaved: () => void;
 }
 
