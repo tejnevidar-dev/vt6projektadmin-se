@@ -167,7 +167,7 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, initialTe
         </DialogHeader>
 
         <div className="space-y-4">
-          {!existing && (
+          {!existing && !lockTemplate && (
             <div>
               <Label>Mall</Label>
               <Select value={templateKey} onValueChange={setTemplateKey}>
@@ -185,6 +185,13 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, initialTe
               {template?.description && (
                 <p className="mt-1 text-xs text-muted-foreground">{template.description}</p>
               )}
+            </div>
+          )}
+
+          {!existing && lockTemplate && template && (
+            <div className="rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
+              Mall: <strong className="text-foreground">{template.name}</strong>
+              {template.description && <p className="mt-1">{template.description}</p>}
             </div>
           )}
 
