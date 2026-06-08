@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import {
   getJob,
+} from "@/lib/jobs.functions";
+import {
   listJobMembers,
   listTimeEntries,
   listSelfChecks,
@@ -201,7 +203,8 @@ function JobDetailPage() {
   // Hours budget: 600 kr/h. Price source: job.fixed_price (UE) or lead.price.
   const HOURLY_RATE = 600;
   const projectPrice = job.fixed_price ?? job.lead?.price ?? null;
-  const estimatedHours = projectPrice != null ? projectPrice / HOURLY_RATE : null;
+  const estimatedHours =
+    job.estimated_hours ?? (projectPrice != null ? projectPrice / HOURLY_RATE : null);
   const loggedHours = times
     .filter((t) => t.status !== "rejected")
     .reduce((sum, t) => sum + Number(t.hours || 0), 0);
