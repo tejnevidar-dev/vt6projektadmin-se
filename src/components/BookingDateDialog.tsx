@@ -287,15 +287,26 @@ export function BookingDateDialog({
 
           {assignmentType === "foreman" && (
             <div className="space-y-2 rounded-lg border border-border bg-muted/40 p-3">
-              <Label htmlFor="foreman-name">Arbetsledare</Label>
-              <Input
-                id="foreman-name"
-                placeholder="Namn på arbetsledare"
-                value={foremanName}
-                onChange={(e) => setForemanName(e.target.value)}
-              />
+              <Label htmlFor="foreman-user">Välj arbetsledare</Label>
+              <Select value={foremanUserId} onValueChange={setForemanUserId}>
+                <SelectTrigger id="foreman-user">
+                  <SelectValue placeholder={foremenLoading ? "Laddar…" : "Välj en arbetsledare"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {foremen.length === 0 && !foremenLoading && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground">
+                      Inga arbetsledare registrerade än. Bjud in dem från Admin.
+                    </div>
+                  )}
+                  {foremen.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.display_name || f.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
-                Inbjudningsfunktion för arbetsledare kommer i ett senare steg.
+                Bara användare med rollen arbetsledare visas. Lägg till nya under Admin → Användare.
               </p>
             </div>
           )}
