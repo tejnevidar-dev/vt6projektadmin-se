@@ -60,6 +60,7 @@ export function BookingDateDialog({
   initialSubcontractorName,
   initialSubcontractorPrice,
   initialForemanName,
+  initialForemanUserId,
   onCancel,
   onConfirm,
 }: Props) {
@@ -71,7 +72,9 @@ export function BookingDateDialog({
   const [assignmentType, setAssignmentType] = useState<AssignmentType>(initialAssignmentType ?? "none");
   const [subName, setSubName] = useState<string>(initialSubcontractorName ?? "");
   const [subPrice, setSubPrice] = useState<string>(initialSubcontractorPrice != null ? String(initialSubcontractorPrice) : "");
-  const [foremanName, setForemanName] = useState<string>(initialForemanName ?? "");
+  const [foremanUserId, setForemanUserId] = useState<string>(initialForemanUserId ?? "");
+  const [foremen, setForemen] = useState<RoleUser[]>([]);
+  const [foremenLoading, setForemenLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -84,14 +87,27 @@ export function BookingDateDialog({
       setAssignmentType(initialAssignmentType ?? "none");
       setSubName(initialSubcontractorName ?? "");
       setSubPrice(initialSubcontractorPrice != null ? String(initialSubcontractorPrice) : "");
-      setForemanName(initialForemanName ?? "");
+      setForemanUserId(initialForemanUserId ?? "");
       setSaving(false);
     }
-  }, [open, initialDate, initialPrice, initialRotAmount, initialAssignmentType, initialSubcontractorName, initialSubcontractorPrice, initialForemanName]);
+  }, [open, initialDate, initialPrice, initialRotAmount, initialAssignmentType, initialSubcontractorName, initialSubcontractorPrice, initialForemanName, initialForemanUserId]);
+
+  useEffect(() => {
+    if (!open) return;
+    setForemenLoading(true);
+    listUsersWithRole("arbetsledare")
+      .then(setForemen)
+      .catch(() => setForemen([]))
+      .finally(() => setForemenLoading(false));
+  }, [open]);
 
   const priceNum = price ? parseFloat(price) : null;
   const rotNum = rotAmount ? parseFloat(rotAmount) : null;
   const customerPrice = priceNum != null ? priceNum - (rotNum ?? 0) : null;
+  const selectedForeman = foremen.find((f) => f.id === foremanUserId) ?? null;
+  const foremanLabel = selectedForeman
+    ? (selectedForeman.display_name || selectedForeman.email)
+    : initialForemanName ?? null;
 
   const submit = async () => {
     if (!date) return;
@@ -106,7 +122,8 @@ export function BookingDateDialog({
         assignmentType,
         subcontractorName: assignmentType === "subcontractor" ? (subName.trim() || null) : null,
         subcontractorPrice: assignmentType === "subcontractor" && subPrice ? parseFloat(subPrice) : null,
-        foremanName: assignmentType === "foreman" ? (foremanName.trim() || null) : null,
+        foremanName: assignmentType === "foreman" ? foremanLabel : null,
+        foremanUserId: assignmentType === "foreman" ? (foremanUserId || null) : null,
       });
     } finally {
       setSaving(false);
