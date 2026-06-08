@@ -10,6 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarCheck, CalendarIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { listUsersWithRole, type RoleUser } from "@/lib/leads-api";
 
 export type AssignmentType = "none" | "subcontractor" | "foreman";
 
@@ -21,6 +22,7 @@ export interface BookingDetails {
   subcontractorName: string | null;
   subcontractorPrice: number | null;
   foremanName: string | null;
+  foremanUserId: string | null;
 }
 
 interface Props {
@@ -33,6 +35,7 @@ interface Props {
   initialSubcontractorName?: string | null;
   initialSubcontractorPrice?: number | null;
   initialForemanName?: string | null;
+  initialForemanUserId?: string | null;
   onCancel: () => void;
   onConfirm: (details: BookingDetails) => void | Promise<void>;
 }
