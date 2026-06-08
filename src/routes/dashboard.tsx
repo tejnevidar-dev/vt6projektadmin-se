@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, RequireAuth } from "@/components/AppShell";
+import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
 import type { Lead, PipelineStage } from "@/lib/types";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS } from "@/lib/types";
