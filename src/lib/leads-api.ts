@@ -53,6 +53,7 @@ export async function updateLeadPipelineStage(
     if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
     if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
     if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
+    if (booking.foremanUserId !== undefined) patch.assigned_to = booking.foremanUserId;
   }
   const { error } = await (supabase.from("leads") as any)
     .update(patch)
@@ -64,6 +65,12 @@ export async function updateLeadPipelineStage(
   }
   if (booking?.price != null) parts.push(`pris ${booking.price} kr`);
   if (booking?.rotAmount != null) parts.push(`ROT ${booking.rotAmount} kr`);
+  if (booking?.assignmentType === "subcontractor" && booking.subcontractorName) {
+    parts.push(`UE: ${booking.subcontractorName}${booking.subcontractorPrice != null ? ` (${booking.subcontractorPrice} kr)` : ""}`);
+  }
+  if (booking?.assignmentType === "foreman" && booking.foremanName) {
+    parts.push(`Arbetsledare: ${booking.foremanName}`);
+  }
   if (booking?.assignmentType === "subcontractor" && booking.subcontractorName) {
     parts.push(`UE: ${booking.subcontractorName}${booking.subcontractorPrice != null ? ` (${booking.subcontractorPrice} kr)` : ""}`);
   }
