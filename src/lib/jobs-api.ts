@@ -236,55 +236,6 @@ export interface SelfCheckWithContext extends SelfCheck {
   performer: { display_name: string | null; email: string } | null;
 }
 
-/** List jobs visible to current user (RLS handles filtering). */
-export async function listJobs(): Promise<JobWithLead[]> {
-  const { data, error } = await supabase
-    .from("jobs")
-    .select("*, lead:leads(id, name, phone, job_type, property_id, price)")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-
-  const rows = (data ?? []) as any[];
-  // Fetch properties separately (no FK declared)
-  const propIds = Array.from(
-    new Set(rows.map((r) => r.lead?.property_id).filter(Boolean) as string[])
-  );
-  let propMap: Record<string, { address: string; municipality: string }> = {};
-  if (propIds.length) {
-    const { data: props } = await supabase
-      .from("properties")
-      .select("id, address, municipality")
-      .in("id", propIds);
-    propMap = Object.fromEntries(
-      (props ?? []).map((p: any) => [p.id, { address: p.address, municipality: p.municipality }])
-    );
-  }
-  return rows.map((r) => ({
-    ...r,
-    property: r.lead?.property_id ? propMap[r.lead.property_id] ?? null : null,
-  })) as JobWithLead[];
-}
-
-export async function getJob(id: string): Promise<JobWithLead | null> {
-  const { data, error } = await supabase
-    .from("jobs")
-    .select("*, lead:leads(id, name, phone, job_type, property_id, price)")
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
-  const row = data as any;
-  let property = null;
-  if (row.lead?.property_id) {
-    const { data: p } = await supabase
-      .from("properties")
-      .select("address, municipality")
-      .eq("id", row.lead.property_id)
-      .maybeSingle();
-    property = p ?? null;
-  }
-  return { ...row, property } as JobWithLead;
-}
 
 export async function updateJobStatus(id: string, status: JobStatus) {
   const { error } = await supabase.from("jobs").update({ status }).eq("id", id);
