@@ -71,12 +71,6 @@ export async function updateLeadPipelineStage(
   if (booking?.assignmentType === "foreman" && booking.foremanName) {
     parts.push(`Arbetsledare: ${booking.foremanName}`);
   }
-  if (booking?.assignmentType === "subcontractor" && booking.subcontractorName) {
-    parts.push(`UE: ${booking.subcontractorName}${booking.subcontractorPrice != null ? ` (${booking.subcontractorPrice} kr)` : ""}`);
-  }
-  if (booking?.assignmentType === "foreman" && booking.foremanName) {
-    parts.push(`Arbetsledare: ${booking.foremanName}`);
-  }
   const bookingNote = parts.length ? ` (${parts.join(", ")})` : "";
   await logActivity(
     id,
