@@ -425,6 +425,21 @@ function JobDetailPage() {
           }
         }}
       />
+      <ForemanDialog
+        open={foremanOpen}
+        onOpenChange={setForemanOpen}
+        currentUserId={job.assigned_to}
+        onPick={async (userId) => {
+          try {
+            await assignJobForeman(job.id, userId);
+            toast.success("Arbetsledare tilldelad");
+            setForemanOpen(false);
+            void reload();
+          } catch (e: any) {
+            toast.error(e.message);
+          }
+        }}
+      />
       <TimeDialog
         open={timeOpen}
         onOpenChange={setTimeOpen}
