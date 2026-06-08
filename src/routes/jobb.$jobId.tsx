@@ -19,16 +19,17 @@ import {
   sendSelfChecksToClient,
   updateJobClientInfo,
   deleteSelfCheck,
+  assignJobForeman,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
   type SelfCheck,
   type JobStatus,
 } from "@/lib/jobs-api";
+import { listUsersWithRole, type RoleUser } from "@/lib/leads-api";
 import { SelfCheckDialog } from "@/components/SelfCheckDialog";
 import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel } from "@/lib/self-check-templates";
 
-import { listEmployees, type Employee } from "@/lib/employees-api";
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
