@@ -704,7 +704,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      list_users_with_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: {
+          display_name: string
+          email: string
+          id: string
+        }[]
+      }
     }
     Enums: {
       activity_type:
