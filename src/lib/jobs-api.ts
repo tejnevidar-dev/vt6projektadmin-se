@@ -87,6 +87,7 @@ export async function deleteWorkOrder(jobId: string, path: string) {
 }
 
 export interface JobWithLead extends Job {
+  estimated_hours?: number | null;
   lead?: {
     id: string;
     name: string;
