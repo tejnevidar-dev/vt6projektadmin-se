@@ -151,7 +151,6 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
                   <Briefcase className="h-4 w-4 text-muted-foreground" />
                   <div className="flex-1">
                     <div className="text-sm font-medium">Extern</div>
-                    <div className="text-[11px] text-muted-foreground">Sälj &amp; leads</div>
                   </div>
                   {side === "extern" && <Check className="h-4 w-4 text-primary" />}
                 </DropdownMenuItem>
@@ -163,7 +162,6 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
                   <HardHat className="h-4 w-4 text-muted-foreground" />
                   <div className="flex-1">
                     <div className="text-sm font-medium">Intern</div>
-                    <div className="text-[11px] text-muted-foreground">Personal &amp; jobb</div>
                   </div>
                   {side === "intern" && <Check className="h-4 w-4 text-primary" />}
                 </DropdownMenuItem>
