@@ -167,13 +167,6 @@ function LoginPage() {
               </button>
             </div>
           )}
-          {!isSignUp && (
-            <p className="mb-4 text-center text-xs text-muted-foreground">
-              {side === "extern"
-                ? "Säljare och administratörer"
-                : "Personal: arbetsledare, hantverkare, UE"}
-            </p>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
