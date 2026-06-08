@@ -22,6 +22,20 @@ export interface BookingPatch {
   subcontractorName?: string | null;
   subcontractorPrice?: number | null;
   foremanName?: string | null;
+  foremanUserId?: string | null;
+}
+
+export interface RoleUser {
+  id: string;
+  display_name: string | null;
+  email: string;
+}
+
+/** Listar användare med en specifik roll (t.ex. arbetsledare). */
+export async function listUsersWithRole(role: "admin" | "arbetsledare" | "saljare" | "hantverkare" | "underentreprenor" | "viewer"): Promise<RoleUser[]> {
+  const { data, error } = await (supabase.rpc as any)("list_users_with_role", { _role: role });
+  if (error) throw error;
+  return (data ?? []) as RoleUser[];
 }
 
 export async function updateLeadPipelineStage(
