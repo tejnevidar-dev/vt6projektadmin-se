@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, RequireAuth } from "@/components/AppShell";
+import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
 import type { Lead, PipelineStage } from "@/lib/types";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS } from "@/lib/types";
@@ -66,9 +67,19 @@ function timeAgo(iso: string) {
 }
 
 function DashboardContent() {
+  const navigate = useNavigate();
+  const { isAdmin, isSaljare, loading: rolesLoading, roles } = useUserRoles();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+
+  // Hantverkare/arbetsledare/underentreprenörer ska inte se admin-översikten
+  useEffect(() => {
+    if (rolesLoading) return;
+    if (!isAdmin && !isSaljare && roles.length > 0) {
+      navigate({ to: "/jobb", replace: true });
+    }
+  }, [rolesLoading, isAdmin, isSaljare, roles, navigate]);
 
   const reload = () => {
     fetchLeads()
@@ -78,8 +89,13 @@ function DashboardContent() {
   };
 
   useEffect(() => {
+    if (rolesLoading) return;
+    if (!isAdmin && !isSaljare) {
+      setLoading(false);
+      return;
+    }
     reload();
-  }, []);
+  }, [rolesLoading, isAdmin, isSaljare]);
 
   const total = leads.length;
   const hot = leads.filter((l) => l.status === "hot").length;
