@@ -22,6 +22,20 @@ export interface BookingPatch {
   subcontractorName?: string | null;
   subcontractorPrice?: number | null;
   foremanName?: string | null;
+  foremanUserId?: string | null;
+}
+
+export interface RoleUser {
+  id: string;
+  display_name: string | null;
+  email: string;
+}
+
+/** Listar användare med en specifik roll (t.ex. arbetsledare). */
+export async function listUsersWithRole(role: "admin" | "arbetsledare" | "saljare" | "hantverkare" | "underentreprenor" | "viewer"): Promise<RoleUser[]> {
+  const { data, error } = await (supabase.rpc as any)("list_users_with_role", { _role: role });
+  if (error) throw error;
+  return (data ?? []) as RoleUser[];
 }
 
 export async function updateLeadPipelineStage(
@@ -39,6 +53,7 @@ export async function updateLeadPipelineStage(
     if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
     if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
     if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
+    if (booking.foremanUserId !== undefined) patch.assigned_to = booking.foremanUserId;
   }
   const { error } = await (supabase.from("leads") as any)
     .update(patch)
@@ -76,6 +91,7 @@ export async function updateLeadBooking(id: string, booking: BookingPatch): Prom
   if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
   if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
   if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
+  if (booking.foremanUserId !== undefined) patch.assigned_to = booking.foremanUserId;
   if (Object.keys(patch).length === 0) return;
   const { error } = await (supabase.from("leads") as any).update(patch).eq("id", id);
   if (error) throw error;

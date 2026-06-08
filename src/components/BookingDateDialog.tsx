@@ -10,6 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarCheck, CalendarIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { listUsersWithRole, type RoleUser } from "@/lib/leads-api";
 
 export type AssignmentType = "none" | "subcontractor" | "foreman";
 
@@ -21,6 +22,7 @@ export interface BookingDetails {
   subcontractorName: string | null;
   subcontractorPrice: number | null;
   foremanName: string | null;
+  foremanUserId: string | null;
 }
 
 interface Props {
@@ -33,6 +35,7 @@ interface Props {
   initialSubcontractorName?: string | null;
   initialSubcontractorPrice?: number | null;
   initialForemanName?: string | null;
+  initialForemanUserId?: string | null;
   onCancel: () => void;
   onConfirm: (details: BookingDetails) => void | Promise<void>;
 }
@@ -57,6 +60,7 @@ export function BookingDateDialog({
   initialSubcontractorName,
   initialSubcontractorPrice,
   initialForemanName,
+  initialForemanUserId,
   onCancel,
   onConfirm,
 }: Props) {
@@ -68,7 +72,9 @@ export function BookingDateDialog({
   const [assignmentType, setAssignmentType] = useState<AssignmentType>(initialAssignmentType ?? "none");
   const [subName, setSubName] = useState<string>(initialSubcontractorName ?? "");
   const [subPrice, setSubPrice] = useState<string>(initialSubcontractorPrice != null ? String(initialSubcontractorPrice) : "");
-  const [foremanName, setForemanName] = useState<string>(initialForemanName ?? "");
+  const [foremanUserId, setForemanUserId] = useState<string>(initialForemanUserId ?? "");
+  const [foremen, setForemen] = useState<RoleUser[]>([]);
+  const [foremenLoading, setForemenLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -81,14 +87,27 @@ export function BookingDateDialog({
       setAssignmentType(initialAssignmentType ?? "none");
       setSubName(initialSubcontractorName ?? "");
       setSubPrice(initialSubcontractorPrice != null ? String(initialSubcontractorPrice) : "");
-      setForemanName(initialForemanName ?? "");
+      setForemanUserId(initialForemanUserId ?? "");
       setSaving(false);
     }
-  }, [open, initialDate, initialPrice, initialRotAmount, initialAssignmentType, initialSubcontractorName, initialSubcontractorPrice, initialForemanName]);
+  }, [open, initialDate, initialPrice, initialRotAmount, initialAssignmentType, initialSubcontractorName, initialSubcontractorPrice, initialForemanName, initialForemanUserId]);
+
+  useEffect(() => {
+    if (!open) return;
+    setForemenLoading(true);
+    listUsersWithRole("arbetsledare")
+      .then(setForemen)
+      .catch(() => setForemen([]))
+      .finally(() => setForemenLoading(false));
+  }, [open]);
 
   const priceNum = price ? parseFloat(price) : null;
   const rotNum = rotAmount ? parseFloat(rotAmount) : null;
   const customerPrice = priceNum != null ? priceNum - (rotNum ?? 0) : null;
+  const selectedForeman = foremen.find((f) => f.id === foremanUserId) ?? null;
+  const foremanLabel = selectedForeman
+    ? (selectedForeman.display_name || selectedForeman.email)
+    : initialForemanName ?? null;
 
   const submit = async () => {
     if (!date) return;
@@ -103,7 +122,8 @@ export function BookingDateDialog({
         assignmentType,
         subcontractorName: assignmentType === "subcontractor" ? (subName.trim() || null) : null,
         subcontractorPrice: assignmentType === "subcontractor" && subPrice ? parseFloat(subPrice) : null,
-        foremanName: assignmentType === "foreman" ? (foremanName.trim() || null) : null,
+        foremanName: assignmentType === "foreman" ? foremanLabel : null,
+        foremanUserId: assignmentType === "foreman" ? (foremanUserId || null) : null,
       });
     } finally {
       setSaving(false);
@@ -267,15 +287,26 @@ export function BookingDateDialog({
 
           {assignmentType === "foreman" && (
             <div className="space-y-2 rounded-lg border border-border bg-muted/40 p-3">
-              <Label htmlFor="foreman-name">Arbetsledare</Label>
-              <Input
-                id="foreman-name"
-                placeholder="Namn på arbetsledare"
-                value={foremanName}
-                onChange={(e) => setForemanName(e.target.value)}
-              />
+              <Label htmlFor="foreman-user">Välj arbetsledare</Label>
+              <Select value={foremanUserId} onValueChange={setForemanUserId}>
+                <SelectTrigger id="foreman-user">
+                  <SelectValue placeholder={foremenLoading ? "Laddar…" : "Välj en arbetsledare"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {foremen.length === 0 && !foremenLoading && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground">
+                      Inga arbetsledare registrerade än. Bjud in dem från Admin.
+                    </div>
+                  )}
+                  {foremen.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.display_name || f.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
-                Inbjudningsfunktion för arbetsledare kommer i ett senare steg.
+                Bara användare med rollen arbetsledare visas. Lägg till nya under Admin → Användare.
               </p>
             </div>
           )}
