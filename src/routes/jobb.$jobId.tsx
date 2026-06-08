@@ -95,7 +95,7 @@ function JobDetailPage() {
   async function reload() {
     setLoading(true);
     try {
-      const j = await getJob(jobId);
+      const j = await getJob({ data: { id: jobId } });
       setJob(j);
       if (j) {
         const [m, t, c] = await Promise.all([
