@@ -92,6 +92,7 @@ function JobDetailPage() {
   const [times, setTimes] = useState<TimeEntry[]>([]);
   const [checks, setChecks] = useState<SelfCheck[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [foremanOpen, setForemanOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
 
