@@ -62,6 +62,8 @@ import {
   Sparkles,
   ExternalLink,
   Pencil,
+  Play,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -236,13 +238,28 @@ function JobDetailPage() {
         </>
       }
       actions={
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           <Link to="/jobb" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Alla projekt
           </Link>
+          {(isOwner || isAdmin) && job.status === "ej_paborjad" && (
+            <Button size="sm" onClick={() => handleStatus("pagaende")}>
+              <Play className="mr-1.5 h-4 w-4" /> Starta projekt
+            </Button>
+          )}
+          {(isOwner || isAdmin) && job.status === "pagaende" && (
+            <Button size="sm" onClick={() => handleStatus("klar")}>
+              <CheckCircle2 className="mr-1.5 h-4 w-4" /> Markera som klar
+            </Button>
+          )}
+          {(isOwner || isAdmin) && job.status === "klar" && (
+            <Button size="sm" variant="outline" onClick={() => handleStatus("pagaende")}>
+              Återöppna
+            </Button>
+          )}
           {(isOwner || isAdmin) && (
             <Select value={job.status} onValueChange={(v) => handleStatus(v as JobStatus)}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
