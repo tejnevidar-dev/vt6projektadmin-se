@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import {
   listAllSelfChecks,
-  listJobs,
   listSelfChecks,
   markSelfCheckReviewed,
   unmarkSelfCheckReviewed,
@@ -30,6 +29,7 @@ import {
   type SelfCheck,
   type SelfCheckWithContext,
 } from "@/lib/jobs-api";
+import { listJobs } from "@/lib/jobs.functions";
 import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
 import { useUserRoles } from "@/hooks/use-role";
 
