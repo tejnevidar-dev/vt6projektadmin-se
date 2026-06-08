@@ -91,6 +91,7 @@ export async function updateLeadBooking(id: string, booking: BookingPatch): Prom
   if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
   if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
   if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
+  if (booking.foremanUserId !== undefined) patch.assigned_to = booking.foremanUserId;
   if (Object.keys(patch).length === 0) return;
   const { error } = await (supabase.from("leads") as any).update(patch).eq("id", id);
   if (error) throw error;
