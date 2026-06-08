@@ -19,16 +19,17 @@ import {
   sendSelfChecksToClient,
   updateJobClientInfo,
   deleteSelfCheck,
+  assignJobForeman,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
   type SelfCheck,
   type JobStatus,
 } from "@/lib/jobs-api";
+import { listUsersWithRole, type RoleUser } from "@/lib/leads-api";
 import { SelfCheckDialog } from "@/components/SelfCheckDialog";
 import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel } from "@/lib/self-check-templates";
 
-import { listEmployees, type Employee } from "@/lib/employees-api";
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
@@ -91,6 +92,7 @@ function JobDetailPage() {
   const [times, setTimes] = useState<TimeEntry[]>([]);
   const [checks, setChecks] = useState<SelfCheck[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [foremanOpen, setForemanOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
 
@@ -242,6 +244,11 @@ function JobDetailPage() {
           <Link to="/jobb" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Alla projekt
           </Link>
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={() => setForemanOpen(true)}>
+              <UserPlus className="mr-1.5 h-4 w-4" /> Tilldela arbetsledare
+            </Button>
+          )}
           {isAdmin && job.status === "ej_paborjad" && (
             <Button size="sm" onClick={() => handleStatus("pagaende")}>
               <Play className="mr-1.5 h-4 w-4" /> Starta projekt
@@ -418,6 +425,21 @@ function JobDetailPage() {
           }
         }}
       />
+      <ForemanDialog
+        open={foremanOpen}
+        onOpenChange={setForemanOpen}
+        currentUserId={job.assigned_to}
+        onPick={async (userId) => {
+          try {
+            await assignJobForeman(job.id, userId);
+            toast.success("Arbetsledare tilldelad");
+            setForemanOpen(false);
+            void reload();
+          } catch (e: any) {
+            toast.error(e.message);
+          }
+        }}
+      />
       <TimeDialog
         open={timeOpen}
         onOpenChange={setTimeOpen}
@@ -466,26 +488,26 @@ function InviteDialog({
   existingUserIds: string[];
   onPick: (userId: string) => void;
 }) {
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [users, setUsers] = useState<RoleUser[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    listEmployees()
-      .then(setEmployees)
-      .catch((e) => toast.error(e.message))
+    Promise.all([
+      listUsersWithRole("hantverkare"),
+      listUsersWithRole("arbetsledare"),
+    ])
+      .then(([h, a]) => {
+        const map = new Map<string, RoleUser>();
+        for (const u of [...h, ...a]) map.set(u.id, u);
+        setUsers(Array.from(map.values()));
+      })
+      .catch((e: any) => toast.error(e.message))
       .finally(() => setLoading(false));
   }, [open]);
 
-  // Only hantverkare/timanställda with a linked user_id can be invited
-  const candidates = employees.filter(
-    (e) =>
-      e.active &&
-      !!e.user_id &&
-      !existingUserIds.includes(e.user_id) &&
-      e.employment_type !== "underentreprenor"
-  );
+  const candidates = users.filter((u) => !existingUserIds.includes(u.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -497,17 +519,17 @@ function InviteDialog({
           {loading && <p className="text-sm text-muted-foreground">Laddar…</p>}
           {!loading && candidates.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              Ingen tillgänglig hantverkare. Personal måste vara registrerad och inloggad minst en gång för att kunna bjudas in.
+              Ingen tillgänglig personal. Bjud in personal via Personal-sidan och be dem logga in minst en gång.
             </p>
           )}
-          {candidates.map((e) => (
+          {candidates.map((u) => (
             <button
-              key={e.id}
-              onClick={() => onPick(e.user_id!)}
+              key={u.id}
+              onClick={() => onPick(u.id)}
               className="w-full text-left rounded-md border border-border p-3 hover:bg-muted/40 transition"
             >
-              <div className="font-medium text-sm">{e.full_name}</div>
-              <div className="text-xs text-muted-foreground">{e.email}</div>
+              <div className="font-medium text-sm">{u.display_name ?? u.email}</div>
+              <div className="text-xs text-muted-foreground">{u.email}</div>
             </button>
           ))}
         </div>
@@ -798,5 +820,64 @@ function ChecksTab({
         onSaved={onChanged}
       />
     </>
+  );
+}
+
+function ForemanDialog({
+  open,
+  onOpenChange,
+  currentUserId,
+  onPick,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  currentUserId: string | null;
+  onPick: (userId: string) => void;
+}) {
+  const [users, setUsers] = useState<RoleUser[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    listUsersWithRole("arbetsledare")
+      .then(setUsers)
+      .catch((e: any) => toast.error(e.message))
+      .finally(() => setLoading(false));
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Tilldela arbetsledare</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          {loading && <p className="text-sm text-muted-foreground">Laddar…</p>}
+          {!loading && users.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Inga arbetsledare registrerade. Bjud in personal med rollen "arbetsledare" via Personal-sidan.
+            </p>
+          )}
+          {users.map((u) => {
+            const isCurrent = u.id === currentUserId;
+            return (
+              <button
+                key={u.id}
+                disabled={isCurrent}
+                onClick={() => onPick(u.id)}
+                className="w-full text-left rounded-md border border-border p-3 hover:bg-muted/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="font-medium text-sm">
+                  {u.display_name ?? u.email}
+                  {isCurrent && <span className="ml-2 text-xs text-muted-foreground">(nuvarande)</span>}
+                </div>
+                <div className="text-xs text-muted-foreground">{u.email}</div>
+              </button>
+            );
+          })}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

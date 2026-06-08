@@ -242,6 +242,14 @@ export async function updateJobStatus(id: string, status: JobStatus) {
   if (error) throw error;
 }
 
+export async function assignJobForeman(id: string, userId: string) {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ assigned_to: userId, assignment_type: "arbetsledare" })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export async function updateJobClientInfo(
   id: string,
   info: { client_company: string | null; client_contact_name: string | null; client_email: string | null }
