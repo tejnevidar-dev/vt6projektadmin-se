@@ -244,6 +244,11 @@ function JobDetailPage() {
           <Link to="/jobb" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Alla projekt
           </Link>
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={() => setForemanOpen(true)}>
+              <UserPlus className="mr-1.5 h-4 w-4" /> Tilldela arbetsledare
+            </Button>
+          )}
           {isAdmin && job.status === "ej_paborjad" && (
             <Button size="sm" onClick={() => handleStatus("pagaende")}>
               <Play className="mr-1.5 h-4 w-4" /> Starta projekt
