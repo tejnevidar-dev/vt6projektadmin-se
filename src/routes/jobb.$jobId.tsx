@@ -467,26 +467,26 @@ function InviteDialog({
   existingUserIds: string[];
   onPick: (userId: string) => void;
 }) {
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [users, setUsers] = useState<RoleUser[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    listEmployees()
-      .then(setEmployees)
-      .catch((e) => toast.error(e.message))
+    Promise.all([
+      listUsersWithRole("hantverkare"),
+      listUsersWithRole("arbetsledare"),
+    ])
+      .then(([h, a]) => {
+        const map = new Map<string, RoleUser>();
+        for (const u of [...h, ...a]) map.set(u.id, u);
+        setUsers(Array.from(map.values()));
+      })
+      .catch((e: any) => toast.error(e.message))
       .finally(() => setLoading(false));
   }, [open]);
 
-  // Only hantverkare/timanställda with a linked user_id can be invited
-  const candidates = employees.filter(
-    (e) =>
-      e.active &&
-      !!e.user_id &&
-      !existingUserIds.includes(e.user_id) &&
-      e.employment_type !== "underentreprenor"
-  );
+  const candidates = users.filter((u) => !existingUserIds.includes(u.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -498,17 +498,17 @@ function InviteDialog({
           {loading && <p className="text-sm text-muted-foreground">Laddar…</p>}
           {!loading && candidates.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              Ingen tillgänglig hantverkare. Personal måste vara registrerad och inloggad minst en gång för att kunna bjudas in.
+              Ingen tillgänglig personal. Bjud in personal via Personal-sidan och be dem logga in minst en gång.
             </p>
           )}
-          {candidates.map((e) => (
+          {candidates.map((u) => (
             <button
-              key={e.id}
-              onClick={() => onPick(e.user_id!)}
+              key={u.id}
+              onClick={() => onPick(u.id)}
               className="w-full text-left rounded-md border border-border p-3 hover:bg-muted/40 transition"
             >
-              <div className="font-medium text-sm">{e.full_name}</div>
-              <div className="text-xs text-muted-foreground">{e.email}</div>
+              <div className="font-medium text-sm">{u.display_name ?? u.email}</div>
+              <div className="text-xs text-muted-foreground">{u.email}</div>
             </button>
           ))}
         </div>
