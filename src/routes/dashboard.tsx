@@ -67,9 +67,19 @@ function timeAgo(iso: string) {
 }
 
 function DashboardContent() {
+  const navigate = useNavigate();
+  const { isAdmin, isSaljare, loading: rolesLoading, roles } = useUserRoles();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+
+  // Hantverkare/arbetsledare/underentreprenörer ska inte se admin-översikten
+  useEffect(() => {
+    if (rolesLoading) return;
+    if (!isAdmin && !isSaljare && roles.length > 0) {
+      navigate({ to: "/jobb", replace: true });
+    }
+  }, [rolesLoading, isAdmin, isSaljare, roles, navigate]);
 
   const reload = () => {
     fetchLeads()
@@ -79,8 +89,13 @@ function DashboardContent() {
   };
 
   useEffect(() => {
+    if (rolesLoading) return;
+    if (!isAdmin && !isSaljare) {
+      setLoading(false);
+      return;
+    }
     reload();
-  }, []);
+  }, [rolesLoading, isAdmin, isSaljare]);
 
   const total = leads.length;
   const hot = leads.filter((l) => l.status === "hot").length;
