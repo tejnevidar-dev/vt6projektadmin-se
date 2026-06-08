@@ -30,6 +30,7 @@ import { Route as ApiSendSelfChecksRouteImport } from './routes/api/send-self-ch
 import { Route as ApiProcessWorkOrderRouteImport } from './routes/api/process-work-order'
 import { Route as ApiAiPitchRouteImport } from './routes/api/ai-pitch'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 
 const WebhookLogsRoute = WebhookLogsRouteImport.update({
   id: '/webhook-logs',
@@ -138,6 +139,12 @@ const ApiPublicRoslagstakWebhookRoute =
     path: '/api/public/roslagstak-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -183,6 +191,7 @@ export interface FileRoutesByTo {
   '/egenkontroller': typeof EgenkontrollerIndexRoute
   '/jobb': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -207,6 +216,7 @@ export interface FileRoutesById {
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/'
     | '/jobb/'
     | '/api/public/roslagstak-webhook'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/egenkontroller'
     | '/jobb'
     | '/api/public/roslagstak-webhook'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -277,6 +289,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/'
     | '/jobb/'
     | '/api/public/roslagstak-webhook'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -299,6 +312,7 @@ export interface RootRouteChildren {
   JobbJobIdRoute: typeof JobbJobIdRoute
   JobbIndexRoute: typeof JobbIndexRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -450,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRoslagstakWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -487,6 +508,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobbJobIdRoute: JobbJobIdRoute,
   JobbIndexRoute: JobbIndexRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
