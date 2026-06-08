@@ -109,7 +109,7 @@ export function WorkOrderPanel({
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          {job.work_order_pdf_path && (
+          {job.work_order_pdf_path && canManage && (
             <Button size="sm" variant="outline" onClick={handleOpenPdf}>
               <ExternalLink className="mr-1.5 h-4 w-4" /> Öppna PDF
             </Button>
