@@ -822,3 +822,62 @@ function ChecksTab({
     </>
   );
 }
+
+function ForemanDialog({
+  open,
+  onOpenChange,
+  currentUserId,
+  onPick,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  currentUserId: string | null;
+  onPick: (userId: string) => void;
+}) {
+  const [users, setUsers] = useState<RoleUser[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    listUsersWithRole("arbetsledare")
+      .then(setUsers)
+      .catch((e: any) => toast.error(e.message))
+      .finally(() => setLoading(false));
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Tilldela arbetsledare</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          {loading && <p className="text-sm text-muted-foreground">Laddar…</p>}
+          {!loading && users.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Inga arbetsledare registrerade. Bjud in personal med rollen "arbetsledare" via Personal-sidan.
+            </p>
+          )}
+          {users.map((u) => {
+            const isCurrent = u.id === currentUserId;
+            return (
+              <button
+                key={u.id}
+                disabled={isCurrent}
+                onClick={() => onPick(u.id)}
+                className="w-full text-left rounded-md border border-border p-3 hover:bg-muted/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="font-medium text-sm">
+                  {u.display_name ?? u.email}
+                  {isCurrent && <span className="ml-2 text-xs text-muted-foreground">(nuvarande)</span>}
+                </div>
+                <div className="text-xs text-muted-foreground">{u.email}</div>
+              </button>
+            );
+          })}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
