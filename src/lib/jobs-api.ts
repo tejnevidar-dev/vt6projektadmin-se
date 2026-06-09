@@ -311,6 +311,22 @@ export async function updateJobPrice(
   }
 }
 
+export async function updateJobEstimatedHours(id: string, hours: number | null) {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ estimated_hours: hours })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function updateJobHideTimeEstimate(id: string, hide: boolean) {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ hide_time_estimate: hide })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 /* ===== Members ===== */
 export async function listJobMembers(jobId: string): Promise<JobMember[]> {
   const { data, error } = await supabase
