@@ -111,12 +111,27 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
 
   return (
     <div className="relative flex min-h-screen w-full bg-background text-foreground">
+      {/* Mobil-overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
       <aside
         className={cn(
-          "sticky top-0 z-20 flex h-screen flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200",
-          collapsed ? "w-[60px]" : "w-[220px]"
+          "fixed inset-y-0 left-0 z-40 flex h-screen w-[260px] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 lg:sticky lg:top-0 lg:z-20 lg:translate-x-0 lg:transition-[width]",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+          collapsed ? "lg:w-[60px]" : "lg:w-[220px]"
         )}
       >
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="absolute right-2 top-3 rounded-md p-1.5 text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:hidden"
+          title="Stäng meny"
+        >
+          <X className="h-4 w-4" />
+        </button>
         <div className="flex h-14 items-center px-2">
           {canSwitch ? (
             <DropdownMenu>
