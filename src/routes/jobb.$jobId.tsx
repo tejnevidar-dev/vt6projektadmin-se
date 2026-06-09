@@ -905,6 +905,7 @@ function ClientInfoDialog({
 
 function ChecksTab({
   jobId,
+  jobType,
   checks,
   currentUserId,
   canCreate,
@@ -912,16 +913,24 @@ function ChecksTab({
   onChanged,
 }: {
   jobId: string;
+  jobType?: string;
   checks: SelfCheck[];
   currentUserId: string | null;
   canCreate: boolean;
   isAdmin: boolean;
   onChanged: () => void;
 }) {
+  const applicableTemplates = useMemo(() => getApplicableTemplates(jobType), [jobType]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SelfCheck | null>(null);
   const [newTemplateKey, setNewTemplateKey] = useState<string | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<string>(SELF_CHECK_TEMPLATES[0].key);
+  const [activeTab, setActiveTab] = useState<string>(() => applicableTemplates[0]?.key ?? "");
+
+  useEffect(() => {
+    if (activeTab && !applicableTemplates.some((t) => t.key === activeTab)) {
+      setActiveTab(applicableTemplates[0]?.key ?? "");
+    }
+  }, [applicableTemplates, activeTab]);
 
   function openNewForTemplate(key: string) {
     setEditing(null);
@@ -935,7 +944,7 @@ function ChecksTab({
   }
 
   const submittedKeys = new Set(checks.filter((c) => c.completed_at).map((c) => c.template_key));
-  const missingCount = SELF_CHECK_TEMPLATES.filter((t) => !submittedKeys.has(t.key)).length;
+  const missingCount = applicableTemplates.filter((t) => !submittedKeys.has(t.key)).length;
 
   return (
     <>
