@@ -68,6 +68,8 @@ import {
   Pencil,
   Play,
   CheckCircle2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
