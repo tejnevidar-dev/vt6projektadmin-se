@@ -293,11 +293,39 @@ function JobDetailPage() {
     >
       <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-lg border border-border bg-card p-3">
-          <div className="text-xs text-muted-foreground">Uppskattade timmar</div>
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-muted-foreground">Uppskattade timmar</div>
+            {isAdmin && (
+              <div className="flex items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-5 w-5"
+                  title={job.hide_time_estimate ? "Visa tidsuppskattning" : "Dölj tidsuppskattning"}
+                  onClick={async () => {
+                    try {
+                      await updateJobHideTimeEstimate(job.id, !job.hide_time_estimate);
+                      toast.success(job.hide_time_estimate ? "Tidsuppskattning visas nu" : "Tidsuppskattning dold");
+                      void reload();
+                    } catch (e: any) {
+                      toast.error(e.message);
+                    }
+                  }}
+                >
+                  {job.hide_time_estimate ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                </Button>
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEstimateOpen(true)}>
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
           <div className="text-lg font-semibold text-foreground">
             {estimatedHours != null ? `${estimatedHours.toFixed(1)} h` : "—"}
           </div>
-          <div className="text-xs text-muted-foreground">Baserat på 600 kr/h</div>
+          <div className="text-xs text-muted-foreground">
+            {job.hide_time_estimate && isAdmin ? "Dold för hantverkare/arbetsledare" : "Baserat på 600 kr/h"}
+          </div>
         </div>
         <div className="rounded-lg border border-border bg-card p-3">
           <div className="text-xs text-muted-foreground">Loggade timmar</div>
