@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2, FileSignature, ExternalLink, CheckCircle } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -319,12 +320,21 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                   return;
                 }
                 setSaving(true);
+                const toastId = toast.loading(
+                  target === "pagaende" ? "Flyttar till Pågående…" : `Flyttar till ${PIPELINE_STAGE_LABELS[target]}…`
+                );
                 try {
                   await updateLeadPipelineStage(lead.id, target, lead.pipelineStage);
+                  if (target === "pagaende") {
+                    toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+                  } else {
+                    toast.success(`Flyttad till ${PIPELINE_STAGE_LABELS[target]}`, { id: toastId });
+                  }
                   onUpdated?.();
                   onClose();
                 } catch (err) {
                   console.error("Failed to update pipeline stage:", err);
+                  toast.error("Kunde inte uppdatera status", { id: toastId });
                 } finally {
                   setSaving(false);
                 }

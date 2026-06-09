@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { LeadKanban } from "@/components/LeadKanban";
 import { LeadTable } from "@/components/LeadTable";
@@ -99,10 +100,19 @@ function StageContent({ stage, description }: Props) {
 
   const handleStageChange = async (leadId: string, newStage: PipelineStage) => {
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, pipelineStage: newStage } : l)));
+    const toastId = toast.loading(
+      newStage === "pagaende" ? "Flyttar till Pågående…" : `Flyttar till ${PIPELINE_STAGE_LABELS[newStage]}…`
+    );
     try {
       await updateLeadPipelineStage(leadId, newStage);
+      if (newStage === "pagaende") {
+        toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+      } else {
+        toast.success(`Flyttad till ${PIPELINE_STAGE_LABELS[newStage]}`, { id: toastId });
+      }
     } catch (err) {
       console.error(err);
+      toast.error("Kunde inte uppdatera status", { id: toastId });
       load();
     }
   };
