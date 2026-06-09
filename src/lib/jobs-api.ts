@@ -11,6 +11,8 @@ export interface Job {
   assignment_type: JobAssignmentType | null;
   status: JobStatus;
   fixed_price: number | null;
+  estimated_hours: number | null;
+  hide_time_estimate: boolean;
   notes: string | null;
   customer_name: string | null;
   customer_phone: string | null;
