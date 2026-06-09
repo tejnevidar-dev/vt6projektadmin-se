@@ -33,7 +33,7 @@ import {
 } from "@/lib/jobs-api";
 import { listUsersWithRole, type RoleUser } from "@/lib/leads-api";
 import { SelfCheckDialog } from "@/components/SelfCheckDialog";
-import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel } from "@/lib/self-check-templates";
+import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel, getApplicableTemplates } from "@/lib/self-check-templates";
 
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
 import { useAuth } from "@/hooks/use-auth";
