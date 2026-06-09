@@ -7,8 +7,8 @@ export type TimeEntryStatus = "pending" | "approved" | "rejected";
 export interface Job {
   id: string;
   lead_id: string | null;
-  assigned_to: string;
-  assignment_type: JobAssignmentType;
+  assigned_to: string | null;
+  assignment_type: JobAssignmentType | null;
   status: JobStatus;
   fixed_price: number | null;
   notes: string | null;
