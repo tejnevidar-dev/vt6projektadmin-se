@@ -107,7 +107,13 @@ function StageContent({ stage, description }: Props) {
     try {
       await updateLeadPipelineStage(leadId, newStage);
       if (newStage === "pagaende") {
-        toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+        toast.loading("Skapar projekt under Projekt-fliken…", { id: toastId });
+        const ok = await waitForJobByLead(leadId);
+        if (ok) {
+          toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+        } else {
+          toast.warning("Status uppdaterad – projektet syns inom kort", { id: toastId });
+        }
       } else {
         toast.success(`Flyttad till ${PIPELINE_STAGE_LABELS[newStage]}`, { id: toastId });
       }
