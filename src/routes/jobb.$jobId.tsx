@@ -528,6 +528,21 @@ function JobDetailPage() {
           }
         }}
       />
+      <EstimateDialog
+        open={estimateOpen}
+        onOpenChange={setEstimateOpen}
+        initialHours={job.estimated_hours}
+        onSubmit={async (hours) => {
+          try {
+            await updateJobEstimatedHours(job.id, hours);
+            toast.success("Tidsuppskattning uppdaterad");
+            setEstimateOpen(false);
+            void reload();
+          } catch (e: any) {
+            toast.error(e.message);
+          }
+        }}
+      />
     </AppShell>
   );
 }
