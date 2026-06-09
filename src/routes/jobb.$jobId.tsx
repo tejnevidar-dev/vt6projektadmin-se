@@ -101,6 +101,7 @@ function JobDetailPage() {
   const [timeOpen, setTimeOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
+  const [estimateOpen, setEstimateOpen] = useState(false);
 
   async function reload() {
     setLoading(true);
