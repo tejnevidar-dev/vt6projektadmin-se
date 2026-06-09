@@ -450,7 +450,7 @@ function JobDetailPage() {
         <TabsContent value="checks" className="mt-4">
           <ChecksTab
             jobId={job.id}
-            jobType={job.job_type ?? job.lead?.job_type ?? null}
+            jobType={job.job_type ?? job.lead?.job_type ?? undefined}
             isAdmin={isAdmin}
             checks={checks}
             currentUserId={user?.id ?? null}
