@@ -18,6 +18,7 @@ import {
   deleteWorkOrder,
   sendSelfChecksToClient,
   updateJobClientInfo,
+  updateJobPrice,
   deleteSelfCheck,
   assignJobForeman,
   type JobWithLead,
@@ -95,6 +96,7 @@ function JobDetailPage() {
   const [foremanOpen, setForemanOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
+  const [priceOpen, setPriceOpen] = useState(false);
 
   async function reload() {
     setLoading(true);
@@ -231,8 +233,13 @@ function JobDetailPage() {
               </Button>
             </span>
           )}
-          {isAdmin && isUE && job.fixed_price != null && (
-            <span>Pris: <strong className="text-foreground">{Number(job.fixed_price).toLocaleString("sv-SE")} kr</strong></span>
+          {isAdmin && (
+            <span className="inline-flex items-center gap-1">
+              Pris: <strong className="text-foreground">{projectPrice != null ? `${Number(projectPrice).toLocaleString("sv-SE")} kr` : "—"}</strong>
+              <Button size="icon" variant="ghost" className="h-5 w-5 ml-1" onClick={() => setPriceOpen(true)}>
+                <Pencil className="h-3 w-3" />
+              </Button>
+            </span>
           )}
           {isAdmin && job.self_checks_emailed_at && job.self_checks_emailed_to && (
             <span>Mejlat: <strong className="text-foreground">{new Date(job.self_checks_emailed_at).toLocaleDateString("sv-SE")} till {job.self_checks_emailed_to}</strong></span>
@@ -473,7 +480,71 @@ function JobDetailPage() {
           }
         }}
       />
+      <PriceDialog
+        open={priceOpen}
+        onOpenChange={setPriceOpen}
+        initialPrice={projectPrice}
+        onSubmit={async (price) => {
+          try {
+            await updateJobPrice(job.id, price, job.lead_id ?? null);
+            toast.success("Pris uppdaterat");
+            setPriceOpen(false);
+            void reload();
+          } catch (e: any) {
+            toast.error(e.message);
+          }
+        }}
+      />
     </AppShell>
+  );
+}
+
+function PriceDialog({
+  open,
+  onOpenChange,
+  initialPrice,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  initialPrice: number | null;
+  onSubmit: (price: number | null) => void | Promise<void>;
+}) {
+  const [value, setValue] = useState<string>(initialPrice != null ? String(initialPrice) : "");
+  useEffect(() => {
+    if (open) setValue(initialPrice != null ? String(initialPrice) : "");
+  }, [open, initialPrice]);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Uppdatera pris</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <Label htmlFor="job-price">Pris (kr)</Label>
+          <Input
+            id="job-price"
+            type="number"
+            min="0"
+            step="100"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="t.ex. 85000"
+          />
+          <p className="text-xs text-muted-foreground">
+            Påverkar uppskattade timmar (600 kr/h) och fast pris för UE.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
+          <Button
+            onClick={() => onSubmit(value.trim() === "" ? null : Number(value))}
+          >
+            Spara
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

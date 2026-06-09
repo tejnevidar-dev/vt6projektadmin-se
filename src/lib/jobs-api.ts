@@ -291,6 +291,25 @@ export async function updateJobClientInfo(
   if (error) throw error;
 }
 
+export async function updateJobPrice(
+  id: string,
+  price: number | null,
+  leadId: string | null,
+) {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ fixed_price: price })
+    .eq("id", id);
+  if (error) throw error;
+  if (leadId) {
+    const { error: leadErr } = await supabase
+      .from("leads")
+      .update({ price })
+      .eq("id", leadId);
+    if (leadErr) throw leadErr;
+  }
+}
+
 /* ===== Members ===== */
 export async function listJobMembers(jobId: string): Promise<JobMember[]> {
   const { data, error } = await supabase
