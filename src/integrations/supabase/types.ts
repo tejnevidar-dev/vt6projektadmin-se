@@ -226,8 +226,10 @@ export type Database = {
       jobs: {
         Row: {
           address: string | null
-          assigned_to: string
-          assignment_type: Database["public"]["Enums"]["job_assignment_type"]
+          assigned_to: string | null
+          assignment_type:
+            | Database["public"]["Enums"]["job_assignment_type"]
+            | null
           client_company: string | null
           client_contact_name: string | null
           client_email: string | null
@@ -248,8 +250,10 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          assigned_to: string
-          assignment_type: Database["public"]["Enums"]["job_assignment_type"]
+          assigned_to?: string | null
+          assignment_type?:
+            | Database["public"]["Enums"]["job_assignment_type"]
+            | null
           client_company?: string | null
           client_contact_name?: string | null
           client_email?: string | null
@@ -270,8 +274,10 @@ export type Database = {
         }
         Update: {
           address?: string | null
-          assigned_to?: string
-          assignment_type?: Database["public"]["Enums"]["job_assignment_type"]
+          assigned_to?: string | null
+          assignment_type?:
+            | Database["public"]["Enums"]["job_assignment_type"]
+            | null
           client_company?: string | null
           client_contact_name?: string | null
           client_email?: string | null
