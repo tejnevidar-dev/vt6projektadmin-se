@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { LeadKanban } from "@/components/LeadKanban";
 import { LeadTable } from "@/components/LeadTable";
