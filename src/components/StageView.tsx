@@ -6,6 +6,7 @@ import { LeadTable } from "@/components/LeadTable";
 import { LeadDetail } from "@/components/LeadDetail";
 import { Input } from "@/components/ui/input";
 import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
+import { waitForJobByLead } from "@/lib/jobs-api";
 import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import type { Lead, PipelineStage, JobType } from "@/lib/types";
 import { PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS, JOB_TYPES, hasIncompleteBooking } from "@/lib/types";
@@ -106,7 +107,13 @@ function StageContent({ stage, description }: Props) {
     try {
       await updateLeadPipelineStage(leadId, newStage);
       if (newStage === "pagaende") {
-        toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+        toast.loading("Skapar projekt under Projekt-fliken…", { id: toastId });
+        const ok = await waitForJobByLead(leadId);
+        if (ok) {
+          toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+        } else {
+          toast.warning("Status uppdaterad – projektet syns inom kort", { id: toastId });
+        }
       } else {
         toast.success(`Flyttad till ${PIPELINE_STAGE_LABELS[newStage]}`, { id: toastId });
       }

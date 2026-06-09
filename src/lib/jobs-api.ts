@@ -27,6 +27,32 @@ export interface Job {
   updated_at: string;
 }
 
+/**
+ * Polls the `jobs` table until a job for the given lead exists (created by
+ * the `handle_lead_booking` trigger when a lead moves to "pagaende").
+ * Resolves true once visible, or false if not seen within timeoutMs.
+ */
+export async function waitForJobByLead(
+  leadId: string,
+  timeoutMs = 8000,
+  intervalMs = 400,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const { data, error } = await supabase
+      .from("jobs")
+      .select("id")
+      .eq("lead_id", leadId)
+      .limit(1)
+      .maybeSingle();
+    if (!error && data?.id) return true;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return false;
+}
+
+
+
 
 /* ===== Work orders (PDF + AI summary) ===== */
 

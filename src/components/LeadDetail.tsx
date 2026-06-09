@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer, setLeadRotPaid } from "@/lib/leads-api";
+import { waitForJobByLead } from "@/lib/jobs-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
@@ -326,7 +327,13 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                 try {
                   await updateLeadPipelineStage(lead.id, target, lead.pipelineStage);
                   if (target === "pagaende") {
-                    toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+                    toast.loading("Skapar projekt under Projekt-fliken…", { id: toastId });
+                    const ok = await waitForJobByLead(lead.id);
+                    if (ok) {
+                      toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+                    } else {
+                      toast.warning("Status uppdaterad – projektet syns inom kort", { id: toastId });
+                    }
                   } else {
                     toast.success(`Flyttad till ${PIPELINE_STAGE_LABELS[target]}`, { id: toastId });
                   }
