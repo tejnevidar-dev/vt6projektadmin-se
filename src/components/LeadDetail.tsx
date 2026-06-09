@@ -327,7 +327,13 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                 try {
                   await updateLeadPipelineStage(lead.id, target, lead.pipelineStage);
                   if (target === "pagaende") {
-                    toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+                    toast.loading("Skapar projekt under Projekt-fliken…", { id: toastId });
+                    const ok = await waitForJobByLead(lead.id);
+                    if (ok) {
+                      toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+                    } else {
+                      toast.warning("Status uppdaterad – projektet syns inom kort", { id: toastId });
+                    }
                   } else {
                     toast.success(`Flyttad till ${PIPELINE_STAGE_LABELS[target]}`, { id: toastId });
                   }
