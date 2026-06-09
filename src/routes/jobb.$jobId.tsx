@@ -1079,8 +1079,15 @@ function ForemanDialog({
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    listUsersWithRole("arbetsledare")
-      .then(setUsers)
+    import("@/lib/employees-api")
+      .then(({ listEmployees }) => listEmployees())
+      .then((emps) =>
+        setUsers(
+          emps
+            .filter((e) => e.active && !!e.user_id && e.employment_type !== "underentreprenor")
+            .map((e) => ({ id: e.user_id!, display_name: e.full_name ?? null, email: e.email ?? "" }))
+        )
+      )
       .catch((e: any) => toast.error(e.message))
       .finally(() => setLoading(false));
   }, [open]);
@@ -1095,7 +1102,7 @@ function ForemanDialog({
           {loading && <p className="text-sm text-muted-foreground">Laddar…</p>}
           {!loading && users.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              Inga arbetsledare registrerade. Bjud in personal med rollen "arbetsledare" via Personal-sidan.
+              Inga medarbetare med inloggning hittades. Bjud in personal via Personal-sidan.
             </p>
           )}
           {users.map((u) => {
