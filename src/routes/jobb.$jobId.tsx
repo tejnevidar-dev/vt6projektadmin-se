@@ -450,11 +450,11 @@ function JobDetailPage() {
         <TabsContent value="checks" className="mt-4">
           <ChecksTab
             jobId={job.id}
-            jobType={job.lead?.job_type}
+            jobType={job.job_type ?? job.lead?.job_type ?? null}
+            isAdmin={isAdmin}
             checks={checks}
             currentUserId={user?.id ?? null}
             canCreate={isOwner || isAdmin || members.some((m) => m.user_id === user?.id)}
-            isAdmin={isAdmin}
             onChanged={reload}
           />
         </TabsContent>
