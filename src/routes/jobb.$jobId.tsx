@@ -986,64 +986,114 @@ function ChecksTab({
                 )}
               </div>
 
-              <div className="rounded-lg border border-border bg-card divide-y divide-border">
-                {tplChecks.length === 0 && (
-                  <div className="p-6 text-center text-sm text-muted-foreground">
-                    <ClipboardCheck className="mx-auto mb-2 h-7 w-7 text-muted-foreground/40" />
-                    Ingen egenkontroll inlämnad för {t.name} än.
-                  </div>
-                )}
-                {tplChecks.map((c) => {
-                  const isDraft = !c.completed_at;
-                  const isMine = c.user_id === currentUserId;
-                  const canEdit = isDraft && (isMine || isAdmin);
-                  const canDelete = isAdmin || (isDraft && isMine);
-                  return (
-                    <div
-                      key={c.id}
-                      className="flex items-center justify-between p-3 hover:bg-muted/30 transition cursor-pointer"
-                      onClick={() => openExisting(c)}
-                    >
-                      <div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(c.completed_at ?? c.created_at).toLocaleString("sv-SE")}
+              {(() => {
+                const submittedChecks = tplChecks.filter((c) => c.completed_at);
+                const isFieldAttached = (label: string, type: string) => {
+                  for (const c of submittedChecks) {
+                    const v = (c.data as Record<string, unknown> | null)?.[label];
+                    if (type === "checkbox") {
+                      if (v === true) return true;
+                    } else {
+                      if (typeof v === "string" && v.trim().length > 0) return true;
+                    }
+                  }
+                  return false;
+                };
+                return (
+                  <div className="rounded-lg border border-border bg-card divide-y divide-border">
+                    {t.fields.map((f) => {
+                      const attached = isFieldAttached(f.label, f.type);
+                      return (
+                        <div
+                          key={f.label}
+                          className="flex items-start justify-between gap-3 p-3"
+                        >
+                          <div className="min-w-0">
+                            <div className="font-medium text-sm">{f.label}</div>
+                            {f.instruction && (
+                              <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                                {f.instruction}
+                              </p>
+                            )}
+                          </div>
+                          <div className="shrink-0">
+                            {attached ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Egenkontroll bifogad
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+                                Saknar egenkontroll
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {c.reviewed_at ? (
-                          <Badge variant="default">Granskad</Badge>
-                        ) : c.completed_at ? (
-                          <Badge variant="secondary">Inlämnad</Badge>
-                        ) : (
-                          <Badge variant="outline">Utkast</Badge>
-                        )}
-                        {canDelete && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              if (!confirm("Ta bort egenkontrollen?")) return;
-                              try {
-                                await deleteSelfCheck(c.id);
-                                toast.success("Borttagen");
-                                onChanged();
-                              } catch (err: any) {
-                                toast.error(err.message);
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        )}
-                        {!canEdit && !canDelete && (
-                          <span className="text-xs text-muted-foreground">Visa</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
+              {tplChecks.length > 0 && (
+                <div className="mt-4">
+                  <div className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Inlämnade egenkontroller
+                  </div>
+                  <div className="rounded-lg border border-border bg-card divide-y divide-border">
+                    {tplChecks.map((c) => {
+                      const isDraft = !c.completed_at;
+                      const isMine = c.user_id === currentUserId;
+                      const canEdit = isDraft && (isMine || isAdmin);
+                      const canDelete = isAdmin || (isDraft && isMine);
+                      return (
+                        <div
+                          key={c.id}
+                          className="flex items-center justify-between p-3 hover:bg-muted/30 transition cursor-pointer"
+                          onClick={() => openExisting(c)}
+                        >
+                          <div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(c.completed_at ?? c.created_at).toLocaleString("sv-SE")}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {c.reviewed_at ? (
+                              <Badge variant="default">Granskad</Badge>
+                            ) : c.completed_at ? (
+                              <Badge variant="secondary">Inlämnad</Badge>
+                            ) : (
+                              <Badge variant="outline">Utkast</Badge>
+                            )}
+                            {canDelete && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (!confirm("Ta bort egenkontrollen?")) return;
+                                  try {
+                                    await deleteSelfCheck(c.id);
+                                    toast.success("Borttagen");
+                                    onChanged();
+                                  } catch (err: any) {
+                                    toast.error(err.message);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                            {!canEdit && !canDelete && (
+                              <span className="text-xs text-muted-foreground">Visa</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </TabsContent>
           );
         })}
