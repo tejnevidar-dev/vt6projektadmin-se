@@ -963,6 +963,22 @@ function ChecksTab({
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap h-auto">
           {applicableTemplates.map((t) => {
+            const tplChecks = checks.filter((c) => c.template_key === t.key);
+            const submitted = tplChecks.some((c) => c.completed_at);
+            return (
+              <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
+                {t.name}
+                {submitted ? (
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                ) : (
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                )}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+
+        {applicableTemplates.map((t) => {
           const tplChecks = checks.filter((c) => c.template_key === t.key);
           const hasSubmitted = tplChecks.some((c) => c.completed_at);
           return (
