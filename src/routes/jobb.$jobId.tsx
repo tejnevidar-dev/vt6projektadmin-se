@@ -18,6 +18,7 @@ import {
   deleteWorkOrder,
   sendSelfChecksToClient,
   updateJobClientInfo,
+  updateJobPrice,
   deleteSelfCheck,
   assignJobForeman,
   type JobWithLead,
@@ -95,6 +96,7 @@ function JobDetailPage() {
   const [foremanOpen, setForemanOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
+  const [priceOpen, setPriceOpen] = useState(false);
 
   async function reload() {
     setLoading(true);
@@ -231,8 +233,13 @@ function JobDetailPage() {
               </Button>
             </span>
           )}
-          {isAdmin && isUE && job.fixed_price != null && (
-            <span>Pris: <strong className="text-foreground">{Number(job.fixed_price).toLocaleString("sv-SE")} kr</strong></span>
+          {isAdmin && (
+            <span className="inline-flex items-center gap-1">
+              Pris: <strong className="text-foreground">{projectPrice != null ? `${Number(projectPrice).toLocaleString("sv-SE")} kr` : "—"}</strong>
+              <Button size="icon" variant="ghost" className="h-5 w-5 ml-1" onClick={() => setPriceOpen(true)}>
+                <Pencil className="h-3 w-3" />
+              </Button>
+            </span>
           )}
           {isAdmin && job.self_checks_emailed_at && job.self_checks_emailed_to && (
             <span>Mejlat: <strong className="text-foreground">{new Date(job.self_checks_emailed_at).toLocaleDateString("sv-SE")} till {job.self_checks_emailed_to}</strong></span>
