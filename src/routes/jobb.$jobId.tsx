@@ -318,8 +318,11 @@ function JobDetailPage() {
                 >
                   {job.hide_time_estimate ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
                 </Button>
-                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEstimateOpen(true)}>
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEstimateOpen(true)} title="Redigera tidsuppskattning">
                   <Pencil className="h-3 w-3" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEstimateHistoryOpen(true)} title="Historik">
+                  <History className="h-3 w-3" />
                 </Button>
               </div>
             )}
