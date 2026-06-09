@@ -274,6 +274,45 @@ export const SELF_CHECK_TEMPLATES: SelfCheckTemplate[] = [
       },
     ],
   },
+  {
+    key: "taktvatt",
+    name: "Taktvätt",
+    description: "Egenkontroll för taktvätt och takbehandling.",
+    sentToClient: true,
+    instructions:
+      "Dokumentera takytan före och efter tvätt. Bifoga bilder för varje moment och notera eventuella avvikelser.",
+    fields: [
+      {
+        label: "Före bild på takyta",
+        type: "checkbox",
+        instruction:
+          "Ta bilder på takytan innan tvätt påbörjas. Bilderna ska visa hela taket och eventuella problemområden.",
+      },
+      {
+        label: "Inteckning",
+        type: "checkbox",
+        instruction:
+          "Kontrollera och dokumentera eventuella inteckningar eller skador på taket som påverkar arbetet.",
+      },
+      {
+        label: "Efterbild på takyta",
+        type: "checkbox",
+        instruction:
+          "Ta bilder på takytan efter att tvätt är genomförd. Bilderna ska visa resultatet och att hela taket är rent.",
+      },
+      {
+        label: "Bild på eventuell applicerad behandling",
+        type: "checkbox",
+        instruction:
+          "Om någon behandling (t.ex. alg- eller mossbehandling) har applicerats, ta bilder som visar detta.",
+      },
+      {
+        label: "Övrigt",
+        type: "textarea",
+        instruction: "Notera eventuella avvikelser, kompletterande åtgärder eller annan relevant information.",
+      },
+    ],
+  },
 ];
 
 export function getSelfCheckTemplate(key: string): SelfCheckTemplate | undefined {
@@ -282,4 +321,28 @@ export function getSelfCheckTemplate(key: string): SelfCheckTemplate | undefined
 
 export function getSelfCheckTemplateLabel(key: string): string {
   return getSelfCheckTemplate(key)?.name ?? key;
+}
+
+/**
+ * Returnerar de egenkontrollmallar som är aktuella för en given jobbtyp.
+ * Om ingen jobbtyp anges visas alla mallar för bakåtkompatibilitet.
+ */
+export function getApplicableTemplates(jobType?: string): SelfCheckTemplate[] {
+  if (!jobType) return SELF_CHECK_TEMPLATES;
+  switch (jobType) {
+    case "roof_cleaning":
+      return SELF_CHECK_TEMPLATES.filter(
+        (t) => t.key === "taktvatt" || t.key === "sakerhet"
+      );
+    case "roof_replacement":
+      return SELF_CHECK_TEMPLATES.filter(
+        (t) => t.key === "tak" || t.key === "plat" || t.key === "stallning" || t.key === "sakerhet"
+      );
+    case "light_roof_work":
+      return SELF_CHECK_TEMPLATES.filter(
+        (t) => t.key === "plat" || t.key === "sakerhet"
+      );
+    default:
+      return SELF_CHECK_TEMPLATES;
+  }
 }

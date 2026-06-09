@@ -1,5 +1,5 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import {
   getJob,
@@ -33,7 +33,7 @@ import {
 } from "@/lib/jobs-api";
 import { listUsersWithRole, type RoleUser } from "@/lib/leads-api";
 import { SelfCheckDialog } from "@/components/SelfCheckDialog";
-import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel } from "@/lib/self-check-templates";
+import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel, getApplicableTemplates } from "@/lib/self-check-templates";
 
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
 import { useAuth } from "@/hooks/use-auth";
@@ -148,7 +148,8 @@ function JobDetailPage() {
       const submittedKeys = new Set(
         checks.filter((c) => c.completed_at).map((c) => c.template_key),
       );
-      const missing = SELF_CHECK_TEMPLATES.filter((t) => !submittedKeys.has(t.key));
+      const applicable = getApplicableTemplates(job.lead?.job_type);
+      const missing = applicable.filter((t) => !submittedKeys.has(t.key));
       if (missing.length > 0) {
         toast.error(
           `Kan inte avsluta: egenkontroll saknas för ${missing.map((m) => m.name).join(", ")}. Alla egenkontroller måste vara inlämnade innan projektet kan markeras som klart och timmar registreras.`,
@@ -904,6 +905,7 @@ function ClientInfoDialog({
 
 function ChecksTab({
   jobId,
+  jobType,
   checks,
   currentUserId,
   canCreate,
@@ -911,16 +913,24 @@ function ChecksTab({
   onChanged,
 }: {
   jobId: string;
+  jobType?: string;
   checks: SelfCheck[];
   currentUserId: string | null;
   canCreate: boolean;
   isAdmin: boolean;
   onChanged: () => void;
 }) {
+  const applicableTemplates = useMemo(() => getApplicableTemplates(jobType), [jobType]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SelfCheck | null>(null);
   const [newTemplateKey, setNewTemplateKey] = useState<string | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<string>(SELF_CHECK_TEMPLATES[0].key);
+  const [activeTab, setActiveTab] = useState<string>(() => applicableTemplates[0]?.key ?? "");
+
+  useEffect(() => {
+    if (activeTab && !applicableTemplates.some((t) => t.key === activeTab)) {
+      setActiveTab(applicableTemplates[0]?.key ?? "");
+    }
+  }, [applicableTemplates, activeTab]);
 
   function openNewForTemplate(key: string) {
     setEditing(null);
@@ -934,7 +944,7 @@ function ChecksTab({
   }
 
   const submittedKeys = new Set(checks.filter((c) => c.completed_at).map((c) => c.template_key));
-  const missingCount = SELF_CHECK_TEMPLATES.filter((t) => !submittedKeys.has(t.key)).length;
+  const missingCount = applicableTemplates.filter((t) => !submittedKeys.has(t.key)).length;
 
   return (
     <>
@@ -952,23 +962,7 @@ function ChecksTab({
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap h-auto">
-          {SELF_CHECK_TEMPLATES.map((t) => {
-            const tplChecks = checks.filter((c) => c.template_key === t.key);
-            const submitted = tplChecks.some((c) => c.completed_at);
-            return (
-              <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
-                {t.name}
-                {submitted ? (
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                ) : (
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
-                )}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-
-        {SELF_CHECK_TEMPLATES.map((t) => {
+          {applicableTemplates.map((t) => {
           const tplChecks = checks.filter((c) => c.template_key === t.key);
           const hasSubmitted = tplChecks.some((c) => c.completed_at);
           return (
