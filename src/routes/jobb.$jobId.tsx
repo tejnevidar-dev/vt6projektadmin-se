@@ -349,7 +349,7 @@ function JobDetailPage() {
       </div>
 
       <Tabs defaultValue={job.work_order_summary ? "workorder" : "members"}>
-        <TabsList>
+        <TabsList className="flex h-auto w-full flex-wrap justify-start sm:w-auto">
           <TabsTrigger value="workorder">
             <FileText className="mr-1.5 h-4 w-4" /> Arbetsorder
           </TabsTrigger>
