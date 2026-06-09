@@ -145,7 +145,11 @@ function JobsPage() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {j.assignment_type === "underentreprenor" ? "UE" : "Arbetsledare"}
+                      {j.assignment_type === "underentreprenor"
+                        ? "UE"
+                        : j.assignment_type === "arbetsledare"
+                          ? "Arbetsledare"
+                          : "Ej tilldelad"}
                     </Badge>
                   </TableCell>
                   <TableCell>
