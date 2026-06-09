@@ -191,6 +191,44 @@ export type Database = {
         }
         Relationships: []
       }
+      job_estimate_audit: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          job_id: string
+          new_value: number | null
+          old_value: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          job_id: string
+          new_value?: number | null
+          old_value?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          new_value?: number | null
+          old_value?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_estimate_audit_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_members: {
         Row: {
           created_at: string

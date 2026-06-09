@@ -312,11 +312,27 @@ export async function updateJobPrice(
 }
 
 export async function updateJobEstimatedHours(id: string, hours: number | null) {
+  const { data: existing } = await supabase
+    .from("jobs")
+    .select("estimated_hours")
+    .eq("id", id)
+    .maybeSingle();
+  const oldHours = (existing as { estimated_hours: number | null } | null)?.estimated_hours ?? null;
   const { error } = await supabase
     .from("jobs")
     .update({ estimated_hours: hours })
     .eq("id", id);
   if (error) throw error;
+  const { data: auth } = await supabase.auth.getUser();
+  if (auth.user) {
+    await supabase.from("job_estimate_audit").insert({
+      job_id: id,
+      user_id: auth.user.id,
+      action: "update_hours",
+      old_value: oldHours,
+      new_value: hours,
+    });
+  }
 }
 
 export async function updateJobHideTimeEstimate(id: string, hide: boolean) {
@@ -325,6 +341,48 @@ export async function updateJobHideTimeEstimate(id: string, hide: boolean) {
     .update({ hide_time_estimate: hide })
     .eq("id", id);
   if (error) throw error;
+  const { data: auth } = await supabase.auth.getUser();
+  if (auth.user) {
+    await supabase.from("job_estimate_audit").insert({
+      job_id: id,
+      user_id: auth.user.id,
+      action: hide ? "hide" : "show",
+      old_value: null,
+      new_value: null,
+    });
+  }
+}
+
+export interface JobEstimateAuditEntry {
+  id: string;
+  job_id: string;
+  user_id: string | null;
+  action: "hide" | "show" | "update_hours";
+  old_value: number | null;
+  new_value: number | null;
+  created_at: string;
+  user?: { display_name: string | null; email: string } | null;
+}
+
+export async function listJobEstimateAudit(jobId: string): Promise<JobEstimateAuditEntry[]> {
+  const { data, error } = await supabase
+    .from("job_estimate_audit")
+    .select("*")
+    .eq("job_id", jobId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const rows = (data ?? []) as JobEstimateAuditEntry[];
+  if (!rows.length) return [];
+  const userIds = Array.from(new Set(rows.map((r) => r.user_id).filter(Boolean) as string[]));
+  let profMap: Record<string, { display_name: string | null; email: string }> = {};
+  if (userIds.length) {
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, display_name, email")
+      .in("id", userIds);
+    profMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, { display_name: p.display_name, email: p.email }]));
+  }
+  return rows.map((r) => ({ ...r, user: r.user_id ? profMap[r.user_id] ?? null : null }));
 }
 
 /* ===== Members ===== */

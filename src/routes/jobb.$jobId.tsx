@@ -23,11 +23,13 @@ import {
   assignJobForeman,
   updateJobEstimatedHours,
   updateJobHideTimeEstimate,
+  listJobEstimateAudit,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
   type SelfCheck,
   type JobStatus,
+  type JobEstimateAuditEntry,
 } from "@/lib/jobs-api";
 import { listUsersWithRole, type RoleUser } from "@/lib/leads-api";
 import { SelfCheckDialog } from "@/components/SelfCheckDialog";
@@ -70,6 +72,7 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -102,6 +105,7 @@ function JobDetailPage() {
   const [clientOpen, setClientOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
   const [estimateOpen, setEstimateOpen] = useState(false);
+  const [estimateHistoryOpen, setEstimateHistoryOpen] = useState(false);
 
   async function reload() {
     setLoading(true);
@@ -314,8 +318,11 @@ function JobDetailPage() {
                 >
                   {job.hide_time_estimate ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
                 </Button>
-                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEstimateOpen(true)}>
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEstimateOpen(true)} title="Redigera tidsuppskattning">
                   <Pencil className="h-3 w-3" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEstimateHistoryOpen(true)} title="Historik">
+                  <History className="h-3 w-3" />
                 </Button>
               </div>
             )}
@@ -543,7 +550,71 @@ function JobDetailPage() {
           }
         }}
       />
+      <EstimateHistoryDialog
+        open={estimateHistoryOpen}
+        onOpenChange={setEstimateHistoryOpen}
+        jobId={job.id}
+      />
     </AppShell>
+  );
+}
+
+function EstimateHistoryDialog({
+  open,
+  onOpenChange,
+  jobId,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  jobId: string;
+}) {
+  const [entries, setEntries] = useState<JobEstimateAuditEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    listJobEstimateAudit(jobId)
+      .then(setEntries)
+      .catch((e: any) => toast.error(e.message))
+      .finally(() => setLoading(false));
+  }, [open, jobId]);
+  function describe(e: JobEstimateAuditEntry) {
+    if (e.action === "hide") return "Dolde tidsuppskattning";
+    if (e.action === "show") return "Visade tidsuppskattning";
+    const oldV = e.old_value != null ? `${Number(e.old_value).toFixed(1)} h` : "auto";
+    const newV = e.new_value != null ? `${Number(e.new_value).toFixed(1)} h` : "auto";
+    return `Ändrade tidsuppskattning: ${oldV} → ${newV}`;
+  }
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Historik – tidsuppskattning</DialogTitle>
+        </DialogHeader>
+        <div className="py-2 max-h-[60vh] overflow-y-auto">
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Laddar…</p>
+          ) : entries.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Inga ändringar registrerade ännu.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {entries.map((e) => (
+                <li key={e.id} className="py-2">
+                  <div className="text-sm text-foreground">{describe(e)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {e.user?.display_name || e.user?.email || "Okänd användare"} ·{" "}
+                    {new Date(e.created_at).toLocaleString("sv-SE")}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Stäng</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
