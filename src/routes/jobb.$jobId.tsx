@@ -549,6 +549,7 @@ function JobDetailPage() {
             toast.error(e.message);
           }
         }}
+      />
       <EstimateHistoryDialog
         open={estimateHistoryOpen}
         onOpenChange={setEstimateHistoryOpen}
