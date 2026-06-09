@@ -21,6 +21,8 @@ import {
   updateJobPrice,
   deleteSelfCheck,
   assignJobForeman,
+  updateJobEstimatedHours,
+  updateJobHideTimeEstimate,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
