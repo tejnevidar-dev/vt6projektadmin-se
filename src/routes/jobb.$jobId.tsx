@@ -24,6 +24,7 @@ import {
   updateJobEstimatedHours,
   updateJobHideTimeEstimate,
   listJobEstimateAudit,
+  updateJobType,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
