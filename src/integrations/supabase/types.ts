@@ -278,6 +278,7 @@ export type Database = {
           fixed_price: number | null
           hide_time_estimate: boolean
           id: string
+          job_type: Database["public"]["Enums"]["job_type"] | null
           lead_id: string | null
           notes: string | null
           self_checks_emailed_at: string | null
@@ -304,6 +305,7 @@ export type Database = {
           fixed_price?: number | null
           hide_time_estimate?: boolean
           id?: string
+          job_type?: Database["public"]["Enums"]["job_type"] | null
           lead_id?: string | null
           notes?: string | null
           self_checks_emailed_at?: string | null
@@ -330,6 +332,7 @@ export type Database = {
           fixed_price?: number | null
           hide_time_estimate?: boolean
           id?: string
+          job_type?: Database["public"]["Enums"]["job_type"] | null
           lead_id?: string | null
           notes?: string | null
           self_checks_emailed_at?: string | null

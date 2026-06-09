@@ -24,6 +24,7 @@ import {
   updateJobEstimatedHours,
   updateJobHideTimeEstimate,
   listJobEstimateAudit,
+  updateJobType,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
@@ -449,11 +450,11 @@ function JobDetailPage() {
         <TabsContent value="checks" className="mt-4">
           <ChecksTab
             jobId={job.id}
-            jobType={job.lead?.job_type}
+            jobType={job.job_type ?? job.lead?.job_type ?? undefined}
+            isAdmin={isAdmin}
             checks={checks}
             currentUserId={user?.id ?? null}
             canCreate={isOwner || isAdmin || members.some((m) => m.user_id === user?.id)}
-            isAdmin={isAdmin}
             onChanged={reload}
           />
         </TabsContent>
@@ -950,6 +951,36 @@ function ChecksTab({
   return (
     <>
       <div className="mb-3 space-y-2">
+        {isAdmin && (
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/30 p-2 text-sm">
+            <Label className="text-xs font-medium">Typ av arbete:</Label>
+            <Select
+              value={jobType ?? "none"}
+              onValueChange={async (v) => {
+                try {
+                  await updateJobType(jobId, v === "none" ? null : v);
+                  toast.success("Typ av arbete uppdaterad");
+                  onChanged();
+                } catch (e: any) {
+                  toast.error(e.message);
+                }
+              }}
+            >
+              <SelectTrigger className="h-8 w-[220px]">
+                <SelectValue placeholder="Välj typ" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Alla mallar</SelectItem>
+                <SelectItem value="roof_replacement">Takbyte</SelectItem>
+                <SelectItem value="roof_cleaning">Taktvätt</SelectItem>
+                <SelectItem value="light_roof_work">Lättare takarbeten</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">
+              Styr vilka egenkontrollmallar som visas nedan.
+            </span>
+          </div>
+        )}
         <p className="text-sm text-muted-foreground">
           Varje moment har en egen flik. Alla moment måste vara inlämnade innan projektet kan
           markeras som klart och timmar registreras.
@@ -960,6 +991,7 @@ function ChecksTab({
           </div>
         )}
       </div>
+
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap h-auto">
