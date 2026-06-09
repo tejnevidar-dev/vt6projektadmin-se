@@ -549,8 +549,71 @@ function JobDetailPage() {
             toast.error(e.message);
           }
         }}
+      <EstimateHistoryDialog
+        open={estimateHistoryOpen}
+        onOpenChange={setEstimateHistoryOpen}
+        jobId={job.id}
       />
     </AppShell>
+  );
+}
+
+function EstimateHistoryDialog({
+  open,
+  onOpenChange,
+  jobId,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  jobId: string;
+}) {
+  const [entries, setEntries] = useState<JobEstimateAuditEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    listJobEstimateAudit(jobId)
+      .then(setEntries)
+      .catch((e: any) => toast.error(e.message))
+      .finally(() => setLoading(false));
+  }, [open, jobId]);
+  function describe(e: JobEstimateAuditEntry) {
+    if (e.action === "hide") return "Dolde tidsuppskattning";
+    if (e.action === "show") return "Visade tidsuppskattning";
+    const oldV = e.old_value != null ? `${Number(e.old_value).toFixed(1)} h` : "auto";
+    const newV = e.new_value != null ? `${Number(e.new_value).toFixed(1)} h` : "auto";
+    return `Ändrade tidsuppskattning: ${oldV} → ${newV}`;
+  }
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Historik – tidsuppskattning</DialogTitle>
+        </DialogHeader>
+        <div className="py-2 max-h-[60vh] overflow-y-auto">
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Laddar…</p>
+          ) : entries.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Inga ändringar registrerade ännu.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {entries.map((e) => (
+                <li key={e.id} className="py-2">
+                  <div className="text-sm text-foreground">{describe(e)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {e.user?.display_name || e.user?.email || "Okänd användare"} ·{" "}
+                    {new Date(e.created_at).toLocaleString("sv-SE")}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Stäng</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
