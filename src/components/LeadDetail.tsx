@@ -320,12 +320,21 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                   return;
                 }
                 setSaving(true);
+                const toastId = toast.loading(
+                  target === "pagaende" ? "Flyttar till Pågående…" : `Flyttar till ${PIPELINE_STAGE_LABELS[target]}…`
+                );
                 try {
                   await updateLeadPipelineStage(lead.id, target, lead.pipelineStage);
+                  if (target === "pagaende") {
+                    toast.success("Projekt skapat under Projekt-fliken", { id: toastId });
+                  } else {
+                    toast.success(`Flyttad till ${PIPELINE_STAGE_LABELS[target]}`, { id: toastId });
+                  }
                   onUpdated?.();
                   onClose();
                 } catch (err) {
                   console.error("Failed to update pipeline stage:", err);
+                  toast.error("Kunde inte uppdatera status", { id: toastId });
                 } finally {
                   setSaving(false);
                 }
