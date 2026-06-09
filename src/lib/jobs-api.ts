@@ -10,6 +10,7 @@ export interface Job {
   assigned_to: string | null;
   assignment_type: JobAssignmentType | null;
   status: JobStatus;
+  job_type: string | null;
   fixed_price: number | null;
   estimated_hours: number | null;
   hide_time_estimate: boolean;
@@ -27,6 +28,14 @@ export interface Job {
   work_order_processed_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export async function updateJobType(jobId: string, jobType: string | null): Promise<void> {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ job_type: jobType } as never)
+    .eq("id", jobId);
+  if (error) throw error;
 }
 
 /**
