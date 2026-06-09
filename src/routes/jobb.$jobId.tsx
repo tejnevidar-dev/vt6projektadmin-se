@@ -596,6 +596,55 @@ function PriceDialog({
   );
 }
 
+function EstimateDialog({
+  open,
+  onOpenChange,
+  initialHours,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  initialHours: number | null;
+  onSubmit: (hours: number | null) => void | Promise<void>;
+}) {
+  const [value, setValue] = useState<string>(initialHours != null ? String(initialHours) : "");
+  useEffect(() => {
+    if (open) setValue(initialHours != null ? String(initialHours) : "");
+  }, [open, initialHours]);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Redigera tidsuppskattning</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <Label htmlFor="job-estimate">Uppskattade timmar</Label>
+          <Input
+            id="job-estimate"
+            type="number"
+            min="0"
+            step="0.5"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="t.ex. 120"
+          />
+          <p className="text-xs text-muted-foreground">
+            Om du lämnar fältet tomt beräknas timmar automatiskt från priset (600 kr/h).
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
+          <Button
+            onClick={() => onSubmit(value.trim() === "" ? null : Number(value))}
+          >
+            Spara
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function InviteDialog({
   open,
   onOpenChange,
