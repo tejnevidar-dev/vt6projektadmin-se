@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type Side } from "@/hooks/use-role";
 import { useWorkspace } from "@/hooks/use-workspace";
@@ -78,6 +78,12 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Stäng mobilmenyn vid navigering
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const handleSignOut = async () => {
     await signOut();
