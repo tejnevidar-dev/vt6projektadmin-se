@@ -22,8 +22,14 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
     if (isAdmin) return; // admin får välja fritt
-    if (side === "intern" && !isInternal) setSideState("extern");
-    if (side === "extern" && !isExternal) setSideState("intern");
+    if (isInternal && !isExternal && side !== "intern") {
+      setSideState("intern");
+    } else if (isExternal && !isInternal && side !== "extern") {
+      setSideState("extern");
+    } else if (!isInternal && !isExternal && side !== "extern") {
+      // Inga sidospecifika roller (t.ex. viewer) – visa extern som standard
+      setSideState("extern");
+    }
   }, [loading, isAdmin, isInternal, isExternal, side]);
 
   const setSide = (s: Side) => {
