@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarCheck, CalendarIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { listUsersWithRole, type RoleUser } from "@/lib/leads-api";
+import { listEmployees, type Employee } from "@/lib/employees-api";
 
 export type AssignmentType = "none" | "subcontractor" | "foreman";
 
@@ -73,7 +73,7 @@ export function BookingDateDialog({
   const [subName, setSubName] = useState<string>(initialSubcontractorName ?? "");
   const [subPrice, setSubPrice] = useState<string>(initialSubcontractorPrice != null ? String(initialSubcontractorPrice) : "");
   const [foremanUserId, setForemanUserId] = useState<string>(initialForemanUserId ?? "");
-  const [foremen, setForemen] = useState<RoleUser[]>([]);
+  const [foremen, setForemen] = useState<Employee[]>([]);
   const [foremenLoading, setForemenLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -95,8 +95,8 @@ export function BookingDateDialog({
   useEffect(() => {
     if (!open) return;
     setForemenLoading(true);
-    listUsersWithRole("arbetsledare")
-      .then(setForemen)
+    listEmployees()
+      .then((emps) => setForemen(emps.filter((e) => e.active && !!e.user_id && e.employment_type !== "underentreprenor")))
       .catch(() => setForemen([]))
       .finally(() => setForemenLoading(false));
   }, [open]);
@@ -104,9 +104,9 @@ export function BookingDateDialog({
   const priceNum = price ? parseFloat(price) : null;
   const rotNum = rotAmount ? parseFloat(rotAmount) : null;
   const customerPrice = priceNum != null ? priceNum - (rotNum ?? 0) : null;
-  const selectedForeman = foremen.find((f) => f.id === foremanUserId) ?? null;
+  const selectedForeman = foremen.find((f) => f.user_id === foremanUserId) ?? null;
   const foremanLabel = selectedForeman
-    ? (selectedForeman.display_name || selectedForeman.email)
+    ? (selectedForeman.full_name || selectedForeman.email)
     : initialForemanName ?? null;
 
   const submit = async () => {
@@ -290,23 +290,23 @@ export function BookingDateDialog({
               <Label htmlFor="foreman-user">Välj arbetsledare</Label>
               <Select value={foremanUserId} onValueChange={setForemanUserId}>
                 <SelectTrigger id="foreman-user">
-                  <SelectValue placeholder={foremenLoading ? "Laddar…" : "Välj en arbetsledare"} />
+                  <SelectValue placeholder={foremenLoading ? "Laddar…" : "Välj en person"} />
                 </SelectTrigger>
                 <SelectContent>
                   {foremen.length === 0 && !foremenLoading && (
                     <div className="px-2 py-3 text-xs text-muted-foreground">
-                      Inga arbetsledare registrerade än. Bjud in dem från Admin.
+                      Ingen personal med inloggning hittad. Bjud in personal under Personal-sidan.
                     </div>
                   )}
                   {foremen.map((f) => (
-                    <SelectItem key={f.id} value={f.id}>
-                      {f.display_name || f.email}
+                    <SelectItem key={f.id} value={f.user_id!}>
+                      {f.full_name || f.email}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Bara användare med rollen arbetsledare visas. Lägg till nya under Admin → Användare.
+                Alla inbjudna medarbetare (utom UE) kan tilldelas som arbetsledare.
               </p>
             </div>
           )}
