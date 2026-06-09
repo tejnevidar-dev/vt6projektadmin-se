@@ -11,6 +11,8 @@ function stripSensitive(job: any, adminOrSeller: boolean): any {
   if (adminOrSeller) return job;
   const {
     fixed_price,
+    estimated_hours,
+    hide_time_estimate,
     client_company,
     client_contact_name,
     client_email,
@@ -27,11 +29,12 @@ function stripSensitive(job: any, adminOrSeller: boolean): any {
     safe.lead = safeLead;
   }
 
-  // Compute estimated hours so non-admins can still see hour budget
+  // Compute estimated hours so non-admins can still see hour budget unless hidden
   const rawPrice = fixed_price ?? job.lead?.price ?? null;
-  const estimatedHours = rawPrice != null ? rawPrice / HOURLY_RATE : null;
+  const computedHours = rawPrice != null ? rawPrice / HOURLY_RATE : null;
+  const visibleHours = hide_time_estimate ? null : (estimated_hours ?? computedHours);
 
-  return { ...safe, estimated_hours: estimatedHours };
+  return { ...safe, estimated_hours: visibleHours };
 }
 
 export const getJob = createServerFn({ method: "GET" })

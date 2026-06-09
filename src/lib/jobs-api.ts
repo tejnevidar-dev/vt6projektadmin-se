@@ -11,6 +11,8 @@ export interface Job {
   assignment_type: JobAssignmentType | null;
   status: JobStatus;
   fixed_price: number | null;
+  estimated_hours: number | null;
+  hide_time_estimate: boolean;
   notes: string | null;
   customer_name: string | null;
   customer_phone: string | null;
@@ -113,7 +115,6 @@ export async function deleteWorkOrder(jobId: string, path: string) {
 }
 
 export interface JobWithLead extends Job {
-  estimated_hours?: number | null;
   lead?: {
     id: string;
     name: string;
@@ -308,6 +309,22 @@ export async function updateJobPrice(
       .eq("id", leadId);
     if (leadErr) throw leadErr;
   }
+}
+
+export async function updateJobEstimatedHours(id: string, hours: number | null) {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ estimated_hours: hours })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function updateJobHideTimeEstimate(id: string, hide: boolean) {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ hide_time_estimate: hide })
+    .eq("id", id);
+  if (error) throw error;
 }
 
 /* ===== Members ===== */

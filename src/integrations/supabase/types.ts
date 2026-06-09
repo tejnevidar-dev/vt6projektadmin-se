@@ -236,7 +236,9 @@ export type Database = {
           created_at: string
           customer_name: string | null
           customer_phone: string | null
+          estimated_hours: number | null
           fixed_price: number | null
+          hide_time_estimate: boolean
           id: string
           lead_id: string | null
           notes: string | null
@@ -260,7 +262,9 @@ export type Database = {
           created_at?: string
           customer_name?: string | null
           customer_phone?: string | null
+          estimated_hours?: number | null
           fixed_price?: number | null
+          hide_time_estimate?: boolean
           id?: string
           lead_id?: string | null
           notes?: string | null
@@ -284,7 +288,9 @@ export type Database = {
           created_at?: string
           customer_name?: string | null
           customer_phone?: string | null
+          estimated_hours?: number | null
           fixed_price?: number | null
+          hide_time_estimate?: boolean
           id?: string
           lead_id?: string | null
           notes?: string | null

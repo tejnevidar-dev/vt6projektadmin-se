@@ -21,6 +21,8 @@ import {
   updateJobPrice,
   deleteSelfCheck,
   assignJobForeman,
+  updateJobEstimatedHours,
+  updateJobHideTimeEstimate,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
@@ -66,6 +68,8 @@ import {
   Pencil,
   Play,
   CheckCircle2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -97,6 +101,7 @@ function JobDetailPage() {
   const [timeOpen, setTimeOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
+  const [estimateOpen, setEstimateOpen] = useState(false);
 
   async function reload() {
     setLoading(true);
@@ -288,11 +293,39 @@ function JobDetailPage() {
     >
       <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-lg border border-border bg-card p-3">
-          <div className="text-xs text-muted-foreground">Uppskattade timmar</div>
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-muted-foreground">Uppskattade timmar</div>
+            {isAdmin && (
+              <div className="flex items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-5 w-5"
+                  title={job.hide_time_estimate ? "Visa tidsuppskattning" : "Dölj tidsuppskattning"}
+                  onClick={async () => {
+                    try {
+                      await updateJobHideTimeEstimate(job.id, !job.hide_time_estimate);
+                      toast.success(job.hide_time_estimate ? "Tidsuppskattning visas nu" : "Tidsuppskattning dold");
+                      void reload();
+                    } catch (e: any) {
+                      toast.error(e.message);
+                    }
+                  }}
+                >
+                  {job.hide_time_estimate ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                </Button>
+                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEstimateOpen(true)}>
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
           <div className="text-lg font-semibold text-foreground">
             {estimatedHours != null ? `${estimatedHours.toFixed(1)} h` : "—"}
           </div>
-          <div className="text-xs text-muted-foreground">Baserat på 600 kr/h</div>
+          <div className="text-xs text-muted-foreground">
+            {job.hide_time_estimate && isAdmin ? "Dold för hantverkare/arbetsledare" : "Baserat på 600 kr/h"}
+          </div>
         </div>
         <div className="rounded-lg border border-border bg-card p-3">
           <div className="text-xs text-muted-foreground">Loggade timmar</div>
@@ -495,6 +528,21 @@ function JobDetailPage() {
           }
         }}
       />
+      <EstimateDialog
+        open={estimateOpen}
+        onOpenChange={setEstimateOpen}
+        initialHours={job.estimated_hours}
+        onSubmit={async (hours) => {
+          try {
+            await updateJobEstimatedHours(job.id, hours);
+            toast.success("Tidsuppskattning uppdaterad");
+            setEstimateOpen(false);
+            void reload();
+          } catch (e: any) {
+            toast.error(e.message);
+          }
+        }}
+      />
     </AppShell>
   );
 }
@@ -533,6 +581,55 @@ function PriceDialog({
           />
           <p className="text-xs text-muted-foreground">
             Påverkar uppskattade timmar (600 kr/h) och fast pris för UE.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
+          <Button
+            onClick={() => onSubmit(value.trim() === "" ? null : Number(value))}
+          >
+            Spara
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EstimateDialog({
+  open,
+  onOpenChange,
+  initialHours,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  initialHours: number | null;
+  onSubmit: (hours: number | null) => void | Promise<void>;
+}) {
+  const [value, setValue] = useState<string>(initialHours != null ? String(initialHours) : "");
+  useEffect(() => {
+    if (open) setValue(initialHours != null ? String(initialHours) : "");
+  }, [open, initialHours]);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Redigera tidsuppskattning</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <Label htmlFor="job-estimate">Uppskattade timmar</Label>
+          <Input
+            id="job-estimate"
+            type="number"
+            min="0"
+            step="0.5"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="t.ex. 120"
+          />
+          <p className="text-xs text-muted-foreground">
+            Om du lämnar fältet tomt beräknas timmar automatiskt från priset (600 kr/h).
           </p>
         </div>
         <DialogFooter>
