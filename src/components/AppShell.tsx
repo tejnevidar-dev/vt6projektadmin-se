@@ -292,7 +292,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
           </div>
           <button
             onClick={() => setCollapsed((c) => !c)}
-            className="mt-1 flex w-full items-center justify-center rounded-md py-1 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="mt-1 hidden w-full items-center justify-center rounded-md py-1 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:flex"
             title={collapsed ? "Expandera" : "Komprimera"}
           >
             {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
@@ -302,10 +302,17 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
 
       <div className="relative flex min-w-0 flex-1 flex-col">
         {/* Topbar: global, app-level controls */}
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-6 border-b border-border bg-background/85 px-8 backdrop-blur-xl">
+        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/85 px-3 backdrop-blur-xl sm:px-4 lg:gap-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-2.5 text-[12.5px]">
-            <span className="font-medium text-muted-foreground/80">admin.vt6</span>
-            <Caret className="h-3 w-3 text-muted-foreground/30" />
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="rounded-lg border border-border bg-card/80 p-2 text-muted-foreground shadow-sm transition-colors hover:text-foreground lg:hidden"
+              title="Öppna meny"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
+            <span className="hidden font-medium text-muted-foreground/80 sm:inline">admin.vt6</span>
+            <Caret className="hidden h-3 w-3 text-muted-foreground/30 sm:block" />
             <span className="truncate font-semibold text-foreground">{activeNav?.label ?? title}</span>
           </div>
           <div className="flex items-center gap-2.5">
@@ -323,18 +330,18 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
         </header>
 
         <main className="relative z-[1] flex-1 overflow-auto">
-          <div className="mx-auto w-full max-w-[1440px] px-10 pt-10 pb-16">
+          <div className="mx-auto w-full max-w-[1440px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 lg:px-10 lg:pt-10 lg:pb-16">
             {/* Page header */}
-            <header className="mb-8">
-              <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
-                <div className="min-w-0 flex-1 space-y-3">
+            <header className="mb-6 lg:mb-8">
+              <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4 lg:gap-y-5">
+                <div className="min-w-0 flex-1 space-y-2 lg:space-y-3">
                   {activeNav?.group && (
                     <div className="flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-primary/80">
                       <span className="h-px w-6 bg-primary/50" />
                       {activeNav.group}
                     </div>
                   )}
-                  <h1 className="text-[36px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground">{title}</h1>
+                  <h1 className="text-[26px] font-semibold leading-[1.05] tracking-[-0.02em] text-foreground sm:text-[30px] lg:text-[36px]">{title}</h1>
                   {description && (
                     <p className="max-w-2xl text-[14.5px] leading-relaxed text-muted-foreground">{description}</p>
                   )}
@@ -348,7 +355,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
               )}
             </header>
 
-            {tabs && <div className="mb-8 -mx-1">{tabs}</div>}
+            {tabs && <div className="mb-6 -mx-1 overflow-x-auto lg:mb-8">{tabs}</div>}
 
             {children}
           </div>
