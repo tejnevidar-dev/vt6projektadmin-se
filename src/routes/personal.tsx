@@ -275,7 +275,7 @@ function EmployeeDialog({
                 email: payload.email,
                 role,
                 displayName: payload.full_name,
-                redirectTo: `${window.location.origin}/login`,
+                redirectTo: `${window.location.origin}/accept-invite`,
               },
             });
             if (res?.alreadyRegistered) {
