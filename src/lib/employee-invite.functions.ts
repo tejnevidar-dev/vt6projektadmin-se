@@ -31,7 +31,7 @@ export const sendEmployeeInvite = createServerFn({ method: "POST" })
     const { data: inv, error: invErr } = await supabaseAdmin
       .from("invitations")
       .insert({ email, role: data.role, invited_by: context.userId })
-      .select("token")
+      .select("id, token")
       .single();
     if (invErr) throw new Error(invErr.message);
 
@@ -47,6 +47,7 @@ export const sendEmployeeInvite = createServerFn({ method: "POST" })
       // If user already exists, send a magic-link instead
       const msg = mailErr.message?.toLowerCase() ?? "";
       if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+        await supabaseAdmin.from("invitations").delete().eq("id", (inv as any).id);
         return { ok: true, alreadyRegistered: true };
       }
       throw new Error(mailErr.message);
