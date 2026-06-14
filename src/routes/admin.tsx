@@ -165,20 +165,36 @@ function AdminPage() {
     e.preventDefault();
     if (!inviteEmail) return;
     setCreating(true);
-    const { data, error } = await supabase
-      .from("invitations")
-      .insert({ email: inviteEmail.trim().toLowerCase(), role: inviteRole })
-      .select("token")
-      .single();
-    if (error) {
-      toast.error(error.message);
+    try {
+      const { sendEmployeeInvite } = await import("@/lib/employee-invite.functions");
+      const res = await sendEmployeeInvite({
+        data: {
+          email: inviteEmail.trim().toLowerCase(),
+          role: inviteRole as any,
+          redirectTo: `${window.location.origin}/accept-invite`,
+        },
+      });
+      // Hämta nyaste token för fallback-länk
+      const { data: invRow } = await supabase
+        .from("invitations")
+        .select("token")
+        .eq("email", inviteEmail.trim().toLowerCase())
+        .is("used_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setCreatedToken((invRow as any)?.token ?? null);
+      if (res?.alreadyRegistered) {
+        toast.info("E-posten är redan registrerad – ingen ny inbjudan skickad");
+      } else {
+        toast.success("Inbjudningsmail skickat");
+      }
+      loadData();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Kunde inte skicka inbjudan");
+    } finally {
       setCreating(false);
-      return;
     }
-    toast.success("Inbjudan skapad");
-    setCreatedToken((data as any).token);
-    setCreating(false);
-    loadData();
   };
 
   const closeInviteDialog = () => {
@@ -197,24 +213,24 @@ function AdminPage() {
   };
 
   const resendInvite = async (inv: Invitation) => {
-    // "Resend" = extend expiry by 14 days from now
-    const newExpires = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-    const { error } = await supabase
-      .from("invitations")
-      .update({ expires_at: newExpires })
-      .eq("id", inv.id);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const { sendEmployeeInvite } = await import("@/lib/employee-invite.functions");
+      await sendEmployeeInvite({
+        data: {
+          email: inv.email,
+          role: inv.role as any,
+          redirectTo: `${window.location.origin}/accept-invite`,
+        },
+      });
+      toast.success("Inbjudningsmail skickat igen");
+      loadData();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Kunde inte skicka inbjudan");
     }
-    const url = `${window.location.origin}/login?invite=${inv.token}`;
-    await navigator.clipboard.writeText(url);
-    toast.success("Inbjudan förnyad – länken kopierad till urklipp");
-    loadData();
   };
 
   const copyInviteLink = (token: string) => {
-    const url = `${window.location.origin}/login?invite=${token}`;
+    const url = `${window.location.origin}/accept-invite?invite=${token}`;
     navigator.clipboard.writeText(url);
     toast.success("Inbjudningslänk kopierad");
   };
@@ -468,8 +484,8 @@ function AdminPage() {
             <DialogTitle>Bjud in ny medlem</DialogTitle>
             <DialogDescription>
               {createdToken
-                ? "Inbjudan skapad! Kopiera länken nedan och skicka till mottagaren."
-                : "Skapa en inbjudningslänk som mottagaren kan använda för att registrera ett konto."}
+                ? "Inbjudningsmail skickat! Mottagaren får en länk till en sida där de väljer namn och lösenord. Du kan också kopiera reservlänken nedan."
+                : "Vi mailar mottagaren en länk till en sida där de skapar sitt konto."}
             </DialogDescription>
           </DialogHeader>
 
@@ -516,7 +532,7 @@ function AdminPage() {
                 <div className="flex gap-2">
                   <Input
                     readOnly
-                    value={`${window.location.origin}/login?invite=${createdToken}`}
+                    value={`${window.location.origin}/accept-invite?invite=${createdToken}`}
                     onFocus={(e) => e.currentTarget.select()}
                   />
                   <Button
