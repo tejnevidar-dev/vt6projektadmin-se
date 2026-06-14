@@ -44,10 +44,14 @@ export const sendEmployeeInvite = createServerFn({ method: "POST" })
       redirectTo: data.redirectTo,
     });
     if (mailErr) {
-      // If user already exists, send a magic-link instead
       const msg = mailErr.message?.toLowerCase() ?? "";
       if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+        // Användaren finns redan – skicka återställningsmail så de kan sätta nytt lösenord
         await supabaseAdmin.from("invitations").delete().eq("id", (inv as any).id);
+        const { error: resetErr } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+          redirectTo: data.redirectTo,
+        });
+        if (resetErr) throw new Error(resetErr.message);
         return { ok: true, alreadyRegistered: true };
       }
       throw new Error(mailErr.message);
