@@ -13,7 +13,7 @@ import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 const EMAIL_SUBJECTS: Record<string, string> = {
   signup: 'Confirm your email',
-  invite: "You've been invited",
+  invite: 'Du har blivit inbjuden till admin.vt6',
   magiclink: 'Your login link',
   recovery: 'Reset your password',
   email_change: 'Confirm your new email',
