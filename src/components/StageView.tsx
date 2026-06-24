@@ -316,6 +316,65 @@ function StageContent({ stage, description }: Props) {
             )}
           </div>
         </section>
+
+        {stage === "pagaende" && (
+          <section className="rounded-xl border border-border/70 bg-card/40">
+            <div className="border-b border-border/60 px-5 py-3">
+              <h2 className="text-[13px] font-semibold text-foreground">Pågående projekt</h2>
+              <p className="text-[11.5px] text-muted-foreground">
+                {jobsLoading ? "Laddar..." : `${jobs.length} projekt`}
+              </p>
+            </div>
+            <div className="p-4">
+              {jobsLoading ? (
+                <p className="text-center text-muted-foreground py-6">Laddar…</p>
+              ) : jobs.length === 0 ? (
+                <p className="text-center text-muted-foreground py-10">Inga pågående projekt.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Kund / projekt</TableHead>
+                      <TableHead>Adress</TableHead>
+                      <TableHead>Typ</TableHead>
+                      <TableHead>Källa</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {jobs.map((j) => {
+                      const kundnamn = j.lead?.name ?? j.customer_name ?? "—";
+                      const adress = j.property
+                        ? `${j.property.address}, ${j.property.municipality}`
+                        : j.address ?? "—";
+                      return (
+                        <TableRow key={j.id} className="cursor-pointer hover:bg-muted/40">
+                          <TableCell>
+                            <Link to="/jobb/$jobId" params={{ jobId: j.id }} className="font-medium hover:underline">
+                              {kundnamn}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{adress}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {j.assignment_type === "underentreprenor"
+                                ? "UE"
+                                : j.assignment_type === "arbetsledare"
+                                  ? "Arbetsledare"
+                                  : "Ej tilldelad"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {j.lead_id ? "Lead" : "Manuellt"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </section>
+        )}
       </div>
 
       {selectedLead && (
