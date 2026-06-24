@@ -1,12 +1,23 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { LeadKanban } from "@/components/LeadKanban";
 import { LeadTable } from "@/components/LeadTable";
 import { LeadDetail } from "@/components/LeadDetail";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
-import { waitForJobByLead } from "@/lib/jobs-api";
+import { waitForJobByLead, type JobWithLead } from "@/lib/jobs-api";
+import { listJobs } from "@/lib/jobs.functions";
 import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import type { Lead, PipelineStage, JobType } from "@/lib/types";
 import { PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS, JOB_TYPES, hasIncompleteBooking } from "@/lib/types";
