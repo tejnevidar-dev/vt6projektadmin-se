@@ -876,6 +876,13 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_invitation_by_token: {
+        Args: { _token: string }
+        Returns: {
+          email: string
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
       list_users_with_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: {
