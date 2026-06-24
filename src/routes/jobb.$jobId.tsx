@@ -817,7 +817,17 @@ function TimeDialog({
           </div>
           <div>
             <Label>Antal timmar</Label>
-            <Input type="number" step="0.25" min="0.25" max="24" value={hours} onChange={(e) => setHours(e.target.value)} />
+            <Input
+              type="text"
+              inputMode="decimal"
+              step="0.5"
+              min="0.5"
+              max="24"
+              value={hours}
+              onChange={(e) => setHours(e.target.value)}
+              placeholder="t.ex. 4,5"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">Endast hela eller halvtimmar (t.ex. 4 eller 4,5).</p>
           </div>
           <div>
             <Label>Beskrivning av vad som gjorts <span className="text-destructive">*</span></Label>
@@ -835,9 +845,14 @@ function TimeDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
           <Button
             onClick={() => {
-              const h = parseFloat(hours);
-              if (!isFinite(h) || h <= 0) {
-                toast.error("Ange ett giltigt antal timmar");
+              const h = parseFloat(hours.replace(",", "."));
+              if (!isFinite(h) || h < 0.5 || h > 24) {
+                toast.error("Ange antal timmar mellan 0,5 och 24");
+                return;
+              }
+              const halves = Math.round(h * 2);
+              if (Math.abs(halves - h * 2) > 1e-6) {
+                toast.error("Endast hela eller halvtimmar");
                 return;
               }
               const trimmed = desc.trim();
