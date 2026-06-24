@@ -845,9 +845,14 @@ function TimeDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
           <Button
             onClick={() => {
-              const h = parseFloat(hours);
-              if (!isFinite(h) || h <= 0) {
-                toast.error("Ange ett giltigt antal timmar");
+              const h = parseFloat(hours.replace(",", "."));
+              if (!isFinite(h) || h < 0.5 || h > 24) {
+                toast.error("Ange antal timmar mellan 0,5 och 24");
+                return;
+              }
+              const halves = Math.round(h * 2);
+              if (Math.abs(halves - h * 2) > 1e-6) {
+                toast.error("Endast hela eller halvtimmar");
                 return;
               }
               const trimmed = desc.trim();
