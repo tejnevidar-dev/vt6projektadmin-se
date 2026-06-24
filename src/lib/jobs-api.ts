@@ -157,6 +157,7 @@ export async function createManualJob(input: CreateJobInput): Promise<string> {
     .insert({
       assigned_to: input.assigned_to,
       assignment_type: input.assignment_type,
+      status: "pagaende",
       customer_name: input.customer_name,
       customer_phone: input.customer_phone ?? null,
       address: input.address ?? null,
