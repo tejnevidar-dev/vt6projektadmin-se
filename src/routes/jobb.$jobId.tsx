@@ -817,7 +817,17 @@ function TimeDialog({
           </div>
           <div>
             <Label>Antal timmar</Label>
-            <Input type="number" step="0.25" min="0.25" max="24" value={hours} onChange={(e) => setHours(e.target.value)} />
+            <Input
+              type="text"
+              inputMode="decimal"
+              step="0.5"
+              min="0.5"
+              max="24"
+              value={hours}
+              onChange={(e) => setHours(e.target.value)}
+              placeholder="t.ex. 4,5"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">Endast hela eller halvtimmar (t.ex. 4 eller 4,5).</p>
           </div>
           <div>
             <Label>Beskrivning av vad som gjorts <span className="text-destructive">*</span></Label>
