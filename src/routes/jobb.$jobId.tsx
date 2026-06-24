@@ -332,9 +332,11 @@ function JobDetailPage() {
           <div className="text-lg font-semibold text-foreground">
             {estimatedHours != null ? `${estimatedHours.toFixed(1)} h` : "—"}
           </div>
-          <div className="text-xs text-muted-foreground">
-            {job.hide_time_estimate && isAdmin ? "Dold för hantverkare/arbetsledare" : "Baserat på 600 kr/h"}
-          </div>
+          {isAdmin && (
+            <div className="text-xs text-muted-foreground">
+              {job.hide_time_estimate ? "Dold för hantverkare/arbetsledare" : "Baserat på 600 kr/h"}
+            </div>
+          )}
         </div>
         <div className="rounded-lg border border-border bg-card p-3">
           <div className="text-xs text-muted-foreground">Loggade timmar</div>
