@@ -819,8 +819,15 @@ function TimeDialog({
             <Input type="number" step="0.25" min="0.25" max="24" value={hours} onChange={(e) => setHours(e.target.value)} />
           </div>
           <div>
-            <Label>Beskrivning (valfri)</Label>
-            <Input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Vad gjordes?" />
+            <Label>Beskrivning av vad som gjorts <span className="text-destructive">*</span></Label>
+            <Textarea
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              placeholder="Beskriv vad du utfört under dagen"
+              rows={4}
+              required
+            />
+            <p className="mt-1 text-xs text-muted-foreground">Minst 10 tecken. Obligatoriskt vid varje tidsrapportering.</p>
           </div>
         </div>
         <DialogFooter>
@@ -832,7 +839,12 @@ function TimeDialog({
                 toast.error("Ange ett giltigt antal timmar");
                 return;
               }
-              onSubmit(date, h, desc || undefined);
+              const trimmed = desc.trim();
+              if (trimmed.length < 10) {
+                toast.error("Beskriv vad du gjort (minst 10 tecken)");
+                return;
+              }
+              onSubmit(date, h, trimmed);
             }}
           >
             Spara
