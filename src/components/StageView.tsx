@@ -48,10 +48,21 @@ function StageContent({ stage, description }: Props) {
   const [incompleteOnly, setIncompleteOnly] = useState(false);
   const [bookingSort, setBookingSort] = useState<"none" | "soonest" | "latest">(stage === "bokad" ? "soonest" : "none");
   const [saljare, setSaljare] = useState<Saljare[]>([]);
+  const [jobs, setJobs] = useState<JobWithLead[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
 
   useEffect(() => {
     fetchSaljare().then(setSaljare).catch(() => setSaljare([]));
   }, []);
+
+  useEffect(() => {
+    if (stage !== "pagaende") return;
+    setJobsLoading(true);
+    listJobs()
+      .then((data) => setJobs((data ?? []).filter((j) => j.status === "pagaende")))
+      .catch((err) => console.error(err))
+      .finally(() => setJobsLoading(false));
+  }, [stage]);
 
   const load = useCallback(async () => {
     try {
