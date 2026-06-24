@@ -1,12 +1,23 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { LeadKanban } from "@/components/LeadKanban";
 import { LeadTable } from "@/components/LeadTable";
 import { LeadDetail } from "@/components/LeadDetail";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
-import { waitForJobByLead } from "@/lib/jobs-api";
+import { waitForJobByLead, type JobWithLead } from "@/lib/jobs-api";
+import { listJobs } from "@/lib/jobs.functions";
 import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import type { Lead, PipelineStage, JobType } from "@/lib/types";
 import { PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS, JOB_TYPES, hasIncompleteBooking } from "@/lib/types";
@@ -37,10 +48,21 @@ function StageContent({ stage, description }: Props) {
   const [incompleteOnly, setIncompleteOnly] = useState(false);
   const [bookingSort, setBookingSort] = useState<"none" | "soonest" | "latest">(stage === "bokad" ? "soonest" : "none");
   const [saljare, setSaljare] = useState<Saljare[]>([]);
+  const [jobs, setJobs] = useState<JobWithLead[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
 
   useEffect(() => {
     fetchSaljare().then(setSaljare).catch(() => setSaljare([]));
   }, []);
+
+  useEffect(() => {
+    if (stage !== "pagaende") return;
+    setJobsLoading(true);
+    listJobs()
+      .then((data) => setJobs((data ?? []).filter((j) => j.status === "pagaende")))
+      .catch((err) => console.error(err))
+      .finally(() => setJobsLoading(false));
+  }, [stage]);
 
   const load = useCallback(async () => {
     try {
@@ -294,6 +316,65 @@ function StageContent({ stage, description }: Props) {
             )}
           </div>
         </section>
+
+        {stage === "pagaende" && (
+          <section className="rounded-xl border border-border/70 bg-card/40">
+            <div className="border-b border-border/60 px-5 py-3">
+              <h2 className="text-[13px] font-semibold text-foreground">Pågående projekt</h2>
+              <p className="text-[11.5px] text-muted-foreground">
+                {jobsLoading ? "Laddar..." : `${jobs.length} projekt`}
+              </p>
+            </div>
+            <div className="p-4">
+              {jobsLoading ? (
+                <p className="text-center text-muted-foreground py-6">Laddar…</p>
+              ) : jobs.length === 0 ? (
+                <p className="text-center text-muted-foreground py-10">Inga pågående projekt.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Kund / projekt</TableHead>
+                      <TableHead>Adress</TableHead>
+                      <TableHead>Typ</TableHead>
+                      <TableHead>Källa</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {jobs.map((j) => {
+                      const kundnamn = j.lead?.name ?? j.customer_name ?? "—";
+                      const adress = j.property
+                        ? `${j.property.address}, ${j.property.municipality}`
+                        : j.address ?? "—";
+                      return (
+                        <TableRow key={j.id} className="cursor-pointer hover:bg-muted/40">
+                          <TableCell>
+                            <Link to="/jobb/$jobId" params={{ jobId: j.id }} className="font-medium hover:underline">
+                              {kundnamn}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{adress}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {j.assignment_type === "underentreprenor"
+                                ? "UE"
+                                : j.assignment_type === "arbetsledare"
+                                  ? "Arbetsledare"
+                                  : "Ej tilldelad"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {j.lead_id ? "Lead" : "Manuellt"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </section>
+        )}
       </div>
 
       {selectedLead && (
