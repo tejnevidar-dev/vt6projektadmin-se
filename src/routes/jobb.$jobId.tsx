@@ -823,7 +823,7 @@ function TimeDialog({
             <Label>Beskrivning av vad som gjorts <span className="text-destructive">*</span></Label>
             <Textarea
               value={desc}
-              onChange={(e) => setDesc(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDesc(e.target.value)}
               placeholder="Beskriv vad du utfört under dagen"
               rows={4}
               required
