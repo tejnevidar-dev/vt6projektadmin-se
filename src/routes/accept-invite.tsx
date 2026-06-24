@@ -73,17 +73,12 @@ function AcceptInvitePage() {
 
       // Fall B: ?invite=TOKEN → slå upp inbjudan
       if (invite) {
-        const { data } = await supabase
-          .from("invitations")
-          .select("email, role")
-          .eq("token", invite)
-          .is("used_at", null)
-          .gt("expires_at", new Date().toISOString())
-          .maybeSingle();
+        const { data } = await (supabase as any).rpc("get_invitation_by_token", { _token: invite });
         if (cancelled) return;
-        if (data) {
-          setInfo(data as any);
-          setDisplayName(((data as any).email as string).split("@")[0]);
+        const row = Array.isArray(data) ? data[0] : data;
+        if (row) {
+          setInfo(row as any);
+          setDisplayName(((row as any).email as string).split("@")[0]);
           setMode("token");
         } else {
           setMode("invalid");
