@@ -87,16 +87,6 @@ export const SELF_CHECK_TEMPLATES: SelfCheckTemplate[] = [
         instruction:
           "Fotbrädan ska sitta rakt längs takfoten, vara hel och ge stöd åt fotplåten. Kontrollera infästning.",
       },
-      {
-        label: "Material från (leverantör/batch)",
-        type: "text",
-        instruction: "Ange leverantör samt batch-/leveransnummer för spårbarhet.",
-      },
-      {
-        label: "Avvikelser och åtgärder",
-        type: "textarea",
-        instruction: "Skriv upp eventuella avvikelser från ritning eller anvisning och vilka åtgärder som vidtagits.",
-      },
     ],
   },
   {
@@ -166,11 +156,6 @@ export const SELF_CHECK_TEMPLATES: SelfCheckTemplate[] = [
         type: "text",
         instruction: "Ange material, kvalitet och tjocklek (t.ex. 0,6 mm aluzink).",
       },
-      {
-        label: "Avvikelser och åtgärder",
-        type: "textarea",
-        instruction: "Beskriv eventuella avvikelser och hur de åtgärdats.",
-      },
     ],
   },
   {
@@ -214,11 +199,6 @@ export const SELF_CHECK_TEMPLATES: SelfCheckTemplate[] = [
         label: "Skylt med ställningsbyggare och datum finns",
         type: "checkbox",
         instruction: "Skylt med byggarens namn, företag och godkännandedatum sitter synligt vid uppstigningen.",
-      },
-      {
-        label: "Avvikelser och åtgärder",
-        type: "textarea",
-        instruction: "Notera om något behövde justeras eller om delar saknades.",
       },
     ],
   },
