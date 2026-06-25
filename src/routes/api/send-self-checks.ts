@@ -13,7 +13,7 @@ const InputSchema = z.object({
   jobId: z.string().uuid(),
 });
 
-const FROM_ADDRESS = "VT6 <noreply@underlag.vt6.se>";
+const FROM_ADDRESS = "VT6 <no-reply@notify.vt6projektadmin.se>";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
