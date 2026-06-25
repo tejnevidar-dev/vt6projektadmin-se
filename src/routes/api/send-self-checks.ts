@@ -184,14 +184,9 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const anonKey =
           process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        const lovableKey = process.env.LOVABLE_API_KEY;
-        const resendKey = process.env.RESEND_API_KEY;
 
         if (!supabaseUrl || !anonKey || !serviceKey) {
           return jsonResponse({ error: "Server misconfigured" }, 500);
-        }
-        if (!lovableKey || !resendKey) {
-          return jsonResponse({ error: "E-postutskick är inte konfigurerat" }, 500);
         }
 
         const userClient = createClient(supabaseUrl, anonKey, {
