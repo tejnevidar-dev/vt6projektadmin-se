@@ -184,14 +184,9 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const anonKey =
           process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        const lovableKey = process.env.LOVABLE_API_KEY;
-        const resendKey = process.env.RESEND_API_KEY;
 
         if (!supabaseUrl || !anonKey || !serviceKey) {
           return jsonResponse({ error: "Server misconfigured" }, 500);
-        }
-        if (!lovableKey || !resendKey) {
-          return jsonResponse({ error: "E-postutskick är inte konfigurerat" }, 500);
         }
 
         const userClient = createClient(supabaseUrl, anonKey, {
@@ -270,8 +265,9 @@ export const Route = createFileRoute("/api/send-self-checks")({
           );
         }
 
-        // Build one PDF per self-check
-        const attachments: { filename: string; content: string }[] = [];
+        // Build one PDF per self-check, upload to storage and sign URLs
+        const links: { label: string; url: string }[] = [];
+        const SIGNED_TTL = 60 * 60 * 24 * 30; // 30 days
         for (let i = 0; i < checks.length; i++) {
           const sc = checks[i];
           const bytes = await buildSelfCheckPdf({
@@ -285,44 +281,61 @@ export const Route = createFileRoute("/api/send-self-checks")({
             performerName: sc.user_id ? nameMap[sc.user_id] ?? null : null,
           });
           const filename = `egenkontroll-${i + 1}-${slugify(sc.template_key)}.pdf`;
-          attachments.push({ filename, content: bytesToBase64(bytes) });
+          const path = `${jobId}/${Date.now()}-${i + 1}-${filename}`;
+          const { error: upErr } = await admin.storage
+            .from("self-check-pdfs")
+            .upload(path, bytes, {
+              contentType: "application/pdf",
+              upsert: true,
+            });
+          if (upErr) {
+            return jsonResponse(
+              { error: `Kunde inte ladda upp PDF: ${upErr.message}` },
+              500,
+            );
+          }
+          const { data: signed, error: signErr } = await admin.storage
+            .from("self-check-pdfs")
+            .createSignedUrl(path, SIGNED_TTL);
+          if (signErr || !signed?.signedUrl) {
+            return jsonResponse(
+              { error: `Kunde inte skapa nedladdningslänk: ${signErr?.message ?? "okänt fel"}` },
+              500,
+            );
+          }
+          links.push({
+            label: `Egenkontroll ${i + 1} – ${templateLabel(sc.template_key)}`,
+            url: signed.signedUrl,
+          });
         }
 
         const greetName = job.client_company || job.client_contact_name || "";
-        const addr = job.address;
-        const html = `
-<!doctype html>
-<html lang="sv">
-<body style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a;font-size:14px;line-height:1.6">
-  <p>Hej${greetName ? ` ${escapeHtml(greetName)}` : ""}!</p>
-  <p>Vi tackar för förtroendet för projektet på "${escapeHtml(addr)}" och översänder här alla egenkontroller och dokumentation.</p>
-  <p>Vänligen kontakta eran kontaktperson för projektet om det uppstår frågetecken som rör egenkontrollerna.</p>
-</body>
-</html>`.trim();
 
-        const subject = addr;
-
-        const sendResp = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+        // Send via Lovable Emails (transactional) on notify.vt6projektadmin.se
+        const origin = new URL(request.url).origin;
+        const sendResp = await fetch(`${origin}/lovable/email/transactional/send`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": resendKey,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            from: FROM_ADDRESS,
-            to: [job.client_email],
-            subject,
-            html,
-            attachments,
+            templateName: "self-checks-client",
+            recipientEmail: job.client_email,
+            idempotencyKey: `self-checks-${jobId}-${Date.now()}`,
+            templateData: {
+              greetName,
+              address: job.address,
+              links,
+            },
           }),
         });
         const sendBody = await sendResp.json().catch(() => ({}));
         if (!sendResp.ok) {
           return jsonResponse(
             {
-              error: `Resend ${sendResp.status}: ${
-                (sendBody as { message?: string }).message ?? "okänt fel"
+              error: `E-postutskick misslyckades: ${
+                (sendBody as { error?: string }).error ?? sendResp.status
               }`,
             },
             502,
