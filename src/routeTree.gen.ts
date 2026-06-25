@@ -26,11 +26,15 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as JobbIndexRouteImport } from './routes/jobb.index'
 import { Route as EgenkontrollerIndexRouteImport } from './routes/egenkontroller.index'
 import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as EgenkontrollerInstruktionerRouteImport } from './routes/egenkontroller.instruktioner'
 import { Route as ApiSendSelfChecksRouteImport } from './routes/api/send-self-checks'
 import { Route as ApiProcessWorkOrderRouteImport } from './routes/api/process-work-order'
 import { Route as ApiAiPitchRouteImport } from './routes/api/ai-pitch'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -120,6 +124,11 @@ const JobbJobIdRoute = JobbJobIdRouteImport.update({
   path: '/jobb/$jobId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EgenkontrollerInstruktionerRoute =
   EgenkontrollerInstruktionerRouteImport.update({
     id: '/instruktioner',
@@ -141,10 +150,27 @@ const ApiAiPitchRoute = ApiAiPitchRouteImport.update({
   path: '/api/ai-pitch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRoslagstakWebhookRoute =
   ApiPublicRoslagstakWebhookRouteImport.update({
     id: '/api/public/roslagstak-webhook',
     path: '/api/public/roslagstak-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailQueueProcessRoute =
@@ -183,13 +209,17 @@ export interface FileRoutesByFullPath {
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -209,13 +239,17 @@ export interface FileRoutesByTo {
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/egenkontroller': typeof EgenkontrollerIndexRoute
   '/jobb': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -237,13 +271,17 @@ export interface FileRoutesById {
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -266,13 +304,17 @@ export interface FileRouteTypes {
     | '/api/process-work-order'
     | '/api/send-self-checks'
     | '/egenkontroller/instruktioner'
+    | '/email/unsubscribe'
     | '/jobb/$jobId'
     | '/egenkontroller/'
     | '/jobb/'
     | '/api/public/roslagstak-webhook'
+    | '/lovable/email/suppression'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -292,13 +334,17 @@ export interface FileRouteTypes {
     | '/api/process-work-order'
     | '/api/send-self-checks'
     | '/egenkontroller/instruktioner'
+    | '/email/unsubscribe'
     | '/jobb/$jobId'
     | '/egenkontroller'
     | '/jobb'
     | '/api/public/roslagstak-webhook'
+    | '/lovable/email/suppression'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -319,13 +365,17 @@ export interface FileRouteTypes {
     | '/api/process-work-order'
     | '/api/send-self-checks'
     | '/egenkontroller/instruktioner'
+    | '/email/unsubscribe'
     | '/jobb/$jobId'
     | '/egenkontroller/'
     | '/jobb/'
     | '/api/public/roslagstak-webhook'
+    | '/lovable/email/suppression'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -346,12 +396,16 @@ export interface RootRouteChildren {
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
   ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   JobbJobIdRoute: typeof JobbJobIdRoute
   JobbIndexRoute: typeof JobbIndexRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -475,6 +529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobbJobIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/egenkontroller/instruktioner': {
       id: '/egenkontroller/instruktioner'
       path: '/instruktioner'
@@ -503,11 +564,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiPitchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/roslagstak-webhook': {
       id: '/api/public/roslagstak-webhook'
       path: '/api/public/roslagstak-webhook'
       fullPath: '/api/public/roslagstak-webhook'
       preLoaderRoute: typeof ApiPublicRoslagstakWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
@@ -566,12 +648,16 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
   ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   JobbJobIdRoute: JobbJobIdRoute,
   JobbIndexRoute: JobbIndexRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
