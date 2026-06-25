@@ -295,9 +295,8 @@ export const Route = createFileRoute("/api/send-self-checks")({
 <html lang="sv">
 <body style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a;font-size:14px;line-height:1.6">
   <p>Hej${greetName ? ` ${escapeHtml(greetName)}` : ""}!</p>
-  <p>Nu är projektet på "${escapeHtml(addr)}" avslutat och vi tackar ödmjukt för förtroendet och hoppas på många fler lika lyckade projekt i framtiden.</p>
-  <p>Ni finner alla egenkontroller för "${escapeHtml(addr)}" bifogade i detta mail.</p>
-  <p>Vänligen kontakta eran kontaktperson för projekt om det uppstår frågetecken som rör egenkontroller.</p>
+  <p>Vi tackar för förtroendet för projektet på "${escapeHtml(addr)}" och översänder här alla egenkontroller och dokumentation.</p>
+  <p>Vänligen kontakta eran kontaktperson för projektet om det uppstår frågetecken som rör egenkontrollerna.</p>
 </body>
 </html>`.trim();
 
