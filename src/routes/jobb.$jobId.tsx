@@ -1201,7 +1201,7 @@ function SentPdfsList({ jobId }: { jobId: string }) {
     if (error) {
       toast.error(error.message);
     } else {
-      setFiles((data ?? []).filter((f) => f.name.toLowerCase().endsWith(".pdf")));
+      setFiles((data ?? []).filter((f) => f.name.toLowerCase().endsWith(".pdf")).map((f) => ({ name: f.name, created_at: f.created_at ?? undefined })));
     }
     setLoading(false);
   };
