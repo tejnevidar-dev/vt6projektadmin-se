@@ -265,9 +265,10 @@ export const Route = createFileRoute("/api/send-self-checks")({
           );
         }
 
-        // Build one PDF per self-check, upload to storage and sign URLs
+        // Build one PDF per self-check and upload. Use a short public redirect
+        // URL so mail clients don't line-break the long signed-URL tokens.
+        const origin = new URL(request.url).origin;
         const links: { label: string; url: string }[] = [];
-        const SIGNED_TTL = 60 * 60 * 24 * 30; // 30 days
         for (let i = 0; i < checks.length; i++) {
           const sc = checks[i];
           const bytes = await buildSelfCheckPdf({
@@ -294,18 +295,13 @@ export const Route = createFileRoute("/api/send-self-checks")({
               500,
             );
           }
-          const { data: signed, error: signErr } = await admin.storage
-            .from("self-check-pdfs")
-            .createSignedUrl(path, SIGNED_TTL);
-          if (signErr || !signed?.signedUrl) {
-            return jsonResponse(
-              { error: `Kunde inte skapa nedladdningslänk: ${signErr?.message ?? "okänt fel"}` },
-              500,
-            );
-          }
+          const safePath = path
+            .split("/")
+            .map((seg) => encodeURIComponent(seg))
+            .join("/");
           links.push({
             label: `Egenkontroll ${i + 1} – ${templateLabel(sc.template_key)}`,
-            url: signed.signedUrl,
+            url: `${origin}/api/public/self-check-pdf/${safePath}`,
           });
         }
 

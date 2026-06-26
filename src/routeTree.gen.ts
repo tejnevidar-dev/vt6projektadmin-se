@@ -38,6 +38,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicSelfCheckPdfSplatRouteImport } from './routes/api/public/self-check-pdf.$'
 
 const WebhookLogsRoute = WebhookLogsRouteImport.update({
   id: '/webhook-logs',
@@ -189,6 +190,12 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSelfCheckPdfSplatRoute =
+  ApiPublicSelfCheckPdfSplatRouteImport.update({
+    id: '/api/public/self-check-pdf/$',
+    path: '/api/public/self-check-pdf/$',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/jobb/': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -245,6 +253,7 @@ export interface FileRoutesByTo {
   '/jobb': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -277,6 +286,7 @@ export interface FileRoutesById {
   '/jobb/': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/jobb/'
     | '/api/public/roslagstak-webhook'
     | '/lovable/email/suppression'
+    | '/api/public/self-check-pdf/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/jobb'
     | '/api/public/roslagstak-webhook'
     | '/lovable/email/suppression'
+    | '/api/public/self-check-pdf/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -371,6 +383,7 @@ export interface FileRouteTypes {
     | '/jobb/'
     | '/api/public/roslagstak-webhook'
     | '/lovable/email/suppression'
+    | '/api/public/self-check-pdf/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -401,6 +414,7 @@ export interface RootRouteChildren {
   JobbIndexRoute: typeof JobbIndexRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicSelfCheckPdfSplatRoute: typeof ApiPublicSelfCheckPdfSplatRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -613,6 +627,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/self-check-pdf/$': {
+      id: '/api/public/self-check-pdf/$'
+      path: '/api/public/self-check-pdf/$'
+      fullPath: '/api/public/self-check-pdf/$'
+      preLoaderRoute: typeof ApiPublicSelfCheckPdfSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -653,6 +674,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobbIndexRoute: JobbIndexRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicSelfCheckPdfSplatRoute: ApiPublicSelfCheckPdfSplatRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
@@ -662,13 +684,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
