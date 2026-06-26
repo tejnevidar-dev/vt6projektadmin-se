@@ -1173,6 +1173,8 @@ function ChecksTab({
         })}
       </Tabs>
 
+      <SentPdfsList jobId={jobId} />
+
       <SelfCheckDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
@@ -1183,6 +1185,87 @@ function ChecksTab({
         onSaved={onChanged}
       />
     </>
+  );
+}
+
+function SentPdfsList({ jobId }: { jobId: string }) {
+  const [files, setFiles] = useState<{ name: string; created_at?: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [opening, setOpening] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.storage
+      .from("self-check-pdfs")
+      .list(jobId, { limit: 200, sortBy: { column: "created_at", order: "desc" } });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setFiles((data ?? []).filter((f) => f.name.toLowerCase().endsWith(".pdf")));
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobId]);
+
+  const openFile = async (name: string) => {
+    setOpening(name);
+    const { data, error } = await supabase.storage
+      .from("self-check-pdfs")
+      .createSignedUrl(`${jobId}/${name}`, 60 * 10);
+    setOpening(null);
+    if (error || !data?.signedUrl) {
+      toast.error(error?.message ?? "Kunde inte öppna PDF");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
+  return (
+    <div className="mt-6 rounded-lg border border-border bg-card p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <div className="text-sm font-medium">Sparade PDF:er</div>
+          <div className="text-xs text-muted-foreground">
+            Alla egenkontroll-PDF:er som genererats för detta projekt.
+          </div>
+        </div>
+        <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+          {loading ? "Laddar..." : "Uppdatera"}
+        </Button>
+      </div>
+      {files.length === 0 ? (
+        <div className="text-sm text-muted-foreground">
+          {loading ? "Hämtar..." : "Inga PDF:er sparade än. PDF:er skapas när projektet markeras som klart och egenkontrollerna mejlas."}
+        </div>
+      ) : (
+        <div className="divide-y divide-border">
+          {files.map((f) => (
+            <div key={f.name} className="flex items-center justify-between py-2">
+              <div className="min-w-0">
+                <div className="truncate text-sm">{f.name}</div>
+                {f.created_at && (
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(f.created_at).toLocaleString("sv-SE")}
+                  </div>
+                )}
+              </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => openFile(f.name)}
+                disabled={opening === f.name}
+              >
+                {opening === f.name ? "Öppnar..." : "Öppna"}
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
