@@ -308,7 +308,6 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const greetName = job.client_company || job.client_contact_name || "";
 
         // Send via Lovable Emails (transactional) on notify.vt6projektadmin.se
-        const origin = new URL(request.url).origin;
         const sendResp = await fetch(`${origin}/lovable/email/transactional/send`, {
           method: "POST",
           headers: {
