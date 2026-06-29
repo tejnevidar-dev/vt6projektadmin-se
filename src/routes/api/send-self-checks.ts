@@ -94,6 +94,7 @@ async function buildSelfCheckPdf(args: {
   completedAt: string | null;
   createdAt: string;
   performerName: string | null;
+  imagesByField: Record<string, { bytes: Uint8Array; name: string }[]>;
 }): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -104,6 +105,13 @@ async function buildSelfCheckPdf(args: {
   const margin = 50;
   const maxWidth = page.getWidth() - margin * 2;
   let y = page.getHeight() - margin;
+
+  const ensureSpace = (h: number) => {
+    if (y - h < margin) {
+      page = pdf.addPage(PAGE);
+      y = page.getHeight() - margin;
+    }
+  };
 
   const draw = (
     text: string,
@@ -129,14 +137,35 @@ async function buildSelfCheckPdf(args: {
       if (line) lines.push(line);
       if (lines.length === 0) lines.push("");
       for (const l of lines) {
-        if (y < margin + size) {
-          page = pdf.addPage(PAGE);
-          y = page.getHeight() - margin;
-        }
+        ensureSpace(size + 4);
         page.drawText(l, { x: margin, y, size, font: f, color });
         y -= size + 4;
       }
     }
+  };
+
+  const drawImage = async (bytes: Uint8Array, caption: string) => {
+    let img;
+    try {
+      img = await pdf.embedJpg(bytes);
+    } catch {
+      try {
+        img = await pdf.embedPng(bytes);
+      } catch {
+        draw(`(Kunde inte bädda in bild: ${caption})`, { size: 9, color: rgb(0.6, 0.2, 0.2) });
+        return;
+      }
+    }
+    const maxW = maxWidth;
+    const maxH = 320;
+    const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    ensureSpace(h + 14);
+    page.drawImage(img, { x: margin, y: y - h, width: w, height: h });
+    y -= h + 6;
+    draw(caption, { size: 9, color: rgb(0.4, 0.4, 0.4) });
+    y -= 2;
   };
 
   draw(`Egenkontroll #${args.index + 1}`, { font: bold, size: 18 });
@@ -158,13 +187,30 @@ async function buildSelfCheckPdf(args: {
   draw("Falt", { font: bold, size: 12 });
   y -= 4;
 
-  const entries = Object.entries(args.data ?? {});
+  const entries = Object.entries(args.data ?? {}).filter(
+    ([k]) => k !== "imagesByField" && k !== "images",
+  );
   if (entries.length === 0) {
     draw("Inga ifyllda falt", { size: 11, color: rgb(0.4, 0.4, 0.4) });
   } else {
     for (const [k, v] of entries) {
       draw(k, { font: bold, size: 11 });
       draw(stringifyValue(v), { size: 11 });
+      y -= 4;
+    }
+  }
+
+  const imageFields = Object.entries(args.imagesByField).filter(([, arr]) => arr.length > 0);
+  if (imageFields.length > 0) {
+    y -= 8;
+    draw("Bifogade bilder", { font: bold, size: 12 });
+    y -= 4;
+    for (const [field, imgs] of imageFields) {
+      draw(field, { font: bold, size: 11 });
+      y -= 2;
+      for (let i = 0; i < imgs.length; i++) {
+        await drawImage(imgs[i].bytes, `${imgs[i].name || `Bild ${i + 1}`}`);
+      }
       y -= 4;
     }
   }
@@ -176,6 +222,8 @@ export const Route = createFileRoute("/api/send-self-checks")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
+
+
 
       POST: async ({ request }) => {
         const authHeader = request.headers.get("authorization");
