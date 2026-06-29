@@ -411,6 +411,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
         // URL so mail clients don't line-break the long signed-URL tokens.
         const origin = new URL(request.url).origin;
         const links: { label: string; url: string }[] = [];
+        let totalEmbeddedImages = 0;
         for (let i = 0; i < checks.length; i++) {
           const sc = checks[i];
           const rawData = (sc.data as Record<string, unknown>) ?? {};
