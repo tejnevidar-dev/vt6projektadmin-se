@@ -28,22 +28,11 @@ const InputSchema = z.object({
   jobId: z.string().uuid(),
 });
 
-const FROM_ADDRESS = "VT6 <no-reply@notify.vt6projektadmin.se>";
-
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json", ...corsHeaders },
   });
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 function stringifyValue(val: unknown): string {
@@ -155,15 +144,6 @@ function templateLabel(key: string): string {
 
 
 
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  return btoa(binary);
-}
 
 async function buildSelfCheckPdf(args: {
   index: number;
