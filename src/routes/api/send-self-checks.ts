@@ -2,6 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
+
+interface SelfCheckImageRef { path: string; name?: string }
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
