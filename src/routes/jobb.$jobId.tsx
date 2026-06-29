@@ -17,6 +17,7 @@ import {
   getWorkOrderSignedUrl,
   deleteWorkOrder,
   sendSelfChecksToClient,
+  revokeSelfChecksSent,
   updateJobClientInfo,
   updateJobPrice,
   deleteSelfCheck,
@@ -200,6 +201,37 @@ function JobDetailPage() {
   }
 
 
+  async function handleRevokeSelfChecks() {
+    if (!job) return;
+    if (!confirm("Återkalla mejlet? Status nollställs så du kan skicka ett nytt mail till beställaren.")) return;
+    const toastId = toast.loading("Återkallar...");
+    try {
+      await revokeSelfChecksSent(job.id);
+      toast.success("Mejlet återkallat. Du kan nu skicka om egenkontrollerna.", { id: toastId });
+      void reload();
+    } catch (e: any) {
+      toast.error(`Kunde inte återkalla: ${e.message ?? ""}`, { id: toastId });
+    }
+  }
+
+  async function handleResendSelfChecks() {
+    if (!job) return;
+    const toastId = toast.loading("Skickar nytt mail med egenkontroller...");
+    try {
+      await revokeSelfChecksSent(job.id);
+      const res = await sendSelfChecksToClient(job.id);
+      toast.success(
+        `Nytt mail skickat till ${res.to} (${res.count} PDF:er, ${res.imageCount} bilder)`,
+        { id: toastId },
+      );
+      void reload();
+    } catch (e: any) {
+      toast.error(`Kunde inte skicka om: ${e.message ?? ""}`, { id: toastId });
+    }
+  }
+
+
+
   if (loading) {
     return (
       <AppShell title="Projekt">
@@ -301,10 +333,20 @@ function JobDetailPage() {
               Återöppna
             </Button>
           )}
-          {isAdmin && job.client_email && (
+          {isAdmin && job.client_email && !job.self_checks_emailed_at && (
             <Button size="sm" variant="outline" onClick={handleSendSelfChecks}>
               <FileText className="mr-1.5 h-4 w-4" /> Skicka egenkontroller
             </Button>
+          )}
+          {isAdmin && job.client_email && job.self_checks_emailed_at && (
+            <>
+              <Button size="sm" variant="outline" onClick={handleResendSelfChecks}>
+                <FileText className="mr-1.5 h-4 w-4" /> Skicka nytt mail
+              </Button>
+              <Button size="sm" variant="ghost" onClick={handleRevokeSelfChecks}>
+                Återkalla mejl
+              </Button>
+            </>
           )}
           {isAdmin && (
             <Select value={job.status} onValueChange={(v) => handleStatus(v as JobStatus)}>
