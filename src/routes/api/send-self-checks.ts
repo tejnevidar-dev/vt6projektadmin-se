@@ -68,11 +68,13 @@ const TEMPLATE_LABELS: Record<string, string> = {
   plat: "Platarbete",
   sakerhet: "Sakerhet",
   stallning: "Stallning",
+  taktvatt: "Taktvatt",
   default: "Egenkontroll",
 };
 function templateLabel(key: string): string {
   return TEMPLATE_LABELS[key] ?? key;
 }
+
 
 
 
