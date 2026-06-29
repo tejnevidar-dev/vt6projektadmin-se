@@ -453,7 +453,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
               .download(path);
             if (error || !data) return null;
             const ab = await data.arrayBuffer();
-            return new Uint8Array(ab);
+            return prepareImageForPdf(new Uint8Array(ab));
           } catch {
             return null;
           }
