@@ -285,14 +285,18 @@ export const Route = createFileRoute("/api/send-self-checks")({
           .eq("job_id", jobId)
           .order("created_at", { ascending: true });
         if (scErr) return jsonResponse({ error: scErr.message }, 500);
-        // Interna mallar (ställning, säkerhet) skickas inte till beställaren.
-        const CLIENT_TEMPLATES = new Set(["tak", "plat"]);
-        const checks = (allChecks ?? []).filter((c) => CLIENT_TEMPLATES.has(c.template_key));
+        // Filtrera till mallar som ska skickas till beställare (sentToClient = true).
+        const CLIENT_TEMPLATE_KEYS = new Set(
+          SELF_CHECK_TEMPLATES.filter((t) => t.sentToClient).map((t) => t.key),
+        );
+        const checks = (allChecks ?? []).filter((c) =>
+          CLIENT_TEMPLATE_KEYS.has(c.template_key),
+        );
         if (checks.length === 0) {
           return jsonResponse(
             {
               error:
-                "Det finns inga egenkontroller att skicka till beställaren (endast Takarbete och Plåtarbete skickas).",
+                "Det finns inga egenkontroller att skicka till beställaren.",
             },
             400,
           );
@@ -317,21 +321,55 @@ export const Route = createFileRoute("/api/send-self-checks")({
           );
         }
 
+        // Hjälpfunktion för att ladda ner en bild från storage som bytes.
+        async function downloadImage(path: string): Promise<Uint8Array | null> {
+          try {
+            const { data, error } = await admin.storage
+              .from("self-check-images")
+              .download(path);
+            if (error || !data) return null;
+            const ab = await data.arrayBuffer();
+            return new Uint8Array(ab);
+          } catch {
+            return null;
+          }
+        }
+
         // Build one PDF per self-check and upload. Use a short public redirect
         // URL so mail clients don't line-break the long signed-URL tokens.
         const origin = new URL(request.url).origin;
         const links: { label: string; url: string }[] = [];
         for (let i = 0; i < checks.length; i++) {
           const sc = checks[i];
+          const rawData = (sc.data as Record<string, unknown>) ?? {};
+          const byField =
+            (rawData.imagesByField as Record<string, SelfCheckImageRef[]> | undefined) ?? {};
+          const legacy = (rawData.images as SelfCheckImageRef[] | undefined) ?? [];
+          const allFields: Record<string, SelfCheckImageRef[]> = { ...byField };
+          if (legacy.length > 0) {
+            allFields["Övrigt"] = [...(allFields["Övrigt"] ?? []), ...legacy];
+          }
+          const resolvedImages: Record<string, { bytes: Uint8Array; name: string }[]> = {};
+          for (const [field, imgs] of Object.entries(allFields)) {
+            const arr: { bytes: Uint8Array; name: string }[] = [];
+            for (const img of imgs) {
+              if (!img?.path) continue;
+              const bytes = await downloadImage(img.path);
+              if (bytes) arr.push({ bytes, name: img.name ?? "" });
+            }
+            if (arr.length > 0) resolvedImages[field] = arr;
+          }
+
           const bytes = await buildSelfCheckPdf({
             index: i,
             jobAddress: job.address ?? "",
             customerName: job.customer_name ?? null,
             templateKey: sc.template_key,
-            data: (sc.data as Record<string, unknown>) ?? {},
+            data: rawData,
             completedAt: sc.completed_at,
             createdAt: sc.created_at,
             performerName: sc.user_id ? nameMap[sc.user_id] ?? null : null,
+            imagesByField: resolvedImages,
           });
           const filename = `egenkontroll-${i + 1}-${slugify(sc.template_key)}.pdf`;
           const path = `${jobId}/${Date.now()}-${i + 1}-${filename}`;
@@ -356,6 +394,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
             url: `${origin}/api/public/self-check-pdf/${safePath}`,
           });
         }
+
 
         const greetName = job.client_company || job.client_contact_name || "";
 
