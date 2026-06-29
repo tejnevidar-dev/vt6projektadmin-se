@@ -168,7 +168,9 @@ function JobDetailPage() {
       if (next === "klar" && job.client_email && !job.self_checks_emailed_at) {
         try {
           const res = await sendSelfChecksToClient(job.id);
-          toast.success(`Egenkontroller mejlade till ${res.to} (${res.count} st)`);
+          toast.success(
+            `Egenkontroller mejlade till ${res.to} (${res.count} PDF:er, ${res.imageCount} bilder)`,
+          );
         } catch (e: any) {
           toast.error(`Status uppdaterad, men kunde inte mejla beställaren: ${e.message ?? ""}`);
         }
