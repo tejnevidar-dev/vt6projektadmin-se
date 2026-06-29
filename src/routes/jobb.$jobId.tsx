@@ -168,7 +168,9 @@ function JobDetailPage() {
       if (next === "klar" && job.client_email && !job.self_checks_emailed_at) {
         try {
           const res = await sendSelfChecksToClient(job.id);
-          toast.success(`Egenkontroller mejlade till ${res.to} (${res.count} st)`);
+          toast.success(
+            `Egenkontroller mejlade till ${res.to} (${res.count} PDF:er, ${res.imageCount} bilder)`,
+          );
         } catch (e: any) {
           toast.error(`Status uppdaterad, men kunde inte mejla beställaren: ${e.message ?? ""}`);
         }
@@ -179,6 +181,21 @@ function JobDetailPage() {
       void reload();
     } catch (e: any) {
       toast.error(e.message);
+    }
+  }
+
+  async function handleSendSelfChecks() {
+    if (!job) return;
+    const toastId = toast.loading("Genererar PDF:er med alla bifogade bilder...");
+    try {
+      const res = await sendSelfChecksToClient(job.id);
+      toast.success(
+        `Egenkontroller mejlade till ${res.to} (${res.count} PDF:er, ${res.imageCount} bilder)`,
+        { id: toastId },
+      );
+      void reload();
+    } catch (e: any) {
+      toast.error(`Kunde inte mejla egenkontroller: ${e.message ?? ""}`, { id: toastId });
     }
   }
 
@@ -282,6 +299,11 @@ function JobDetailPage() {
           {isAdmin && job.status === "klar" && (
             <Button size="sm" variant="outline" onClick={() => handleStatus("pagaende")}>
               Återöppna
+            </Button>
+          )}
+          {isAdmin && job.client_email && (
+            <Button size="sm" variant="outline" onClick={handleSendSelfChecks}>
+              <FileText className="mr-1.5 h-4 w-4" /> Skicka egenkontroller
             </Button>
           )}
           {isAdmin && (

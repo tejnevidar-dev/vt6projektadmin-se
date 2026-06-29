@@ -6,6 +6,17 @@ import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
 
 interface SelfCheckImageRef { path: string; name?: string }
 
+interface EmbeddedSelfCheckImage {
+  bytes: Uint8Array;
+  name: string;
+}
+
+interface PdfBuildResult {
+  bytes: Uint8Array;
+  embeddedImageCount: number;
+  failedImageNames: string[];
+}
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,22 +28,11 @@ const InputSchema = z.object({
   jobId: z.string().uuid(),
 });
 
-const FROM_ADDRESS = "VT6 <no-reply@notify.vt6projektadmin.se>";
-
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json", ...corsHeaders },
   });
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 function stringifyValue(val: unknown): string {
@@ -44,6 +44,73 @@ function stringifyValue(val: unknown): string {
   } catch {
     return String(val);
   }
+}
+
+function isImageMetadataKey(key: string): boolean {
+  return ["images", "imagesbyfield"].includes(key.replace(/[^a-z]/gi, "").toLowerCase());
+}
+
+function isSelfCheckImageRef(value: unknown): value is SelfCheckImageRef {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { path?: unknown }).path === "string"
+  );
+}
+
+function containsImageRefs(value: unknown): boolean {
+  if (isSelfCheckImageRef(value)) return true;
+  if (Array.isArray(value)) return value.some(containsImageRefs);
+  if (typeof value === "object" && value !== null) {
+    return Object.values(value as Record<string, unknown>).some(containsImageRefs);
+  }
+  return false;
+}
+
+function normalizeImageRefs(value: unknown): Record<string, SelfCheckImageRef[]> {
+  if (!value) return {};
+
+  let parsed = value;
+  if (typeof value === "string") {
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      return {};
+    }
+  }
+
+  if (Array.isArray(parsed)) {
+    return {
+      "Övrigt": parsed.filter(isSelfCheckImageRef),
+    };
+  }
+
+  if (typeof parsed !== "object" || parsed === null) return {};
+
+  const result: Record<string, SelfCheckImageRef[]> = {};
+  for (const [field, refs] of Object.entries(parsed as Record<string, unknown>)) {
+    if (Array.isArray(refs)) {
+      const validRefs = refs.filter(isSelfCheckImageRef);
+      if (validRefs.length > 0) result[field] = validRefs;
+    }
+  }
+  return result;
+}
+
+function normalizeSelfCheckData(value: unknown): Record<string, unknown> {
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : {};
+    } catch {
+      return {};
+    }
+  }
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
 function sanitize(s: string): string {
@@ -78,15 +145,6 @@ function templateLabel(key: string): string {
 
 
 
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  return btoa(binary);
-}
-
 async function buildSelfCheckPdf(args: {
   index: number;
   jobAddress: string;
@@ -96,8 +154,8 @@ async function buildSelfCheckPdf(args: {
   completedAt: string | null;
   createdAt: string;
   performerName: string | null;
-  imagesByField: Record<string, { bytes: Uint8Array; name: string }[]>;
-}): Promise<Uint8Array> {
+  imagesByField: Record<string, EmbeddedSelfCheckImage[]>;
+}): Promise<PdfBuildResult> {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -146,6 +204,9 @@ async function buildSelfCheckPdf(args: {
     }
   };
 
+  let embeddedImageCount = 0;
+  const failedImageNames: string[] = [];
+
   const drawImage = async (bytes: Uint8Array, caption: string) => {
     let img;
     try {
@@ -154,7 +215,7 @@ async function buildSelfCheckPdf(args: {
       try {
         img = await pdf.embedPng(bytes);
       } catch {
-        draw(`(Kunde inte bädda in bild: ${caption})`, { size: 9, color: rgb(0.6, 0.2, 0.2) });
+        failedImageNames.push(caption);
         return;
       }
     }
@@ -165,6 +226,7 @@ async function buildSelfCheckPdf(args: {
     const h = img.height * scale;
     ensureSpace(h + 14);
     page.drawImage(img, { x: margin, y: y - h, width: w, height: h });
+    embeddedImageCount += 1;
     y -= h + 6;
     draw(caption, { size: 9, color: rgb(0.4, 0.4, 0.4) });
     y -= 2;
@@ -186,11 +248,11 @@ async function buildSelfCheckPdf(args: {
     draw(`Utford av: ${args.performerName}`, { size: 10, color: rgb(0.3, 0.3, 0.3) });
 
   y -= 10;
-  draw("Falt", { font: bold, size: 12 });
+  draw("Fält", { font: bold, size: 12 });
   y -= 4;
 
   const entries = Object.entries(args.data ?? {}).filter(
-    ([k]) => k !== "imagesByField" && k !== "images",
+    ([k, v]) => !isImageMetadataKey(k) && !containsImageRefs(v),
   );
   if (entries.length === 0) {
     draw("Inga ifyllda falt", { size: 11, color: rgb(0.4, 0.4, 0.4) });
@@ -217,7 +279,11 @@ async function buildSelfCheckPdf(args: {
     }
   }
 
-  return pdf.save();
+  return {
+    bytes: await pdf.save(),
+    embeddedImageCount,
+    failedImageNames,
+  };
 }
 
 export const Route = createFileRoute("/api/send-self-checks")({
@@ -341,28 +407,41 @@ export const Route = createFileRoute("/api/send-self-checks")({
         // URL so mail clients don't line-break the long signed-URL tokens.
         const origin = new URL(request.url).origin;
         const links: { label: string; url: string }[] = [];
+        let totalEmbeddedImages = 0;
         for (let i = 0; i < checks.length; i++) {
           const sc = checks[i];
-          const rawData = (sc.data as Record<string, unknown>) ?? {};
-          const byField =
-            (rawData.imagesByField as Record<string, SelfCheckImageRef[]> | undefined) ?? {};
-          const legacy = (rawData.images as SelfCheckImageRef[] | undefined) ?? [];
+          const rawData = normalizeSelfCheckData(sc.data);
+          const byField = normalizeImageRefs(rawData.imagesByField);
+          const legacy = normalizeImageRefs(rawData.images);
           const allFields: Record<string, SelfCheckImageRef[]> = { ...byField };
-          if (legacy.length > 0) {
-            allFields["Övrigt"] = [...(allFields["Övrigt"] ?? []), ...legacy];
+          if (legacy["Övrigt"]?.length > 0) {
+            allFields["Övrigt"] = [...(allFields["Övrigt"] ?? []), ...legacy["Övrigt"]];
           }
-          const resolvedImages: Record<string, { bytes: Uint8Array; name: string }[]> = {};
+          const resolvedImages: Record<string, EmbeddedSelfCheckImage[]> = {};
+          const missingImages: string[] = [];
           for (const [field, imgs] of Object.entries(allFields)) {
-            const arr: { bytes: Uint8Array; name: string }[] = [];
+            const arr: EmbeddedSelfCheckImage[] = [];
             for (const img of imgs) {
               if (!img?.path) continue;
               const bytes = await downloadImage(img.path);
-              if (bytes) arr.push({ bytes, name: img.name ?? "" });
+              if (bytes) {
+                arr.push({ bytes, name: img.name ?? "" });
+              } else {
+                missingImages.push(img.name || img.path.split("/").pop() || "bild");
+              }
             }
             if (arr.length > 0) resolvedImages[field] = arr;
           }
+          if (missingImages.length > 0) {
+            return jsonResponse(
+              {
+                error: `Kunde inte hämta ${missingImages.length} bifogade bilder till egenkontroll ${i + 1}. Inget mejl skickades.`,
+              },
+              500,
+            );
+          }
 
-          const bytes = await buildSelfCheckPdf({
+          const pdfResult = await buildSelfCheckPdf({
             index: i,
             jobAddress: job.address ?? "",
             customerName: job.customer_name ?? null,
@@ -373,11 +452,19 @@ export const Route = createFileRoute("/api/send-self-checks")({
             performerName: sc.user_id ? nameMap[sc.user_id] ?? null : null,
             imagesByField: resolvedImages,
           });
+          if (pdfResult.failedImageNames.length > 0) {
+            return jsonResponse(
+              {
+                error: `Kunde inte bädda in ${pdfResult.failedImageNames.length} bilder i egenkontroll ${i + 1}. Inget mejl skickades.`,
+              },
+              500,
+            );
+          }
           const filename = `egenkontroll-${i + 1}-${slugify(sc.template_key)}.pdf`;
           const path = `${jobId}/${Date.now()}-${i + 1}-${filename}`;
           const { error: upErr } = await admin.storage
             .from("self-check-pdfs")
-            .upload(path, bytes, {
+            .upload(path, pdfResult.bytes, {
               contentType: "application/pdf",
               upsert: true,
             });
@@ -395,6 +482,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
             label: `Egenkontroll ${i + 1} – ${templateLabel(sc.template_key)}`,
             url: `${origin}/api/public/self-check-pdf/${safePath}`,
           });
+          totalEmbeddedImages += pdfResult.embeddedImageCount;
         }
 
 
@@ -442,6 +530,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
           success: true,
           to: job.client_email,
           count: checks.length,
+          imageCount: totalEmbeddedImages,
         });
       },
     },

@@ -85,6 +85,10 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, initialTe
   const template: SelfCheckTemplate | undefined = getSelfCheckTemplate(templateKey);
   const readOnly = !!existing?.completed_at;
   const totalImages = Object.values(imagesByField).reduce((n, arr) => n + arr.length, 0);
+  const templateFieldLabels = new Set(template?.fields.map((f) => f.label) ?? []);
+  const orphanImageFields = Object.entries(imagesByField).filter(
+    ([field, imgs]) => field !== LEGACY_IMAGE_BUCKET && !templateFieldLabels.has(field) && imgs.length > 0,
+  );
 
   async function handleSave(submit: boolean) {
     if (!template) return;
@@ -253,6 +257,27 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, initialTe
                   readOnly={readOnly}
                   onRemove={(p) => removeImage(LEGACY_IMAGE_BUCKET, p)}
                 />
+              </div>
+            )}
+
+            {orphanImageFields.length > 0 && (
+              <div className="rounded-md border border-border bg-card p-3">
+                <div className="text-sm font-medium">Bifogade bilder från tidigare moment</div>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Dessa bilder ligger kvar från moment som inte längre finns i mallen.
+                </p>
+                <div className="space-y-3">
+                  {orphanImageFields.map(([field, imgs]) => (
+                    <div key={field}>
+                      <div className="text-xs font-medium text-muted-foreground">{field}</div>
+                      <ImageList
+                        images={imgs}
+                        readOnly={readOnly}
+                        onRemove={(p) => removeImage(field, p)}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
