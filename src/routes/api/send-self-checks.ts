@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import * as jpeg from "jpeg-js";
 import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
 
 interface SelfCheckImageRef { path: string; name?: string }
@@ -15,6 +16,61 @@ interface PdfBuildResult {
   bytes: Uint8Array;
   embeddedImageCount: number;
   failedImageNames: string[];
+}
+
+const PDF_IMAGE_MAX_EDGE = 1400;
+const PDF_IMAGE_JPEG_QUALITY = 72;
+
+function isJpeg(bytes: Uint8Array): boolean {
+  return bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+}
+
+function downscaleRgbaNearest(
+  data: Uint8Array,
+  srcWidth: number,
+  srcHeight: number,
+  dstWidth: number,
+  dstHeight: number,
+): Uint8Array {
+  const out = new Uint8Array(dstWidth * dstHeight * 4);
+  for (let y = 0; y < dstHeight; y++) {
+    const srcY = Math.min(srcHeight - 1, Math.floor((y * srcHeight) / dstHeight));
+    for (let x = 0; x < dstWidth; x++) {
+      const srcX = Math.min(srcWidth - 1, Math.floor((x * srcWidth) / dstWidth));
+      const srcIdx = (srcY * srcWidth + srcX) * 4;
+      const dstIdx = (y * dstWidth + x) * 4;
+      out[dstIdx] = data[srcIdx];
+      out[dstIdx + 1] = data[srcIdx + 1];
+      out[dstIdx + 2] = data[srcIdx + 2];
+      out[dstIdx + 3] = data[srcIdx + 3] ?? 255;
+    }
+  }
+  return out;
+}
+
+function prepareImageForPdf(bytes: Uint8Array): Uint8Array {
+  // iPhone/Android photos are often 5-10 MB each. Embedding 80 originals can
+  // create a several-hundred-MB PDF that many clients cannot open. Re-encode
+  // JPEGs to a sane size before pdf-lib embeds them.
+  if (!isJpeg(bytes)) return bytes;
+  try {
+    const decoded = jpeg.decode(bytes, {
+      useTArray: true,
+      tolerantDecoding: true,
+      maxMemoryUsageInMB: 768,
+    });
+    const longest = Math.max(decoded.width, decoded.height);
+    const scale = Math.min(1, PDF_IMAGE_MAX_EDGE / longest);
+    const width = Math.max(1, Math.round(decoded.width * scale));
+    const height = Math.max(1, Math.round(decoded.height * scale));
+    const data = scale < 1
+      ? downscaleRgbaNearest(decoded.data, decoded.width, decoded.height, width, height)
+      : decoded.data;
+    const encoded = jpeg.encode({ data, width, height }, PDF_IMAGE_JPEG_QUALITY);
+    return encoded.data instanceof Uint8Array ? encoded.data : new Uint8Array(encoded.data);
+  } catch {
+    return bytes;
+  }
 }
 
 
