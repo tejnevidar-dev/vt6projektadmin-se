@@ -52,7 +52,6 @@
     "@tanstack/react-start": "^1.167.14",
     "@tanstack/router-plugin": "^1.167.10",
     "@tanstack/zod-adapter": "^1.166.9",
-    "@types/jpeg-js": "^0.3.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
