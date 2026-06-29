@@ -17,6 +17,7 @@ import {
   getWorkOrderSignedUrl,
   deleteWorkOrder,
   sendSelfChecksToClient,
+  revokeSelfChecksSent,
   updateJobClientInfo,
   updateJobPrice,
   deleteSelfCheck,
