@@ -108,6 +108,22 @@ function normalizeImageRefs(value: unknown): Record<string, SelfCheckImageRef[]>
   return result;
 }
 
+function normalizeSelfCheckData(value: unknown): Record<string, unknown> {
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : {};
+    } catch {
+      return {};
+    }
+  }
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
 function sanitize(s: string): string {
   // Standard Helvetica only supports WinAnsi; strip anything outside.
   return s.replace(/[^\x00-\xFF]/g, "?");
@@ -414,7 +430,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
         let totalEmbeddedImages = 0;
         for (let i = 0; i < checks.length; i++) {
           const sc = checks[i];
-          const rawData = (sc.data as Record<string, unknown>) ?? {};
+          const rawData = normalizeSelfCheckData(sc.data);
           const byField = normalizeImageRefs(rawData.imagesByField);
           const legacy = normalizeImageRefs(rawData.images);
           const allFields: Record<string, SelfCheckImageRef[]> = { ...byField };
