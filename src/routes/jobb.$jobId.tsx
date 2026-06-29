@@ -197,7 +197,36 @@ function JobDetailPage() {
       void reload();
     } catch (e: any) {
       toast.error(`Kunde inte mejla egenkontroller: ${e.message ?? ""}`, { id: toastId });
+  }
+
+  async function handleRevokeSelfChecks() {
+    if (!job) return;
+    if (!confirm("Återkalla mejlet? Status nollställs så du kan skicka ett nytt mail till beställaren.")) return;
+    const toastId = toast.loading("Återkallar...");
+    try {
+      await revokeSelfChecksSent(job.id);
+      toast.success("Mejlet återkallat. Du kan nu skicka om egenkontrollerna.", { id: toastId });
+      void reload();
+    } catch (e: any) {
+      toast.error(`Kunde inte återkalla: ${e.message ?? ""}`, { id: toastId });
     }
+  }
+
+  async function handleResendSelfChecks() {
+    if (!job) return;
+    const toastId = toast.loading("Skickar nytt mail med egenkontroller...");
+    try {
+      await revokeSelfChecksSent(job.id);
+      const res = await sendSelfChecksToClient(job.id);
+      toast.success(
+        `Nytt mail skickat till ${res.to} (${res.count} PDF:er, ${res.imageCount} bilder)`,
+        { id: toastId },
+      );
+      void reload();
+    } catch (e: any) {
+      toast.error(`Kunde inte skicka om: ${e.message ?? ""}`, { id: toastId });
+    }
+  }
   }
 
 
