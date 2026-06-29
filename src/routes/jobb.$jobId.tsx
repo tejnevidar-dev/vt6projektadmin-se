@@ -184,6 +184,21 @@ function JobDetailPage() {
     }
   }
 
+  async function handleSendSelfChecks() {
+    if (!job) return;
+    const toastId = toast.loading("Genererar PDF:er med alla bifogade bilder...");
+    try {
+      const res = await sendSelfChecksToClient(job.id);
+      toast.success(
+        `Egenkontroller mejlade till ${res.to} (${res.count} PDF:er, ${res.imageCount} bilder)`,
+        { id: toastId },
+      );
+      void reload();
+    } catch (e: any) {
+      toast.error(`Kunde inte mejla egenkontroller: ${e.message ?? ""}`, { id: toastId });
+    }
+  }
+
 
   if (loading) {
     return (
@@ -284,6 +299,11 @@ function JobDetailPage() {
           {isAdmin && job.status === "klar" && (
             <Button size="sm" variant="outline" onClick={() => handleStatus("pagaende")}>
               Återöppna
+            </Button>
+          )}
+          {isAdmin && job.client_email && (
+            <Button size="sm" variant="outline" onClick={handleSendSelfChecks}>
+              <FileText className="mr-1.5 h-4 w-4" /> Skicka egenkontroller
             </Button>
           )}
           {isAdmin && (
