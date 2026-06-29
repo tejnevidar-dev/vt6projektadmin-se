@@ -199,6 +199,15 @@ export async function sendSelfChecksToClient(
   return { to: json.to ?? "", count: json.count ?? 0, imageCount: json.imageCount ?? 0 };
 }
 
+/** Clear the "self-checks emailed" state so it can be resent fresh. */
+export async function revokeSelfChecksSent(jobId: string): Promise<void> {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ self_checks_emailed_at: null, self_checks_emailed_to: null })
+    .eq("id", jobId);
+  if (error) throw error;
+}
+
 
 export interface JobMember {
   id: string;
