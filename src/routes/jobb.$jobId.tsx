@@ -227,9 +227,9 @@ function JobDetailPage() {
       void reload();
     } catch (e: any) {
       toast.error(`Kunde inte skicka om: ${e.message ?? ""}`, { id: toastId });
-
-
+    }
   }
+
 
 
   if (loading) {
