@@ -333,10 +333,20 @@ function JobDetailPage() {
               Återöppna
             </Button>
           )}
-          {isAdmin && job.client_email && (
+          {isAdmin && job.client_email && !job.self_checks_emailed_at && (
             <Button size="sm" variant="outline" onClick={handleSendSelfChecks}>
               <FileText className="mr-1.5 h-4 w-4" /> Skicka egenkontroller
             </Button>
+          )}
+          {isAdmin && job.client_email && job.self_checks_emailed_at && (
+            <>
+              <Button size="sm" variant="outline" onClick={handleResendSelfChecks}>
+                <FileText className="mr-1.5 h-4 w-4" /> Skicka nytt mail
+              </Button>
+              <Button size="sm" variant="ghost" onClick={handleRevokeSelfChecks}>
+                Återkalla mejl
+              </Button>
+            </>
           )}
           {isAdmin && (
             <Select value={job.status} onValueChange={(v) => handleStatus(v as JobStatus)}>
