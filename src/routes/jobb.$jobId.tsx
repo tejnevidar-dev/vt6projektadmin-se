@@ -197,7 +197,9 @@ function JobDetailPage() {
       void reload();
     } catch (e: any) {
       toast.error(`Kunde inte mejla egenkontroller: ${e.message ?? ""}`, { id: toastId });
+    }
   }
+
 
   async function handleRevokeSelfChecks() {
     if (!job) return;
