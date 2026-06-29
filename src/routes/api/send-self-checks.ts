@@ -464,6 +464,19 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const origin = new URL(request.url).origin;
         const links: { label: string; url: string }[] = [];
         let totalEmbeddedImages = 0;
+
+        // Ta bort tidigare genererade PDF:er för projektet så användaren och
+        // beställaren inte råkar öppna gamla, trasiga filer efter ett omskick.
+        const { data: oldPdfs } = await admin.storage
+          .from("self-check-pdfs")
+          .list(jobId, { limit: 1000 });
+        const oldPdfPaths = (oldPdfs ?? [])
+          .filter((f) => f.name.toLowerCase().endsWith(".pdf"))
+          .map((f) => `${jobId}/${f.name}`);
+        if (oldPdfPaths.length > 0) {
+          await admin.storage.from("self-check-pdfs").remove(oldPdfPaths);
+        }
+
         for (let i = 0; i < checks.length; i++) {
           const sc = checks[i];
           const rawData = normalizeSelfCheckData(sc.data);
