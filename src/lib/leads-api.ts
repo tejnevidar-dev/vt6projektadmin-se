@@ -221,6 +221,25 @@ export async function assignLead(id: string, assignedTo: string | null, assignee
   );
 }
 
+export async function setLeadContactPerson(
+  id: string,
+  contactPersonId: string | null,
+  contactName?: string,
+): Promise<void> {
+  const { error } = await (supabase.from("leads") as any)
+    .update({ contact_person_id: contactPersonId })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "assignment",
+    contactPersonId
+      ? `Kontaktperson satt till ${contactName ?? "säljare"}`
+      : "Kontaktperson borttagen",
+    { contact_person_id: contactPersonId },
+  );
+}
+
 function computeAndPersistScore(leadId: string, score: number) {
   return (supabase.from("leads") as any).update({ score }).eq("id", leadId);
 }

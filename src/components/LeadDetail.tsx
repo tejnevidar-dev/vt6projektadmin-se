@@ -12,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer, setLeadRotPaid } from "@/lib/leads-api";
+import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer, setLeadRotPaid, setLeadContactPerson } from "@/lib/leads-api";
+import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
+import { useEffect } from "react";
 import { waitForJobByLead } from "@/lib/jobs-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
@@ -230,6 +232,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                 <span className={`font-medium ${lead.roofAge > 40 ? "text-destructive" : ""}`}>{lead.roofAge} år</span>
               </InfoRow>
             </div>
+
+            {!(lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford") && (
+              <ContactPersonSection lead={lead} onSaved={onUpdated} />
+            )}
 
             {(lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford") && (
               <BookingSection lead={lead} onSaved={onUpdated} />
@@ -686,6 +692,71 @@ function BookingSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void })
           Avbryt
         </Button>
       </div>
+    </div>
+  );
+}
+
+function ContactPersonSection({ lead, onSaved }: { lead: Lead; onSaved?: () => void }) {
+  const [options, setOptions] = useState<Saljare[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [value, setValue] = useState<string>(lead.contactPersonId ?? "");
+
+  useEffect(() => {
+    setLoading(true);
+    fetchSaljare()
+      .then((data) => setOptions(data))
+      .catch(() => setOptions([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    setValue(lead.contactPersonId ?? "");
+  }, [lead.contactPersonId]);
+
+  const current = options.find((o) => o.id === lead.contactPersonId);
+
+  const handleChange = async (next: string) => {
+    const nextId = next === "__none__" ? null : next;
+    setValue(next === "__none__" ? "" : next);
+    setSaving(true);
+    try {
+      const name = options.find((o) => o.id === nextId)?.display_name;
+      await setLeadContactPerson(lead.id, nextId, name);
+      toast.success(nextId ? "Kontaktperson uppdaterad" : "Kontaktperson borttagen");
+      onSaved?.();
+    } catch (err) {
+      console.error("Failed to set contact person:", err);
+      toast.error("Kunde inte uppdatera kontaktperson");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <User className="h-4 w-4 text-muted-foreground" />
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Säljare / kontaktperson
+        </span>
+      </div>
+      <Select value={value || "__none__"} onValueChange={handleChange} disabled={saving || loading}>
+        <SelectTrigger>
+          <SelectValue placeholder={loading ? "Laddar…" : "Välj kontaktperson"} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__none__">Ingen tilldelad</SelectItem>
+          {options.map((o) => (
+            <SelectItem key={o.id} value={o.id}>
+              {o.display_name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {current && (
+        <p className="text-xs text-muted-foreground">Ansvarig: {current.display_name}</p>
+      )}
     </div>
   );
 }

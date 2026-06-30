@@ -103,6 +103,7 @@ export interface Lead {
   offerPdfPath: string | null;
   needsOffer: boolean;
   rotPaid: boolean;
+  contactPersonId: string | null;
 }
 
 /** True om en bokad lead saknar pris eller tilldelning (UE / arbetsledare). */
@@ -150,6 +151,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     offerPdfPath: (lp as { offer_pdf_path?: string | null }).offer_pdf_path ?? null,
     needsOffer: (lp as { needs_offer?: boolean | null }).needs_offer ?? false,
     rotPaid: (lp as { rot_paid?: boolean | null }).rot_paid ?? false,
+    contactPersonId: (lp as { contact_person_id?: string | null }).contact_person_id ?? null,
   };
 }
 
