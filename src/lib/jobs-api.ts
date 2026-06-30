@@ -234,6 +234,8 @@ export interface TimeEntry {
 export interface SelfCheckImage {
   path: string;
   name: string;
+  uploadedBy?: string;
+  uploadedAt?: string;
 }
 
 export interface SelfCheckFieldReview {
@@ -267,7 +269,31 @@ export async function uploadSelfCheckImage(jobId: string, file: File): Promise<S
     .from("self-check-images")
     .upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
   if (error) throw error;
-  return { path, name: file.name };
+  const { data: userData } = await supabase.auth.getUser();
+  return {
+    path,
+    name: file.name,
+    uploadedBy: userData.user?.id,
+    uploadedAt: new Date().toISOString(),
+  };
+}
+
+/** Fetch display names for a set of user IDs. Returns id → display name (or email). */
+export async function getProfileNames(userIds: string[]): Promise<Record<string, string>> {
+  const ids = Array.from(new Set(userIds.filter(Boolean)));
+  if (ids.length === 0) return {};
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, display_name, email")
+    .in("id", ids);
+  if (error) return {};
+  const map: Record<string, string> = {};
+  for (const p of data ?? []) {
+    map[p.id] = (p as { display_name?: string | null; email?: string | null }).display_name
+      || (p as { email?: string | null }).email
+      || "Okänd";
+  }
+  return map;
 }
 
 export async function getSelfCheckImageUrl(path: string): Promise<string> {

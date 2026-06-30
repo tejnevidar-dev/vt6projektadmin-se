@@ -28,6 +28,7 @@ import {
   updateJobType,
   approveSelfCheckField,
   getSelfCheckImageUrl,
+  getProfileNames,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
@@ -107,6 +108,7 @@ function JobDetailPage() {
   const [members, setMembers] = useState<JobMember[]>([]);
   const [times, setTimes] = useState<TimeEntry[]>([]);
   const [checks, setChecks] = useState<SelfCheck[]>([]);
+  const [nameMap, setNameMap] = useState<Record<string, string>>({});
   const [inviteOpen, setInviteOpen] = useState(false);
   const [foremanOpen, setForemanOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
@@ -129,6 +131,18 @@ function JobDetailPage() {
         setMembers(m);
         setTimes(t);
         setChecks(c);
+        const ids = new Set<string>();
+        t.forEach((x) => x.user_id && ids.add(x.user_id));
+        c.forEach((x) => {
+          if (x.user_id) ids.add(x.user_id);
+          const byField = x.data?.imagesByField ?? {};
+          Object.values(byField).forEach((arr) =>
+            arr.forEach((img) => img.uploadedBy && ids.add(img.uploadedBy)),
+          );
+          (x.data?.images ?? []).forEach((img) => img.uploadedBy && ids.add(img.uploadedBy));
+        });
+        const names = await getProfileNames(Array.from(ids));
+        setNameMap(names);
       }
     } catch (e: any) {
       toast.error(e.message);
@@ -509,6 +523,9 @@ function JobDetailPage() {
                   <div>
                     <div className="font-medium">{t.work_date} — {t.hours} h</div>
                     {t.description && <div className="text-xs text-muted-foreground">{t.description}</div>}
+                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                      Loggad av {nameMap[t.user_id] ?? "okänd"} · {new Date(t.created_at).toLocaleString("sv-SE")}
+                    </div>
                   </div>
                   <Badge variant={t.status === "approved" ? "default" : t.status === "rejected" ? "destructive" : "secondary"}>
                     {t.status === "approved" ? "Godkänd" : t.status === "rejected" ? "Avvisad" : "Väntar"}
@@ -527,6 +544,7 @@ function JobDetailPage() {
             checks={checks}
             currentUserId={user?.id ?? null}
             canCreate={isOwner || isAdmin || members.some((m) => m.user_id === user?.id)}
+            nameMap={nameMap}
             onChanged={reload}
           />
         </TabsContent>
@@ -1011,6 +1029,7 @@ function ChecksTab({
   currentUserId,
   canCreate,
   isAdmin,
+  nameMap,
   onChanged,
 }: {
   jobId: string;
@@ -1019,6 +1038,7 @@ function ChecksTab({
   currentUserId: string | null;
   canCreate: boolean;
   isAdmin: boolean;
+  nameMap: Record<string, string>;
   onChanged: () => void;
 }) {
   const applicableTemplates = useMemo(() => getApplicableTemplates(jobType), [jobType]);
@@ -1243,6 +1263,9 @@ function ChecksTab({
                             <div className="text-xs text-muted-foreground">
                               {new Date(c.completed_at ?? c.created_at).toLocaleString("sv-SE")}
                             </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              Inlämnad av {nameMap[c.user_id] ?? "okänd"}
+                            </div>
                           </div>
                           <div className="flex items-center gap-2">
                             {c.reviewed_at ? (
@@ -1303,6 +1326,7 @@ function ChecksTab({
         target={reviewTarget}
         checks={checks}
         isAdmin={isAdmin}
+        nameMap={nameMap}
         onChanged={onChanged}
       />
     </>
@@ -1325,6 +1349,7 @@ function FieldReviewDialog({
   target,
   checks,
   isAdmin,
+  nameMap,
   onChanged,
 }: {
   open: boolean;
@@ -1332,6 +1357,7 @@ function FieldReviewDialog({
   target: { templateKey: string; templateName: string; fieldLabel: string } | null;
   checks: SelfCheck[];
   isAdmin: boolean;
+  nameMap: Record<string, string>;
   onChanged: () => void;
 }) {
   if (!target) return null;
@@ -1387,7 +1413,7 @@ function FieldReviewDialog({
                         Inlämnad {new Date(check.completed_at ?? check.created_at).toLocaleString("sv-SE")}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        Status: {review ? `Godkänd ${new Date(review.reviewed_at).toLocaleString("sv-SE")}` : "Ej godkänd"}
+                        Av {nameMap[check.user_id] ?? "okänd"} · Status: {review ? `Godkänd ${new Date(review.reviewed_at).toLocaleString("sv-SE")}` : "Ej godkänd"}
                       </div>
                     </div>
                     {isAdmin && !review && (
@@ -1406,9 +1432,14 @@ function FieldReviewDialog({
                   )}
                   {images.length > 0 ? (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {images.map((image) => (
-                        <SelfCheckImagePreview key={image.path} image={image} />
-                      ))}
+                      {images.map((image) => {
+                        const uploader = image.uploadedBy
+                          ? nameMap[image.uploadedBy] ?? null
+                          : nameMap[check.user_id] ?? null;
+                        return (
+                          <SelfCheckImagePreview key={image.path} image={image} uploaderName={uploader} />
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-sm text-muted-foreground">Inga bilder kopplade till detta moment.</div>
@@ -1426,7 +1457,7 @@ function FieldReviewDialog({
   );
 }
 
-function SelfCheckImagePreview({ image }: { image: SelfCheckImage }) {
+function SelfCheckImagePreview({ image, uploaderName }: { image: SelfCheckImage; uploaderName?: string | null }) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -1449,7 +1480,12 @@ function SelfCheckImagePreview({ image }: { image: SelfCheckImage }) {
       ) : (
         <div className="flex aspect-[4/3] items-center justify-center text-xs text-muted-foreground">Laddar bild…</div>
       )}
-      <div className="truncate px-2 py-1.5 text-xs text-muted-foreground">{image.name}</div>
+      <div className="px-2 py-1.5">
+        <div className="truncate text-xs text-muted-foreground">{image.name}</div>
+        {uploaderName && (
+          <div className="truncate text-[11px] text-muted-foreground/80">Uppladdad av {uploaderName}</div>
+        )}
+      </div>
     </a>
   );
 }
