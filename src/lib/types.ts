@@ -103,6 +103,7 @@ export interface Lead {
   offerPdfPath: string | null;
   needsOffer: boolean;
   rotPaid: boolean;
+  contactPersonId: string | null;
 }
 
 /** True om en bokad lead saknar pris eller tilldelning (UE / arbetsledare). */
