@@ -523,6 +523,9 @@ function JobDetailPage() {
                   <div>
                     <div className="font-medium">{t.work_date} — {t.hours} h</div>
                     {t.description && <div className="text-xs text-muted-foreground">{t.description}</div>}
+                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                      Loggad av {nameMap[t.user_id] ?? "okänd"} · {new Date(t.created_at).toLocaleString("sv-SE")}
+                    </div>
                   </div>
                   <Badge variant={t.status === "approved" ? "default" : t.status === "rejected" ? "destructive" : "secondary"}>
                     {t.status === "approved" ? "Godkänd" : t.status === "rejected" ? "Avvisad" : "Väntar"}
@@ -541,6 +544,7 @@ function JobDetailPage() {
             checks={checks}
             currentUserId={user?.id ?? null}
             canCreate={isOwner || isAdmin || members.some((m) => m.user_id === user?.id)}
+            nameMap={nameMap}
             onChanged={reload}
           />
         </TabsContent>
