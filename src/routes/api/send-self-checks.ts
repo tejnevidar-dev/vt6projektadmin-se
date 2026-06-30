@@ -12,11 +12,17 @@ interface EmbeddedSelfCheckImage {
   name: string;
 }
 
+interface PdfImageFailure {
+  name: string;
+  reason: string;
+}
+
 interface PdfBuildResult {
   bytes: Uint8Array;
   embeddedImageCount: number;
-  failedImageNames: string[];
+  failedImages: PdfImageFailure[];
 }
+
 
 
 
