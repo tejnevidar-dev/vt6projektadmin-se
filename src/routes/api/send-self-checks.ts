@@ -95,7 +95,10 @@ function prepareImageForPdf(bytes: Uint8Array): Uint8Array {
       flattened[src + 3] = 255;
     }
     const encoded = jpeg.encode({ data: flattened, width, height }, PDF_IMAGE_JPEG_QUALITY);
-    return encoded.data instanceof Uint8Array ? encoded.data : new Uint8Array(encoded.data);
+    // Node Buffer shares an underlying ArrayBuffer pool, which makes pdf-lib's
+    // DataView read from the wrong offset ("SOI not found in JPEG"). Copy into
+    // a clean Uint8Array so the bytes start exactly at offset 0.
+    return new Uint8Array(encoded.data);
   } catch {
     return bytes;
   }
