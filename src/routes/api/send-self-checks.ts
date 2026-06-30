@@ -217,17 +217,24 @@ async function buildSelfCheckPdf(args: {
   };
 
   let embeddedImageCount = 0;
-  const failedImageNames: string[] = [];
+  const failedImages: PdfImageFailure[] = [];
 
   const drawImage = async (bytes: Uint8Array, caption: string) => {
     let img;
+    let jpgErr: unknown;
+    let pngErr: unknown;
     try {
       img = await pdf.embedJpg(bytes);
-    } catch {
+    } catch (e) {
+      jpgErr = e;
       try {
         img = await pdf.embedPng(bytes);
-      } catch {
-        failedImageNames.push(caption);
+      } catch (e2) {
+        pngErr = e2;
+        failedImages.push({
+          name: caption,
+          reason: `pdf-lib avvisade bilden (${bytes.length} bytes). embedJpg: ${(jpgErr as Error)?.message ?? "okänt"}; embedPng: ${(pngErr as Error)?.message ?? "okänt"}`,
+        });
         return;
       }
     }
@@ -243,6 +250,7 @@ async function buildSelfCheckPdf(args: {
     draw(caption, { size: 9, color: rgb(0.4, 0.4, 0.4) });
     y -= 2;
   };
+
 
   draw(`Egenkontroll #${args.index + 1}`, { font: bold, size: 18 });
   y -= 6;
