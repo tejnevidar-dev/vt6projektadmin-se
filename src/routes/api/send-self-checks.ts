@@ -483,24 +483,33 @@ export const Route = createFileRoute("/api/send-self-checks")({
             allFields["Övrigt"] = [...(allFields["Övrigt"] ?? []), ...legacy["Övrigt"]];
           }
           const resolvedImages: Record<string, EmbeddedSelfCheckImage[]> = {};
-          const missingImages: string[] = [];
+          const failedDownloads: { name: string; reason: string }[] = [];
           for (const [field, imgs] of Object.entries(allFields)) {
             const arr: EmbeddedSelfCheckImage[] = [];
             for (const img of imgs) {
               if (!img?.path) continue;
-              const bytes = await downloadImage(img.path);
-              if (bytes) {
-                arr.push({ bytes, name: img.name ?? "" });
+              const result = await downloadImage(img.path);
+              const displayName = img.name || img.path.split("/").pop() || "bild";
+              if (result.ok) {
+                arr.push({ bytes: result.bytes, name: img.name ?? "" });
               } else {
-                missingImages.push(img.name || img.path.split("/").pop() || "bild");
+                failedDownloads.push({ name: displayName, reason: result.reason });
               }
             }
             if (arr.length > 0) resolvedImages[field] = arr;
           }
-          if (missingImages.length > 0) {
+          if (failedDownloads.length > 0) {
+            const detail = failedDownloads
+              .slice(0, 5)
+              .map((f) => `${f.name} – ${f.reason}`)
+              .join("; ");
+            const more =
+              failedDownloads.length > 5 ? ` (+${failedDownloads.length - 5} till)` : "";
             return jsonResponse(
               {
-                error: `Kunde inte hämta ${missingImages.length} bifogade bilder till egenkontroll ${i + 1}. Inget mejl skickades.`,
+                error: `Kunde inte förbereda ${failedDownloads.length} bifogade bilder till egenkontroll ${i + 1}. Inget mejl skickades. Detaljer: ${detail}${more}`,
+                failedImages: failedDownloads,
+                selfCheckIndex: i + 1,
               },
               500,
             );
@@ -517,14 +526,25 @@ export const Route = createFileRoute("/api/send-self-checks")({
             performerName: sc.user_id ? nameMap[sc.user_id] ?? null : null,
             imagesByField: resolvedImages,
           });
-          if (pdfResult.failedImageNames.length > 0) {
+          if (pdfResult.failedImages.length > 0) {
+            const detail = pdfResult.failedImages
+              .slice(0, 5)
+              .map((f) => `${f.name} – ${f.reason}`)
+              .join("; ");
+            const more =
+              pdfResult.failedImages.length > 5
+                ? ` (+${pdfResult.failedImages.length - 5} till)`
+                : "";
             return jsonResponse(
               {
-                error: `Kunde inte bädda in ${pdfResult.failedImageNames.length} bilder i egenkontroll ${i + 1}. Inget mejl skickades.`,
+                error: `Kunde inte bädda in ${pdfResult.failedImages.length} bilder i egenkontroll ${i + 1}. Inget mejl skickades. Detaljer: ${detail}${more}`,
+                failedImages: pdfResult.failedImages,
+                selfCheckIndex: i + 1,
               },
               500,
             );
           }
+
           const filename = `egenkontroll-${i + 1}-${slugify(sc.template_key)}.pdf`;
           const path = `${jobId}/${Date.now()}-${i + 1}-${filename}`;
           const { error: upErr } = await admin.storage
