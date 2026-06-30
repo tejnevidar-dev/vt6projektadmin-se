@@ -131,6 +131,18 @@ function JobDetailPage() {
         setMembers(m);
         setTimes(t);
         setChecks(c);
+        const ids = new Set<string>();
+        t.forEach((x) => x.user_id && ids.add(x.user_id));
+        c.forEach((x) => {
+          if (x.user_id) ids.add(x.user_id);
+          const byField = x.data?.imagesByField ?? {};
+          Object.values(byField).forEach((arr) =>
+            arr.forEach((img) => img.uploadedBy && ids.add(img.uploadedBy)),
+          );
+          (x.data?.images ?? []).forEach((img) => img.uploadedBy && ids.add(img.uploadedBy));
+        });
+        const names = await getProfileNames(Array.from(ids));
+        setNameMap(names);
       }
     } catch (e: any) {
       toast.error(e.message);
