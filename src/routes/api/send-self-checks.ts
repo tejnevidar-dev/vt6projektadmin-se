@@ -305,7 +305,7 @@ async function buildSelfCheckPdf(args: {
   return {
     bytes: await pdf.save(),
     embeddedImageCount,
-    failedImageNames,
+    failedImages,
   };
 }
 
