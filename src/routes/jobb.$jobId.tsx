@@ -108,6 +108,7 @@ function JobDetailPage() {
   const [members, setMembers] = useState<JobMember[]>([]);
   const [times, setTimes] = useState<TimeEntry[]>([]);
   const [checks, setChecks] = useState<SelfCheck[]>([]);
+  const [nameMap, setNameMap] = useState<Record<string, string>>({});
   const [inviteOpen, setInviteOpen] = useState(false);
   const [foremanOpen, setForemanOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
