@@ -26,10 +26,13 @@ import {
   updateJobHideTimeEstimate,
   listJobEstimateAudit,
   updateJobType,
+  approveSelfCheckField,
+  getSelfCheckImageUrl,
   type JobWithLead,
   type JobMember,
   type TimeEntry,
   type SelfCheck,
+  type SelfCheckImage,
   type JobStatus,
   type JobEstimateAuditEntry,
 } from "@/lib/jobs-api";
@@ -76,6 +79,7 @@ import {
   Eye,
   EyeOff,
   History,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -1022,6 +1026,11 @@ function ChecksTab({
   const [editing, setEditing] = useState<SelfCheck | null>(null);
   const [newTemplateKey, setNewTemplateKey] = useState<string | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<string>(() => applicableTemplates[0]?.key ?? "");
+  const [reviewTarget, setReviewTarget] = useState<{
+    templateKey: string;
+    templateName: string;
+    fieldLabel: string;
+  } | null>(null);
 
   useEffect(() => {
     if (activeTab && !applicableTemplates.some((t) => t.key === activeTab)) {
@@ -1126,9 +1135,27 @@ function ChecksTab({
 
               {(() => {
                 const submittedChecks = tplChecks.filter((c) => c.completed_at);
+                const fieldSubmissions = (label: string, type: string) => {
+                  const rows = submittedChecks.filter((c) => {
+                    const value = (c.data as Record<string, unknown> | null)?.[label];
+                    const images = getImagesForSelfCheckField(c, label);
+                    if (images.length > 0) return true;
+                    if (type === "checkbox") return value === true;
+                    return typeof value === "string" && value.trim().length > 0;
+                  });
+                  const imageCount = rows.reduce(
+                    (sum, c) => sum + getImagesForSelfCheckField(c, label).length,
+                    0,
+                  );
+                  const approved = rows.some(
+                    (c) => c.data.__fieldReviews?.[label]?.status === "approved",
+                  );
+                  return { rows, imageCount, approved };
+                };
                 const isFieldAttached = (label: string, type: string) => {
                   for (const c of submittedChecks) {
                     const v = (c.data as Record<string, unknown> | null)?.[label];
+                    if (getImagesForSelfCheckField(c, label).length > 0) return true;
                     if (type === "checkbox") {
                       if (v === true) return true;
                     } else {
@@ -1141,13 +1168,30 @@ function ChecksTab({
                   <div className="rounded-lg border border-border bg-card divide-y divide-border">
                     {t.fields.map((f) => {
                       const attached = isFieldAttached(f.label, f.type);
+                      const submissions = fieldSubmissions(f.label, f.type);
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={f.label}
-                          className="flex items-start justify-between gap-3 p-3"
+                          className="flex w-full items-start justify-between gap-3 p-3 text-left transition hover:bg-muted/40"
+                          onClick={() =>
+                            setReviewTarget({
+                              templateKey: t.key,
+                              templateName: t.name,
+                              fieldLabel: f.label,
+                            })
+                          }
                         >
                           <div className="min-w-0">
-                            <div className="font-medium text-sm">{f.label}</div>
+                            <div className="flex flex-wrap items-center gap-2 font-medium text-sm">
+                              {f.label}
+                              {submissions.imageCount > 0 && (
+                                <span className="inline-flex items-center gap-1 text-xs font-normal text-muted-foreground">
+                                  <ImageIcon className="h-3.5 w-3.5" />
+                                  {submissions.imageCount} bild{submissions.imageCount === 1 ? "" : "er"}
+                                </span>
+                              )}
+                            </div>
                             {f.instruction && (
                               <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
                                 {f.instruction}
@@ -1155,10 +1199,15 @@ function ChecksTab({
                             )}
                           </div>
                           <div className="shrink-0">
-                            {attached ? (
+                            {submissions.approved ? (
                               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
                                 <CheckCircle2 className="h-3.5 w-3.5" />
-                                Egenkontroll bifogad
+                                Godkänd
+                              </span>
+                            ) : attached ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Granska
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
@@ -1166,7 +1215,7 @@ function ChecksTab({
                               </span>
                             )}
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -1248,7 +1297,160 @@ function ChecksTab({
         lockTemplate={!!newTemplateKey}
         onSaved={onChanged}
       />
+      <FieldReviewDialog
+        open={!!reviewTarget}
+        onOpenChange={(open) => !open && setReviewTarget(null)}
+        target={reviewTarget}
+        checks={checks}
+        isAdmin={isAdmin}
+        onChanged={onChanged}
+      />
     </>
+  );
+}
+
+function getImagesForSelfCheckField(check: SelfCheck, fieldLabel: string): SelfCheckImage[] {
+  const byField = check.data.imagesByField;
+  if (byField && Array.isArray(byField[fieldLabel])) return byField[fieldLabel];
+  return [];
+}
+
+function getSelfCheckFieldValue(check: SelfCheck, fieldLabel: string): unknown {
+  return (check.data as Record<string, unknown>)[fieldLabel];
+}
+
+function FieldReviewDialog({
+  open,
+  onOpenChange,
+  target,
+  checks,
+  isAdmin,
+  onChanged,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  target: { templateKey: string; templateName: string; fieldLabel: string } | null;
+  checks: SelfCheck[];
+  isAdmin: boolean;
+  onChanged: () => void;
+}) {
+  if (!target) return null;
+  const targetInfo = target;
+  const relevant = checks
+    .filter((c) => c.template_key === targetInfo.templateKey && c.completed_at)
+    .filter((c) => {
+      const value = getSelfCheckFieldValue(c, targetInfo.fieldLabel);
+      return getImagesForSelfCheckField(c, targetInfo.fieldLabel).length > 0 || value === true || (typeof value === "string" && value.trim().length > 0);
+    });
+  const allImages = relevant.flatMap((c) => getImagesForSelfCheckField(c, targetInfo.fieldLabel));
+
+  async function approve(checkId: string) {
+    try {
+      await approveSelfCheckField(checkId, targetInfo.fieldLabel);
+      toast.success("Momentet godkänt");
+      onChanged();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[88vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{targetInfo.fieldLabel}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">
+            <div className="font-medium">{targetInfo.templateName}</div>
+            <div className="text-xs text-muted-foreground">
+              {allImages.length > 0
+                ? `${allImages.length} uppladdade bilder under detta moment.`
+                : "Inga bilder är uppladdade under detta moment ännu."}
+            </div>
+          </div>
+
+          {relevant.length === 0 ? (
+            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
+              Saknar egenkontroll för detta moment.
+            </div>
+          ) : (
+            relevant.map((check) => {
+              const images = getImagesForSelfCheckField(check, targetInfo.fieldLabel);
+              const value = getSelfCheckFieldValue(check, targetInfo.fieldLabel);
+              const review = check.data.__fieldReviews?.[targetInfo.fieldLabel];
+              return (
+                <div key={check.id} className="rounded-md border border-border bg-card p-3">
+                  <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-medium">
+                        Inlämnad {new Date(check.completed_at ?? check.created_at).toLocaleString("sv-SE")}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Status: {review ? `Godkänd ${new Date(review.reviewed_at).toLocaleString("sv-SE")}` : "Ej godkänd"}
+                      </div>
+                    </div>
+                    {isAdmin && !review && (
+                      <Button size="sm" onClick={() => approve(check.id)}>
+                        <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                        Godkänn
+                      </Button>
+                    )}
+                    {review && <Badge variant="default">Godkänd</Badge>}
+                  </div>
+                  {typeof value === "string" && value.trim() && (
+                    <div className="mb-3 rounded-md bg-muted/40 p-2 text-sm whitespace-pre-wrap">{value}</div>
+                  )}
+                  {value === true && images.length === 0 && (
+                    <div className="mb-3 text-sm text-muted-foreground">Momentet är avbockat men saknar bilder.</div>
+                  )}
+                  {images.length > 0 ? (
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {images.map((image) => (
+                        <SelfCheckImagePreview key={image.path} image={image} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">Inga bilder kopplade till detta moment.</div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Stäng</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SelfCheckImagePreview({ image }: { image: SelfCheckImage }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getSelfCheckImageUrl(image.path)
+      .then((u) => !cancelled && setUrl(u))
+      .catch(() => !cancelled && setUrl(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [image.path]);
+  return (
+    <a
+      href={url ?? undefined}
+      target="_blank"
+      rel="noreferrer"
+      className="group overflow-hidden rounded-md border border-border bg-muted/30"
+    >
+      {url ? (
+        <img src={url} alt={image.name} className="aspect-[4/3] w-full object-cover transition group-hover:scale-[1.02]" loading="lazy" />
+      ) : (
+        <div className="flex aspect-[4/3] items-center justify-center text-xs text-muted-foreground">Laddar bild…</div>
+      )}
+      <div className="truncate px-2 py-1.5 text-xs text-muted-foreground">{image.name}</div>
+    </a>
   );
 }
 
@@ -1277,15 +1479,17 @@ function SentPdfsList({ jobId }: { jobId: string }) {
 
   const openFile = async (name: string) => {
     setOpening(name);
-    const { data, error } = await supabase.storage
-      .from("self-check-pdfs")
-      .createSignedUrl(`${jobId}/${name}`, 60 * 10);
+    const { data, error } = await supabase.auth.getSession();
     setOpening(null);
-    if (error || !data?.signedUrl) {
-      toast.error(error?.message ?? "Kunde inte öppna PDF");
+    if (error || !data.session) {
+      toast.error(error?.message ?? "Du måste vara inloggad");
       return;
     }
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    const safePath = `${jobId}/${name}`
+      .split("/")
+      .map((seg) => encodeURIComponent(seg))
+      .join("/");
+    window.open(`/api/public/self-check-pdf/${safePath}`, "_blank", "noopener,noreferrer");
   };
 
   return (
