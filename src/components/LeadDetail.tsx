@@ -231,6 +231,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               </InfoRow>
             </div>
 
+            {!(lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford") && (
+              <ContactPersonSection lead={lead} onSaved={onUpdated} />
+            )}
+
             {(lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford") && (
               <BookingSection lead={lead} onSaved={onUpdated} />
             )}
