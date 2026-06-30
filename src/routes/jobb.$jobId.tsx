@@ -1263,6 +1263,9 @@ function ChecksTab({
                             <div className="text-xs text-muted-foreground">
                               {new Date(c.completed_at ?? c.created_at).toLocaleString("sv-SE")}
                             </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              Inlämnad av {nameMap[c.user_id] ?? "okänd"}
+                            </div>
                           </div>
                           <div className="flex items-center gap-2">
                             {c.reviewed_at ? (
