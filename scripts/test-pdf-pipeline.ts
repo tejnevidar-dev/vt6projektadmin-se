@@ -14,7 +14,7 @@
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import * as jpeg from "jpeg-js";
 import { PNG } from "pngjs";
-import { prepareImageForPdf, PDF_IMAGE_MAX_EDGE } from "../src/lib/pdf-image";
+import { prepareImageForPdf, PdfImageError, PDF_IMAGE_MAX_EDGE } from "../src/lib/pdf-image";
 
 function makePng(w: number, h: number, r: number, g: number, b: number, alpha = 255): Uint8Array {
   const png = new PNG({ width: w, height: h });
