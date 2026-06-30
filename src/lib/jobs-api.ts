@@ -236,12 +236,22 @@ export interface SelfCheckImage {
   name: string;
 }
 
+export interface SelfCheckFieldReview {
+  status: "approved";
+  reviewed_at: string;
+  reviewed_by: string | null;
+}
+
 export interface SelfCheck {
   id: string;
   job_id: string;
   user_id: string;
   template_key: string;
-  data: Record<string, unknown> & { images?: SelfCheckImage[] };
+  data: Record<string, unknown> & {
+    images?: SelfCheckImage[];
+    imagesByField?: Record<string, SelfCheckImage[]>;
+    __fieldReviews?: Record<string, SelfCheckFieldReview>;
+  };
   completed_at: string | null;
   reviewed_at: string | null;
   reviewed_by: string | null;
@@ -506,6 +516,39 @@ export async function updateSelfCheck(
   const patch: Record<string, unknown> = { data: input.data };
   if (input.submit) patch.completed_at = new Date().toISOString();
   const { error } = await supabase.from("self_checks").update(patch as never).eq("id", id);
+  if (error) throw error;
+}
+
+export async function approveSelfCheckField(id: string, fieldLabel: string): Promise<void> {
+  const { data: auth } = await supabase.auth.getUser();
+  const { data: existing, error: readErr } = await supabase
+    .from("self_checks")
+    .select("data")
+    .eq("id", id)
+    .maybeSingle();
+  if (readErr) throw readErr;
+  const currentData =
+    typeof (existing as { data?: unknown } | null)?.data === "object" &&
+    (existing as { data?: unknown } | null)?.data !== null &&
+    !Array.isArray((existing as { data?: unknown }).data)
+      ? { ...((existing as { data: Record<string, unknown> }).data) }
+      : {};
+  const previousReviews =
+    typeof currentData.__fieldReviews === "object" && currentData.__fieldReviews !== null
+      ? (currentData.__fieldReviews as Record<string, SelfCheckFieldReview>)
+      : {};
+  const nextData = {
+    ...currentData,
+    __fieldReviews: {
+      ...previousReviews,
+      [fieldLabel]: {
+        status: "approved" as const,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: auth.user?.id ?? null,
+      },
+    },
+  };
+  const { error } = await supabase.from("self_checks").update({ data: nextData } as never).eq("id", id);
   if (error) throw error;
 }
 
