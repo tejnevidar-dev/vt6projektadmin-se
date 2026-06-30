@@ -412,19 +412,48 @@ export const Route = createFileRoute("/api/send-self-checks")({
           );
         }
 
-        // Hjälpfunktion för att ladda ner en bild från storage som bytes.
-        async function downloadImage(path: string): Promise<Uint8Array | null> {
+        // Hjälpfunktion för att ladda ner och förbereda en bild från storage.
+        // Returnerar antingen bytes eller ett strukturerat fel så vi kan
+        // berätta exakt varför bilden inte gick att bädda in.
+        type ImageLoadResult =
+          | { ok: true; bytes: Uint8Array }
+          | { ok: false; reason: string };
+        async function downloadImage(path: string): Promise<ImageLoadResult> {
+          let ab: ArrayBuffer;
           try {
             const { data, error } = await admin.storage
               .from("self-check-images")
               .download(path);
-            if (error || !data) return null;
-            const ab = await data.arrayBuffer();
-            return prepareImageForPdf(new Uint8Array(ab));
-          } catch {
-            return null;
+            if (error || !data) {
+              return {
+                ok: false,
+                reason: `nedladdning misslyckades: ${error?.message ?? "ingen data"}`,
+              };
+            }
+            ab = await data.arrayBuffer();
+          } catch (err) {
+            return {
+              ok: false,
+              reason: `nedladdning kastade: ${(err as Error).message}`,
+            };
+          }
+          try {
+            return { ok: true, bytes: prepareImageForPdf(new Uint8Array(ab)) };
+          } catch (err) {
+            if (err instanceof PdfImageError) {
+              return {
+                ok: false,
+                reason: `${err.stage} (${err.format}, ${err.byteLength} bytes): ${err.message}`,
+              };
+            }
+            return {
+              ok: false,
+              reason: `bildbearbetning kastade: ${(err as Error).message}`,
+            };
           }
         }
+
+
 
         // Build one PDF per self-check and upload. Use a short public redirect
         // URL so mail clients don't line-break the long signed-URL tokens.
