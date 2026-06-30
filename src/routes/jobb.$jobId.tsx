@@ -1029,6 +1029,7 @@ function ChecksTab({
   currentUserId,
   canCreate,
   isAdmin,
+  nameMap,
   onChanged,
 }: {
   jobId: string;
@@ -1037,6 +1038,7 @@ function ChecksTab({
   currentUserId: string | null;
   canCreate: boolean;
   isAdmin: boolean;
+  nameMap: Record<string, string>;
   onChanged: () => void;
 }) {
   const applicableTemplates = useMemo(() => getApplicableTemplates(jobType), [jobType]);
