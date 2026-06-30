@@ -1335,17 +1335,18 @@ function FieldReviewDialog({
   onChanged: () => void;
 }) {
   if (!target) return null;
+  const targetInfo = target;
   const relevant = checks
-    .filter((c) => c.template_key === target.templateKey && c.completed_at)
+    .filter((c) => c.template_key === targetInfo.templateKey && c.completed_at)
     .filter((c) => {
-      const value = getSelfCheckFieldValue(c, target.fieldLabel);
-      return getImagesForSelfCheckField(c, target.fieldLabel).length > 0 || value === true || (typeof value === "string" && value.trim().length > 0);
+      const value = getSelfCheckFieldValue(c, targetInfo.fieldLabel);
+      return getImagesForSelfCheckField(c, targetInfo.fieldLabel).length > 0 || value === true || (typeof value === "string" && value.trim().length > 0);
     });
-  const allImages = relevant.flatMap((c) => getImagesForSelfCheckField(c, target.fieldLabel));
+  const allImages = relevant.flatMap((c) => getImagesForSelfCheckField(c, targetInfo.fieldLabel));
 
   async function approve(checkId: string) {
     try {
-      await approveSelfCheckField(checkId, target.fieldLabel);
+      await approveSelfCheckField(checkId, targetInfo.fieldLabel);
       toast.success("Momentet godkänt");
       onChanged();
     } catch (e: any) {
@@ -1357,11 +1358,11 @@ function FieldReviewDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{target.fieldLabel}</DialogTitle>
+          <DialogTitle>{targetInfo.fieldLabel}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">
-            <div className="font-medium">{target.templateName}</div>
+            <div className="font-medium">{targetInfo.templateName}</div>
             <div className="text-xs text-muted-foreground">
               {allImages.length > 0
                 ? `${allImages.length} uppladdade bilder under detta moment.`
@@ -1375,9 +1376,9 @@ function FieldReviewDialog({
             </div>
           ) : (
             relevant.map((check) => {
-              const images = getImagesForSelfCheckField(check, target.fieldLabel);
-              const value = getSelfCheckFieldValue(check, target.fieldLabel);
-              const review = check.data.__fieldReviews?.[target.fieldLabel];
+              const images = getImagesForSelfCheckField(check, targetInfo.fieldLabel);
+              const value = getSelfCheckFieldValue(check, targetInfo.fieldLabel);
+              const review = check.data.__fieldReviews?.[targetInfo.fieldLabel];
               return (
                 <div key={check.id} className="rounded-md border border-border bg-card p-3">
                   <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
