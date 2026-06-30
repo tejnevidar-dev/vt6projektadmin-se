@@ -1457,7 +1457,7 @@ function FieldReviewDialog({
   );
 }
 
-function SelfCheckImagePreview({ image }: { image: SelfCheckImage }) {
+function SelfCheckImagePreview({ image, uploaderName }: { image: SelfCheckImage; uploaderName?: string | null }) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -1480,7 +1480,12 @@ function SelfCheckImagePreview({ image }: { image: SelfCheckImage }) {
       ) : (
         <div className="flex aspect-[4/3] items-center justify-center text-xs text-muted-foreground">Laddar bild…</div>
       )}
-      <div className="truncate px-2 py-1.5 text-xs text-muted-foreground">{image.name}</div>
+      <div className="px-2 py-1.5">
+        <div className="truncate text-xs text-muted-foreground">{image.name}</div>
+        {uploaderName && (
+          <div className="truncate text-[11px] text-muted-foreground/80">Uppladdad av {uploaderName}</div>
+        )}
+      </div>
     </a>
   );
 }
