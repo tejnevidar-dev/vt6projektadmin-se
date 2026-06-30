@@ -14,7 +14,7 @@
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import * as jpeg from "jpeg-js";
 import { PNG } from "pngjs";
-import { prepareImageForPdf, PDF_IMAGE_MAX_EDGE } from "../src/lib/pdf-image";
+import { prepareImageForPdf, PdfImageError, PDF_IMAGE_MAX_EDGE } from "../src/lib/pdf-image";
 
 function makePng(w: number, h: number, r: number, g: number, b: number, alpha = 255): Uint8Array {
   const png = new PNG({ width: w, height: h });
@@ -62,7 +62,17 @@ let y = 760;
 const embedded: { label: string; w: number; h: number; bytes: number }[] = [];
 
 for (const c of cases) {
-  const prepped = prepareImageForPdf(c.bytes);
+  let prepped: Uint8Array;
+  try {
+    prepped = prepareImageForPdf(c.bytes);
+  } catch (e) {
+    if (e instanceof PdfImageError) {
+      failures.push(`${c.label}: prepareImageForPdf kastade ${e.stage} (${e.format}): ${e.message}`);
+    } else {
+      failures.push(`${c.label}: prepareImageForPdf kastade okänt fel: ${(e as Error).message}`);
+    }
+    continue;
+  }
   let img;
   try {
     img = await pdf.embedJpg(prepped);
@@ -83,6 +93,28 @@ for (const c of cases) {
   embedded.push({ label: c.label, w: img.width, h: img.height, bytes: prepped.length });
   y -= 240;
 }
+
+// Negativa fall — säkerställ att vi får tydliga PdfImageError med rätt stage.
+interface NegCase { label: string; bytes: Uint8Array; expectedStage: string }
+const negativeCases: NegCase[] = [
+  { label: "Slumpmässiga bytes (ingen magic)", bytes: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), expectedStage: "unsupported-format" },
+  { label: "Trasig JPEG-header utan body", bytes: new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]), expectedStage: "decode" },
+];
+for (const n of negativeCases) {
+  try {
+    prepareImageForPdf(n.bytes);
+    failures.push(`${n.label}: förväntade PdfImageError men funktionen returnerade utan att kasta`);
+  } catch (e) {
+    if (!(e instanceof PdfImageError)) {
+      failures.push(`${n.label}: förväntade PdfImageError, fick ${(e as Error).constructor?.name}: ${(e as Error).message}`);
+    } else if (e.stage !== n.expectedStage) {
+      failures.push(`${n.label}: förväntade stage="${n.expectedStage}", fick "${e.stage}" (${e.message})`);
+    } else {
+      console.log(`  ✓ Negativt fall "${n.label}" → stage=${e.stage}`);
+    }
+  }
+}
+
 
 const pdfBytes = await pdf.save();
 

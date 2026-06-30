@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { prepareImageForPdf } from "@/lib/pdf-image";
+import { prepareImageForPdf, PdfImageError } from "@/lib/pdf-image";
 import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
 
 interface SelfCheckImageRef { path: string; name?: string }
@@ -12,11 +12,17 @@ interface EmbeddedSelfCheckImage {
   name: string;
 }
 
+interface PdfImageFailure {
+  name: string;
+  reason: string;
+}
+
 interface PdfBuildResult {
   bytes: Uint8Array;
   embeddedImageCount: number;
-  failedImageNames: string[];
+  failedImages: PdfImageFailure[];
 }
+
 
 
 
@@ -211,17 +217,24 @@ async function buildSelfCheckPdf(args: {
   };
 
   let embeddedImageCount = 0;
-  const failedImageNames: string[] = [];
+  const failedImages: PdfImageFailure[] = [];
 
   const drawImage = async (bytes: Uint8Array, caption: string) => {
     let img;
+    let jpgErr: unknown;
+    let pngErr: unknown;
     try {
       img = await pdf.embedJpg(bytes);
-    } catch {
+    } catch (e) {
+      jpgErr = e;
       try {
         img = await pdf.embedPng(bytes);
-      } catch {
-        failedImageNames.push(caption);
+      } catch (e2) {
+        pngErr = e2;
+        failedImages.push({
+          name: caption,
+          reason: `pdf-lib avvisade bilden (${bytes.length} bytes). embedJpg: ${(jpgErr as Error)?.message ?? "okänt"}; embedPng: ${(pngErr as Error)?.message ?? "okänt"}`,
+        });
         return;
       }
     }
@@ -237,6 +250,7 @@ async function buildSelfCheckPdf(args: {
     draw(caption, { size: 9, color: rgb(0.4, 0.4, 0.4) });
     y -= 2;
   };
+
 
   draw(`Egenkontroll #${args.index + 1}`, { font: bold, size: 18 });
   y -= 6;
@@ -291,7 +305,7 @@ async function buildSelfCheckPdf(args: {
   return {
     bytes: await pdf.save(),
     embeddedImageCount,
-    failedImageNames,
+    failedImages,
   };
 }
 
@@ -398,19 +412,48 @@ export const Route = createFileRoute("/api/send-self-checks")({
           );
         }
 
-        // Hjälpfunktion för att ladda ner en bild från storage som bytes.
-        async function downloadImage(path: string): Promise<Uint8Array | null> {
+        // Hjälpfunktion för att ladda ner och förbereda en bild från storage.
+        // Returnerar antingen bytes eller ett strukturerat fel så vi kan
+        // berätta exakt varför bilden inte gick att bädda in.
+        type ImageLoadResult =
+          | { ok: true; bytes: Uint8Array }
+          | { ok: false; reason: string };
+        async function downloadImage(path: string): Promise<ImageLoadResult> {
+          let ab: ArrayBuffer;
           try {
             const { data, error } = await admin.storage
               .from("self-check-images")
               .download(path);
-            if (error || !data) return null;
-            const ab = await data.arrayBuffer();
-            return prepareImageForPdf(new Uint8Array(ab));
-          } catch {
-            return null;
+            if (error || !data) {
+              return {
+                ok: false,
+                reason: `nedladdning misslyckades: ${error?.message ?? "ingen data"}`,
+              };
+            }
+            ab = await data.arrayBuffer();
+          } catch (err) {
+            return {
+              ok: false,
+              reason: `nedladdning kastade: ${(err as Error).message}`,
+            };
+          }
+          try {
+            return { ok: true, bytes: prepareImageForPdf(new Uint8Array(ab)) };
+          } catch (err) {
+            if (err instanceof PdfImageError) {
+              return {
+                ok: false,
+                reason: `${err.stage} (${err.format}, ${err.byteLength} bytes): ${err.message}`,
+              };
+            }
+            return {
+              ok: false,
+              reason: `bildbearbetning kastade: ${(err as Error).message}`,
+            };
           }
         }
+
+
 
         // Build one PDF per self-check and upload. Use a short public redirect
         // URL so mail clients don't line-break the long signed-URL tokens.
@@ -440,24 +483,33 @@ export const Route = createFileRoute("/api/send-self-checks")({
             allFields["Övrigt"] = [...(allFields["Övrigt"] ?? []), ...legacy["Övrigt"]];
           }
           const resolvedImages: Record<string, EmbeddedSelfCheckImage[]> = {};
-          const missingImages: string[] = [];
+          const failedDownloads: { name: string; reason: string }[] = [];
           for (const [field, imgs] of Object.entries(allFields)) {
             const arr: EmbeddedSelfCheckImage[] = [];
             for (const img of imgs) {
               if (!img?.path) continue;
-              const bytes = await downloadImage(img.path);
-              if (bytes) {
-                arr.push({ bytes, name: img.name ?? "" });
+              const result = await downloadImage(img.path);
+              const displayName = img.name || img.path.split("/").pop() || "bild";
+              if (result.ok) {
+                arr.push({ bytes: result.bytes, name: img.name ?? "" });
               } else {
-                missingImages.push(img.name || img.path.split("/").pop() || "bild");
+                failedDownloads.push({ name: displayName, reason: result.reason });
               }
             }
             if (arr.length > 0) resolvedImages[field] = arr;
           }
-          if (missingImages.length > 0) {
+          if (failedDownloads.length > 0) {
+            const detail = failedDownloads
+              .slice(0, 5)
+              .map((f) => `${f.name} – ${f.reason}`)
+              .join("; ");
+            const more =
+              failedDownloads.length > 5 ? ` (+${failedDownloads.length - 5} till)` : "";
             return jsonResponse(
               {
-                error: `Kunde inte hämta ${missingImages.length} bifogade bilder till egenkontroll ${i + 1}. Inget mejl skickades.`,
+                error: `Kunde inte förbereda ${failedDownloads.length} bifogade bilder till egenkontroll ${i + 1}. Inget mejl skickades. Detaljer: ${detail}${more}`,
+                failedImages: failedDownloads,
+                selfCheckIndex: i + 1,
               },
               500,
             );
@@ -474,14 +526,25 @@ export const Route = createFileRoute("/api/send-self-checks")({
             performerName: sc.user_id ? nameMap[sc.user_id] ?? null : null,
             imagesByField: resolvedImages,
           });
-          if (pdfResult.failedImageNames.length > 0) {
+          if (pdfResult.failedImages.length > 0) {
+            const detail = pdfResult.failedImages
+              .slice(0, 5)
+              .map((f) => `${f.name} – ${f.reason}`)
+              .join("; ");
+            const more =
+              pdfResult.failedImages.length > 5
+                ? ` (+${pdfResult.failedImages.length - 5} till)`
+                : "";
             return jsonResponse(
               {
-                error: `Kunde inte bädda in ${pdfResult.failedImageNames.length} bilder i egenkontroll ${i + 1}. Inget mejl skickades.`,
+                error: `Kunde inte bädda in ${pdfResult.failedImages.length} bilder i egenkontroll ${i + 1}. Inget mejl skickades. Detaljer: ${detail}${more}`,
+                failedImages: pdfResult.failedImages,
+                selfCheckIndex: i + 1,
               },
               500,
             );
           }
+
           const filename = `egenkontroll-${i + 1}-${slugify(sc.template_key)}.pdf`;
           const path = `${jobId}/${Date.now()}-${i + 1}-${filename}`;
           const { error: upErr } = await admin.storage
