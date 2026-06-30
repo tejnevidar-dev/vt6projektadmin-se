@@ -1479,15 +1479,17 @@ function SentPdfsList({ jobId }: { jobId: string }) {
 
   const openFile = async (name: string) => {
     setOpening(name);
-    const { data, error } = await supabase.storage
-      .from("self-check-pdfs")
-      .createSignedUrl(`${jobId}/${name}`, 60 * 10);
+    const { data, error } = await supabase.auth.getSession();
     setOpening(null);
-    if (error || !data?.signedUrl) {
-      toast.error(error?.message ?? "Kunde inte öppna PDF");
+    if (error || !data.session) {
+      toast.error(error?.message ?? "Du måste vara inloggad");
       return;
     }
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    const safePath = `${jobId}/${name}`
+      .split("/")
+      .map((seg) => encodeURIComponent(seg))
+      .join("/");
+    window.open(`/api/public/self-check-pdf/${safePath}`, "_blank", "noopener,noreferrer");
   };
 
   return (
