@@ -1326,6 +1326,7 @@ function ChecksTab({
         target={reviewTarget}
         checks={checks}
         isAdmin={isAdmin}
+        nameMap={nameMap}
         onChanged={onChanged}
       />
     </>
