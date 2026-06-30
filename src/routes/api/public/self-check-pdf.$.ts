@@ -26,13 +26,18 @@ export const Route = createFileRoute("/api/public/self-check-pdf/$")({
         });
         const { data, error } = await admin.storage
           .from("self-check-pdfs")
-          .createSignedUrl(path, 60 * 10);
-        if (error || !data?.signedUrl) {
+          .download(path);
+        if (error || !data) {
           return new Response("Inte tillgänglig", { status: 404, headers: corsHeaders });
         }
-        return new Response(null, {
-          status: 302,
-          headers: { Location: data.signedUrl, ...corsHeaders },
+        return new Response(data, {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `inline; filename="${encodeURIComponent(path.split("/").pop() ?? "egenkontroll.pdf")}"`,
+            "Cache-Control": "private, max-age=300",
+          },
         });
       },
     },
