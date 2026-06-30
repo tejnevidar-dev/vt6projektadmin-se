@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { prepareImageForPdf } from "@/lib/pdf-image";
+import { prepareImageForPdf, PdfImageError } from "@/lib/pdf-image";
 import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
 
 interface SelfCheckImageRef { path: string; name?: string }
