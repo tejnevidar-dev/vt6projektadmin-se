@@ -438,6 +438,7 @@ export type Database = {
           assigned_to: string | null
           assignment_type: string | null
           booking_date: string | null
+          contact_person_id: string | null
           created_at: string
           created_by: string | null
           email: string | null
@@ -468,6 +469,7 @@ export type Database = {
           assigned_to?: string | null
           assignment_type?: string | null
           booking_date?: string | null
+          contact_person_id?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
@@ -498,6 +500,7 @@ export type Database = {
           assigned_to?: string | null
           assignment_type?: string | null
           booking_date?: string | null
+          contact_person_id?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
