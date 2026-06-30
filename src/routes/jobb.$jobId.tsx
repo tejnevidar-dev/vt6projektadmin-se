@@ -1413,7 +1413,7 @@ function FieldReviewDialog({
                         Inlämnad {new Date(check.completed_at ?? check.created_at).toLocaleString("sv-SE")}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        Status: {review ? `Godkänd ${new Date(review.reviewed_at).toLocaleString("sv-SE")}` : "Ej godkänd"}
+                        Av {nameMap[check.user_id] ?? "okänd"} · Status: {review ? `Godkänd ${new Date(review.reviewed_at).toLocaleString("sv-SE")}` : "Ej godkänd"}
                       </div>
                     </div>
                     {isAdmin && !review && (
@@ -1432,9 +1432,14 @@ function FieldReviewDialog({
                   )}
                   {images.length > 0 ? (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {images.map((image) => (
-                        <SelfCheckImagePreview key={image.path} image={image} />
-                      ))}
+                      {images.map((image) => {
+                        const uploader = image.uploadedBy
+                          ? nameMap[image.uploadedBy] ?? null
+                          : nameMap[check.user_id] ?? null;
+                        return (
+                          <SelfCheckImagePreview key={image.path} image={image} uploaderName={uploader} />
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-sm text-muted-foreground">Inga bilder kopplade till detta moment.</div>
