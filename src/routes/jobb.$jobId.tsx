@@ -1349,6 +1349,7 @@ function FieldReviewDialog({
   target,
   checks,
   isAdmin,
+  nameMap,
   onChanged,
 }: {
   open: boolean;
@@ -1356,6 +1357,7 @@ function FieldReviewDialog({
   target: { templateKey: string; templateName: string; fieldLabel: string } | null;
   checks: SelfCheck[];
   isAdmin: boolean;
+  nameMap: Record<string, string>;
   onChanged: () => void;
 }) {
   if (!target) return null;
