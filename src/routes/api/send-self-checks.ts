@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import * as jpeg from "jpeg-js";
+import { PNG } from "pngjs";
 import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
 
 interface SelfCheckImageRef { path: string; name?: string }
@@ -23,6 +24,20 @@ const PDF_IMAGE_JPEG_QUALITY = 72;
 
 function isJpeg(bytes: Uint8Array): boolean {
   return bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+}
+
+function isPng(bytes: Uint8Array): boolean {
+  return (
+    bytes.length > 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  );
 }
 
 function downscaleRgbaNearest(
@@ -50,15 +65,19 @@ function downscaleRgbaNearest(
 
 function prepareImageForPdf(bytes: Uint8Array): Uint8Array {
   // iPhone/Android photos are often 5-10 MB each. Embedding 80 originals can
-  // create a several-hundred-MB PDF that many clients cannot open. Re-encode
-  // JPEGs to a sane size before pdf-lib embeds them.
-  if (!isJpeg(bytes)) return bytes;
+  // create a several-hundred-MB PDF that many clients cannot open. Phones may
+  // upload either JPEG or PNG, so both formats are re-encoded to compact JPEGs.
   try {
-    const decoded = jpeg.decode(bytes, {
-      useTArray: true,
-      tolerantDecoding: true,
-      maxMemoryUsageInMB: 768,
-    });
+    const decoded = isJpeg(bytes)
+      ? jpeg.decode(bytes, {
+          useTArray: true,
+          tolerantDecoding: true,
+          maxMemoryUsageInMB: 768,
+        })
+      : isPng(bytes)
+        ? PNG.sync.read(Buffer.from(bytes))
+        : null;
+    if (!decoded) return bytes;
     const longest = Math.max(decoded.width, decoded.height);
     const scale = Math.min(1, PDF_IMAGE_MAX_EDGE / longest);
     const width = Math.max(1, Math.round(decoded.width * scale));
@@ -66,7 +85,16 @@ function prepareImageForPdf(bytes: Uint8Array): Uint8Array {
     const data = scale < 1
       ? downscaleRgbaNearest(decoded.data, decoded.width, decoded.height, width, height)
       : decoded.data;
-    const encoded = jpeg.encode({ data, width, height }, PDF_IMAGE_JPEG_QUALITY);
+    const flattened = new Uint8Array(width * height * 4);
+    for (let i = 0; i < width * height; i++) {
+      const src = i * 4;
+      const alpha = (data[src + 3] ?? 255) / 255;
+      flattened[src] = Math.round((data[src] ?? 255) * alpha + 255 * (1 - alpha));
+      flattened[src + 1] = Math.round((data[src + 1] ?? 255) * alpha + 255 * (1 - alpha));
+      flattened[src + 2] = Math.round((data[src + 2] ?? 255) * alpha + 255 * (1 - alpha));
+      flattened[src + 3] = 255;
+    }
+    const encoded = jpeg.encode({ data: flattened, width, height }, PDF_IMAGE_JPEG_QUALITY);
     return encoded.data instanceof Uint8Array ? encoded.data : new Uint8Array(encoded.data);
   } catch {
     return bytes;
@@ -198,6 +226,10 @@ function templateLabel(key: string): string {
   return TEMPLATE_LABELS[key] ?? key;
 }
 
+function templateFieldLabels(key: string): Set<string> {
+  return new Set(SELF_CHECK_TEMPLATES.find((t) => t.key === key)?.fields.map((f) => f.label) ?? []);
+}
+
 
 
 
@@ -307,9 +339,12 @@ async function buildSelfCheckPdf(args: {
   draw("Fält", { font: bold, size: 12 });
   y -= 4;
 
-  const entries = Object.entries(args.data ?? {}).filter(
-    ([k, v]) => !isImageMetadataKey(k) && !containsImageRefs(v),
-  );
+  const allowedFieldLabels = templateFieldLabels(args.templateKey);
+  const entries = Object.entries(args.data ?? {}).filter(([k, v]) => {
+    if (k.startsWith("__")) return false;
+    if (!allowedFieldLabels.has(k)) return false;
+    return !isImageMetadataKey(k) && !containsImageRefs(v);
+  });
   if (entries.length === 0) {
     draw("Inga ifyllda falt", { size: 11, color: rgb(0.4, 0.4, 0.4) });
   } else {
