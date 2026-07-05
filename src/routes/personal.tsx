@@ -99,10 +99,12 @@ function PersonalInner() {
 
   function openNew() {
     setEditing(null);
+    setDialogMode(filter === "extern" ? "saljare" : "employee");
     setDialogOpen(true);
   }
   function openEdit(emp: Employee) {
     setEditing(emp);
+    setDialogMode("employee");
     setDialogOpen(true);
   }
 
