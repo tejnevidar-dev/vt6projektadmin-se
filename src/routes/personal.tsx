@@ -102,20 +102,27 @@ function PersonalInner() {
     }
   }
 
-  async function handleSendReset(emp: Employee) {
+  async function handleRefreshAccount(emp: Employee) {
     if (!emp.email) {
       toast.error("Personen saknar e-postadress");
       return;
     }
-    if (!confirm(`Skicka återställningsmail till ${emp.email}?`)) return;
+    if (
+      !confirm(
+        `Skicka förnyelselänk till ${emp.email}?\n\nDeras aktiva sessioner loggas ut och de får fylla i uppgifter + nytt lösenord på nytt.`
+      )
+    )
+      return;
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(emp.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      await refreshEmployeeAccount({
+        data: {
+          email: emp.email,
+          redirectTo: `${window.location.origin}/uppdatera-konto`,
+        },
       });
-      if (error) throw error;
-      toast.success(`Återställningsmail skickat till ${emp.email}`);
+      toast.success(`Förnyelselänk skickad till ${emp.email}`);
     } catch (e: any) {
-      toast.error(e.message ?? "Kunde inte skicka återställningsmail");
+      toast.error(e.message ?? "Kunde inte skicka förnyelselänk");
     }
   }
 
