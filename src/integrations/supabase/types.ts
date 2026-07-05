@@ -14,6 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      calculations: {
+        Row: {
+          arbete_timmar: number
+          arbete_timpris: number
+          att_betala: number
+          created_at: string
+          created_by: string
+          id: string
+          lead_id: string
+          marginal_procent: number
+          material_key: string | null
+          moms: number
+          notes: string | null
+          plat_items: Json
+          ranndalar_meter: number
+          roof_area_kvm: number
+          rot_avdrag: boolean
+          rot_belopp: number
+          subtotal: number
+          tillagg: Json
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          arbete_timmar?: number
+          arbete_timpris?: number
+          att_betala?: number
+          created_at?: string
+          created_by: string
+          id?: string
+          lead_id: string
+          marginal_procent?: number
+          material_key?: string | null
+          moms?: number
+          notes?: string | null
+          plat_items?: Json
+          ranndalar_meter?: number
+          roof_area_kvm?: number
+          rot_avdrag?: boolean
+          rot_belopp?: number
+          subtotal?: number
+          tillagg?: Json
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          arbete_timmar?: number
+          arbete_timpris?: number
+          att_betala?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          lead_id?: string
+          marginal_procent?: number
+          material_key?: string | null
+          moms?: number
+          notes?: string | null
+          plat_items?: Json
+          ranndalar_meter?: number
+          roof_area_kvm?: number
+          rot_avdrag?: boolean
+          rot_belopp?: number
+          subtotal?: number
+          tillagg?: Json
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calculations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -539,6 +616,105 @@ export type Database = {
           },
         ]
       }
+      offers: {
+        Row: {
+          accepted_at: string | null
+          calculation_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          lead_id: string
+          pdf_path: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["offer_status"]
+          total_amount: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          accepted_at?: string | null
+          calculation_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          lead_id: string
+          pdf_path: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["offer_status"]
+          total_amount?: number
+          updated_at?: string
+          version: number
+        }
+        Update: {
+          accepted_at?: string | null
+          calculation_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          lead_id?: string
+          pdf_path?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["offer_status"]
+          total_amount?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "calculations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_list: {
+        Row: {
+          category: Database["public"]["Enums"]["price_category"]
+          created_at: string
+          id: string
+          is_active: boolean
+          key: string
+          label: string
+          sort_order: number
+          unit: Database["public"]["Enums"]["price_unit"]
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["price_category"]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          label: string
+          sort_order?: number
+          unit: Database["public"]["Enums"]["price_unit"]
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["price_category"]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          label?: string
+          sort_order?: number
+          unit?: Database["public"]["Enums"]["price_unit"]
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -950,6 +1126,7 @@ export type Database = {
         | "csv_import"
         | "roslagstak"
       lead_status: "cold" | "warm" | "hot" | "customer" | "lost"
+      offer_status: "draft" | "skickad" | "accepterad" | "avvisad"
       pipeline_stage:
         | "inkommande_webb"
         | "saljpanel"
@@ -957,6 +1134,8 @@ export type Database = {
         | "bokad"
         | "pagaende"
         | "slutford"
+      price_category: "material" | "arbete" | "plat" | "tillagg"
+      price_unit: "kvm" | "meter" | "st" | "timme" | "paket"
       salary_adjustment_type: "tillagg" | "avdrag"
       time_entry_status: "pending" | "approved" | "rejected"
     }
@@ -1123,6 +1302,7 @@ export const Constants = {
         "roslagstak",
       ],
       lead_status: ["cold", "warm", "hot", "customer", "lost"],
+      offer_status: ["draft", "skickad", "accepterad", "avvisad"],
       pipeline_stage: [
         "inkommande_webb",
         "saljpanel",
@@ -1131,6 +1311,8 @@ export const Constants = {
         "pagaende",
         "slutford",
       ],
+      price_category: ["material", "arbete", "plat", "tillagg"],
+      price_unit: ["kvm", "meter", "st", "timme", "paket"],
       salary_adjustment_type: ["tillagg", "avdrag"],
       time_entry_status: ["pending", "approved", "rejected"],
     },
