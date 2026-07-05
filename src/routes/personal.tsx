@@ -320,15 +320,18 @@ function EmployeeDialog({
   open,
   onOpenChange,
   employee,
+  mode,
   onSaved,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   employee: Employee | null;
+  mode: "employee" | "saljare";
   onSaved: () => void;
 }) {
   const [form, setForm] = useState<Partial<Employee>>({});
   const [saving, setSaving] = useState(false);
+  const isSaljare = mode === "saljare";
 
   useEffect(() => {
     if (open) {
@@ -337,12 +340,12 @@ function EmployeeDialog({
           full_name: "",
           email: "",
           phone: "",
-          employment_type: "timanstalld",
+          employment_type: isSaljare ? "provisionsbaserad" : "timanstalld",
           active: true,
         }
       );
     }
-  }, [open, employee]);
+  }, [open, employee, isSaljare]);
 
   function set<K extends keyof Employee>(k: K, v: Employee[K] | null) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -359,12 +362,13 @@ function EmployeeDialog({
         full_name: form.full_name,
         email: form.email || null,
         phone: form.phone || null,
-        personal_number: form.personal_number || null,
-        employment_type: form.employment_type ?? "timanstalld",
+        personal_number: isSaljare ? null : form.personal_number || null,
+        employment_type: form.employment_type ?? (isSaljare ? "provisionsbaserad" : "timanstalld"),
         hourly_rate: form.hourly_rate ?? null,
         monthly_salary: form.monthly_salary ?? null,
-        company_name: form.company_name || null,
-        org_number: form.org_number || null,
+        provision_rate: form.provision_rate ?? null,
+        company_name: isSaljare ? null : form.company_name || null,
+        org_number: isSaljare ? null : form.org_number || null,
         active: form.active ?? true,
         notes: form.notes || null,
       };
@@ -375,10 +379,12 @@ function EmployeeDialog({
         await createEmployee(payload);
         toast.success("Tillagd");
         if (payload.email && payload.active) {
-          const role =
-            payload.employment_type === "underentreprenor"
-              ? "underentreprenor"
-              : "hantverkare";
+          let role: "hantverkare" | "underentreprenor" | "saljare" = "hantverkare";
+          if (isSaljare) {
+            role = "saljare";
+          } else if (payload.employment_type === "underentreprenor") {
+            role = "underentreprenor";
+          }
           try {
             const { sendEmployeeInvite } = await import("@/lib/employee-invite.functions");
             const res = await sendEmployeeInvite({
@@ -395,7 +401,7 @@ function EmployeeDialog({
               toast.success("Inbjudningsmail skickat");
             }
           } catch (e: any) {
-            toast.error(`Personalen skapades men inbjudan misslyckades: ${e.message ?? e}`);
+            toast.error(`${isSaljare ? "Säljaren" : "Personalen"} skapades men inbjudan misslyckades: ${e.message ?? e}`);
           }
         }
       }
@@ -407,13 +413,21 @@ function EmployeeDialog({
     }
   }
 
-  const type = (form.employment_type ?? "timanstalld") as EmploymentType;
+  const type = (form.employment_type ?? (isSaljare ? "provisionsbaserad" : "timanstalld")) as EmploymentType;
+
+  const title = employee
+    ? isSaljare
+      ? "Redigera säljare"
+      : "Redigera anställd"
+    : isSaljare
+    ? "Ny säljare"
+    : "Ny anställd";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{employee ? "Redigera anställd" : "Ny anställd"}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -430,13 +444,22 @@ function EmployeeDialog({
               <Input value={form.phone ?? ""} onChange={(e) => set("phone", e.target.value)} />
             </div>
             <div className="col-span-2">
-              <Label>Anställningstyp</Label>
+              <Label>Löneform</Label>
               <Select value={type} onValueChange={(v) => set("employment_type", v as EmploymentType)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="timanstalld">Timanställd (timlön)</SelectItem>
-                  <SelectItem value="fast">Fast anställd (månadslön)</SelectItem>
-                  <SelectItem value="underentreprenor">Underentreprenör (fast pris per jobb)</SelectItem>
+                  {isSaljare ? (
+                    <>
+                      <SelectItem value="provisionsbaserad">Provisionsbaserad</SelectItem>
+                      <SelectItem value="fast">Fast månadslön</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="timanstalld">Timanställd (timlön)</SelectItem>
+                      <SelectItem value="fast">Fast anställd (månadslön)</SelectItem>
+                      <SelectItem value="underentreprenor">Underentreprenör (fast pris per jobb)</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -461,6 +484,16 @@ function EmployeeDialog({
                 />
               </div>
             )}
+            {type === "provisionsbaserad" && (
+              <div>
+                <Label>Provision (%)</Label>
+                <Input
+                  type="number"
+                  value={form.provision_rate ?? ""}
+                  onChange={(e) => set("provision_rate", e.target.value ? Number(e.target.value) : null)}
+                />
+              </div>
+            )}
 
             {type === "underentreprenor" && (
               <>
@@ -475,7 +508,7 @@ function EmployeeDialog({
               </>
             )}
 
-            {type !== "underentreprenor" && (
+            {!isSaljare && type !== "underentreprenor" && (
               <div className="col-span-2">
                 <Label>Personnummer</Label>
                 <Input value={form.personal_number ?? ""} onChange={(e) => set("personal_number", e.target.value)} />
