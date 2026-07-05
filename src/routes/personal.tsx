@@ -151,14 +151,35 @@ function PersonalInner() {
   const showIntern = filter === "intern" || filter === "alla";
   const showExtern = filter === "extern" || filter === "alla";
 
-  // Undvik dubblett: en säljare som också ligger i employees visas bara som employee (intern)
-  const employeeEmails = useMemo(
-    () => new Set(employees.map((e) => e.email?.toLowerCase()).filter(Boolean) as string[]),
+  const SALJARE_TYPES: EmploymentType[] = ["provisionsbaserad", "saljare_fast"];
+
+  // Intern personal = alla anställda som INTE är säljare (säljare visas under extern)
+  const internEmployees = useMemo(
+    () => employees.filter((e) => !SALJARE_TYPES.includes(e.employment_type)),
     [employees]
   );
+  const internEmployeeEmails = useMemo(
+    () => new Set(internEmployees.map((e) => e.email?.toLowerCase()).filter(Boolean) as string[]),
+    [internEmployees]
+  );
+
+  // Externa säljare = registrerade säljare som inte redan visas som intern personal
   const filteredSaljare = useMemo(
-    () => saljare.filter((s) => !employeeEmails.has(s.email?.toLowerCase() ?? "")),
-    [saljare, employeeEmails]
+    () => saljare.filter((s) => !internEmployeeEmails.has(s.email?.toLowerCase() ?? "")),
+    [saljare, internEmployeeEmails]
+  );
+
+  // Säljare som bjudits in men ännu inte skapat konto visas också under extern
+  const signedUpSaljareEmails = useMemo(
+    () => new Set(saljare.map((s) => s.email?.toLowerCase()).filter(Boolean) as string[]),
+    [saljare]
+  );
+  const pendingSaljare = useMemo(
+    () =>
+      employees.filter(
+        (e) => SALJARE_TYPES.includes(e.employment_type) && !signedUpSaljareEmails.has(e.email?.toLowerCase() ?? "")
+      ),
+    [employees, signedUpSaljareEmails]
   );
 
   const counts = {
