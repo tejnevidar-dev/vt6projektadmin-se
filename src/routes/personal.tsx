@@ -200,11 +200,11 @@ function PersonalInner() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => handleSendReset(e)}
-                    title="Skicka återställningsmail"
+                    onClick={() => handleRefreshAccount(e)}
+                    title="Skicka förnyelselänk (loggar ut och låter användaren återskapa kontot)"
                     disabled={!e.email}
                   >
-                    <KeyRound className="h-4 w-4" />
+                    <RefreshCw className="h-4 w-4" />
                   </Button>
                   <Button size="icon" variant="ghost" onClick={() => openEdit(e)} title="Redigera">
                     <Pencil className="h-4 w-4" />
