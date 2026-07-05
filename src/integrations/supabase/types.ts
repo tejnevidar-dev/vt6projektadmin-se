@@ -938,6 +938,7 @@ export type Database = {
         | "fast"
         | "underentreprenor"
         | "provisionsbaserad"
+        | "saljare_fast"
       job_assignment_type: "arbetsledare" | "underentreprenor"
       job_status: "ej_paborjad" | "pagaende" | "klar"
       job_type: "roof_replacement" | "roof_cleaning" | "light_roof_work"
@@ -1108,6 +1109,7 @@ export const Constants = {
         "fast",
         "underentreprenor",
         "provisionsbaserad",
+        "saljare_fast",
       ],
       job_assignment_type: ["arbetsledare", "underentreprenor"],
       job_status: ["ej_paborjad", "pagaende", "klar"],
