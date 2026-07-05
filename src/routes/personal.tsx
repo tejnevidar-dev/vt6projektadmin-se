@@ -37,8 +37,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/personal")({
   component: PersonalPage,
@@ -101,6 +102,23 @@ function PersonalInner() {
     }
   }
 
+  async function handleSendReset(emp: Employee) {
+    if (!emp.email) {
+      toast.error("Personen saknar e-postadress");
+      return;
+    }
+    if (!confirm(`Skicka återställningsmail till ${emp.email}?`)) return;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(emp.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success(`Återställningsmail skickat till ${emp.email}`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Kunde inte skicka återställningsmail");
+    }
+  }
+
   const counts = {
     total: employees.length,
     active: employees.filter((e) => e.active).length,
@@ -134,7 +152,7 @@ function PersonalInner() {
               <TableHead>Timlön / Månadslön</TableHead>
               <TableHead>Företag</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[100px]"></TableHead>
+              <TableHead className="w-[140px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -172,10 +190,19 @@ function PersonalInner() {
                     : <Badge variant="outline">Inaktiv</Badge>}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button size="icon" variant="ghost" onClick={() => openEdit(e)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleSendReset(e)}
+                    title="Skicka återställningsmail"
+                    disabled={!e.email}
+                  >
+                    <KeyRound className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => openEdit(e)} title="Redigera">
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" onClick={() => handleDelete(e)}>
+                  <Button size="icon" variant="ghost" onClick={() => handleDelete(e)} title="Ta bort">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </TableCell>
