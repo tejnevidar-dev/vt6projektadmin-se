@@ -551,7 +551,7 @@ function EmployeeDialog({
                 />
               </div>
             )}
-            {type === "fast" && (
+            {(type === "fast" || type === "saljare_fast") && (
               <div>
                 <Label>Månadslön (kr)</Label>
                 <Input
