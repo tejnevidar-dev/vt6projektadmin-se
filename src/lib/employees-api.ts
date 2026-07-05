@@ -12,6 +12,7 @@ export interface Employee {
   employment_type: EmploymentType;
   hourly_rate: number | null;
   monthly_salary: number | null;
+  provision_rate: number | null;
   company_name: string | null;
   org_number: string | null;
   active: boolean;
