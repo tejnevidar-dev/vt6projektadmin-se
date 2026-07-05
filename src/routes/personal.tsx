@@ -104,7 +104,11 @@ function PersonalInner() {
   }
   function openEdit(emp: Employee) {
     setEditing(emp);
-    setDialogMode(emp.employment_type === "provisionsbaserad" ? "saljare" : "employee");
+    setDialogMode(
+      emp.employment_type === "provisionsbaserad" || emp.employment_type === "saljare_fast"
+        ? "saljare"
+        : "employee"
+    );
     setDialogOpen(true);
   }
 
