@@ -242,13 +242,13 @@ function PersonalInner() {
               <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Laddar…</TableCell></TableRow>
             )}
             {!loading && (
-              (showIntern ? employees.length : 0) + (showExtern ? filteredSaljare.length : 0) === 0
+              (showIntern ? internEmployees.length : 0) + (showExtern ? filteredSaljare.length + pendingSaljare.length : 0) === 0
             ) && (
               <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-10">
                 Ingen personal i denna vy. Byt filter eller klicka <strong>Lägg till</strong>.
               </TableCell></TableRow>
             )}
-            {showIntern && employees.map((e) => (
+            {showIntern && internEmployees.map((e) => (
               <TableRow key={`emp-${e.id}`}>
                 <TableCell className="font-medium">{e.full_name}</TableCell>
                 <TableCell>
