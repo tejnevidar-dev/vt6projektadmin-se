@@ -27,7 +27,7 @@ export const Route = createFileRoute("/prislista")({
       <PrislistaPage />
     </RequireAuth>
   ),
-  head: () => ({ meta: [{ title: "Prislista – admin.vt6" }] }),
+  head: () => ({ meta: [{ title: "Kalkyl – admin.vt6" }] }),
 });
 
 const CATEGORY_LABEL: Record<PriceCategory, string> = {
@@ -65,14 +65,14 @@ function PrislistaPage() {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Fel"),
   });
 
-  if (loading) return <AppShell title="Prislista"><Loader2 className="h-4 w-4 animate-spin" /></AppShell>;
-  if (!isAdmin) return <AppShell title="Prislista"><p className="text-sm text-muted-foreground">Endast administratörer kan hantera prislistan.</p></AppShell>;
+  if (loading) return <AppShell title="Kalkyl"><Loader2 className="h-4 w-4 animate-spin" /></AppShell>;
+  if (!isAdmin) return <AppShell title="Kalkyl"><p className="text-sm text-muted-foreground">Endast administratörer kan hantera prislistan.</p></AppShell>;
 
   const grouped = CATEGORIES.map((cat) => ({ cat, items: rows.filter((r) => r.category === cat) })).filter((g) => g.items.length > 0);
 
   return (
     <AppShell
-      title="Prislista"
+      title="Kalkyl"
       description="Redigera enhetspriser som används i kalkyler och offerter."
       actions={
         <Button size="sm" onClick={() => setAdding(true)}><Plus className="mr-1 h-3.5 w-3.5" /> Ny rad</Button>
