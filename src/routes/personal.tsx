@@ -183,9 +183,9 @@ function PersonalInner() {
   );
 
   const counts = {
-    intern: employees.length,
-    extern: filteredSaljare.length,
-    active: employees.filter((e) => e.active).length,
+    intern: internEmployees.length,
+    extern: filteredSaljare.length + pendingSaljare.length,
+    active: internEmployees.filter((e) => e.active).length,
   };
 
   const description =
