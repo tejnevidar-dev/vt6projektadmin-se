@@ -308,7 +308,7 @@ function PersonalInner() {
                     ? s.provision_rate
                       ? `${s.provision_rate.toLocaleString("sv-SE")} % provision`
                       : "—"
-                    : s.employment_type === "fast"
+                    : s.employment_type === "saljare_fast"
                     ? s.monthly_salary
                       ? `${s.monthly_salary.toLocaleString("sv-SE")} kr/mån`
                       : "—"
@@ -325,6 +325,43 @@ function PersonalInner() {
                     disabled={!s.email}
                   >
                     <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {showExtern && pendingSaljare.map((e) => (
+              <TableRow key={`pending-sal-${e.id}`}>
+                <TableCell className="font-medium">{e.full_name}</TableCell>
+                <TableCell>
+                  <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300">
+                    Säljare
+                  </span>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {e.email}
+                  {e.phone && <div>{e.phone}</div>}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {e.employment_type === "provisionsbaserad"
+                    ? e.provision_rate
+                      ? `${e.provision_rate.toLocaleString("sv-SE")} % provision`
+                      : "—"
+                    : e.employment_type === "saljare_fast"
+                    ? e.monthly_salary
+                      ? `${e.monthly_salary.toLocaleString("sv-SE")} kr/mån`
+                      : "—"
+                    : "—"}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">—</TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="text-muted-foreground">Väntar på inbjudan</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button size="icon" variant="ghost" onClick={() => openEdit(e)} title="Redigera">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => handleDelete(e)} title="Ta bort">
+                    <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </TableCell>
               </TableRow>
