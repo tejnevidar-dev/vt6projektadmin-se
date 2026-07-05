@@ -152,7 +152,7 @@ function PersonalInner() {
               <TableHead>Timlön / Månadslön</TableHead>
               <TableHead>Företag</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[100px]"></TableHead>
+              <TableHead className="w-[140px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
