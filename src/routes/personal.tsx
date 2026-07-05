@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useUserRoles } from "@/hooks/use-role";
+import { useWorkspace } from "@/hooks/use-workspace";
 import {
   listEmployees,
   createEmployee,
@@ -10,6 +11,7 @@ import {
   type Employee,
   type EmploymentType,
 } from "@/lib/employees-api";
+import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
