@@ -104,7 +104,7 @@ function PersonalInner() {
   }
   function openEdit(emp: Employee) {
     setEditing(emp);
-    setDialogMode("employee");
+    setDialogMode(emp.employment_type === "provisionsbaserad" ? "saljare" : "employee");
     setDialogOpen(true);
   }
 
