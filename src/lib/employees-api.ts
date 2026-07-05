@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type EmploymentType = "timanstalld" | "fast" | "underentreprenor" | "provisionsbaserad";
+export type EmploymentType = "timanstalld" | "fast" | "underentreprenor" | "provisionsbaserad" | "saljare_fast";
 
 export interface Employee {
   id: string;
