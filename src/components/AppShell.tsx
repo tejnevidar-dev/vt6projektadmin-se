@@ -52,7 +52,7 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
     { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "both", adminOnly: true },
 
     // Gemensamt (Hantera)
-    { to: "/prislista", label: "Prislista", icon: Calculator, group: "Hantera", side: "extern", adminOnly: true },
+    { to: "/prislista", label: "Kalkyl", icon: Calculator, group: "Hantera", side: "extern", adminOnly: true },
     { to: "/admin", label: "Roller & inbjudningar", icon: Shield, group: "Hantera", side: "both", adminOnly: true },
     { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "Hantera", side: "extern", adminOnly: true },
     { to: "/settings", label: "Inställningar", icon: Settings, group: "Hantera", side: "both" },

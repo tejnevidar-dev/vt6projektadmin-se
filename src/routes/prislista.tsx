@@ -27,7 +27,7 @@ export const Route = createFileRoute("/prislista")({
       <PrislistaPage />
     </RequireAuth>
   ),
-  head: () => ({ meta: [{ title: "Prislista – admin.vt6" }] }),
+  head: () => ({ meta: [{ title: "Kalkyl – admin.vt6" }] }),
 });
 
 const CATEGORY_LABEL: Record<PriceCategory, string> = {
