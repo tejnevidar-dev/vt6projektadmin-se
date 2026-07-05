@@ -1,12 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { EmploymentType } from "./employees-api";
 
 export interface Saljare {
   id: string;
   display_name: string;
   email: string;
+  employment_type?: EmploymentType | null;
+  provision_rate?: number | null;
+  monthly_salary?: number | null;
 }
 
-/** Hämtar alla användare med rollen 'saljare' eller 'admin'. */
+/** Hämtar alla användare med rollen 'saljare' eller 'admin', samt lönuppgifter från employees. */
 export async function fetchSaljare(): Promise<Saljare[]> {
   const { data: roles, error: rolesErr } = await supabase
     .from("user_roles")
@@ -23,9 +27,29 @@ export async function fetchSaljare(): Promise<Saljare[]> {
     .in("id", ids);
   if (profErr) throw profErr;
 
-  return (profiles ?? []).map((p) => ({
-    id: p.id,
-    display_name: p.display_name || p.email || "Okänd",
-    email: p.email,
-  }));
+  const emails = (profiles ?? []).map((p) => p.email).filter(Boolean) as string[];
+  let salaryByEmail: Record<string, { employment_type: EmploymentType; provision_rate: number | null; monthly_salary: number | null }> = {};
+  if (emails.length > 0) {
+    const { data: emps, error: empErr } = await supabase
+      .from("employees")
+      .select("email, employment_type, provision_rate, monthly_salary")
+      .in("email", emails);
+    if (!empErr && emps) {
+      salaryByEmail = Object.fromEntries(
+        emps.map((e: any) => [e.email?.toLowerCase(), e])
+      );
+    }
+  }
+
+  return (profiles ?? []).map((p) => {
+    const salary = salaryByEmail[p.email?.toLowerCase() ?? ""];
+    return {
+      id: p.id,
+      display_name: p.display_name || p.email || "Okänd",
+      email: p.email,
+      employment_type: salary?.employment_type ?? null,
+      provision_rate: salary?.provision_rate ?? null,
+      monthly_salary: salary?.monthly_salary ?? null,
+    };
+  });
 }
