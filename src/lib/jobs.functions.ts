@@ -51,7 +51,7 @@ export const getJob = createServerFn({ method: "GET" })
 
     const { data: job, error } = await supabase
       .from("jobs")
-      .select("*, lead:leads(id, name, phone, job_type, property_id, price)")
+      .select("*, lead:leads(id, name, phone, job_type, property_id, price, created_by)")
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw error;
@@ -67,7 +67,33 @@ export const getJob = createServerFn({ method: "GET" })
       property = p ?? null;
     }
 
-    return stripSensitive({ ...job, property }, canSeeSensitive);
+    let saljare: { id: string; name: string; email: string | null; phone: string | null } | null = null;
+    if (job.lead?.created_by) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("id, display_name, email")
+        .eq("id", job.lead.created_by)
+        .maybeSingle();
+      if (prof) {
+        let phone: string | null = null;
+        if (prof.email) {
+          const { data: emp } = await supabase
+            .from("employees")
+            .select("phone")
+            .eq("email", prof.email)
+            .maybeSingle();
+          phone = emp?.phone ?? null;
+        }
+        saljare = {
+          id: prof.id,
+          name: prof.display_name || prof.email || "Säljare",
+          email: prof.email,
+          phone,
+        };
+      }
+    }
+
+    return stripSensitive({ ...job, property, saljare }, canSeeSensitive);
   });
 
 export const listJobs = createServerFn({ method: "GET" })

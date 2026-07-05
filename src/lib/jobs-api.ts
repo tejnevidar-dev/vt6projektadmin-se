@@ -131,10 +131,17 @@ export interface JobWithLead extends Job {
     job_type: string;
     property_id: string | null;
     price: number | null;
+    created_by?: string | null;
   } | null;
   property?: {
     address: string;
     municipality: string;
+  } | null;
+  saljare?: {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
   } | null;
 }
 

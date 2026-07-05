@@ -434,6 +434,30 @@ function JobDetailPage() {
         </div>
       </div>
 
+      {job.saljare && (
+        <div className="mb-4 rounded-lg border border-border bg-card p-3">
+          <div className="text-xs text-muted-foreground mb-1">Ansvarig säljare</div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <div className="text-sm font-semibold text-foreground">{job.saljare.name}</div>
+            {job.saljare.phone && (
+              <a href={`tel:${job.saljare.phone}`} className="text-sm text-primary hover:underline">
+                {job.saljare.phone}
+              </a>
+            )}
+            {job.saljare.email && (
+              <a href={`mailto:${job.saljare.email}`} className="text-sm text-primary hover:underline">
+                {job.saljare.email}
+              </a>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Kontakta säljaren vid oklarheter om projektet.
+          </p>
+        </div>
+      )}
+
+
+
       <Tabs defaultValue={job.work_order_summary ? "workorder" : "members"}>
         <TabsList className="flex h-auto w-full flex-wrap justify-start sm:w-auto">
           <TabsTrigger value="workorder">
