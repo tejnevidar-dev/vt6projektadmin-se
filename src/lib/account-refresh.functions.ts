@@ -105,7 +105,7 @@ export const applyAccountRefresh = createServerFn({ method: "POST" })
     const { data: userRow } = await supabaseAdmin.auth.admin.getUserById(context.userId);
     const email = userRow?.user?.email?.toLowerCase();
     if (email) {
-      const patch: Record<string, unknown> = {};
+      const patch: { phone?: string | null; full_name?: string } = {};
       if (phone !== null) patch.phone = phone;
       if (displayName) patch.full_name = displayName;
       if (Object.keys(patch).length > 0) {
