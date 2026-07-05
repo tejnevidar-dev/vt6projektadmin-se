@@ -528,7 +528,7 @@ function EmployeeDialog({
                   {isSaljare ? (
                     <>
                       <SelectItem value="provisionsbaserad">Provisionsbaserad</SelectItem>
-                      <SelectItem value="fast">Fast månadslön</SelectItem>
+                      <SelectItem value="saljare_fast">Fast månadslön</SelectItem>
                     </>
                   ) : (
                     <>
