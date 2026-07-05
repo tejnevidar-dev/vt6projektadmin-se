@@ -235,6 +235,8 @@ function PersonalInner() {
                     <span className="text-muted-foreground">Fast pris per jobb</span>
                   ) : e.employment_type === "fast" ? (
                     e.monthly_salary ? `${e.monthly_salary.toLocaleString("sv-SE")} kr/mån` : "—"
+                  ) : e.employment_type === "provisionsbaserad" ? (
+                    e.provision_rate ? `${e.provision_rate.toLocaleString("sv-SE")} % provision` : "—"
                   ) : (
                     e.hourly_rate ? `${e.hourly_rate.toLocaleString("sv-SE")} kr/h` : "—"
                   )}
