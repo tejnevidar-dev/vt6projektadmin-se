@@ -99,6 +99,7 @@ function PersonalInner() {
       void load();
     } catch (e: any) {
       toast.error(e.message);
+    }
   }
 
   async function handleSendReset(emp: Employee) {
@@ -116,7 +117,6 @@ function PersonalInner() {
     } catch (e: any) {
       toast.error(e.message ?? "Kunde inte skicka återställningsmail");
     }
-  }
   }
 
   const counts = {
