@@ -302,6 +302,7 @@ function PersonalInner() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         employee={editing}
+        mode={dialogMode}
         onSaved={() => { setDialogOpen(false); void load(); }}
       />
     </AppShell>
