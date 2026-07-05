@@ -99,7 +99,24 @@ function PersonalInner() {
       void load();
     } catch (e: any) {
       toast.error(e.message);
+  }
+
+  async function handleSendReset(emp: Employee) {
+    if (!emp.email) {
+      toast.error("Personen saknar e-postadress");
+      return;
     }
+    if (!confirm(`Skicka återställningsmail till ${emp.email}?`)) return;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(emp.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success(`Återställningsmail skickat till ${emp.email}`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Kunde inte skicka återställningsmail");
+    }
+  }
   }
 
   const counts = {
