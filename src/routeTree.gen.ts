@@ -10,9 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
+import { Route as UppdateraKontoRouteImport } from './routes/uppdatera-konto'
 import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as PagaendeRouteImport } from './routes/pagaende'
 import { Route as OfferteradeRouteImport } from './routes/offerterade'
@@ -46,6 +46,11 @@ const WebhookLogsRoute = WebhookLogsRouteImport.update({
   path: '/webhook-logs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UppdateraKontoRoute = UppdateraKontoRouteImport.update({
+  id: '/uppdatera-konto',
+  path: '/uppdatera-konto',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SlutfordaRoute = SlutfordaRouteImport.update({
   id: '/slutforda',
   path: '/slutforda',
@@ -54,11 +59,6 @@ const SlutfordaRoute = SlutfordaRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PersonalRoute = PersonalRouteImport.update({
@@ -215,9 +215,9 @@ export interface FileRoutesByFullPath {
   '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
+  '/uppdatera-konto': typeof UppdateraKontoRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
@@ -247,9 +247,9 @@ export interface FileRoutesByTo {
   '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
+  '/uppdatera-konto': typeof UppdateraKontoRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
@@ -281,9 +281,9 @@ export interface FileRoutesById {
   '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
-  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
+  '/uppdatera-konto': typeof UppdateraKontoRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
@@ -316,9 +316,9 @@ export interface FileRouteTypes {
     | '/offerterade'
     | '/pagaende'
     | '/personal'
-    | '/reset-password'
     | '/settings'
     | '/slutforda'
+    | '/uppdatera-konto'
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
@@ -348,9 +348,9 @@ export interface FileRouteTypes {
     | '/offerterade'
     | '/pagaende'
     | '/personal'
-    | '/reset-password'
     | '/settings'
     | '/slutforda'
+    | '/uppdatera-konto'
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
@@ -381,9 +381,9 @@ export interface FileRouteTypes {
     | '/offerterade'
     | '/pagaende'
     | '/personal'
-    | '/reset-password'
     | '/settings'
     | '/slutforda'
+    | '/uppdatera-konto'
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
@@ -415,9 +415,9 @@ export interface RootRouteChildren {
   OfferteradeRoute: typeof OfferteradeRoute
   PagaendeRoute: typeof PagaendeRoute
   PersonalRoute: typeof PersonalRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
+  UppdateraKontoRoute: typeof UppdateraKontoRoute
   WebhookLogsRoute: typeof WebhookLogsRoute
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
@@ -444,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WebhookLogsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/uppdatera-konto': {
+      id: '/uppdatera-konto'
+      path: '/uppdatera-konto'
+      fullPath: '/uppdatera-konto'
+      preLoaderRoute: typeof UppdateraKontoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/slutforda': {
       id: '/slutforda'
       path: '/slutforda'
@@ -456,13 +463,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/personal': {
@@ -683,9 +683,9 @@ const rootRouteChildren: RootRouteChildren = {
   OfferteradeRoute: OfferteradeRoute,
   PagaendeRoute: PagaendeRoute,
   PersonalRoute: PersonalRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,
+  UppdateraKontoRoute: UppdateraKontoRoute,
   WebhookLogsRoute: WebhookLogsRoute,
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
