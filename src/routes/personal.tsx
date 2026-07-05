@@ -190,10 +190,19 @@ function PersonalInner() {
                     : <Badge variant="outline">Inaktiv</Badge>}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button size="icon" variant="ghost" onClick={() => openEdit(e)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleSendReset(e)}
+                    title="Skicka återställningsmail"
+                    disabled={!e.email}
+                  >
+                    <KeyRound className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => openEdit(e)} title="Redigera">
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" onClick={() => handleDelete(e)}>
+                  <Button size="icon" variant="ghost" onClick={() => handleDelete(e)} title="Ta bort">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </TableCell>
