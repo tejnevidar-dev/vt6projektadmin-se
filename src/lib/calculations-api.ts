@@ -31,7 +31,7 @@ export async function fetchCalculationForLead(leadId: string): Promise<Calculati
     .eq("lead_id", leadId)
     .maybeSingle();
   if (error) throw error;
-  return (data as CalculationRow | null) ?? null;
+  return (data as unknown as CalculationRow | null) ?? null;
 }
 
 export async function upsertCalculation(input: {
@@ -70,7 +70,7 @@ export async function upsertCalculation(input: {
     .select()
     .single();
   if (error) throw error;
-  return data as CalculationRow;
+  return data as unknown as CalculationRow;
 }
 
 export interface OfferRow {
@@ -102,7 +102,11 @@ export async function updateOfferStatus(
   offerId: string,
   status: OfferRow["status"],
 ): Promise<void> {
-  const patch: Record<string, unknown> = { status };
+  const patch: {
+    status: OfferRow["status"];
+    sent_at?: string;
+    accepted_at?: string;
+  } = { status };
   if (status === "skickad") patch.sent_at = new Date().toISOString();
   if (status === "accepterad") patch.accepted_at = new Date().toISOString();
   const { error } = await supabase.from("offers").update(patch).eq("id", offerId);
