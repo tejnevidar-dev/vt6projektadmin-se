@@ -13,6 +13,7 @@ import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
 import { Route as UppdateraKontoRouteImport } from './routes/uppdatera-konto'
 import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as PrislistaRouteImport } from './routes/prislista'
 import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as PagaendeRouteImport } from './routes/pagaende'
 import { Route as OfferteradeRouteImport } from './routes/offerterade'
@@ -26,6 +27,7 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JobbIndexRouteImport } from './routes/jobb.index'
 import { Route as EgenkontrollerIndexRouteImport } from './routes/egenkontroller.index'
+import { Route as KalkylLeadIdRouteImport } from './routes/kalkyl.$leadId'
 import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as EgenkontrollerInstruktionerRouteImport } from './routes/egenkontroller.instruktioner'
@@ -59,6 +61,11 @@ const SlutfordaRoute = SlutfordaRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrislistaRoute = PrislistaRouteImport.update({
+  id: '/prislista',
+  path: '/prislista',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PersonalRoute = PersonalRouteImport.update({
@@ -125,6 +132,11 @@ const EgenkontrollerIndexRoute = EgenkontrollerIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => EgenkontrollerRoute,
+} as any)
+const KalkylLeadIdRoute = KalkylLeadIdRouteImport.update({
+  id: '/kalkyl/$leadId',
+  path: '/kalkyl/$leadId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const JobbJobIdRoute = JobbJobIdRouteImport.update({
   id: '/jobb/$jobId',
@@ -215,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
+  '/prislista': typeof PrislistaRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
@@ -225,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
+  '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
@@ -247,6 +261,7 @@ export interface FileRoutesByTo {
   '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
+  '/prislista': typeof PrislistaRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
@@ -257,6 +272,7 @@ export interface FileRoutesByTo {
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
+  '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/egenkontroller': typeof EgenkontrollerIndexRoute
   '/jobb': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
@@ -281,6 +297,7 @@ export interface FileRoutesById {
   '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
+  '/prislista': typeof PrislistaRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
@@ -291,6 +308,7 @@ export interface FileRoutesById {
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
+  '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
@@ -316,6 +334,7 @@ export interface FileRouteTypes {
     | '/offerterade'
     | '/pagaende'
     | '/personal'
+    | '/prislista'
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
@@ -326,6 +345,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/instruktioner'
     | '/email/unsubscribe'
     | '/jobb/$jobId'
+    | '/kalkyl/$leadId'
     | '/egenkontroller/'
     | '/jobb/'
     | '/api/public/roslagstak-webhook'
@@ -348,6 +368,7 @@ export interface FileRouteTypes {
     | '/offerterade'
     | '/pagaende'
     | '/personal'
+    | '/prislista'
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
@@ -358,6 +379,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/instruktioner'
     | '/email/unsubscribe'
     | '/jobb/$jobId'
+    | '/kalkyl/$leadId'
     | '/egenkontroller'
     | '/jobb'
     | '/api/public/roslagstak-webhook'
@@ -381,6 +403,7 @@ export interface FileRouteTypes {
     | '/offerterade'
     | '/pagaende'
     | '/personal'
+    | '/prislista'
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
@@ -391,6 +414,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/instruktioner'
     | '/email/unsubscribe'
     | '/jobb/$jobId'
+    | '/kalkyl/$leadId'
     | '/egenkontroller/'
     | '/jobb/'
     | '/api/public/roslagstak-webhook'
@@ -415,6 +439,7 @@ export interface RootRouteChildren {
   OfferteradeRoute: typeof OfferteradeRoute
   PagaendeRoute: typeof PagaendeRoute
   PersonalRoute: typeof PersonalRoute
+  PrislistaRoute: typeof PrislistaRoute
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
   UppdateraKontoRoute: typeof UppdateraKontoRoute
@@ -424,6 +449,7 @@ export interface RootRouteChildren {
   ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   JobbJobIdRoute: typeof JobbJobIdRoute
+  KalkylLeadIdRoute: typeof KalkylLeadIdRoute
   JobbIndexRoute: typeof JobbIndexRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -463,6 +489,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prislista': {
+      id: '/prislista'
+      path: '/prislista'
+      fullPath: '/prislista'
+      preLoaderRoute: typeof PrislistaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/personal': {
@@ -555,6 +588,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/egenkontroller/'
       preLoaderRoute: typeof EgenkontrollerIndexRouteImport
       parentRoute: typeof EgenkontrollerRoute
+    }
+    '/kalkyl/$leadId': {
+      id: '/kalkyl/$leadId'
+      path: '/kalkyl/$leadId'
+      fullPath: '/kalkyl/$leadId'
+      preLoaderRoute: typeof KalkylLeadIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/jobb/$jobId': {
       id: '/jobb/$jobId'
@@ -683,6 +723,7 @@ const rootRouteChildren: RootRouteChildren = {
   OfferteradeRoute: OfferteradeRoute,
   PagaendeRoute: PagaendeRoute,
   PersonalRoute: PersonalRoute,
+  PrislistaRoute: PrislistaRoute,
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,
   UppdateraKontoRoute: UppdateraKontoRoute,
@@ -692,6 +733,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   JobbJobIdRoute: JobbJobIdRoute,
+  KalkylLeadIdRoute: KalkylLeadIdRoute,
   JobbIndexRoute: JobbIndexRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
@@ -705,13 +747,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
