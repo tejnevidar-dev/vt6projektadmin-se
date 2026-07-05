@@ -46,12 +46,39 @@ export const sendEmployeeInvite = createServerFn({ method: "POST" })
     if (mailErr) {
       const msg = mailErr.message?.toLowerCase() ?? "";
       if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
-        // Användaren finns redan – skicka återställningsmail så de kan sätta nytt lösenord
-        await supabaseAdmin.from("invitations").delete().eq("id", (inv as any).id);
-        const { error: resetErr } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+        // Användaren finns redan i auth – radera den befintliga och skicka en ny inbjudan
+        let existingUserId: string | null = null;
+        try {
+          for (let page = 1; page <= 10 && !existingUserId; page++) {
+            const { data: listData, error: listErr } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+            if (listErr) break;
+            const found = listData.users.find((u: any) => (u.email ?? "").toLowerCase() === email);
+            if (found) existingUserId = found.id;
+            if (listData.users.length < 200) break;
+          }
+        } catch {
+          // ignorera – fortsätt ändå
+        }
+
+        if (existingUserId) {
+          const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(existingUserId);
+          if (delErr) {
+            await supabaseAdmin.from("invitations").delete().eq("id", (inv as any).id);
+            throw new Error("Kunde inte skicka ny inbjudan: " + delErr.message);
+          }
+        }
+
+        const { error: retryErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+          data: {
+            invite_token: (inv as any).token,
+            display_name: data.displayName ?? null,
+          },
           redirectTo: data.redirectTo,
         });
-        if (resetErr) throw new Error(resetErr.message);
+        if (retryErr) {
+          await supabaseAdmin.from("invitations").delete().eq("id", (inv as any).id);
+          throw new Error(retryErr.message);
+        }
         return { ok: true, alreadyRegistered: true };
       }
       throw new Error(mailErr.message);
