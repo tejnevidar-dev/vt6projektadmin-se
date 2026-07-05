@@ -278,7 +278,17 @@ function PersonalInner() {
                   </span>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.email}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">—</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {s.employment_type === "provisionsbaserad"
+                    ? s.provision_rate
+                      ? `${s.provision_rate.toLocaleString("sv-SE")} % provision`
+                      : "—"
+                    : s.employment_type === "fast"
+                    ? s.monthly_salary
+                      ? `${s.monthly_salary.toLocaleString("sv-SE")} kr/mån`
+                      : "—"
+                    : "—"}
+                </TableCell>
                 <TableCell className="text-sm text-muted-foreground">—</TableCell>
                 <TableCell><Badge variant="secondary">Aktiv</Badge></TableCell>
                 <TableCell className="text-right">
