@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2, FileSignature, ExternalLink, CheckCircle } from "lucide-react";
+import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2, FileSignature, ExternalLink, CheckCircle, Calculator } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -268,6 +269,12 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
 
         {/* Sticky footer with actions */}
         <div className="shrink-0 border-t border-border bg-card/95 px-6 py-4 backdrop-blur space-y-3">
+          <Button asChild variant="outline" className="w-full">
+            <Link to="/kalkyl/$leadId" params={{ leadId: lead.id }}>
+              <Calculator className="mr-2 h-4 w-4" />
+              Öppna kalkyl & offert
+            </Link>
+          </Button>
           {lead.pipelineStage === "offererad" && (
             <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
           )}
