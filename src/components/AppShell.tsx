@@ -49,10 +49,10 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
         ...(isAdmin ? [{ to: "/egenkontroller/instruktioner", label: "Montageinstruktioner" }] : []),
       ],
     },
-    { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "intern", adminOnly: true },
+    { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "both", adminOnly: true },
 
     // Gemensamt (Hantera)
-    { to: "/admin", label: "Medlemmar", icon: Shield, group: "Hantera", side: "both" },
+    { to: "/admin", label: "Roller & inbjudningar", icon: Shield, group: "Hantera", side: "both", adminOnly: true },
     { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "Hantera", side: "extern", adminOnly: true },
     { to: "/settings", label: "Inställningar", icon: Settings, group: "Hantera", side: "both" },
   ];

@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useUserRoles } from "@/hooks/use-role";
+import { useWorkspace } from "@/hooks/use-workspace";
 import {
   listEmployees,
   createEmployee,
@@ -10,6 +11,7 @@ import {
   type Employee,
   type EmploymentType,
 } from "@/lib/employees-api";
+import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,13 +56,23 @@ function PersonalPage() {
   );
 }
 
+type PersonalFilter = "extern" | "intern" | "alla";
+
 function PersonalInner() {
   const { isAdmin, loading: rolesLoading } = useUserRoles();
+  const { side } = useWorkspace();
   const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [saljare, setSaljare] = useState<Saljare[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
+  const [filter, setFilter] = useState<PersonalFilter>(side);
+
+  // När arbetssidan ändras, uppdatera förvalt filter
+  useEffect(() => {
+    setFilter(side);
+  }, [side]);
 
   useEffect(() => {
     if (rolesLoading) return;
@@ -74,7 +86,9 @@ function PersonalInner() {
   async function load() {
     setLoading(true);
     try {
-      setEmployees(await listEmployees());
+      const [emps, sls] = await Promise.all([listEmployees(), fetchSaljare()]);
+      setEmployees(emps);
+      setSaljare(sls);
     } catch (e: any) {
       toast.error(e.message ?? "Kunde inte ladda personal");
     } finally {
@@ -102,51 +116,84 @@ function PersonalInner() {
     }
   }
 
-  async function handleRefreshAccount(emp: Employee) {
-    if (!emp.email) {
+  async function handleRefreshAccount(email: string | null, name: string) {
+    if (!email) {
       toast.error("Personen saknar e-postadress");
       return;
     }
     if (
       !confirm(
-        `Skicka förnyelselänk till ${emp.email}?\n\nDeras aktiva sessioner loggas ut och de får fylla i uppgifter + nytt lösenord på nytt.`
+        `Skicka förnyelselänk till ${email}?\n\n${name}s aktiva sessioner loggas ut och de får fylla i uppgifter + nytt lösenord på nytt.`
       )
     )
       return;
     try {
       await refreshEmployeeAccount({
         data: {
-          email: emp.email,
+          email,
           redirectTo: `${window.location.origin}/uppdatera-konto`,
         },
       });
-      toast.success(`Förnyelselänk skickad till ${emp.email}`);
+      toast.success(`Förnyelselänk skickad till ${email}`);
     } catch (e: any) {
       toast.error(e.message ?? "Kunde inte skicka förnyelselänk");
     }
   }
 
+  // Filtrera baserat på val: extern = säljare, intern = hantverkare/UE, alla = båda
+  const showIntern = filter === "intern" || filter === "alla";
+  const showExtern = filter === "extern" || filter === "alla";
+
+  // Undvik dubblett: en säljare som också ligger i employees visas bara som employee (intern)
+  const employeeEmails = useMemo(
+    () => new Set(employees.map((e) => e.email?.toLowerCase()).filter(Boolean) as string[]),
+    [employees]
+  );
+  const filteredSaljare = useMemo(
+    () => saljare.filter((s) => !employeeEmails.has(s.email?.toLowerCase() ?? "")),
+    [saljare, employeeEmails]
+  );
+
   const counts = {
-    total: employees.length,
+    intern: employees.length,
+    extern: filteredSaljare.length,
     active: employees.filter((e) => e.active).length,
-    ue: employees.filter((e) => e.employment_type === "underentreprenor").length,
   };
+
+  const description =
+    filter === "extern"
+      ? "Säljare och kontaktpersoner (extern)."
+      : filter === "intern"
+      ? "Hantverkare och underentreprenörer (intern)."
+      : "All personal – intern och extern.";
 
   return (
     <AppShell
       title="Personal"
-      description="Anställda, underentreprenörer, timlöner och lönejusteringar."
+      description={description}
       meta={
         <>
-          <span>Totalt: <strong className="text-foreground">{counts.total}</strong></span>
-          <span>Aktiva: <strong className="text-foreground">{counts.active}</strong></span>
-          <span>UE: <strong className="text-foreground">{counts.ue}</strong></span>
+          <span>Intern: <strong className="text-foreground">{counts.intern}</strong></span>
+          <span>Extern: <strong className="text-foreground">{counts.extern}</strong></span>
+          <span>Aktiva (intern): <strong className="text-foreground">{counts.active}</strong></span>
         </>
       }
       actions={
-        <Button onClick={openNew}>
-          <Plus className="mr-1.5 h-4 w-4" /> Lägg till
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={filter} onValueChange={(v) => setFilter(v as PersonalFilter)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="extern">Extern (säljare)</SelectItem>
+              <SelectItem value="intern">Intern (hantverkare)</SelectItem>
+              <SelectItem value="alla">Alla</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={openNew}>
+            <Plus className="mr-1.5 h-4 w-4" /> Lägg till
+          </Button>
+        </div>
       }
     >
       <div className="rounded-lg border border-border bg-card">
@@ -166,13 +213,15 @@ function PersonalInner() {
             {loading && (
               <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Laddar…</TableCell></TableRow>
             )}
-            {!loading && employees.length === 0 && (
+            {!loading && (
+              (showIntern ? employees.length : 0) + (showExtern ? filteredSaljare.length : 0) === 0
+            ) && (
               <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-10">
-                Ingen personal tillagd än. Klicka <strong>Lägg till</strong> för att börja.
+                Ingen personal i denna vy. Byt filter eller klicka <strong>Lägg till</strong>.
               </TableCell></TableRow>
             )}
-            {employees.map((e) => (
-              <TableRow key={e.id}>
+            {showIntern && employees.map((e) => (
+              <TableRow key={`emp-${e.id}`}>
                 <TableCell className="font-medium">{e.full_name}</TableCell>
                 <TableCell>
                   <EmploymentBadge type={e.employment_type} />
@@ -200,7 +249,7 @@ function PersonalInner() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => handleRefreshAccount(e)}
+                    onClick={() => handleRefreshAccount(e.email, e.full_name)}
                     title="Skicka förnyelselänk (loggar ut och låter användaren återskapa kontot)"
                     disabled={!e.email}
                   >
@@ -211,6 +260,31 @@ function PersonalInner() {
                   </Button>
                   <Button size="icon" variant="ghost" onClick={() => handleDelete(e)} title="Ta bort">
                     <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {showExtern && filteredSaljare.map((s) => (
+              <TableRow key={`sal-${s.id}`}>
+                <TableCell className="font-medium">{s.display_name}</TableCell>
+                <TableCell>
+                  <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300">
+                    Säljare
+                  </span>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">{s.email}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">—</TableCell>
+                <TableCell className="text-sm text-muted-foreground">—</TableCell>
+                <TableCell><Badge variant="secondary">Aktiv</Badge></TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleRefreshAccount(s.email, s.display_name)}
+                    title="Skicka förnyelselänk"
+                    disabled={!s.email}
+                  >
+                    <RefreshCw className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>
