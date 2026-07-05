@@ -67,6 +67,7 @@ function PersonalInner() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
+  const [dialogMode, setDialogMode] = useState<"employee" | "saljare">("employee");
   const [filter, setFilter] = useState<PersonalFilter>(side);
 
   // När arbetssidan ändras, uppdatera förvalt filter
