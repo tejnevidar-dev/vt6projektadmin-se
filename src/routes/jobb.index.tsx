@@ -244,6 +244,7 @@ function AddJobDialog({
           employment_type: "fast",
           hourly_rate: null,
           monthly_salary: null,
+          provision_rate: null,
           company_name: null,
           org_number: null,
           active: true,
