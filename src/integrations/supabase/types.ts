@@ -116,6 +116,7 @@ export type Database = {
           org_number: string | null
           personal_number: string | null
           phone: string | null
+          provision_rate: number | null
           updated_at: string
           user_id: string | null
         }
@@ -133,6 +134,7 @@ export type Database = {
           org_number?: string | null
           personal_number?: string | null
           phone?: string | null
+          provision_rate?: number | null
           updated_at?: string
           user_id?: string | null
         }
@@ -150,6 +152,7 @@ export type Database = {
           org_number?: string | null
           personal_number?: string | null
           phone?: string | null
+          provision_rate?: number | null
           updated_at?: string
           user_id?: string | null
         }
@@ -930,7 +933,12 @@ export type Database = {
         | "arbetsledare"
         | "hantverkare"
         | "underentreprenor"
-      employment_type: "timanstalld" | "fast" | "underentreprenor"
+      employment_type:
+        | "timanstalld"
+        | "fast"
+        | "underentreprenor"
+        | "provisionsbaserad"
+        | "saljare_fast"
       job_assignment_type: "arbetsledare" | "underentreprenor"
       job_status: "ej_paborjad" | "pagaende" | "klar"
       job_type: "roof_replacement" | "roof_cleaning" | "light_roof_work"
@@ -1096,7 +1104,13 @@ export const Constants = {
         "hantverkare",
         "underentreprenor",
       ],
-      employment_type: ["timanstalld", "fast", "underentreprenor"],
+      employment_type: [
+        "timanstalld",
+        "fast",
+        "underentreprenor",
+        "provisionsbaserad",
+        "saljare_fast",
+      ],
       job_assignment_type: ["arbetsledare", "underentreprenor"],
       job_status: ["ej_paborjad", "pagaende", "klar"],
       job_type: ["roof_replacement", "roof_cleaning", "light_roof_work"],

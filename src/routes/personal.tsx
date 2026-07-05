@@ -67,6 +67,7 @@ function PersonalInner() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
+  const [dialogMode, setDialogMode] = useState<"employee" | "saljare">("employee");
   const [filter, setFilter] = useState<PersonalFilter>(side);
 
   // När arbetssidan ändras, uppdatera förvalt filter
@@ -98,10 +99,16 @@ function PersonalInner() {
 
   function openNew() {
     setEditing(null);
+    setDialogMode(filter === "extern" ? "saljare" : "employee");
     setDialogOpen(true);
   }
   function openEdit(emp: Employee) {
     setEditing(emp);
+    setDialogMode(
+      emp.employment_type === "provisionsbaserad" || emp.employment_type === "saljare_fast"
+        ? "saljare"
+        : "employee"
+    );
     setDialogOpen(true);
   }
 
@@ -144,20 +151,41 @@ function PersonalInner() {
   const showIntern = filter === "intern" || filter === "alla";
   const showExtern = filter === "extern" || filter === "alla";
 
-  // Undvik dubblett: en säljare som också ligger i employees visas bara som employee (intern)
-  const employeeEmails = useMemo(
-    () => new Set(employees.map((e) => e.email?.toLowerCase()).filter(Boolean) as string[]),
+  const SALJARE_TYPES: EmploymentType[] = ["provisionsbaserad", "saljare_fast"];
+
+  // Intern personal = alla anställda som INTE är säljare (säljare visas under extern)
+  const internEmployees = useMemo(
+    () => employees.filter((e) => !SALJARE_TYPES.includes(e.employment_type)),
     [employees]
   );
+  const internEmployeeEmails = useMemo(
+    () => new Set(internEmployees.map((e) => e.email?.toLowerCase()).filter(Boolean) as string[]),
+    [internEmployees]
+  );
+
+  // Externa säljare = registrerade säljare som inte redan visas som intern personal
   const filteredSaljare = useMemo(
-    () => saljare.filter((s) => !employeeEmails.has(s.email?.toLowerCase() ?? "")),
-    [saljare, employeeEmails]
+    () => saljare.filter((s) => !internEmployeeEmails.has(s.email?.toLowerCase() ?? "")),
+    [saljare, internEmployeeEmails]
+  );
+
+  // Säljare som bjudits in men ännu inte skapat konto visas också under extern
+  const signedUpSaljareEmails = useMemo(
+    () => new Set(saljare.map((s) => s.email?.toLowerCase()).filter(Boolean) as string[]),
+    [saljare]
+  );
+  const pendingSaljare = useMemo(
+    () =>
+      employees.filter(
+        (e) => SALJARE_TYPES.includes(e.employment_type) && !signedUpSaljareEmails.has(e.email?.toLowerCase() ?? "")
+      ),
+    [employees, signedUpSaljareEmails]
   );
 
   const counts = {
-    intern: employees.length,
-    extern: filteredSaljare.length,
-    active: employees.filter((e) => e.active).length,
+    intern: internEmployees.length,
+    extern: filteredSaljare.length + pendingSaljare.length,
+    active: internEmployees.filter((e) => e.active).length,
   };
 
   const description =
@@ -214,13 +242,13 @@ function PersonalInner() {
               <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Laddar…</TableCell></TableRow>
             )}
             {!loading && (
-              (showIntern ? employees.length : 0) + (showExtern ? filteredSaljare.length : 0) === 0
+              (showIntern ? internEmployees.length : 0) + (showExtern ? filteredSaljare.length + pendingSaljare.length : 0) === 0
             ) && (
               <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-10">
                 Ingen personal i denna vy. Byt filter eller klicka <strong>Lägg till</strong>.
               </TableCell></TableRow>
             )}
-            {showIntern && employees.map((e) => (
+            {showIntern && internEmployees.map((e) => (
               <TableRow key={`emp-${e.id}`}>
                 <TableCell className="font-medium">{e.full_name}</TableCell>
                 <TableCell>
@@ -235,6 +263,8 @@ function PersonalInner() {
                     <span className="text-muted-foreground">Fast pris per jobb</span>
                   ) : e.employment_type === "fast" ? (
                     e.monthly_salary ? `${e.monthly_salary.toLocaleString("sv-SE")} kr/mån` : "—"
+                  ) : e.employment_type === "provisionsbaserad" ? (
+                    e.provision_rate ? `${e.provision_rate.toLocaleString("sv-SE")} % provision` : "—"
                   ) : (
                     e.hourly_rate ? `${e.hourly_rate.toLocaleString("sv-SE")} kr/h` : "—"
                   )}
@@ -273,7 +303,17 @@ function PersonalInner() {
                   </span>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{s.email}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">—</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {s.employment_type === "provisionsbaserad"
+                    ? s.provision_rate
+                      ? `${s.provision_rate.toLocaleString("sv-SE")} % provision`
+                      : "—"
+                    : s.employment_type === "saljare_fast"
+                    ? s.monthly_salary
+                      ? `${s.monthly_salary.toLocaleString("sv-SE")} kr/mån`
+                      : "—"
+                    : "—"}
+                </TableCell>
                 <TableCell className="text-sm text-muted-foreground">—</TableCell>
                 <TableCell><Badge variant="secondary">Aktiv</Badge></TableCell>
                 <TableCell className="text-right">
@@ -289,6 +329,43 @@ function PersonalInner() {
                 </TableCell>
               </TableRow>
             ))}
+            {showExtern && pendingSaljare.map((e) => (
+              <TableRow key={`pending-sal-${e.id}`}>
+                <TableCell className="font-medium">{e.full_name}</TableCell>
+                <TableCell>
+                  <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300">
+                    Säljare
+                  </span>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {e.email}
+                  {e.phone && <div>{e.phone}</div>}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {e.employment_type === "provisionsbaserad"
+                    ? e.provision_rate
+                      ? `${e.provision_rate.toLocaleString("sv-SE")} % provision`
+                      : "—"
+                    : e.employment_type === "saljare_fast"
+                    ? e.monthly_salary
+                      ? `${e.monthly_salary.toLocaleString("sv-SE")} kr/mån`
+                      : "—"
+                    : "—"}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">—</TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="text-muted-foreground">Väntar på inbjudan</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button size="icon" variant="ghost" onClick={() => openEdit(e)} title="Redigera">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => handleDelete(e)} title="Ta bort">
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
@@ -297,6 +374,7 @@ function PersonalInner() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         employee={editing}
+        mode={dialogMode}
         onSaved={() => { setDialogOpen(false); void load(); }}
       />
     </AppShell>
@@ -308,6 +386,8 @@ function EmploymentBadge({ type }: { type: EmploymentType }) {
     timanstalld: { label: "Timanställd", cls: "bg-blue-500/15 text-blue-700 dark:text-blue-300" },
     fast: { label: "Fast", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" },
     underentreprenor: { label: "UE", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+    provisionsbaserad: { label: "Provisionsbaserad", cls: "bg-purple-500/15 text-purple-700 dark:text-purple-300" },
+    saljare_fast: { label: "Fast lön", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" },
   };
   const m = map[type];
   return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${m.cls}`}>{m.label}</span>;
@@ -317,15 +397,18 @@ function EmployeeDialog({
   open,
   onOpenChange,
   employee,
+  mode,
   onSaved,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   employee: Employee | null;
+  mode: "employee" | "saljare";
   onSaved: () => void;
 }) {
   const [form, setForm] = useState<Partial<Employee>>({});
   const [saving, setSaving] = useState(false);
+  const isSaljare = mode === "saljare";
 
   useEffect(() => {
     if (open) {
@@ -334,12 +417,12 @@ function EmployeeDialog({
           full_name: "",
           email: "",
           phone: "",
-          employment_type: "timanstalld",
+          employment_type: isSaljare ? "provisionsbaserad" : "timanstalld",
           active: true,
         }
       );
     }
-  }, [open, employee]);
+  }, [open, employee, isSaljare]);
 
   function set<K extends keyof Employee>(k: K, v: Employee[K] | null) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -356,12 +439,13 @@ function EmployeeDialog({
         full_name: form.full_name,
         email: form.email || null,
         phone: form.phone || null,
-        personal_number: form.personal_number || null,
-        employment_type: form.employment_type ?? "timanstalld",
+        personal_number: isSaljare ? null : form.personal_number || null,
+        employment_type: form.employment_type ?? (isSaljare ? "provisionsbaserad" : "timanstalld"),
         hourly_rate: form.hourly_rate ?? null,
         monthly_salary: form.monthly_salary ?? null,
-        company_name: form.company_name || null,
-        org_number: form.org_number || null,
+        provision_rate: form.provision_rate ?? null,
+        company_name: isSaljare ? null : form.company_name || null,
+        org_number: isSaljare ? null : form.org_number || null,
         active: form.active ?? true,
         notes: form.notes || null,
       };
@@ -372,10 +456,12 @@ function EmployeeDialog({
         await createEmployee(payload);
         toast.success("Tillagd");
         if (payload.email && payload.active) {
-          const role =
-            payload.employment_type === "underentreprenor"
-              ? "underentreprenor"
-              : "hantverkare";
+          let role: "hantverkare" | "underentreprenor" | "saljare" = "hantverkare";
+          if (isSaljare) {
+            role = "saljare";
+          } else if (payload.employment_type === "underentreprenor") {
+            role = "underentreprenor";
+          }
           try {
             const { sendEmployeeInvite } = await import("@/lib/employee-invite.functions");
             const res = await sendEmployeeInvite({
@@ -392,7 +478,7 @@ function EmployeeDialog({
               toast.success("Inbjudningsmail skickat");
             }
           } catch (e: any) {
-            toast.error(`Personalen skapades men inbjudan misslyckades: ${e.message ?? e}`);
+            toast.error(`${isSaljare ? "Säljaren" : "Personalen"} skapades men inbjudan misslyckades: ${e.message ?? e}`);
           }
         }
       }
@@ -404,13 +490,21 @@ function EmployeeDialog({
     }
   }
 
-  const type = (form.employment_type ?? "timanstalld") as EmploymentType;
+  const type = (form.employment_type ?? (isSaljare ? "provisionsbaserad" : "timanstalld")) as EmploymentType;
+
+  const title = employee
+    ? isSaljare
+      ? "Redigera säljare"
+      : "Redigera anställd"
+    : isSaljare
+    ? "Ny säljare"
+    : "Ny anställd";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{employee ? "Redigera anställd" : "Ny anställd"}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -427,13 +521,22 @@ function EmployeeDialog({
               <Input value={form.phone ?? ""} onChange={(e) => set("phone", e.target.value)} />
             </div>
             <div className="col-span-2">
-              <Label>Anställningstyp</Label>
+              <Label>Löneform</Label>
               <Select value={type} onValueChange={(v) => set("employment_type", v as EmploymentType)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="timanstalld">Timanställd (timlön)</SelectItem>
-                  <SelectItem value="fast">Fast anställd (månadslön)</SelectItem>
-                  <SelectItem value="underentreprenor">Underentreprenör (fast pris per jobb)</SelectItem>
+                  {isSaljare ? (
+                    <>
+                      <SelectItem value="provisionsbaserad">Provisionsbaserad</SelectItem>
+                      <SelectItem value="saljare_fast">Fast månadslön</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="timanstalld">Timanställd (timlön)</SelectItem>
+                      <SelectItem value="fast">Fast anställd (månadslön)</SelectItem>
+                      <SelectItem value="underentreprenor">Underentreprenör (fast pris per jobb)</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -448,13 +551,23 @@ function EmployeeDialog({
                 />
               </div>
             )}
-            {type === "fast" && (
+            {(type === "fast" || type === "saljare_fast") && (
               <div>
                 <Label>Månadslön (kr)</Label>
                 <Input
                   type="number"
                   value={form.monthly_salary ?? ""}
                   onChange={(e) => set("monthly_salary", e.target.value ? Number(e.target.value) : null)}
+                />
+              </div>
+            )}
+            {type === "provisionsbaserad" && (
+              <div>
+                <Label>Provision (%)</Label>
+                <Input
+                  type="number"
+                  value={form.provision_rate ?? ""}
+                  onChange={(e) => set("provision_rate", e.target.value ? Number(e.target.value) : null)}
                 />
               </div>
             )}
@@ -472,7 +585,7 @@ function EmployeeDialog({
               </>
             )}
 
-            {type !== "underentreprenor" && (
+            {!isSaljare && type !== "underentreprenor" && (
               <div className="col-span-2">
                 <Label>Personnummer</Label>
                 <Input value={form.personal_number ?? ""} onChange={(e) => set("personal_number", e.target.value)} />

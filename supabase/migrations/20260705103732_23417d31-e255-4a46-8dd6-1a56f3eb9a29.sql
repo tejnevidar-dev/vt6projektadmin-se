@@ -1,0 +1,1 @@
+ALTER TYPE public.employment_type ADD VALUE 'saljare_fast';
