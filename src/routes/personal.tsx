@@ -308,6 +308,7 @@ function EmploymentBadge({ type }: { type: EmploymentType }) {
     timanstalld: { label: "Timanställd", cls: "bg-blue-500/15 text-blue-700 dark:text-blue-300" },
     fast: { label: "Fast", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" },
     underentreprenor: { label: "UE", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+    provisionsbaserad: { label: "Provisionsbaserad", cls: "bg-purple-500/15 text-purple-700 dark:text-purple-300" },
   };
   const m = map[type];
   return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${m.cls}`}>{m.label}</span>;
