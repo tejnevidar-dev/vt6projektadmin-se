@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
+import { Route as UppdateraKontoRouteImport } from './routes/uppdatera-konto'
 import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PersonalRouteImport } from './routes/personal'
@@ -43,6 +44,11 @@ import { Route as ApiPublicSelfCheckPdfSplatRouteImport } from './routes/api/pub
 const WebhookLogsRoute = WebhookLogsRouteImport.update({
   id: '/webhook-logs',
   path: '/webhook-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UppdateraKontoRoute = UppdateraKontoRouteImport.update({
+  id: '/uppdatera-konto',
+  path: '/uppdatera-konto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlutfordaRoute = SlutfordaRouteImport.update({
@@ -211,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/personal': typeof PersonalRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
+  '/uppdatera-konto': typeof UppdateraKontoRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
@@ -242,6 +249,7 @@ export interface FileRoutesByTo {
   '/personal': typeof PersonalRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
+  '/uppdatera-konto': typeof UppdateraKontoRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
@@ -275,6 +283,7 @@ export interface FileRoutesById {
   '/personal': typeof PersonalRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
+  '/uppdatera-konto': typeof UppdateraKontoRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
@@ -309,6 +318,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/settings'
     | '/slutforda'
+    | '/uppdatera-konto'
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
@@ -340,6 +350,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/settings'
     | '/slutforda'
+    | '/uppdatera-konto'
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
@@ -372,6 +383,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/settings'
     | '/slutforda'
+    | '/uppdatera-konto'
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
@@ -405,6 +417,7 @@ export interface RootRouteChildren {
   PersonalRoute: typeof PersonalRoute
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
+  UppdateraKontoRoute: typeof UppdateraKontoRoute
   WebhookLogsRoute: typeof WebhookLogsRoute
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
@@ -429,6 +442,13 @@ declare module '@tanstack/react-router' {
       path: '/webhook-logs'
       fullPath: '/webhook-logs'
       preLoaderRoute: typeof WebhookLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/uppdatera-konto': {
+      id: '/uppdatera-konto'
+      path: '/uppdatera-konto'
+      fullPath: '/uppdatera-konto'
+      preLoaderRoute: typeof UppdateraKontoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/slutforda': {
@@ -665,6 +685,7 @@ const rootRouteChildren: RootRouteChildren = {
   PersonalRoute: PersonalRoute,
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,
+  UppdateraKontoRoute: UppdateraKontoRoute,
   WebhookLogsRoute: WebhookLogsRoute,
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,

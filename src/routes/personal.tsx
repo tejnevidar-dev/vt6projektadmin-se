@@ -37,9 +37,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, KeyRound } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { refreshEmployeeAccount } from "@/lib/account-refresh.functions";
 
 export const Route = createFileRoute("/personal")({
   component: PersonalPage,
