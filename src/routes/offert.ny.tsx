@@ -98,15 +98,18 @@ function OffertNyPage() {
   const [entreprenadpris, setEntreprenadpris] = useState<number>(0);
   const [materialkostnad, setMaterialkostnad] = useState<number>(0);
   const [momsProcent, setMomsProcent] = useState<number>(25);
-  const [rotBelopp, setRotBelopp] = useState<number>(0);
   const [rotEtikett, setRotEtikett] = useState<string>("");
+  const [inkluderaRot, setInkluderaRot] = useState<boolean>(true);
 
   const totals = useMemo(() => {
     const moms = Math.round((entreprenadpris * momsProcent) / 100);
     const totalInkl = entreprenadpris + moms;
+    const arbeteExMoms = Math.max(0, entreprenadpris - materialkostnad);
+    const arbeteInklMoms = arbeteExMoms * (1 + momsProcent / 100);
+    const rotBelopp = inkluderaRot ? Math.round(arbeteInklMoms * 0.3) : 0;
     const attBetala = totalInkl - rotBelopp;
-    return { moms, totalInkl, attBetala };
-  }, [entreprenadpris, momsProcent, rotBelopp]);
+    return { moms, totalInkl, rotBelopp, attBetala, arbeteExMoms };
+  }, [entreprenadpris, materialkostnad, momsProcent, inkluderaRot]);
 
   // Noteringar
   const [noteringarText, setNoteringarText] = useState("");
