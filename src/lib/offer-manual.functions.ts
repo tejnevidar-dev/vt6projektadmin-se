@@ -263,7 +263,7 @@ export const generateManualOffer = createServerFn({ method: "POST" })
       totRows.push({ label: "ATT BETALA EFTER ROT", value: fmtSek(attBetala), bold: true });
     }
 
-    const totBlockHeight = totRows.length * 20 + 14;
+    const totBlockHeight = totRows.length * 17 + 14;
     ensure(totBlockHeight);
 
     const totLeft = width / 2 + 10;
@@ -279,7 +279,7 @@ export const generateManualOffer = createServerFn({ method: "POST" })
       const size = r.bold ? 11 : 10;
       draw(r.label, totLeft, y - 6, size, r.bold);
       drawRight(r.value, totRight, y - 6, size, r.bold);
-      y -= 20;
+      y -= 17;
       if (r.rule) {
         page.drawLine({
           start: { x: totLeft, y: y + 8 },
