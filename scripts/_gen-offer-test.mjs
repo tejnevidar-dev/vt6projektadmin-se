@@ -82,7 +82,7 @@ if(data.intro){draw(data.intro,marginX,y,10);y-=22;}
 const colRad=marginX, colBesk=marginX+60;
 draw('Rad',colRad,y,10,true); draw('Beskrivning',colBesk,y,10,true); y-=6; hr(y); y-=14;
 const beskMax=width-marginX-colBesk;
-for(const r of data.rader){const lines=wrap(r.beskrivning,beskMax,10);const needed=Math.max(14,lines.length*13);ensure(needed);draw(String(r.radnr),colRad,y,10);for(let i=0;i<lines.length;i++)draw(lines[i],colBesk,y-i*13,10);y-=needed;}
+for(const r of data.rader){const lines=wrap(r.beskrivning,beskMax,10);const needed=Math.max(13,lines.length*12);ensure(needed);draw(String(r.radnr),colRad,y,10);for(let i=0;i<lines.length;i++)draw(lines[i],colBesk,y-i*12,10);y-=needed;}
 y-=10;
 const moms=Math.round(data.entreprenadprisExklMoms*data.momsProcent/100);
 const total=data.entreprenadprisExklMoms+moms; const attB=total-data.rotBelopp;
@@ -94,10 +94,10 @@ const rows=[
   {label:'Totalt inkl. moms',value:fmtSek(total)},
 ];
 if(data.rotBelopp>0){rows.push({label:`Preliminärt ROT-avdrag ${data.rotEtikett}`,value:'-'+fmtSek(data.rotBelopp),rule:true});rows.push({label:'ATT BETALA EFTER ROT',value:fmtSek(attB),bold:true});}
-const totH=rows.length*20+14; ensure(totH);
+const totH=rows.length*17+14; ensure(totH);
 const totLeft=width/2+10, totRight=width-marginX;
 page.drawLine({start:{x:totLeft,y:y+6},end:{x:totRight,y:y+6},thickness:0.6,color:RULE});
-for(const r of rows){const sz=r.bold?11:10;draw(r.label,totLeft,y-6,sz,r.bold);drawRight(r.value,totRight,y-6,sz,r.bold);y-=20;if(r.rule)page.drawLine({start:{x:totLeft,y:y+8},end:{x:totRight,y:y+8},thickness:0.6,color:RULE});}
+for(const r of rows){const sz=r.bold?11:10;draw(r.label,totLeft,y-6,sz,r.bold);drawRight(r.value,totRight,y-6,sz,r.bold);y-=17;if(r.rule)page.drawLine({start:{x:totLeft,y:y+8},end:{x:totRight,y:y+8},thickness:0.6,color:RULE});}
 newPage();
 draw('Övriga noteringar',marginX,y,18,true); y-=24;
 for(const n of data.noteringar){const lines=wrap(n,width-marginX*2-14,10);ensure(lines.length*14+4);draw('•',marginX,y,10,true);for(let i=0;i<lines.length;i++)draw(lines[i],marginX+14,y-i*14,10);y-=lines.length*14+4;}
