@@ -37,6 +37,7 @@ import { Route as ApiProcessWorkOrderRouteImport } from './routes/api/process-wo
 import { Route as ApiAiPitchRouteImport } from './routes/api/ai-pitch'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
+import { Route as ApiPublicLookupInviteRouteImport } from './routes/api/public/lookup-invite'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -186,6 +187,11 @@ const ApiPublicRoslagstakWebhookRoute =
     path: '/api/public/roslagstak-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicLookupInviteRoute = ApiPublicLookupInviteRouteImport.update({
+  id: '/api/public/lookup-invite',
+  path: '/api/public/lookup-invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
     id: '/lovable/email/transactional/send',
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
+  '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
@@ -283,6 +290,7 @@ export interface FileRoutesByTo {
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/egenkontroller': typeof EgenkontrollerIndexRoute
   '/jobb': typeof JobbIndexRoute
+  '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
@@ -320,6 +328,7 @@ export interface FileRoutesById {
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
+  '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
@@ -358,6 +367,7 @@ export interface FileRouteTypes {
     | '/kalkyl/$leadId'
     | '/egenkontroller/'
     | '/jobb/'
+    | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
     | '/lovable/email/suppression'
     | '/api/public/self-check-pdf/$'
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/kalkyl/$leadId'
     | '/egenkontroller'
     | '/jobb'
+    | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
     | '/lovable/email/suppression'
     | '/api/public/self-check-pdf/$'
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/kalkyl/$leadId'
     | '/egenkontroller/'
     | '/jobb/'
+    | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
     | '/lovable/email/suppression'
     | '/api/public/self-check-pdf/$'
@@ -464,6 +476,7 @@ export interface RootRouteChildren {
   JobbJobIdRoute: typeof JobbJobIdRoute
   KalkylLeadIdRoute: typeof KalkylLeadIdRoute
   JobbIndexRoute: typeof JobbIndexRoute
+  ApiPublicLookupInviteRoute: typeof ApiPublicLookupInviteRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicSelfCheckPdfSplatRoute: typeof ApiPublicSelfCheckPdfSplatRoute
@@ -672,6 +685,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRoslagstakWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/lookup-invite': {
+      id: '/api/public/lookup-invite'
+      path: '/api/public/lookup-invite'
+      fullPath: '/api/public/lookup-invite'
+      preLoaderRoute: typeof ApiPublicLookupInviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
       path: '/lovable/email/transactional/send'
@@ -756,6 +776,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobbJobIdRoute: JobbJobIdRoute,
   KalkylLeadIdRoute: KalkylLeadIdRoute,
   JobbIndexRoute: JobbIndexRoute,
+  ApiPublicLookupInviteRoute: ApiPublicLookupInviteRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicSelfCheckPdfSplatRoute: ApiPublicSelfCheckPdfSplatRoute,
