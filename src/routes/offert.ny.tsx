@@ -158,9 +158,11 @@ function OffertNyPage() {
       toast.error("Ange kundnamn");
       return;
     }
-    const cleanRader = parseRader(arbetstext);
+    const cleanRader = renumber(
+      rader.map((r) => ({ beskrivning: r.beskrivning.trim() })).filter((r) => r.beskrivning),
+    );
     if (cleanRader.length === 0) {
-      toast.error("Skriv in arbetsbeskrivningen");
+      toast.error("Tolka texten till punkter (eller lägg till manuellt) först");
       return;
     }
     const noteringarArr = noteringarText
