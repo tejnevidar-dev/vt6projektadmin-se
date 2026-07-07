@@ -232,11 +232,11 @@ export const generateManualOffer = createServerFn({ method: "POST" })
     const beskMaxWidth = width - marginX - colBesk;
     for (const rad of data.rader) {
       const lines = wrap(rad.beskrivning, beskMaxWidth, 10);
-      const needed = Math.max(14, lines.length * 13);
+      const needed = Math.max(13, lines.length * 12);
       ensure(needed);
       draw(String(rad.radnr), colRad, y, 10);
       for (let i = 0; i < lines.length; i++) {
-        draw(lines[i], colBesk, y - i * 13, 10);
+        draw(lines[i], colBesk, y - i * 12, 10);
       }
       y -= needed;
     }
