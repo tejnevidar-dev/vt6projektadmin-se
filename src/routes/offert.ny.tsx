@@ -83,16 +83,20 @@ function OffertNyPage() {
   // Intro
   const [intro, setIntro] = useState(STANDARD_INTRO);
 
-  // Rader
-  const [rader, setRader] = useState<OfferRow[]>([{ radnr: 10, beskrivning: "" }]);
-  const addRad = () =>
-    setRader((rs) => [...rs, { radnr: (rs[rs.length - 1]?.radnr ?? 0) + 10, beskrivning: "" }]);
-  const removeRad = (i: number) =>
-    setRader((rs) => rs.filter((_, idx) => idx !== i));
-  const updateRad = (i: number, patch: Partial<OfferRow>) =>
-    setRader((rs) => rs.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
-  const renumberRader = () =>
-    setRader((rs) => rs.map((r, i) => ({ ...r, radnr: (i + 1) * 10 })));
+  // Arbetsbeskrivning – en textruta som bryts ut till punkter
+  const [arbetstext, setArbetstext] = useState("");
+
+  const parseRader = (text: string): OfferRow[] => {
+    return text
+      .split(/\r?\n+/)
+      .map((l) => l.trim())
+      // rensa bort ledande punkter/streck/numrering (t.ex. "1.", "•", "-", "*", "10 ")
+      .map((l) => l.replace(/^(?:[-•*·]|\d+[\.\)]?)\s+/, "").trim())
+      .filter(Boolean)
+      .map((beskrivning, i) => ({ radnr: (i + 1) * 10, beskrivning }));
+  };
+
+  const raderPreview = useMemo(() => parseRader(arbetstext), [arbetstext]);
 
   // Belopp
   const [entreprenadpris, setEntreprenadpris] = useState<number>(0);
