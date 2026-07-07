@@ -84,20 +84,46 @@ function OffertNyPage() {
   // Intro
   const [intro, setIntro] = useState(STANDARD_INTRO);
 
-  // Arbetsbeskrivning – en textruta som bryts ut till punkter
+  // Arbetsbeskrivning – fri text som AI tolkar till punkter
   const [arbetstext, setArbetstext] = useState("");
+  const [rader, setRader] = useState<OfferRow[]>([]);
+  const [parsing, setParsing] = useState(false);
+  const callParse = useServerFn(parseArbeteText);
 
-  const parseRader = (text: string): OfferRow[] => {
-    return text
-      .split(/\r?\n+/)
-      .map((l) => l.trim())
-      // rensa bort ledande punkter/streck/numrering (t.ex. "1.", "•", "-", "*", "10 ")
-      .map((l) => l.replace(/^(?:[-•*·]|\d+[\.\)]?)\s+/, "").trim())
-      .filter(Boolean)
-      .map((beskrivning, i) => ({ radnr: (i + 1) * 10, beskrivning }));
+  const renumber = (list: { beskrivning: string }[]): OfferRow[] =>
+    list.map((r, i) => ({ radnr: (i + 1) * 10, beskrivning: r.beskrivning }));
+
+  const handleTolka = async () => {
+    if (!arbetstext.trim()) {
+      toast.error("Klistra in arbetstexten först");
+      return;
+    }
+    setParsing(true);
+    try {
+      const res = await callParse({ data: { text: arbetstext } });
+      setRader(renumber(res.punkter.map((p) => ({ beskrivning: p }))));
+      toast.success(`AI tolkade ${res.punkter.length} punkter`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Kunde inte tolka texten");
+    } finally {
+      setParsing(false);
+    }
   };
 
-  const raderPreview = useMemo(() => parseRader(arbetstext), [arbetstext]);
+  const updateRad = (i: number, beskrivning: string) =>
+    setRader((prev) => prev.map((r, idx) => (idx === i ? { ...r, beskrivning } : r)));
+  const removeRad = (i: number) =>
+    setRader((prev) => renumber(prev.filter((_, idx) => idx !== i)));
+  const moveRad = (i: number, dir: -1 | 1) =>
+    setRader((prev) => {
+      const j = i + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const copy = [...prev];
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+      return renumber(copy);
+    });
+  const addRad = () =>
+    setRader((prev) => renumber([...prev, { beskrivning: "" }]));
 
   // Belopp
   const [entreprenadpris, setEntreprenadpris] = useState<number>(0);
