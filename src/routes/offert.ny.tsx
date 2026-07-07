@@ -131,11 +131,9 @@ function OffertNyPage() {
       toast.error("Ange kundnamn");
       return;
     }
-    const cleanRader = rader
-      .filter((r) => r.beskrivning.trim())
-      .map((r) => ({ radnr: r.radnr, beskrivning: r.beskrivning.trim() }));
+    const cleanRader = parseRader(arbetstext);
     if (cleanRader.length === 0) {
-      toast.error("Lägg till minst en rad med beskrivning");
+      toast.error("Skriv in arbetsbeskrivningen");
       return;
     }
     const noteringarArr = noteringarText
