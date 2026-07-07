@@ -39,8 +39,10 @@ export interface OfferInput {
   filnamn?: string;
 }
 
+const COMPANY_NAME = "ROSLAGSTAK";
+const COMPANY_TAGLINE = "TAKENTREPRENAD I VÄRLDSKLASS";
 const FOOTER_TEXT =
-  "RoslagsTak (VT6 Invest AB) | Org.nr 559539-3595 | Momsnr SE559539359501 | Godkänd för F-skatt";
+  "RoslagsTak (VT6 Invest AB)   ·   Org.nr 559539-3595   ·   Momsnr SE559539359501   ·   Godkänd för F-skatt";
 
 function fmtSek(n: number): string {
   const rounded = Math.round(n);
@@ -53,7 +55,6 @@ function fmtSek(n: number): string {
 
 function fmtDate(iso: string): string {
   if (!iso) return "";
-  // Return as-is if already ISO-like
   return iso;
 }
 
@@ -72,19 +73,34 @@ export const generateManualOffer = createServerFn({ method: "POST" })
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+    const oblique = await pdf.embedFont(StandardFonts.HelveticaOblique);
 
     const A4: [number, number] = [595.28, 841.89];
-    const marginX = 55;
+    const marginX = 50;
     const marginTop = 55;
-    const marginBottom = 55;
+    const marginBottom = 70;
 
+    // Färger – seriös, mörk palett
+    const INK = rgb(0.08, 0.1, 0.14);
+    const BODY = rgb(0.18, 0.2, 0.24);
+    const MUTED = rgb(0.42, 0.45, 0.5);
+    const RULE = rgb(0.82, 0.84, 0.88);
+    const SOFT = rgb(0.96, 0.97, 0.98);
+    const ACCENT = rgb(0.72, 0.55, 0.18); // varm mässing/guld
+    const ACCENT_DARK = rgb(0.55, 0.4, 0.1);
+
+    const pages: any[] = [];
     let page = pdf.addPage(A4);
-    let { width, height } = { width: page.getWidth(), height: page.getHeight() };
+    pages.push(page);
+    let width = page.getWidth();
+    let height = page.getHeight();
     let y = height - marginTop;
 
-    const BLACK = rgb(0, 0, 0);
-    const RULE = rgb(0.15, 0.15, 0.15);
-    const MUTED = rgb(0.35, 0.35, 0.35);
+    const setPage = (p: any) => {
+      page = p;
+      width = page.getWidth();
+      height = page.getHeight();
+    };
 
     const draw = (
       text: string,
@@ -92,7 +108,7 @@ export const generateManualOffer = createServerFn({ method: "POST" })
       yy: number,
       size = 10,
       useBold = false,
-      color = BLACK,
+      color = BODY,
     ) => {
       page.drawText(sanitize(text), {
         x,
@@ -103,53 +119,122 @@ export const generateManualOffer = createServerFn({ method: "POST" })
       });
     };
 
+    const drawItalic = (text: string, x: number, yy: number, size = 10, color = MUTED) => {
+      page.drawText(sanitize(text), { x, y: yy, size, font: oblique, color });
+    };
+
+    const textWidth = (text: string, size: number, useBold = false) => {
+      const f = useBold ? bold : font;
+      return f.widthOfTextAtSize(sanitize(text), size);
+    };
+
     const drawRight = (
       text: string,
       xRight: number,
       yy: number,
       size = 10,
       useBold = false,
-      color = BLACK,
+      color = BODY,
     ) => {
-      const t = sanitize(text);
-      const f = useBold ? bold : font;
-      const w = f.widthOfTextAtSize(t, size);
-      page.drawText(t, { x: xRight - w, y: yy, size, font: f, color });
+      const w = textWidth(text, size, useBold);
+      page.drawText(sanitize(text), {
+        x: xRight - w,
+        y: yy,
+        size,
+        font: useBold ? bold : font,
+        color,
+      });
     };
 
-    const hr = (yy: number, color = RULE, thickness = 0.6) => {
+    const drawCenter = (
+      text: string,
+      cx: number,
+      yy: number,
+      size = 10,
+      useBold = false,
+      color = BODY,
+    ) => {
+      const w = textWidth(text, size, useBold);
+      page.drawText(sanitize(text), {
+        x: cx - w / 2,
+        y: yy,
+        size,
+        font: useBold ? bold : font,
+        color,
+      });
+    };
+
+    const hr = (yy: number, color = RULE, thickness = 0.6, x1 = marginX, x2?: number) => {
       page.drawLine({
-        start: { x: marginX, y: yy },
-        end: { x: width - marginX, y: yy },
+        start: { x: x1, y: yy },
+        end: { x: (x2 ?? width - marginX), y: yy },
         thickness,
         color,
       });
     };
 
-    const drawFooter = () => {
+    const rect = (
+      x: number,
+      yy: number,
+      w: number,
+      h: number,
+      fill?: any,
+      stroke?: any,
+      strokeWidth = 0.6,
+    ) => {
+      page.drawRectangle({
+        x,
+        y: yy,
+        width: w,
+        height: h,
+        color: fill,
+        borderColor: stroke,
+        borderWidth: stroke ? strokeWidth : 0,
+      });
+    };
+
+    const drawHeader = () => {
+      // Övre accentband
+      rect(0, height - 8, width, 8, ACCENT);
+      // Namn centrerat
+      drawCenter(COMPANY_NAME, width / 2, height - 44, 26, true, INK);
+      // Tagline med accent under
+      drawCenter(COMPANY_TAGLINE, width / 2, height - 60, 8, true, ACCENT_DARK);
+      // Tunn linje under header
+      hr(height - 74, RULE, 0.5);
+    };
+
+    const drawFooter = (pageIdx: number, totalPages: number) => {
       const fy = 40;
       page.drawLine({
-        start: { x: marginX, y: fy + 14 },
-        end: { x: width - marginX, y: fy + 14 },
+        start: { x: marginX, y: fy + 20 },
+        end: { x: width - marginX, y: fy + 20 },
         thickness: 0.5,
         color: RULE,
       });
-      draw(FOOTER_TEXT, marginX, fy, 9, false, MUTED);
+      drawCenter(FOOTER_TEXT, width / 2, fy + 8, 8, false, MUTED);
+      drawCenter(
+        `Sida ${pageIdx} av ${totalPages}`,
+        width / 2,
+        fy - 4,
+        8,
+        false,
+        MUTED,
+      );
     };
 
     const newPage = () => {
-      drawFooter();
-      page = pdf.addPage(A4);
-      width = page.getWidth();
-      height = page.getHeight();
-      y = height - marginTop;
+      const p = pdf.addPage(A4);
+      pages.push(p);
+      setPage(p);
+      drawHeader();
+      y = height - 100;
     };
 
     const ensure = (needed: number) => {
-      if (y - needed < marginBottom) newPage();
+      if (y - needed < marginBottom + 20) newPage();
     };
 
-    // Word wrap helper
     const wrap = (
       text: string,
       maxWidth: number,
@@ -180,163 +265,302 @@ export const generateManualOffer = createServerFn({ method: "POST" })
       return lines;
     };
 
-    // ===== HEADER =====
-    draw("ROSLAGSTAK", marginX, y - 24, 30, true);
+    // ===== SIDA 1 =====
+    drawHeader();
+    y = height - 100;
+
+    // OFFERT-titel + offertnr-badge
+    draw("OFFERT", marginX, y - 22, 24, true, INK);
+    const badgeW = 170;
+    const badgeH = 30;
+    const badgeX = width - marginX - badgeW;
+    const badgeY = y - 26;
+    rect(badgeX, badgeY, badgeW, badgeH, INK);
+    drawCenter("OFFERTNUMMER", badgeX + badgeW / 2, badgeY + badgeH - 11, 7, true, ACCENT);
+    drawCenter(data.offertnr, badgeX + badgeW / 2, badgeY + 8, 12, true, rgb(1, 1, 1));
+    y -= 44;
+
+    // Meta-rad
+    const metaY = y;
+    const metaCol = (width - marginX * 2) / 3;
+    const metaCell = (label: string, value: string, i: number) => {
+      const x = marginX + metaCol * i;
+      draw(label.toUpperCase(), x, metaY, 7, true, MUTED);
+      draw(value || "—", x, metaY - 14, 10, true, INK);
+    };
+    metaCell("Offertdatum", fmtDate(data.offertdatum), 0);
+    metaCell("Giltig till", fmtDate(data.giltigTom), 1);
+    metaCell("Betalningsvillkor", data.betalningsvillkor, 2);
     y -= 34;
-    draw("OFFERT", marginX, y - 20, 20, true);
-    y -= 32;
 
-    // Meta row: 3 kolumner
-    const colW = (width - marginX * 2) / 3;
-    draw(`Offertnr: ${data.offertnr}`, marginX, y, 10);
-    draw(`Offertdatum: ${fmtDate(data.offertdatum)}`, marginX + colW, y, 10);
-    draw(`Giltig tom: ${fmtDate(data.giltigTom)}`, marginX + colW * 2, y, 10);
-    y -= 16;
-    draw(`Betalningsvillkor: ${data.betalningsvillkor}`, marginX, y, 10);
-    y -= 24;
+    hr(y);
+    y -= 22;
 
-    // Kund
-    draw("Kund", marginX, y, 12, true);
-    y -= 16;
+    // ===== KUND / OBJEKT: två boxar =====
+    const boxGap = 14;
+    const boxW = (width - marginX * 2 - boxGap) / 2;
     const kundRows: [string, string][] = [
       ["Namn", data.kundNamn],
-      ["Objektadress", data.objektadress],
       ["Telefon", data.telefon],
-      ["Mail", data.mail],
+      ["E-post", data.mail],
+    ];
+    const objRows: [string, string][] = [
+      ["Objektadress", data.objektadress],
       ["Fastighetsbeteckning", data.fastighetsbeteckning],
     ];
-    for (const [k, v] of kundRows) {
-      if (!v) continue;
-      draw(`${k}: ${v}`, marginX, y, 10);
-      y -= 14;
+    const boxRowH = 16;
+    const boxHeaderH = 22;
+    const boxPad = 12;
+    const kundH = boxHeaderH + boxPad + kundRows.length * boxRowH + 4;
+    const objH = boxHeaderH + boxPad + objRows.length * boxRowH + 4;
+    const boxH = Math.max(kundH, objH);
+
+    const drawInfoBox = (
+      x: number,
+      title: string,
+      rows: [string, string][],
+    ) => {
+      rect(x, y - boxH, boxW, boxH, undefined, RULE, 0.6);
+      rect(x, y - boxHeaderH, boxW, boxHeaderH, SOFT);
+      // accent stripe left
+      rect(x, y - boxH, 3, boxH, ACCENT);
+      draw(title.toUpperCase(), x + 12, y - 15, 8, true, INK);
+      let ry = y - boxHeaderH - boxPad;
+      for (const [k, v] of rows) {
+        draw(k, x + 12, ry, 8, false, MUTED);
+        draw(v || "—", x + 12, ry - 10, 10, true, INK);
+        ry -= boxRowH;
+      }
+    };
+    drawInfoBox(marginX, "Kund", kundRows);
+    drawInfoBox(marginX + boxW + boxGap, "Objekt", objRows);
+    y -= boxH + 22;
+
+    // ===== INTRO =====
+    if (data.intro?.trim()) {
+      const introLines = wrap(data.intro, width - marginX * 2, 10);
+      for (const ln of introLines) {
+        ensure(14);
+        draw(ln, marginX, y, 10, false, BODY);
+        y -= 14;
+      }
+      y -= 12;
     }
-    y -= 8;
-    hr(y);
+
+    // ===== ARBETSBESKRIVNING – tabellrubrik =====
+    ensure(40);
+    draw("ARBETSBESKRIVNING", marginX, y, 10, true, INK);
+    // accentlinje under
+    page.drawLine({
+      start: { x: marginX, y: y - 4 },
+      end: { x: marginX + 60, y: y - 4 },
+      thickness: 1.5,
+      color: ACCENT,
+    });
     y -= 18;
 
-    // Intro
-    if (data.intro?.trim()) {
-      draw(data.intro, marginX, y, 10);
-      y -= 22;
-    }
+    // Tabellheader
+    const tRowNumW = 40;
+    const tCol1 = marginX;
+    const tCol2 = marginX + tRowNumW;
+    const tRight = width - marginX;
+    const headerH = 22;
+    rect(tCol1, y - headerH, tRight - tCol1, headerH, INK);
+    draw("NR", tCol1 + 12, y - 14, 8, true, ACCENT);
+    draw("BESKRIVNING", tCol2 + 8, y - 14, 8, true, ACCENT);
+    y -= headerH;
 
-    // Rader-tabell
-    const colRad = marginX;
-    const colBesk = marginX + 60;
-    draw("Rad", colRad, y, 10, true);
-    draw("Beskrivning", colBesk, y, 10, true);
-    y -= 6;
-    hr(y);
-    y -= 14;
-
-    const beskMaxWidth = width - marginX - colBesk;
+    const beskMaxWidth = tRight - tCol2 - 16;
+    let zebra = false;
     for (const rad of data.rader) {
       const lines = wrap(rad.beskrivning, beskMaxWidth, 10);
-      const needed = Math.max(13, lines.length * 12);
-      ensure(needed);
-      draw(String(rad.radnr), colRad, y, 10);
-      for (let i = 0; i < lines.length; i++) {
-        draw(lines[i], colBesk, y - i * 12, 10);
+      const rowH = Math.max(20, lines.length * 13 + 8);
+      ensure(rowH + 40); // leave room for totals
+      if (zebra) {
+        rect(tCol1, y - rowH, tRight - tCol1, rowH, SOFT);
       }
-      y -= needed;
+      // radnr som liten "chip"
+      draw(String(rad.radnr).padStart(3, "0"), tCol1 + 8, y - 14, 9, true, ACCENT_DARK);
+      for (let i = 0; i < lines.length; i++) {
+        draw(lines[i], tCol2 + 8, y - 14 - i * 13, 10, false, INK);
+      }
+      // bottom rule
+      page.drawLine({
+        start: { x: tCol1, y: y - rowH },
+        end: { x: tRight, y: y - rowH },
+        thickness: 0.4,
+        color: RULE,
+      });
+      y -= rowH;
+      zebra = !zebra;
     }
-    y -= 10;
+    y -= 20;
 
-    // ===== TOTALER (nere till höger) =====
+    // ===== TOTALER som kort till höger =====
     const moms = Math.round((data.entreprenadprisExklMoms * data.momsProcent) / 100);
     const summaExklMoms = data.entreprenadprisExklMoms;
     const totaltInklMoms = summaExklMoms + moms;
     const attBetala = totaltInklMoms - data.rotBelopp;
 
-    const totRows: { label: string; value: string; bold?: boolean; rule?: boolean }[] = [
+    const totRows: { label: string; value: string; strong?: boolean; sep?: boolean }[] = [
       { label: "Entreprenadpris exkl. moms", value: fmtSek(data.entreprenadprisExklMoms) },
-      { label: "Materialkostnad", value: fmtSek(data.materialkostnad) },
-      { label: "Summa exkl. moms", value: fmtSek(summaExklMoms) },
-      { label: `Moms ${data.momsProcent} %`, value: fmtSek(moms) },
-      { label: "Totalt inkl. moms", value: fmtSek(totaltInklMoms) },
+      { label: "Varav materialkostnad", value: fmtSek(data.materialkostnad) },
+      { label: `Moms ${data.momsProcent} %`, value: fmtSek(moms), sep: true },
+      { label: "Totalt inkl. moms", value: fmtSek(totaltInklMoms), strong: true },
     ];
     if (data.rotBelopp > 0) {
       const rotLabel = data.rotEtikett
         ? `Preliminärt ROT-avdrag ${data.rotEtikett}`
         : "Preliminärt ROT-avdrag";
-      totRows.push({ label: rotLabel, value: `-${fmtSek(data.rotBelopp)}`, rule: true });
-      totRows.push({ label: "ATT BETALA EFTER ROT", value: fmtSek(attBetala), bold: true });
+      totRows.push({ label: rotLabel, value: `-${fmtSek(data.rotBelopp)}`, sep: true });
     }
 
-    const totBlockHeight = totRows.length * 17 + 14;
-    ensure(totBlockHeight);
+    const cardW = 300;
+    const cardX = width - marginX - cardW;
+    const rowH = 20;
+    const highlightH = data.rotBelopp > 0 ? 44 : 0;
+    const cardH = 14 + totRows.length * rowH + 6 + highlightH;
 
-    const totLeft = width / 2 + 10;
-    const totRight = width - marginX;
-    // Övre linje för totalblock
-    page.drawLine({
-      start: { x: totLeft, y: y + 6 },
-      end: { x: totRight, y: y + 6 },
-      thickness: 0.6,
-      color: RULE,
-    });
+    ensure(cardH + 10);
+    // Card outline
+    rect(cardX, y - cardH, cardW, cardH, undefined, RULE, 0.8);
+    // Header stripe
+    rect(cardX, y - 22, cardW, 22, INK);
+    draw("SAMMANSTÄLLNING", cardX + 14, y - 15, 8, true, ACCENT);
+
+    let ry = y - 34;
     for (const r of totRows) {
-      const size = r.bold ? 11 : 10;
-      draw(r.label, totLeft, y - 6, size, r.bold);
-      drawRight(r.value, totRight, y - 6, size, r.bold);
-      y -= 17;
-      if (r.rule) {
+      const size = r.strong ? 11 : 10;
+      const color = r.strong ? INK : BODY;
+      draw(r.label, cardX + 14, ry, size, r.strong, color);
+      drawRight(r.value, cardX + cardW - 14, ry, size, r.strong, color);
+      ry -= rowH;
+      if (r.sep) {
         page.drawLine({
-          start: { x: totLeft, y: y + 8 },
-          end: { x: totRight, y: y + 8 },
-          thickness: 0.6,
+          start: { x: cardX + 14, y: ry + rowH - 6 },
+          end: { x: cardX + cardW - 14, y: ry + rowH - 6 },
+          thickness: 0.4,
           color: RULE,
         });
       }
     }
 
-    // ===== SIDA 2: NOTERINGAR + VILLKOR =====
+    if (data.rotBelopp > 0) {
+      // Highlight-block "Att betala"
+      const hy = y - cardH;
+      rect(cardX, hy, cardW, highlightH, ACCENT);
+      draw("ATT BETALA EFTER ROT", cardX + 14, hy + highlightH - 16, 9, true, rgb(1, 1, 1));
+      drawRight(fmtSek(attBetala), cardX + cardW - 14, hy + 14, 16, true, rgb(1, 1, 1));
+    }
+
+    y -= cardH + 24;
+
+    // ===== SIDA 2: NOTERINGAR + VILLKOR + SIGNATUR =====
     const hasNoteringar = data.noteringar.some((n) => n.trim());
     const hasVillkor = data.villkor.some((v) => v.rubrik.trim() || v.brodtext.trim());
+
     if (hasNoteringar || hasVillkor) {
       newPage();
 
+      const sectionHeader = (title: string) => {
+        ensure(40);
+        draw(title.toUpperCase(), marginX, y, 14, true, INK);
+        page.drawLine({
+          start: { x: marginX, y: y - 6 },
+          end: { x: marginX + 60, y: y - 6 },
+          thickness: 1.5,
+          color: ACCENT,
+        });
+        y -= 22;
+      };
+
       if (hasNoteringar) {
-        draw("Övriga noteringar", marginX, y, 18, true);
-        y -= 24;
+        sectionHeader("Övriga noteringar");
         for (const n of data.noteringar) {
           if (!n.trim()) continue;
-          const lines = wrap(n, width - marginX * 2 - 14, 10);
-          ensure(lines.length * 14 + 4);
-          draw("•", marginX, y, 10, true);
+          const lines = wrap(n, width - marginX * 2 - 18, 10);
+          ensure(lines.length * 14 + 6);
+          // liten fyrkant som bullet
+          rect(marginX + 2, y - 8, 4, 4, ACCENT);
           for (let i = 0; i < lines.length; i++) {
-            draw(lines[i], marginX + 14, y - i * 14, 10);
+            draw(lines[i], marginX + 16, y - i * 14, 10, false, BODY);
           }
-          y -= lines.length * 14 + 4;
+          y -= lines.length * 14 + 8;
         }
-        y -= 10;
+        y -= 14;
       }
 
       if (hasVillkor) {
-        ensure(30);
-        draw("Övriga villkor", marginX, y, 18, true);
-        y -= 22;
+        sectionHeader("Övriga villkor");
         for (const v of data.villkor) {
           if (!v.rubrik.trim() && !v.brodtext.trim()) continue;
-          ensure(30);
+          ensure(36);
           if (v.rubrik.trim()) {
-            draw(v.rubrik, marginX, y, 11, true);
-            y -= 16;
+            draw(v.rubrik, marginX, y, 11, true, INK);
+            y -= 15;
           }
           if (v.brodtext.trim()) {
             const lines = wrap(v.brodtext, width - marginX * 2, 10);
             for (const ln of lines) {
               ensure(14);
-              draw(ln, marginX, y, 10);
+              draw(ln, marginX, y, 10, false, BODY);
               y -= 14;
             }
           }
-          y -= 8;
+          y -= 10;
         }
       }
+
+      // ===== SIGNATURRUTA =====
+      ensure(120);
+      y -= 10;
+      draw("GODKÄNNANDE AV OFFERT", marginX, y, 10, true, INK);
+      page.drawLine({
+        start: { x: marginX, y: y - 4 },
+        end: { x: marginX + 60, y: y - 4 },
+        thickness: 1.5,
+        color: ACCENT,
+      });
+      y -= 22;
+      drawItalic(
+        "Vid godkännande av denna offert signeras nedan. Två exemplar; ett behålls av respektive part.",
+        marginX,
+        y,
+        9,
+        MUTED,
+      );
+      y -= 30;
+
+      const sigW = (width - marginX * 2 - 30) / 2;
+      const sigY = y - 50;
+      // Kund
+      page.drawLine({
+        start: { x: marginX, y: sigY + 18 },
+        end: { x: marginX + sigW, y: sigY + 18 },
+        thickness: 0.6,
+        color: INK,
+      });
+      draw("Ort och datum", marginX, sigY + 6, 8, false, MUTED);
+      draw("Beställare / kund", marginX, sigY - 6, 8, false, MUTED);
+      // Entreprenör
+      const eX = marginX + sigW + 30;
+      page.drawLine({
+        start: { x: eX, y: sigY + 18 },
+        end: { x: eX + sigW, y: sigY + 18 },
+        thickness: 0.6,
+        color: INK,
+      });
+      draw("Ort och datum", eX, sigY + 6, 8, false, MUTED);
+      draw("För RoslagsTak (VT6 Invest AB)", eX, sigY - 6, 8, false, MUTED);
+      y = sigY - 20;
     }
 
-    drawFooter();
+    // Rita footer på alla sidor med korrekt sidnr
+    const total = pages.length;
+    for (let i = 0; i < pages.length; i++) {
+      setPage(pages[i]);
+      drawFooter(i + 1, total);
+    }
 
     const bytes = await pdf.save();
     const base64 = uint8ToBase64(bytes);
@@ -347,12 +571,11 @@ export const generateManualOffer = createServerFn({ method: "POST" })
     return { filename, base64 };
   });
 
-// Ersätt tecken som Helvetica (WinAnsi) inte klarar
 function sanitize(s: string): string {
   if (!s) return "";
   return s
     .replace(/\r/g, "")
-    .replace(/[\u2013\u2014]/g, "-") // – —
+    .replace(/[\u2013\u2014]/g, "-")
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/\u00A0/g, " ")
@@ -365,6 +588,5 @@ function uint8ToBase64(bytes: Uint8Array): string {
   for (let i = 0; i < bytes.length; i += chunk) {
     binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
   }
-  // btoa exists in both browser and Workers runtime
   return btoa(binary);
 }
