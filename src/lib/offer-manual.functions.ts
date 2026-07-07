@@ -81,13 +81,14 @@ export const generateManualOffer = createServerFn({ method: "POST" })
     const marginBottom = 70;
 
     // Färger – seriös, mörk palett
-    const INK = rgb(0.08, 0.1, 0.14);
-    const BODY = rgb(0.18, 0.2, 0.24);
-    const MUTED = rgb(0.42, 0.45, 0.5);
-    const RULE = rgb(0.82, 0.84, 0.88);
-    const SOFT = rgb(0.96, 0.97, 0.98);
-    const ACCENT = rgb(0.72, 0.55, 0.18); // varm mässing/guld
-    const ACCENT_DARK = rgb(0.55, 0.4, 0.1);
+    const INK = rgb(0, 0, 0);
+    const BODY = rgb(0.15, 0.15, 0.15);
+    const MUTED = rgb(0.4, 0.4, 0.4);
+    const RULE = rgb(0.75, 0.75, 0.75);
+    const SOFT = rgb(0.95, 0.95, 0.95);
+    const ACCENT = rgb(0, 0, 0);
+    const ACCENT_DARK = rgb(0, 0, 0);
+    const WHITE = rgb(1, 1, 1);
 
     const pages: any[] = [];
     let page = pdf.addPage(A4);
