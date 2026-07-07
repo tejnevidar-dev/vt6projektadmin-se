@@ -81,13 +81,14 @@ export const generateManualOffer = createServerFn({ method: "POST" })
     const marginBottom = 70;
 
     // Färger – seriös, mörk palett
-    const INK = rgb(0.08, 0.1, 0.14);
-    const BODY = rgb(0.18, 0.2, 0.24);
-    const MUTED = rgb(0.42, 0.45, 0.5);
-    const RULE = rgb(0.82, 0.84, 0.88);
-    const SOFT = rgb(0.96, 0.97, 0.98);
-    const ACCENT = rgb(0.72, 0.55, 0.18); // varm mässing/guld
-    const ACCENT_DARK = rgb(0.55, 0.4, 0.1);
+    const INK = rgb(0, 0, 0);
+    const BODY = rgb(0.15, 0.15, 0.15);
+    const MUTED = rgb(0.4, 0.4, 0.4);
+    const RULE = rgb(0.75, 0.75, 0.75);
+    const SOFT = rgb(0.95, 0.95, 0.95);
+    const ACCENT = rgb(0, 0, 0);
+    const ACCENT_DARK = rgb(0, 0, 0);
+    const WHITE = rgb(1, 1, 1);
 
     const pages: any[] = [];
     let page = pdf.addPage(A4);
@@ -195,7 +196,7 @@ export const generateManualOffer = createServerFn({ method: "POST" })
 
     const drawHeader = () => {
       // Övre accentband
-      rect(0, height - 8, width, 8, ACCENT);
+      rect(0, height - 3, width, 3, INK);
       // Namn centrerat
       drawCenter(COMPANY_NAME, width / 2, height - 44, 26, true, INK);
       // Tagline med accent under
@@ -276,7 +277,7 @@ export const generateManualOffer = createServerFn({ method: "POST" })
     const badgeX = width - marginX - badgeW;
     const badgeY = y - 26;
     rect(badgeX, badgeY, badgeW, badgeH, INK);
-    drawCenter("OFFERTNUMMER", badgeX + badgeW / 2, badgeY + badgeH - 11, 7, true, ACCENT);
+    drawCenter("OFFERTNUMMER", badgeX + badgeW / 2, badgeY + badgeH - 11, 7, true, WHITE);
     drawCenter(data.offertnr, badgeX + badgeW / 2, badgeY + 8, 12, true, rgb(1, 1, 1));
     y -= 44;
 
@@ -366,8 +367,8 @@ export const generateManualOffer = createServerFn({ method: "POST" })
     const tRight = width - marginX;
     const headerH = 22;
     rect(tCol1, y - headerH, tRight - tCol1, headerH, INK);
-    draw("NR", tCol1 + 12, y - 14, 8, true, ACCENT);
-    draw("BESKRIVNING", tCol2 + 8, y - 14, 8, true, ACCENT);
+    draw("NR", tCol1 + 12, y - 14, 8, true, WHITE);
+    draw("BESKRIVNING", tCol2 + 8, y - 14, 8, true, WHITE);
     y -= headerH;
 
     const beskMaxWidth = tRight - tCol2 - 16;
@@ -426,7 +427,7 @@ export const generateManualOffer = createServerFn({ method: "POST" })
     rect(cardX, y - cardH, cardW, cardH, undefined, RULE, 0.8);
     // Header stripe
     rect(cardX, y - 22, cardW, 22, INK);
-    draw("SAMMANSTÄLLNING", cardX + 14, y - 15, 8, true, ACCENT);
+    draw("SAMMANSTÄLLNING", cardX + 14, y - 15, 8, true, WHITE);
 
     let ry = y - 34;
     for (const r of totRows) {
