@@ -76,7 +76,7 @@ export const generateManualOffer = createServerFn({ method: "POST" })
     const A4: [number, number] = [595.28, 841.89];
     const marginX = 55;
     const marginTop = 55;
-    const marginBottom = 70;
+    const marginBottom = 55;
 
     let page = pdf.addPage(A4);
     let { width, height } = { width: page.getWidth(), height: page.getHeight() };
