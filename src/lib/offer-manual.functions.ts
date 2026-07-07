@@ -40,7 +40,7 @@ export interface OfferInput {
 }
 
 const COMPANY_NAME = "ROSLAGSTAK";
-const COMPANY_TAGLINE = "TAKENTREPRENAD I VÄRLDSKLASS";
+const COMPANY_TAGLINE = "Offerten avser takentreprenad enligt följande.";
 const FOOTER_TEXT =
   "RoslagsTak (VT6 Invest AB)   ·   Org.nr 559539-3595   ·   Momsnr SE559539359501   ·   Godkänd för F-skatt";
 
