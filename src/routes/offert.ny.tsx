@@ -269,50 +269,45 @@ function OffertNyPage() {
       </div>
 
       <Card className="mt-4">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Specifikation (rader)</CardTitle>
-          <div className="flex gap-2">
-            <Button size="sm" variant="ghost" onClick={renumberRader}>
-              Numrera om
-            </Button>
-            <Button size="sm" onClick={addRad}>
-              <Plus className="mr-1 h-4 w-4" /> Lägg till rad
-            </Button>
-          </div>
+        <CardHeader>
+          <CardTitle>Arbetsbeskrivning</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="mb-2">
+        <CardContent className="space-y-3">
+          <div>
             <Label>Introduktionstext</Label>
             <Input value={intro} onChange={(e) => setIntro(e.target.value)} />
           </div>
-          <div className="space-y-2">
-            {rader.map((r, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <Input
-                  className="w-20"
-                  type="number"
-                  value={r.radnr}
-                  onChange={(e) => updateRad(i, { radnr: Number(e.target.value) })}
-                />
-                <Textarea
-                  className="flex-1 min-h-[38px]"
-                  rows={1}
-                  placeholder="Beskrivning av arbetet"
-                  value={r.beskrivning}
-                  onChange={(e) => updateRad(i, { beskrivning: e.target.value })}
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => removeRad(i)}
-                  disabled={rader.length === 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+          <div>
+            <Label>Klistra in arbetsmallen</Label>
+            <Textarea
+              rows={10}
+              placeholder={
+                "Klistra in hela texten här. Varje rad blir en punkt i offerten.\n\nT.ex.\nRivning av befintligt tak\nMontering av ny underlagspapp\nNytt plåttak inkl. beslag\nBortforsling av rivningsmaterial"
+              }
+              value={arbetstext}
+              onChange={(e) => setArbetstext(e.target.value)}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Varje icke-tom rad blir en egen punkt. Ledande "•", "-" eller "1." rensas automatiskt.
+            </p>
           </div>
+          {raderPreview.length > 0 && (
+            <div className="rounded-md border p-3 bg-muted/30">
+              <div className="text-xs font-medium text-muted-foreground mb-2">
+                Förhandsvisning ({raderPreview.length} rader)
+              </div>
+              <ol className="space-y-1 text-sm">
+                {raderPreview.map((r) => (
+                  <li key={r.radnr} className="flex gap-3">
+                    <span className="w-8 text-muted-foreground tabular-nums">{r.radnr}</span>
+                    <span className="flex-1">{r.beskrivning}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </CardContent>
+
       </Card>
 
       <Card className="mt-4">
