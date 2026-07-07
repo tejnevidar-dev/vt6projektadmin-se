@@ -19,6 +19,7 @@ import { Route as PagaendeRouteImport } from './routes/pagaende'
 import { Route as OfferteradeRouteImport } from './routes/offerterade'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeadsRouteImport } from './routes/leads'
+import { Route as KalenderRouteImport } from './routes/kalender'
 import { Route as EgenkontrollerRouteImport } from './routes/egenkontroller'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BokadeRouteImport } from './routes/bokade'
@@ -91,6 +92,11 @@ const LoginRoute = LoginRouteImport.update({
 const LeadsRoute = LeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KalenderRoute = KalenderRouteImport.update({
+  id: '/kalender',
+  path: '/kalender',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EgenkontrollerRoute = EgenkontrollerRouteImport.update({
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
   '/egenkontroller': typeof EgenkontrollerRouteWithChildren
+  '/kalender': typeof KalenderRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
   '/offerterade': typeof OfferteradeRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
+  '/kalender': typeof KalenderRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
   '/offerterade': typeof OfferteradeRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
   '/egenkontroller': typeof EgenkontrollerRouteWithChildren
+  '/kalender': typeof KalenderRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
   '/offerterade': typeof OfferteradeRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/bokade'
     | '/dashboard'
     | '/egenkontroller'
+    | '/kalender'
     | '/leads'
     | '/login'
     | '/offerterade'
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
+    | '/kalender'
     | '/leads'
     | '/login'
     | '/offerterade'
@@ -398,6 +409,7 @@ export interface FileRouteTypes {
     | '/bokade'
     | '/dashboard'
     | '/egenkontroller'
+    | '/kalender'
     | '/leads'
     | '/login'
     | '/offerterade'
@@ -434,6 +446,7 @@ export interface RootRouteChildren {
   BokadeRoute: typeof BokadeRoute
   DashboardRoute: typeof DashboardRoute
   EgenkontrollerRoute: typeof EgenkontrollerRouteWithChildren
+  KalenderRoute: typeof KalenderRoute
   LeadsRoute: typeof LeadsRoute
   LoginRoute: typeof LoginRoute
   OfferteradeRoute: typeof OfferteradeRoute
@@ -531,6 +544,13 @@ declare module '@tanstack/react-router' {
       path: '/leads'
       fullPath: '/leads'
       preLoaderRoute: typeof LeadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kalender': {
+      id: '/kalender'
+      path: '/kalender'
+      fullPath: '/kalender'
+      preLoaderRoute: typeof KalenderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/egenkontroller': {
@@ -718,6 +738,7 @@ const rootRouteChildren: RootRouteChildren = {
   BokadeRoute: BokadeRoute,
   DashboardRoute: DashboardRoute,
   EgenkontrollerRoute: EgenkontrollerRouteWithChildren,
+  KalenderRoute: KalenderRoute,
   LeadsRoute: LeadsRoute,
   LoginRoute: LoginRoute,
   OfferteradeRoute: OfferteradeRoute,
@@ -747,13 +768,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
