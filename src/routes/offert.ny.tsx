@@ -7,13 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, FileDown, Loader2 } from "lucide-react";
+import { Plus, Trash2, FileDown, Loader2, Sparkles, ArrowUp, ArrowDown } from "lucide-react";
 import {
   generateManualOffer,
   type OfferInput,
   type OfferRow,
   type OfferVillkorSektion,
 } from "@/lib/offer-manual.functions";
+import { parseArbeteText } from "@/lib/offer-parse.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/offert/ny")({
@@ -83,20 +84,46 @@ function OffertNyPage() {
   // Intro
   const [intro, setIntro] = useState(STANDARD_INTRO);
 
-  // Arbetsbeskrivning – en textruta som bryts ut till punkter
+  // Arbetsbeskrivning – fri text som AI tolkar till punkter
   const [arbetstext, setArbetstext] = useState("");
+  const [rader, setRader] = useState<OfferRow[]>([]);
+  const [parsing, setParsing] = useState(false);
+  const callParse = useServerFn(parseArbeteText);
 
-  const parseRader = (text: string): OfferRow[] => {
-    return text
-      .split(/\r?\n+/)
-      .map((l) => l.trim())
-      // rensa bort ledande punkter/streck/numrering (t.ex. "1.", "•", "-", "*", "10 ")
-      .map((l) => l.replace(/^(?:[-•*·]|\d+[\.\)]?)\s+/, "").trim())
-      .filter(Boolean)
-      .map((beskrivning, i) => ({ radnr: (i + 1) * 10, beskrivning }));
+  const renumber = (list: { beskrivning: string }[]): OfferRow[] =>
+    list.map((r, i) => ({ radnr: (i + 1) * 10, beskrivning: r.beskrivning }));
+
+  const handleTolka = async () => {
+    if (!arbetstext.trim()) {
+      toast.error("Klistra in arbetstexten först");
+      return;
+    }
+    setParsing(true);
+    try {
+      const res = await callParse({ data: { text: arbetstext } });
+      setRader(renumber(res.punkter.map((p) => ({ beskrivning: p }))));
+      toast.success(`AI tolkade ${res.punkter.length} punkter`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Kunde inte tolka texten");
+    } finally {
+      setParsing(false);
+    }
   };
 
-  const raderPreview = useMemo(() => parseRader(arbetstext), [arbetstext]);
+  const updateRad = (i: number, beskrivning: string) =>
+    setRader((prev) => prev.map((r, idx) => (idx === i ? { ...r, beskrivning } : r)));
+  const removeRad = (i: number) =>
+    setRader((prev) => renumber(prev.filter((_, idx) => idx !== i)));
+  const moveRad = (i: number, dir: -1 | 1) =>
+    setRader((prev) => {
+      const j = i + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const copy = [...prev];
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+      return renumber(copy);
+    });
+  const addRad = () =>
+    setRader((prev) => renumber([...prev, { beskrivning: "" }]));
 
   // Belopp
   const [entreprenadpris, setEntreprenadpris] = useState<number>(0);
@@ -131,9 +158,11 @@ function OffertNyPage() {
       toast.error("Ange kundnamn");
       return;
     }
-    const cleanRader = parseRader(arbetstext);
+    const cleanRader = renumber(
+      rader.map((r) => ({ beskrivning: r.beskrivning.trim() })).filter((r) => r.beskrivning),
+    );
     if (cleanRader.length === 0) {
-      toast.error("Skriv in arbetsbeskrivningen");
+      toast.error("Tolka texten till punkter (eller lägg till manuellt) först");
       return;
     }
     const noteringarArr = noteringarText
@@ -278,32 +307,72 @@ function OffertNyPage() {
             <Input value={intro} onChange={(e) => setIntro(e.target.value)} />
           </div>
           <div>
-            <Label>Klistra in arbetsmallen</Label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>Klistra in arbetstexten (löpande text)</Label>
+              <Button size="sm" onClick={handleTolka} disabled={parsing}>
+                {parsing ? (
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-1 h-4 w-4" />
+                )}
+                Tolka med AI
+              </Button>
+            </div>
             <Textarea
               rows={10}
-              placeholder={
-                "Klistra in hela texten här. Varje rad blir en punkt i offerten.\n\nT.ex.\nRivning av befintligt tak\nMontering av ny underlagspapp\nNytt plåttak inkl. beslag\nBortforsling av rivningsmaterial"
-              }
+              placeholder="Klistra in hela din löpande text. AI läser och bryter ut arbetsmomenten till numrerade punkter."
               value={arbetstext}
               onChange={(e) => setArbetstext(e.target.value)}
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Varje icke-tom rad blir en egen punkt. Ledande "•", "-" eller "1." rensas automatiskt.
+              Skriv fritt – AI tolkar texten och skapar punktlistan nedan. Du kan redigera efteråt.
             </p>
           </div>
-          {raderPreview.length > 0 && (
-            <div className="rounded-md border p-3 bg-muted/30">
-              <div className="text-xs font-medium text-muted-foreground mb-2">
-                Förhandsvisning ({raderPreview.length} rader)
+
+          {rader.length > 0 && (
+            <div className="rounded-md border p-3 bg-muted/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-medium text-muted-foreground">
+                  {rader.length} punkter (redigerbara)
+                </div>
+                <Button size="sm" variant="ghost" onClick={addRad}>
+                  <Plus className="mr-1 h-4 w-4" /> Lägg till
+                </Button>
               </div>
-              <ol className="space-y-1 text-sm">
-                {raderPreview.map((r) => (
-                  <li key={r.radnr} className="flex gap-3">
-                    <span className="w-8 text-muted-foreground tabular-nums">{r.radnr}</span>
-                    <span className="flex-1">{r.beskrivning}</span>
-                  </li>
-                ))}
-              </ol>
+              {rader.map((r, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="w-8 pt-2 text-xs text-muted-foreground tabular-nums">
+                    {r.radnr}
+                  </span>
+                  <Textarea
+                    rows={2}
+                    value={r.beskrivning}
+                    onChange={(e) => updateRad(i, e.target.value)}
+                    className="flex-1"
+                  />
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => moveRad(i, -1)}
+                      disabled={i === 0}
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => moveRad(i, 1)}
+                      disabled={i === rader.length - 1}
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => removeRad(i)}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
