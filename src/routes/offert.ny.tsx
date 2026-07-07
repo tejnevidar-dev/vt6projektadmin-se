@@ -129,18 +129,22 @@ function OffertNyPage() {
   const [entreprenadpris, setEntreprenadpris] = useState<number>(0);
   const [materialkostnad, setMaterialkostnad] = useState<number>(0);
   const [momsProcent, setMomsProcent] = useState<number>(25);
-  const [rotEtikett, setRotEtikett] = useState<string>("");
   const [inkluderaRot, setInkluderaRot] = useState<boolean>(true);
+  const [antalAgare, setAntalAgare] = useState<1 | 2>(1);
 
   const totals = useMemo(() => {
     const moms = Math.round((entreprenadpris * momsProcent) / 100);
     const totalInkl = entreprenadpris + moms;
     const arbeteExMoms = Math.max(0, entreprenadpris - materialkostnad);
     const arbeteInklMoms = arbeteExMoms * (1 + momsProcent / 100);
-    const rotBelopp = inkluderaRot ? Math.round(arbeteInklMoms * 0.3) : 0;
+    const rotTak = antalAgare * 50000;
+    const rotRaknat = Math.round(arbeteInklMoms * 0.3);
+    const rotBelopp = inkluderaRot ? Math.min(rotRaknat, rotTak) : 0;
+    const rotKapad = inkluderaRot && rotRaknat > rotTak;
     const attBetala = totalInkl - rotBelopp;
-    return { moms, totalInkl, rotBelopp, attBetala, arbeteExMoms };
-  }, [entreprenadpris, materialkostnad, momsProcent, inkluderaRot]);
+    return { moms, totalInkl, rotBelopp, attBetala, arbeteExMoms, rotTak, rotRaknat, rotKapad };
+  }, [entreprenadpris, materialkostnad, momsProcent, inkluderaRot, antalAgare]);
+  const rotEtikett = antalAgare === 2 ? "(2 ägare)" : "";
 
   // Noteringar
   const [noteringarText, setNoteringarText] = useState("");
