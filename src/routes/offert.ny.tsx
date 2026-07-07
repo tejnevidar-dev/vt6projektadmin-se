@@ -129,18 +129,22 @@ function OffertNyPage() {
   const [entreprenadpris, setEntreprenadpris] = useState<number>(0);
   const [materialkostnad, setMaterialkostnad] = useState<number>(0);
   const [momsProcent, setMomsProcent] = useState<number>(25);
-  const [rotEtikett, setRotEtikett] = useState<string>("");
   const [inkluderaRot, setInkluderaRot] = useState<boolean>(true);
+  const [antalAgare, setAntalAgare] = useState<1 | 2>(1);
 
   const totals = useMemo(() => {
     const moms = Math.round((entreprenadpris * momsProcent) / 100);
     const totalInkl = entreprenadpris + moms;
     const arbeteExMoms = Math.max(0, entreprenadpris - materialkostnad);
     const arbeteInklMoms = arbeteExMoms * (1 + momsProcent / 100);
-    const rotBelopp = inkluderaRot ? Math.round(arbeteInklMoms * 0.3) : 0;
+    const rotTak = antalAgare * 50000;
+    const rotRaknat = Math.round(arbeteInklMoms * 0.3);
+    const rotBelopp = inkluderaRot ? Math.min(rotRaknat, rotTak) : 0;
+    const rotKapad = inkluderaRot && rotRaknat > rotTak;
     const attBetala = totalInkl - rotBelopp;
-    return { moms, totalInkl, rotBelopp, attBetala, arbeteExMoms };
-  }, [entreprenadpris, materialkostnad, momsProcent, inkluderaRot]);
+    return { moms, totalInkl, rotBelopp, attBetala, arbeteExMoms, rotTak, rotRaknat, rotKapad };
+  }, [entreprenadpris, materialkostnad, momsProcent, inkluderaRot, antalAgare]);
+  const rotEtikett = antalAgare === 2 ? "(2 ägare)" : "";
 
   // Noteringar
   const [noteringarText, setNoteringarText] = useState("");
@@ -421,12 +425,27 @@ function OffertNyPage() {
             </Label>
           </div>
           <div className="sm:col-span-2">
-            <Label>ROT-etikett (t.ex. "(2 ägare)")</Label>
-            <Input
-              placeholder="(2 ägare)"
-              value={rotEtikett}
-              onChange={(e) => setRotEtikett(e.target.value)}
-            />
+            <Label>Antal ägare (ROT-tak: 50 000 kr/ägare)</Label>
+            <div className="flex gap-4 mt-1">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="antal-agare"
+                  checked={antalAgare === 1}
+                  onChange={() => setAntalAgare(1)}
+                />
+                1 ägare (max 50 000 kr)
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="antal-agare"
+                  checked={antalAgare === 2}
+                  onChange={() => setAntalAgare(2)}
+                />
+                2 ägare (max 100 000 kr)
+              </label>
+            </div>
           </div>
           <div className="sm:col-span-2 rounded-md border p-3 text-sm bg-muted/30 space-y-1">
             <div className="flex justify-between">
@@ -444,7 +463,14 @@ function OffertNyPage() {
             {inkluderaRot && totals.rotBelopp > 0 && (
               <>
                 <div className="flex justify-between">
-                  <span>ROT-avdrag</span>
+                  <span>
+                    ROT-avdrag {rotEtikett}
+                    {totals.rotKapad && (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        (kapat till tak {totals.rotTak.toLocaleString("sv-SE")} kr)
+                      </span>
+                    )}
+                  </span>
                   <span>−{totals.rotBelopp.toLocaleString("sv-SE")} kr</span>
                 </div>
                 <div className="flex justify-between font-semibold border-t pt-1">
