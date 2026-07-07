@@ -7,13 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, FileDown, Loader2 } from "lucide-react";
+import { Plus, Trash2, FileDown, Loader2, Sparkles, ArrowUp, ArrowDown } from "lucide-react";
 import {
   generateManualOffer,
   type OfferInput,
   type OfferRow,
   type OfferVillkorSektion,
 } from "@/lib/offer-manual.functions";
+import { parseArbeteText } from "@/lib/offer-parse.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/offert/ny")({
