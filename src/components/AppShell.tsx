@@ -32,6 +32,7 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
     { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", side: "extern" },
     { to: "/leads", label: "Leads", icon: Users, group: "Arbeta", side: "extern" },
     { to: "/offerterade", label: "Offerterade", icon: ClipboardList, group: "Arbeta", side: "extern" },
+    { to: "/offert/ny", label: "Ny offert", icon: FileDown, group: "Arbeta", side: "extern" },
     { to: "/bokade", label: "Bokade", icon: CalendarCheck, group: "Arbeta", side: "extern" },
     { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", side: "extern" },
     { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", side: "extern" },

@@ -28,6 +28,7 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JobbIndexRouteImport } from './routes/jobb.index'
 import { Route as EgenkontrollerIndexRouteImport } from './routes/egenkontroller.index'
+import { Route as OffertNyRouteImport } from './routes/offert.ny'
 import { Route as KalkylLeadIdRouteImport } from './routes/kalkyl.$leadId'
 import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
@@ -139,6 +140,11 @@ const EgenkontrollerIndexRoute = EgenkontrollerIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => EgenkontrollerRoute,
+} as any)
+const OffertNyRoute = OffertNyRouteImport.update({
+  id: '/offert/ny',
+  path: '/offert/ny',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const KalkylLeadIdRoute = KalkylLeadIdRouteImport.update({
   id: '/kalkyl/$leadId',
@@ -252,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
+  '/offert/ny': typeof OffertNyRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
+  '/offert/ny': typeof OffertNyRoute
   '/egenkontroller': typeof EgenkontrollerIndexRoute
   '/jobb': typeof JobbIndexRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
@@ -326,6 +334,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
+  '/offert/ny': typeof OffertNyRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
@@ -365,6 +374,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
+    | '/offert/ny'
     | '/egenkontroller/'
     | '/jobb/'
     | '/api/public/lookup-invite'
@@ -401,6 +411,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
+    | '/offert/ny'
     | '/egenkontroller'
     | '/jobb'
     | '/api/public/lookup-invite'
@@ -438,6 +449,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
+    | '/offert/ny'
     | '/egenkontroller/'
     | '/jobb/'
     | '/api/public/lookup-invite'
@@ -475,6 +487,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   JobbJobIdRoute: typeof JobbJobIdRoute
   KalkylLeadIdRoute: typeof KalkylLeadIdRoute
+  OffertNyRoute: typeof OffertNyRoute
   JobbIndexRoute: typeof JobbIndexRoute
   ApiPublicLookupInviteRoute: typeof ApiPublicLookupInviteRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
@@ -621,6 +634,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/egenkontroller/'
       preLoaderRoute: typeof EgenkontrollerIndexRouteImport
       parentRoute: typeof EgenkontrollerRoute
+    }
+    '/offert/ny': {
+      id: '/offert/ny'
+      path: '/offert/ny'
+      fullPath: '/offert/ny'
+      preLoaderRoute: typeof OffertNyRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/kalkyl/$leadId': {
       id: '/kalkyl/$leadId'
@@ -775,6 +795,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   JobbJobIdRoute: JobbJobIdRoute,
   KalkylLeadIdRoute: KalkylLeadIdRoute,
+  OffertNyRoute: OffertNyRoute,
   JobbIndexRoute: JobbIndexRoute,
   ApiPublicLookupInviteRoute: ApiPublicLookupInviteRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
