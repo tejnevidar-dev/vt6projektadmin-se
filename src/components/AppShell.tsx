@@ -50,6 +50,7 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
         ...(isAdmin ? [{ to: "/egenkontroller/instruktioner", label: "Montageinstruktioner" }] : []),
       ],
     },
+    { to: "/kalender", label: "Kalender", icon: CalendarDays, group: "Arbeta", side: "intern" },
     { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "both", adminOnly: true },
 
     // Gemensamt (Hantera)
