@@ -463,7 +463,14 @@ function OffertNyPage() {
             {inkluderaRot && totals.rotBelopp > 0 && (
               <>
                 <div className="flex justify-between">
-                  <span>ROT-avdrag</span>
+                  <span>
+                    ROT-avdrag {rotEtikett}
+                    {totals.rotKapad && (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        (kapat till tak {totals.rotTak.toLocaleString("sv-SE")} kr)
+                      </span>
+                    )}
+                  </span>
                   <span>−{totals.rotBelopp.toLocaleString("sv-SE")} kr</span>
                 </div>
                 <div className="flex justify-between font-semibold border-t pt-1">
