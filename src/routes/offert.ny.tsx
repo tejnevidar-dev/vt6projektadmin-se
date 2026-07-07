@@ -342,13 +342,17 @@ function OffertNyPage() {
               onChange={(e) => setMomsProcent(Number(e.target.value))}
             />
           </div>
-          <div>
-            <Label>ROT-avdrag (kr) – 0 om ej tillämpligt</Label>
-            <Input
-              type="number"
-              value={rotBelopp}
-              onChange={(e) => setRotBelopp(Number(e.target.value))}
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <input
+              id="inkl-rot"
+              type="checkbox"
+              checked={inkluderaRot}
+              onChange={(e) => setInkluderaRot(e.target.checked)}
+              className="h-4 w-4"
             />
+            <Label htmlFor="inkl-rot" className="!m-0">
+              Inkludera ROT-avdrag (30 % av arbetskostnaden)
+            </Label>
           </div>
           <div className="sm:col-span-2">
             <Label>ROT-etikett (t.ex. "(2 ägare)")</Label>
@@ -358,7 +362,11 @@ function OffertNyPage() {
               onChange={(e) => setRotEtikett(e.target.value)}
             />
           </div>
-          <div className="sm:col-span-2 rounded-md border p-3 text-sm bg-muted/30">
+          <div className="sm:col-span-2 rounded-md border p-3 text-sm bg-muted/30 space-y-1">
+            <div className="flex justify-between">
+              <span>Arbetskostnad ex. moms</span>
+              <span>{totals.arbeteExMoms.toLocaleString("sv-SE")} kr</span>
+            </div>
             <div className="flex justify-between">
               <span>Moms {momsProcent} %</span>
               <span>{totals.moms.toLocaleString("sv-SE")} kr</span>
@@ -367,13 +375,20 @@ function OffertNyPage() {
               <span>Totalt inkl. moms</span>
               <span>{totals.totalInkl.toLocaleString("sv-SE")} kr</span>
             </div>
-            {rotBelopp > 0 && (
-              <div className="flex justify-between font-semibold">
-                <span>Att betala efter ROT</span>
-                <span>{totals.attBetala.toLocaleString("sv-SE")} kr</span>
-              </div>
+            {inkluderaRot && totals.rotBelopp > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <span>ROT-avdrag</span>
+                  <span>−{totals.rotBelopp.toLocaleString("sv-SE")} kr</span>
+                </div>
+                <div className="flex justify-between font-semibold border-t pt-1">
+                  <span>Att betala efter ROT</span>
+                  <span>{totals.attBetala.toLocaleString("sv-SE")} kr</span>
+                </div>
+              </>
             )}
           </div>
+
         </CardContent>
       </Card>
 
