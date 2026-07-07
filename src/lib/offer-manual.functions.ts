@@ -40,7 +40,7 @@ export interface OfferInput {
 }
 
 const COMPANY_NAME = "ROSLAGSTAK";
-const COMPANY_TAGLINE = "TAKENTREPRENAD I VÄRLDSKLASS";
+const COMPANY_TAGLINE = "Offerten avser takentreprenad enligt följande.";
 const FOOTER_TEXT =
   "RoslagsTak (VT6 Invest AB)   ·   Org.nr 559539-3595   ·   Momsnr SE559539359501   ·   Godkänd för F-skatt";
 
@@ -309,11 +309,11 @@ export const generateManualOffer = createServerFn({ method: "POST" })
       ["Objektadress", data.objektadress],
       ["Fastighetsbeteckning", data.fastighetsbeteckning],
     ];
-    const boxRowH = 16;
+    const boxRowH = 28;
     const boxHeaderH = 22;
-    const boxPad = 12;
-    const kundH = boxHeaderH + boxPad + kundRows.length * boxRowH + 4;
-    const objH = boxHeaderH + boxPad + objRows.length * boxRowH + 4;
+    const boxPad = 14;
+    const kundH = boxHeaderH + boxPad + kundRows.length * boxRowH + 6;
+    const objH = boxHeaderH + boxPad + objRows.length * boxRowH + 6;
     const boxH = Math.max(kundH, objH);
 
     const drawInfoBox = (
@@ -328,8 +328,8 @@ export const generateManualOffer = createServerFn({ method: "POST" })
       draw(title.toUpperCase(), x + 12, y - 15, 8, true, INK);
       let ry = y - boxHeaderH - boxPad;
       for (const [k, v] of rows) {
-        draw(k, x + 12, ry, 8, false, MUTED);
-        draw(v || "—", x + 12, ry - 10, 10, true, INK);
+        draw(k.toUpperCase(), x + 12, ry, 7, true, MUTED);
+        draw(v || "—", x + 12, ry - 14, 10, true, INK);
         ry -= boxRowH;
       }
     };
