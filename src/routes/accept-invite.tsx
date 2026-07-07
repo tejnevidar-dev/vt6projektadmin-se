@@ -73,12 +73,24 @@ function AcceptInvitePage() {
 
       // Fall B: ?invite=TOKEN → slå upp inbjudan
       if (invite) {
-        const { data } = await (supabase as any).rpc("get_invitation_by_token", { _token: invite });
+        let row: { email: string; role: string } | null = null;
+        try {
+          const resp = await fetch("/api/public/lookup-invite", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: invite }),
+          });
+          if (resp.ok) {
+            const json = await resp.json();
+            row = json?.invitation ?? null;
+          }
+        } catch {
+          row = null;
+        }
         if (cancelled) return;
-        const row = Array.isArray(data) ? data[0] : data;
         if (row) {
           setInfo(row as any);
-          setDisplayName(((row as any).email as string).split("@")[0]);
+          setDisplayName((row.email as string).split("@")[0]);
           setMode("token");
         } else {
           setMode("invalid");
