@@ -153,7 +153,7 @@ function OffertNyPage() {
       entreprenadprisExklMoms: entreprenadpris,
       materialkostnad,
       momsProcent,
-      rotBelopp,
+      rotBelopp: totals.rotBelopp,
       rotEtikett: rotEtikett.trim(),
       noteringar: noteringarArr,
       villkor: villkor.filter((v) => v.rubrik.trim() || v.brodtext.trim()),
