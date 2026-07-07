@@ -425,12 +425,27 @@ function OffertNyPage() {
             </Label>
           </div>
           <div className="sm:col-span-2">
-            <Label>ROT-etikett (t.ex. "(2 ägare)")</Label>
-            <Input
-              placeholder="(2 ägare)"
-              value={rotEtikett}
-              onChange={(e) => setRotEtikett(e.target.value)}
-            />
+            <Label>Antal ägare (ROT-tak: 50 000 kr/ägare)</Label>
+            <div className="flex gap-4 mt-1">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="antal-agare"
+                  checked={antalAgare === 1}
+                  onChange={() => setAntalAgare(1)}
+                />
+                1 ägare (max 50 000 kr)
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="antal-agare"
+                  checked={antalAgare === 2}
+                  onChange={() => setAntalAgare(2)}
+                />
+                2 ägare (max 100 000 kr)
+              </label>
+            </div>
           </div>
           <div className="sm:col-span-2 rounded-md border p-3 text-sm bg-muted/30 space-y-1">
             <div className="flex justify-between">
