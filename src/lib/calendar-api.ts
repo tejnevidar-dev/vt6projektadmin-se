@@ -79,6 +79,7 @@ export async function listCalendarEvents(side: Side): Promise<CalendarEvent[]> {
     start_at: e.start_at,
     end_at: e.end_at,
     all_day: e.all_day,
+    agenda: Array.isArray(e.agenda) ? (e.agenda as AgendaItem[]) : [],
     created_at: e.created_at,
     updated_at: e.updated_at,
     shared_users: (e.calendar_event_shares_users ?? []).map((s: any) => s.user_id),
