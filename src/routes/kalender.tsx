@@ -455,7 +455,7 @@ function KalenderPage() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => removeAgendaItem(e, a.id)}
+                          onClick={() => setAgendaToDelete({ event: e, item: a })}
                           className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
                           aria-label="Ta bort punkt"
                         >
