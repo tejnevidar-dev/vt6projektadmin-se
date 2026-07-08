@@ -386,13 +386,17 @@ function KalenderPage() {
               <div className="text-xs text-muted-foreground">Inga händelser.</div>
             )}
             {displayedEvents.map((e) => (
-              <button
+              <div
                 key={e.id}
-                onClick={() => openEdit(e)}
-                className="block w-full rounded-md border border-border p-3 text-left hover:bg-muted/50"
+                className="rounded-md border border-border p-3 hover:bg-muted/30"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <div className="font-medium text-sm">{e.title}</div>
+                  <button
+                    onClick={() => openEdit(e)}
+                    className="font-medium text-sm text-left hover:underline"
+                  >
+                    {e.title}
+                  </button>
                   <div className="text-[11px] text-muted-foreground whitespace-nowrap">
                     {format(new Date(e.start_at), "d MMM HH:mm", { locale: sv })}
                   </div>
@@ -402,17 +406,21 @@ function KalenderPage() {
                 )}
                 {e.agenda && e.agenda.length > 0 && (
                   <ul className="mt-2 space-y-1">
-                    {e.agenda.slice(0, 5).map((a) => (
-                      <li key={a.id} className="flex items-start gap-1.5 text-xs">
-                        <span className={a.done ? "line-through text-muted-foreground" : ""}>• {a.text}</span>
+                    {e.agenda.map((a) => (
+                      <li key={a.id} className="flex items-start gap-2 text-xs">
+                        <Checkbox
+                          checked={a.done}
+                          onCheckedChange={() => toggleAgendaItem(e, a.id)}
+                          className="mt-0.5"
+                        />
+                        <span className={a.done ? "line-through text-muted-foreground" : ""}>
+                          {a.text}
+                        </span>
                       </li>
                     ))}
-                    {e.agenda.length > 5 && (
-                      <li className="text-[10px] text-muted-foreground">+{e.agenda.length - 5} till</li>
-                    )}
                   </ul>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         </div>
