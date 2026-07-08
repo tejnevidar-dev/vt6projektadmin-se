@@ -37,6 +37,7 @@ export interface CalendarEventInput {
   start_at: string;
   end_at: string;
   all_day?: boolean;
+  agenda?: AgendaItem[];
   shared_users: string[];
   shared_roles: AppRole[];
 }
