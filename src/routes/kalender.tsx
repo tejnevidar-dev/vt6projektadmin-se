@@ -475,7 +475,7 @@ function KalenderPage() {
                 views={["month", "week", "day", "agenda"]}
                 selectable
                 onSelectSlot={(slot) => openCreate(slot.start as Date, slot.end as Date)}
-                onSelectEvent={(ev: any) => openEdit(ev.resource as CalendarEvent)}
+                onSelectEvent={(ev) => openEdit((ev as { resource: CalendarEvent }).resource)}
                 popup
               />
             </div>
