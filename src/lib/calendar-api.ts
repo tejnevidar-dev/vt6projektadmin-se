@@ -130,6 +130,7 @@ export async function updateCalendarEvent(id: string, input: CalendarEventInput)
       start_at: input.start_at,
       end_at: input.end_at,
       all_day: input.all_day ?? false,
+      agenda: (input.agenda ?? []) as any,
     })
     .eq("id", id);
   if (error) throw error;
