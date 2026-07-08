@@ -662,6 +662,25 @@ function KalenderPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!agendaToDelete} onOpenChange={(open) => !open && setAgendaToDelete(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ta bort agendapunkt?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Är du säker på att du vill ta bort "{agendaToDelete?.item.text}"?
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setAgendaToDelete(null)}>
+              Avbryt
+            </Button>
+            <Button variant="destructive" onClick={confirmRemoveAgendaItem}>
+              Ta bort
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
