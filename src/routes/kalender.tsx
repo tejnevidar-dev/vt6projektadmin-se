@@ -4,6 +4,7 @@ import { Calendar, dateFnsLocalizer, type View } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { sv } from "date-fns/locale";
 import { toast } from "sonner";
+import { Plus, X, Check } from "lucide-react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type AppRole } from "@/hooks/use-role";
 import { useWorkspace } from "@/hooks/use-workspace";
@@ -20,9 +22,12 @@ import {
   createCalendarEvent,
   deleteCalendarEvent,
   listCalendarEvents,
+  listCustomerOptions,
   listShareablePeople,
   updateCalendarEvent,
+  type AgendaItem,
   type CalendarEvent,
+  type CustomerOption,
   type ShareablePerson,
 } from "@/lib/calendar-api";
 
@@ -74,18 +79,23 @@ const MESSAGES = {
   showMore: (count: number) => `+${count} till`,
 };
 
+type CustomerFilter = { kind: "lead" | "job"; id: string } | null;
+
 function KalenderPage() {
   const { user } = useAuth();
   const { side } = useWorkspace();
   const { isAdmin } = useUserRoles();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [people, setPeople] = useState<ShareablePerson[]>([]);
+  const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<View>("month");
   const [date, setDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CalendarEvent | null>(null);
   const [form, setForm] = useState(() => emptyForm());
+  const [customerFilter, setCustomerFilter] = useState<CustomerFilter>(null);
+  const [newAgendaText, setNewAgendaText] = useState("");
 
   const allowedRoles = side === "extern" ? EXTERN_ROLES : INTERN_ROLES;
 
@@ -97,9 +107,14 @@ function KalenderPage() {
   async function refresh() {
     setLoading(true);
     try {
-      const [ev, pp] = await Promise.all([listCalendarEvents(side), listShareablePeople()]);
+      const [ev, pp, cc] = await Promise.all([
+        listCalendarEvents(side),
+        listShareablePeople(),
+        listCustomerOptions(),
+      ]);
       setEvents(ev);
       setPeople(pp);
+      setCustomers(cc);
     } catch (e: any) {
       toast.error("Kunde inte ladda kalendern", { description: e.message });
     } finally {
@@ -112,9 +127,24 @@ function KalenderPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [side]);
 
+  const displayedEvents = useMemo(() => {
+    if (!customerFilter) return events;
+    return events.filter((e) =>
+      customerFilter.kind === "lead" ? e.lead_id === customerFilter.id : e.job_id === customerFilter.id
+    );
+  }, [events, customerFilter]);
+
   function openCreate(start?: Date, end?: Date) {
     setEditing(null);
-    setForm({ ...emptyForm(), start_at: toLocalInput(start ?? new Date()), end_at: toLocalInput(end ?? addHour(start ?? new Date())) });
+    const base = emptyForm();
+    setForm({
+      ...base,
+      start_at: toLocalInput(start ?? new Date()),
+      end_at: toLocalInput(end ?? addHour(start ?? new Date())),
+      lead_id: customerFilter?.kind === "lead" ? customerFilter.id : null,
+      job_id: customerFilter?.kind === "job" ? customerFilter.id : null,
+    });
+    setNewAgendaText("");
     setDialogOpen(true);
   }
 
@@ -127,9 +157,13 @@ function KalenderPage() {
       start_at: toLocalInput(new Date(ev.start_at)),
       end_at: toLocalInput(new Date(ev.end_at)),
       all_day: ev.all_day,
+      lead_id: ev.lead_id,
+      job_id: ev.job_id,
+      agenda: ev.agenda ?? [],
       shared_users: ev.shared_users,
       shared_roles: ev.shared_roles,
     });
+    setNewAgendaText("");
     setDialogOpen(true);
   }
 
@@ -144,9 +178,12 @@ function KalenderPage() {
         title: form.title.trim(),
         description: form.description || null,
         location: form.location || null,
+        lead_id: form.lead_id,
+        job_id: form.job_id,
         start_at: new Date(form.start_at).toISOString(),
         end_at: new Date(form.end_at).toISOString(),
         all_day: form.all_day,
+        agenda: form.agenda,
         shared_users: form.shared_users,
         shared_roles: form.shared_roles,
       };
@@ -179,7 +216,7 @@ function KalenderPage() {
 
   const rbcEvents = useMemo(
     () =>
-      events.map((e) => ({
+      displayedEvents.map((e) => ({
         id: e.id,
         title: e.title,
         start: new Date(e.start_at),
@@ -187,10 +224,57 @@ function KalenderPage() {
         allDay: e.all_day,
         resource: e,
       })),
-    [events]
+    [displayedEvents]
   );
 
   const canEditEditing = !editing || editing.owner_id === user?.id || isAdmin;
+
+  function setCustomer(value: string) {
+    if (value === "__all__") {
+      setCustomerFilter(null);
+    } else {
+      const [kind, id] = value.split(":");
+      setCustomerFilter({ kind: kind as "lead" | "job", id });
+    }
+  }
+
+  function setEventCustomer(value: string) {
+    if (value === "__none__") {
+      setForm({ ...form, lead_id: null, job_id: null });
+    } else {
+      const [kind, id] = value.split(":");
+      if (kind === "lead") setForm({ ...form, lead_id: id, job_id: null });
+      else setForm({ ...form, lead_id: null, job_id: id });
+    }
+  }
+
+  const eventCustomerValue =
+    form.lead_id ? `lead:${form.lead_id}` : form.job_id ? `job:${form.job_id}` : "__none__";
+
+  const filterValue = customerFilter ? `${customerFilter.kind}:${customerFilter.id}` : "__all__";
+
+  const selectedCustomer = customerFilter
+    ? customers.find((c) => c.kind === customerFilter.kind && c.id === customerFilter.id) ?? null
+    : null;
+
+  function addAgendaItem() {
+    const text = newAgendaText.trim();
+    if (!text) return;
+    const item: AgendaItem = { id: crypto.randomUUID(), text, done: false };
+    setForm({ ...form, agenda: [...form.agenda, item] });
+    setNewAgendaText("");
+  }
+
+  function toggleAgenda(id: string) {
+    setForm({
+      ...form,
+      agenda: form.agenda.map((a) => (a.id === id ? { ...a, done: !a.done } : a)),
+    });
+  }
+
+  function removeAgenda(id: string) {
+    setForm({ ...form, agenda: form.agenda.filter((a) => a.id !== id) });
+  }
 
   return (
     <AppShell
@@ -198,34 +282,130 @@ function KalenderPage() {
       description={`${side === "extern" ? "Extern" : "Intern"} kalender – separat från motsatt arbetsyta`}
       actions={<Button onClick={() => openCreate()}>Ny händelse</Button>}
     >
-      <div className="rounded-lg border border-border bg-card p-3">
-        {loading ? (
-          <div className="p-6 text-sm text-muted-foreground">Laddar…</div>
-        ) : (
-          <div style={{ height: 720 }}>
-            <Calendar
-              localizer={localizer}
-              culture="sv"
-              messages={MESSAGES}
-              events={rbcEvents}
-              startAccessor="start"
-              endAccessor="end"
-              view={view}
-              onView={setView}
-              date={date}
-              onNavigate={setDate}
-              views={["month", "week", "day", "agenda"]}
-              selectable
-              onSelectSlot={(slot) => openCreate(slot.start as Date, slot.end as Date)}
-              onSelectEvent={(ev: any) => openEdit(ev.resource as CalendarEvent)}
-              popup
-            />
+      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3">
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Filtrera kund</Label>
+          <Select value={filterValue} onValueChange={setCustomer}>
+            <SelectTrigger className="h-9 w-[280px]">
+              <SelectValue placeholder="Alla kunder" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Alla kunder</SelectItem>
+              {customers.filter((c) => c.kind === "lead").length > 0 && (
+                <div className="px-2 py-1 text-[10px] font-semibold uppercase text-muted-foreground">Leads</div>
+              )}
+              {customers
+                .filter((c) => c.kind === "lead")
+                .map((c) => (
+                  <SelectItem key={`lead:${c.id}`} value={`lead:${c.id}`}>
+                    {c.label}
+                    {c.sub ? ` · ${c.sub}` : ""}
+                  </SelectItem>
+                ))}
+              {customers.filter((c) => c.kind === "job").length > 0 && (
+                <div className="px-2 py-1 text-[10px] font-semibold uppercase text-muted-foreground">Jobb</div>
+              )}
+              {customers
+                .filter((c) => c.kind === "job")
+                .map((c) => (
+                  <SelectItem key={`job:${c.id}`} value={`job:${c.id}`}>
+                    {c.label}
+                    {c.sub ? ` · ${c.sub}` : ""}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          {customerFilter && (
+            <Button size="sm" variant="ghost" onClick={() => setCustomerFilter(null)}>
+              Rensa
+            </Button>
+          )}
+        </div>
+        <div className="ml-auto text-xs text-muted-foreground">
+          {displayedEvents.length} händelse{displayedEvents.length === 1 ? "" : "r"}
+        </div>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-[1fr_360px]">
+        <div className="rounded-lg border border-border bg-card p-3">
+          {loading ? (
+            <div className="p-6 text-sm text-muted-foreground">Laddar…</div>
+          ) : (
+            <div style={{ height: 720 }}>
+              <Calendar
+                localizer={localizer}
+                culture="sv"
+                messages={MESSAGES}
+                events={rbcEvents}
+                startAccessor="start"
+                endAccessor="end"
+                view={view}
+                onView={setView}
+                date={date}
+                onNavigate={setDate}
+                views={["month", "week", "day", "agenda"]}
+                selectable
+                onSelectSlot={(slot) => openCreate(slot.start as Date, slot.end as Date)}
+                onSelectEvent={(ev: any) => openEdit(ev.resource as CalendarEvent)}
+                popup
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Agenda</h3>
+            {selectedCustomer && (
+              <Badge variant="outline" className="text-[10px]">
+                {selectedCustomer.kind === "lead" ? "Lead" : "Jobb"}
+              </Badge>
+            )}
           </div>
-        )}
+          <p className="mb-3 text-xs text-muted-foreground">
+            {selectedCustomer
+              ? `Kommande & senaste för ${selectedCustomer.label}`
+              : "Välj en kund i filtret för att se agendan"}
+          </p>
+          <div className="space-y-3 max-h-[660px] overflow-y-auto">
+            {displayedEvents.length === 0 && (
+              <div className="text-xs text-muted-foreground">Inga händelser.</div>
+            )}
+            {displayedEvents.map((e) => (
+              <button
+                key={e.id}
+                onClick={() => openEdit(e)}
+                className="block w-full rounded-md border border-border p-3 text-left hover:bg-muted/50"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-medium text-sm">{e.title}</div>
+                  <div className="text-[11px] text-muted-foreground whitespace-nowrap">
+                    {format(new Date(e.start_at), "d MMM HH:mm", { locale: sv })}
+                  </div>
+                </div>
+                {e.location && (
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{e.location}</div>
+                )}
+                {e.agenda && e.agenda.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {e.agenda.slice(0, 5).map((a) => (
+                      <li key={a.id} className="flex items-start gap-1.5 text-xs">
+                        <span className={a.done ? "line-through text-muted-foreground" : ""}>• {a.text}</span>
+                      </li>
+                    ))}
+                    {e.agenda.length > 5 && (
+                      <li className="text-[10px] text-muted-foreground">+{e.agenda.length - 5} till</li>
+                    )}
+                  </ul>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Redigera händelse" : "Ny händelse"}</DialogTitle>
           </DialogHeader>
@@ -234,6 +414,41 @@ function KalenderPage() {
               <Label>Titel</Label>
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} disabled={!canEditEditing} />
             </div>
+
+            <div>
+              <Label>Kund (lead eller jobb)</Label>
+              <Select value={eventCustomerValue} onValueChange={setEventCustomer} disabled={!canEditEditing}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Ingen kund" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Ingen kund</SelectItem>
+                  {customers.filter((c) => c.kind === "lead").length > 0 && (
+                    <div className="px-2 py-1 text-[10px] font-semibold uppercase text-muted-foreground">Leads</div>
+                  )}
+                  {customers
+                    .filter((c) => c.kind === "lead")
+                    .map((c) => (
+                      <SelectItem key={`lead:${c.id}`} value={`lead:${c.id}`}>
+                        {c.label}
+                        {c.sub ? ` · ${c.sub}` : ""}
+                      </SelectItem>
+                    ))}
+                  {customers.filter((c) => c.kind === "job").length > 0 && (
+                    <div className="px-2 py-1 text-[10px] font-semibold uppercase text-muted-foreground">Jobb</div>
+                  )}
+                  {customers
+                    .filter((c) => c.kind === "job")
+                    .map((c) => (
+                      <SelectItem key={`job:${c.id}`} value={`job:${c.id}`}>
+                        {c.label}
+                        {c.sub ? ` · ${c.sub}` : ""}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label>Plats / adress</Label>
               <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} disabled={!canEditEditing} />
@@ -242,6 +457,52 @@ function KalenderPage() {
               <Label>Beskrivning</Label>
               <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} disabled={!canEditEditing} rows={3} />
             </div>
+
+            <div>
+              <Label>Agenda / punkter</Label>
+              <div className="mt-1 space-y-1">
+                {form.agenda.length === 0 && (
+                  <div className="text-xs text-muted-foreground">Inga punkter ännu.</div>
+                )}
+                {form.agenda.map((a) => (
+                  <div key={a.id} className="flex items-center gap-2 rounded-md border border-border px-2 py-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleAgenda(a.id)}
+                      disabled={!canEditEditing}
+                      className={`flex h-5 w-5 items-center justify-center rounded border ${a.done ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+                    >
+                      {a.done && <Check className="h-3 w-3" />}
+                    </button>
+                    <span className={`flex-1 text-sm ${a.done ? "line-through text-muted-foreground" : ""}`}>{a.text}</span>
+                    {canEditEditing && (
+                      <button type="button" onClick={() => removeAgenda(a.id)} className="text-muted-foreground hover:text-destructive">
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {canEditEditing && (
+                <div className="mt-2 flex gap-2">
+                  <Input
+                    placeholder="Ny agendapunkt…"
+                    value={newAgendaText}
+                    onChange={(e) => setNewAgendaText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addAgendaItem();
+                      }
+                    }}
+                  />
+                  <Button type="button" variant="outline" size="icon" onClick={addAgendaItem}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center gap-2">
               <Checkbox id="allday" checked={form.all_day} onCheckedChange={(v) => setForm({ ...form, all_day: !!v })} disabled={!canEditEditing} />
               <Label htmlFor="allday" className="cursor-pointer">Heldag</Label>
@@ -346,6 +607,9 @@ function emptyForm() {
     start_at: toLocalInput(now),
     end_at: toLocalInput(addHour(now)),
     all_day: false,
+    lead_id: null as string | null,
+    job_id: null as string | null,
+    agenda: [] as AgendaItem[],
     shared_users: [] as string[],
     shared_roles: [] as AppRole[],
   };

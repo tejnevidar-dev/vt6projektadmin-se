@@ -145,6 +145,7 @@ export type Database = {
       }
       calendar_events: {
         Row: {
+          agenda: Json
           all_day: boolean
           created_at: string
           description: string | null
@@ -160,6 +161,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agenda?: Json
           all_day?: boolean
           created_at?: string
           description?: string | null
@@ -175,6 +177,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agenda?: Json
           all_day?: boolean
           created_at?: string
           description?: string | null
