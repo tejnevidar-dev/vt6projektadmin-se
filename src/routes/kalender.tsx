@@ -214,16 +214,16 @@ function KalenderPage() {
 
   function setCustomerFilter(filter: CustomerFilter) {
     navigate({
-      search: (prev) => ({ ...prev, customer: filter ? `${filter.kind}:${filter.id}` : "__all__" }),
+      search: (prev: Search) => ({ ...prev, customer: filter ? `${filter.kind}:${filter.id}` : "__all__" }),
     });
   }
 
   function setViewValue(v: View) {
-    navigate({ search: (prev) => ({ ...prev, view: v }) });
+    navigate({ search: (prev: Search) => ({ ...prev, view: v }) });
   }
 
   function setDateValue(d: Date) {
-    navigate({ search: (prev) => ({ ...prev, date: format(d, "yyyy-MM-dd") }) });
+    navigate({ search: (prev: Search) => ({ ...prev, date: format(d, "yyyy-MM-dd") }) });
   }
 
   async function toggleAgendaItem(ev: CalendarEvent, itemId: string) {
