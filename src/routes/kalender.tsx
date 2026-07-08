@@ -178,6 +178,13 @@ function KalenderPage() {
     }
   }
 
+  function confirmRemoveAgendaItem() {
+    if (!agendaToDelete) return;
+    const { event, item } = agendaToDelete;
+    setAgendaToDelete(null);
+    removeAgendaItem(event, item.id);
+  }
+
   function openCreate(start?: Date, end?: Date) {
     setEditing(null);
     const base = emptyForm();
