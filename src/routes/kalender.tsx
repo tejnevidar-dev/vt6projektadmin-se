@@ -98,6 +98,8 @@ function KalenderPage() {
   const [customerFilter, setCustomerFilter] = useState<CustomerFilter>(null);
   const [newAgendaText, setNewAgendaText] = useState("");
   const [agendaToDelete, setAgendaToDelete] = useState<{ event: CalendarEvent; item: AgendaItem } | null>(null);
+  const [editingAgendaItem, setEditingAgendaItem] = useState<{ event: CalendarEvent; item: AgendaItem } | null>(null);
+  const [editAgendaText, setEditAgendaText] = useState("");
 
   const allowedRoles = side === "extern" ? EXTERN_ROLES : INTERN_ROLES;
 
@@ -183,6 +185,37 @@ function KalenderPage() {
     const { event, item } = agendaToDelete;
     setAgendaToDelete(null);
     removeAgendaItem(event, item.id);
+  }
+
+  function startEditingAgendaItem(ev: CalendarEvent, item: AgendaItem) {
+    setEditingAgendaItem({ event: ev, item });
+    setEditAgendaText(item.text);
+  }
+
+  function cancelAgendaItemEdit() {
+    setEditingAgendaItem(null);
+    setEditAgendaText("");
+  }
+
+  async function commitAgendaItemEdit() {
+    if (!editingAgendaItem) return;
+    const { event, item } = editingAgendaItem;
+    const trimmed = editAgendaText.trim();
+    if (!trimmed || trimmed === item.text) {
+      cancelAgendaItemEdit();
+      return;
+    }
+    const nextAgenda = (event.agenda ?? []).map((a) =>
+      a.id === item.id ? { ...a, text: trimmed } : a
+    );
+    setEvents((prev) => prev.map((e) => (e.id === event.id ? { ...e, agenda: nextAgenda } : e)));
+    cancelAgendaItemEdit();
+    try {
+      await updateEventAgenda(event.id, nextAgenda);
+    } catch (e: any) {
+      toast.error("Kunde inte spara ändring", { description: e.message });
+      setEvents((prev) => prev.map((x) => (x.id === event.id ? { ...x, agenda: event.agenda } : x)));
+    }
   }
 
   function openCreate(start?: Date, end?: Date) {
@@ -450,9 +483,32 @@ function KalenderPage() {
                           onCheckedChange={() => toggleAgendaItem(e, a.id)}
                           className="mt-0.5"
                         />
-                        <span className={`flex-1 ${a.done ? "line-through text-muted-foreground" : ""}`}>
-                          {a.text}
-                        </span>
+                        {editingAgendaItem?.event.id === e.id && editingAgendaItem?.item.id === a.id ? (
+                          <Input
+                            value={editAgendaText}
+                            onChange={(ev) => setEditAgendaText(ev.target.value)}
+                            onKeyDown={(ev) => {
+                              if (ev.key === "Enter") {
+                                ev.preventDefault();
+                                commitAgendaItemEdit();
+                              } else if (ev.key === "Escape") {
+                                ev.preventDefault();
+                                cancelAgendaItemEdit();
+                              }
+                            }}
+                            onBlur={commitAgendaItemEdit}
+                            autoFocus
+                            className="h-6 text-xs flex-1"
+                          />
+                        ) : (
+                          <span
+                            onClick={() => startEditingAgendaItem(e, a)}
+                            className={`flex-1 cursor-pointer ${a.done ? "line-through text-muted-foreground" : ""}`}
+                            title="Klicka för att redigera"
+                          >
+                            {a.text}
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => setAgendaToDelete({ event: e, item: a })}
