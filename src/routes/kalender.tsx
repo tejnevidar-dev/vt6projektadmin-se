@@ -25,6 +25,7 @@ import {
   listCustomerOptions,
   listShareablePeople,
   updateCalendarEvent,
+  updateEventAgenda,
   type AgendaItem,
   type CalendarEvent,
   type CustomerOption,
