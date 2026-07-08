@@ -97,6 +97,7 @@ function KalenderPage() {
   const [form, setForm] = useState(() => emptyForm());
   const [customerFilter, setCustomerFilter] = useState<CustomerFilter>(null);
   const [newAgendaText, setNewAgendaText] = useState("");
+  const [agendaToDelete, setAgendaToDelete] = useState<{ event: CalendarEvent; item: AgendaItem } | null>(null);
 
   const allowedRoles = side === "extern" ? EXTERN_ROLES : INTERN_ROLES;
 
@@ -175,6 +176,13 @@ function KalenderPage() {
       toast.error("Kunde inte ta bort punkt", { description: e.message });
       setEvents((prev) => prev.map((x) => (x.id === ev.id ? { ...x, agenda: ev.agenda } : x)));
     }
+  }
+
+  function confirmRemoveAgendaItem() {
+    if (!agendaToDelete) return;
+    const { event, item } = agendaToDelete;
+    setAgendaToDelete(null);
+    removeAgendaItem(event, item.id);
   }
 
   function openCreate(start?: Date, end?: Date) {
@@ -447,7 +455,7 @@ function KalenderPage() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => removeAgendaItem(e, a.id)}
+                          onClick={() => setAgendaToDelete({ event: e, item: a })}
                           className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
                           aria-label="Ta bort punkt"
                         >
@@ -651,6 +659,25 @@ function KalenderPage() {
             )}
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Stäng</Button>
             {canEditEditing && <Button onClick={save}>{editing ? "Spara" : "Skapa"}</Button>}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!agendaToDelete} onOpenChange={(open) => !open && setAgendaToDelete(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ta bort agendapunkt?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Är du säker på att du vill ta bort "{agendaToDelete?.item.text}"?
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setAgendaToDelete(null)}>
+              Avbryt
+            </Button>
+            <Button variant="destructive" onClick={confirmRemoveAgendaItem}>
+              Ta bort
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
