@@ -135,6 +135,19 @@ function KalenderPage() {
     );
   }, [events, customerFilter]);
 
+  async function toggleAgendaItem(ev: CalendarEvent, itemId: string) {
+    const nextAgenda = (ev.agenda ?? []).map((a) =>
+      a.id === itemId ? { ...a, done: !a.done } : a
+    );
+    setEvents((prev) => prev.map((e) => (e.id === ev.id ? { ...e, agenda: nextAgenda } : e)));
+    try {
+      await updateEventAgenda(ev.id, nextAgenda);
+    } catch (e: any) {
+      toast.error("Kunde inte spara agenda", { description: e.message });
+      setEvents((prev) => prev.map((x) => (x.id === ev.id ? { ...x, agenda: ev.agenda } : x)));
+    }
+  }
+
   function openCreate(start?: Date, end?: Date) {
     setEditing(null);
     const base = emptyForm();
