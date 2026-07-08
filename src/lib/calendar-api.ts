@@ -1,6 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, Side } from "@/hooks/use-role";
 
+export interface AgendaItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
 export interface CalendarEvent {
   id: string;
   side: Side;
@@ -13,6 +19,7 @@ export interface CalendarEvent {
   start_at: string;
   end_at: string;
   all_day: boolean;
+  agenda: AgendaItem[];
   created_at: string;
   updated_at: string;
   shared_users: string[];
