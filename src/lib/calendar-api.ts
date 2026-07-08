@@ -106,6 +106,7 @@ export async function createCalendarEvent(input: CalendarEventInput): Promise<st
       start_at: input.start_at,
       end_at: input.end_at,
       all_day: input.all_day ?? false,
+      agenda: (input.agenda ?? []) as any,
     })
     .select("id")
     .single();
