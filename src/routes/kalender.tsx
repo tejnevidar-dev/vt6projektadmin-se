@@ -192,8 +192,8 @@ function KalenderPage() {
       toast.success(vars.id ? "Händelse uppdaterad" : "Händelse skapad");
       setDialogOpen(false);
     },
-    onError: (err: any) => {
-      toast.error("Kunde inte spara", { description: err.message });
+    onError: (err) => {
+      toast.error("Kunde inte spara", { description: errorMessage(err) });
     },
   });
 
@@ -204,8 +204,8 @@ function KalenderPage() {
       toast.success("Händelse borttagen");
       setDialogOpen(false);
     },
-    onError: (err: any) => {
-      toast.error("Kunde inte ta bort", { description: err.message });
+    onError: (err) => {
+      toast.error("Kunde inte ta bort", { description: errorMessage(err) });
     },
   });
 
