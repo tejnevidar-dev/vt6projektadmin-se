@@ -148,6 +148,35 @@ function KalenderPage() {
     }
   }
 
+  async function addAgendaItem(ev: CalendarEvent, text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const item: AgendaItem = {
+      id: (crypto as any)?.randomUUID?.() ?? Math.random().toString(36).slice(2),
+      text: trimmed,
+      done: false,
+    };
+    const nextAgenda = [...(ev.agenda ?? []), item];
+    setEvents((prev) => prev.map((e) => (e.id === ev.id ? { ...e, agenda: nextAgenda } : e)));
+    try {
+      await updateEventAgenda(ev.id, nextAgenda);
+    } catch (e: any) {
+      toast.error("Kunde inte lägga till punkt", { description: e.message });
+      setEvents((prev) => prev.map((x) => (x.id === ev.id ? { ...x, agenda: ev.agenda } : x)));
+    }
+  }
+
+  async function removeAgendaItem(ev: CalendarEvent, itemId: string) {
+    const nextAgenda = (ev.agenda ?? []).filter((a) => a.id !== itemId);
+    setEvents((prev) => prev.map((e) => (e.id === ev.id ? { ...e, agenda: nextAgenda } : e)));
+    try {
+      await updateEventAgenda(ev.id, nextAgenda);
+    } catch (e: any) {
+      toast.error("Kunde inte ta bort punkt", { description: e.message });
+      setEvents((prev) => prev.map((x) => (x.id === ev.id ? { ...x, agenda: ev.agenda } : x)));
+    }
+  }
+
   function openCreate(start?: Date, end?: Date) {
     setEditing(null);
     const base = emptyForm();
@@ -271,7 +300,7 @@ function KalenderPage() {
     ? customers.find((c) => c.kind === customerFilter.kind && c.id === customerFilter.id) ?? null
     : null;
 
-  function addAgendaItem() {
+  function addFormAgendaItem() {
     const text = newAgendaText.trim();
     if (!text) return;
     const item: AgendaItem = { id: crypto.randomUUID(), text, done: false };
@@ -407,19 +436,28 @@ function KalenderPage() {
                 {e.agenda && e.agenda.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {e.agenda.map((a) => (
-                      <li key={a.id} className="flex items-start gap-2 text-xs">
+                      <li key={a.id} className="flex items-start gap-2 text-xs group">
                         <Checkbox
                           checked={a.done}
                           onCheckedChange={() => toggleAgendaItem(e, a.id)}
                           className="mt-0.5"
                         />
-                        <span className={a.done ? "line-through text-muted-foreground" : ""}>
+                        <span className={`flex-1 ${a.done ? "line-through text-muted-foreground" : ""}`}>
                           {a.text}
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => removeAgendaItem(e, a.id)}
+                          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                          aria-label="Ta bort punkt"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </li>
                     ))}
                   </ul>
                 )}
+                <AddAgendaInline onAdd={(text) => addAgendaItem(e, text)} />
               </div>
             ))}
           </div>
@@ -514,11 +552,11 @@ function KalenderPage() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        addAgendaItem();
+                        addFormAgendaItem();
                       }
                     }}
                   />
-                  <Button type="button" variant="outline" size="icon" onClick={addAgendaItem}>
+                  <Button type="button" variant="outline" size="icon" onClick={addFormAgendaItem}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
@@ -644,4 +682,33 @@ function addHour(d: Date) {
 function toLocalInput(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function AddAgendaInline({ onAdd }: { onAdd: (text: string) => void | Promise<void> }) {
+  const [text, setText] = useState("");
+  async function submit() {
+    const t = text.trim();
+    if (!t) return;
+    setText("");
+    await onAdd(t);
+  }
+  return (
+    <div className="flex gap-1 mt-2">
+      <Input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submit();
+          }
+        }}
+        placeholder="Ny agendapunkt…"
+        className="h-7 text-xs"
+      />
+      <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={submit}>
+        <Plus className="h-3 w-3" />
+      </Button>
+    </div>
+  );
 }
