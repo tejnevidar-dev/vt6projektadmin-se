@@ -80,12 +80,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
+  }));
   return (
-    <AuthProvider>
-      <WorkspaceProvider>
-        <Outlet />
-        <Toaster />
-      </WorkspaceProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <WorkspaceProvider>
+          <Outlet />
+          <Toaster />
+        </WorkspaceProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
