@@ -125,8 +125,10 @@ function KalenderPage() {
   const view = useMemo<View>(() => (search.view ?? "month") as View, [search.view]);
   const date = useMemo(() => {
     if (search.date) {
-      const d = new Date(search.date);
-      if (!isNaN(d.getTime())) return d;
+      const [y, m, d] = search.date.split("-").map((n) => parseInt(n, 10));
+      if (y && m && d) {
+        return new Date(y, m - 1, d, 12, 0, 0);
+      }
     }
     return new Date();
   }, [search.date]);
