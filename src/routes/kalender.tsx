@@ -543,11 +543,11 @@ function KalenderPage() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        addAgendaItem();
+                        addFormAgendaItem();
                       }
                     }}
                   />
-                  <Button type="button" variant="outline" size="icon" onClick={addAgendaItem}>
+                  <Button type="button" variant="outline" size="icon" onClick={addFormAgendaItem}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
