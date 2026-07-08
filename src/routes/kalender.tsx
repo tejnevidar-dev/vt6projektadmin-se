@@ -813,10 +813,16 @@ function toLocalInput(d: Date) {
 }
 
 function generateId() {
-  if (typeof crypto !== "undefined" && (crypto as any).randomUUID) {
-    return crypto.randomUUID();
+  const c = typeof crypto !== "undefined" ? crypto : undefined;
+  if (c && "randomUUID" in c && typeof (c as Crypto).randomUUID === "function") {
+    return (c as Crypto).randomUUID();
   }
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return String(err);
 }
 
 function AddAgendaInline({ onAdd }: { onAdd: (text: string) => void | Promise<void> }) {
