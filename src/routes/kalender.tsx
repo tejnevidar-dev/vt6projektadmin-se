@@ -1,5 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { Calendar, dateFnsLocalizer, type View } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -28,11 +31,19 @@ import {
   updateEventAgenda,
   type AgendaItem,
   type CalendarEvent,
+  type CalendarEventInput,
   type CustomerOption,
   type ShareablePerson,
 } from "@/lib/calendar-api";
 
+const searchSchema = z.object({
+  customer: z.string().optional().catch(undefined),
+  view: z.enum(["month", "week", "day", "agenda"]).optional().catch("month"),
+  date: z.string().optional().catch(undefined),
+});
+
 export const Route = createFileRoute("/kalender")({
+  validateSearch: zodValidator(searchSchema),
   component: () => (
     <RequireAuth>
       <KalenderPage />
@@ -86,20 +97,53 @@ function KalenderPage() {
   const { user } = useAuth();
   const { side } = useWorkspace();
   const { isAdmin } = useUserRoles();
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [people, setPeople] = useState<ShareablePerson[]>([]);
-  const [customers, setCustomers] = useState<CustomerOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<View>("month");
-  const [date, setDate] = useState(new Date());
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/kalender" });
+  const queryClient = useQueryClient();
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CalendarEvent | null>(null);
   const [form, setForm] = useState(() => emptyForm());
-  const [customerFilter, setCustomerFilter] = useState<CustomerFilter>(null);
   const [newAgendaText, setNewAgendaText] = useState("");
   const [agendaToDelete, setAgendaToDelete] = useState<{ event: CalendarEvent; item: AgendaItem } | null>(null);
   const [editingAgendaItem, setEditingAgendaItem] = useState<{ event: CalendarEvent; item: AgendaItem } | null>(null);
   const [editAgendaText, setEditAgendaText] = useState("");
+
+  const customerFilter: CustomerFilter = useMemo(() => {
+    if (!search.customer || search.customer === "__all__") return null;
+    const [kind, ...rest] = search.customer.split(":");
+    if (kind !== "lead" && kind !== "job") return null;
+    return { kind, id: rest.join(":") };
+  }, [search.customer]);
+
+  const view = useMemo<View>(() => (search.view ?? "month") as View, [search.view]);
+  const date = useMemo(() => {
+    if (search.date) {
+      const d = new Date(search.date);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return new Date();
+  }, [search.date]);
+
+  const eventsQuery = useQuery({
+    queryKey: ["calendar-events", side],
+    queryFn: () => listCalendarEvents(side),
+  });
+
+  const peopleQuery = useQuery({
+    queryKey: ["shareable-people"],
+    queryFn: listShareablePeople,
+  });
+
+  const customersQuery = useQuery({
+    queryKey: ["customer-options"],
+    queryFn: listCustomerOptions,
+  });
+
+  const events = eventsQuery.data ?? [];
+  const people = peopleQuery.data ?? [];
+  const customers = customersQuery.data ?? [];
+  const loading = eventsQuery.isLoading || peopleQuery.isLoading || customersQuery.isLoading;
 
   const allowedRoles = side === "extern" ? EXTERN_ROLES : INTERN_ROLES;
 
@@ -108,28 +152,56 @@ function KalenderPage() {
     [people, allowedRoles]
   );
 
-  async function refresh() {
-    setLoading(true);
-    try {
-      const [ev, pp, cc] = await Promise.all([
-        listCalendarEvents(side),
-        listShareablePeople(),
-        listCustomerOptions(),
-      ]);
-      setEvents(ev);
-      setPeople(pp);
-      setCustomers(cc);
-    } catch (e: any) {
-      toast.error("Kunde inte ladda kalendern", { description: e.message });
-    } finally {
-      setLoading(false);
-    }
-  }
+  const updateAgendaMutation = useMutation({
+    mutationFn: ({ id, agenda }: { id: string; agenda: AgendaItem[] }) => updateEventAgenda(id, agenda),
+    onMutate: async ({ id, agenda }) => {
+      await queryClient.cancelQueries({ queryKey: ["calendar-events", side] });
+      const previous = queryClient.getQueryData<CalendarEvent[]>(["calendar-events", side]);
+      queryClient.setQueryData<CalendarEvent[]>(["calendar-events", side], (old) =>
+        old?.map((e) => (e.id === id ? { ...e, agenda } : e))
+      );
+      return { previous };
+    },
+    onError: (err: any, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["calendar-events", side], context.previous);
+      }
+      toast.error("Kunde inte spara agenda", { description: err.message });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["calendar-events", side] });
+    },
+  });
 
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [side]);
+  const saveEventMutation = useMutation({
+    mutationFn: async (payload: CalendarEventInput & { id?: string }) => {
+      if (payload.id) {
+        await updateCalendarEvent(payload.id, payload);
+      } else {
+        await createCalendarEvent(payload);
+      }
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["calendar-events", side] });
+      toast.success(vars.id ? "Händelse uppdaterad" : "Händelse skapad");
+      setDialogOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error("Kunde inte spara", { description: err.message });
+    },
+  });
+
+  const deleteEventMutation = useMutation({
+    mutationFn: (id: string) => deleteCalendarEvent(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calendar-events", side] });
+      toast.success("Händelse borttagen");
+      setDialogOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error("Kunde inte ta bort", { description: err.message });
+    },
+  });
 
   const displayedEvents = useMemo(() => {
     if (!customerFilter) return events;
@@ -138,46 +210,36 @@ function KalenderPage() {
     );
   }, [events, customerFilter]);
 
+  function setCustomerFilter(filter: CustomerFilter) {
+    navigate({
+      search: (prev) => ({ ...prev, customer: filter ? `${filter.kind}:${filter.id}` : "__all__" }),
+    });
+  }
+
+  function setViewValue(v: View) {
+    navigate({ search: (prev) => ({ ...prev, view: v }) });
+  }
+
+  function setDateValue(d: Date) {
+    navigate({ search: (prev) => ({ ...prev, date: format(d, "yyyy-MM-dd") }) });
+  }
+
   async function toggleAgendaItem(ev: CalendarEvent, itemId: string) {
-    const nextAgenda = (ev.agenda ?? []).map((a) =>
-      a.id === itemId ? { ...a, done: !a.done } : a
-    );
-    setEvents((prev) => prev.map((e) => (e.id === ev.id ? { ...e, agenda: nextAgenda } : e)));
-    try {
-      await updateEventAgenda(ev.id, nextAgenda);
-    } catch (e: any) {
-      toast.error("Kunde inte spara agenda", { description: e.message });
-      setEvents((prev) => prev.map((x) => (x.id === ev.id ? { ...x, agenda: ev.agenda } : x)));
-    }
+    const nextAgenda = (ev.agenda ?? []).map((a) => (a.id === itemId ? { ...a, done: !a.done } : a));
+    await updateAgendaMutation.mutateAsync({ id: ev.id, agenda: nextAgenda });
   }
 
   async function addAgendaItem(ev: CalendarEvent, text: string) {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const item: AgendaItem = {
-      id: (crypto as any)?.randomUUID?.() ?? Math.random().toString(36).slice(2),
-      text: trimmed,
-      done: false,
-    };
+    const item: AgendaItem = { id: generateId(), text: trimmed, done: false };
     const nextAgenda = [...(ev.agenda ?? []), item];
-    setEvents((prev) => prev.map((e) => (e.id === ev.id ? { ...e, agenda: nextAgenda } : e)));
-    try {
-      await updateEventAgenda(ev.id, nextAgenda);
-    } catch (e: any) {
-      toast.error("Kunde inte lägga till punkt", { description: e.message });
-      setEvents((prev) => prev.map((x) => (x.id === ev.id ? { ...x, agenda: ev.agenda } : x)));
-    }
+    await updateAgendaMutation.mutateAsync({ id: ev.id, agenda: nextAgenda });
   }
 
   async function removeAgendaItem(ev: CalendarEvent, itemId: string) {
     const nextAgenda = (ev.agenda ?? []).filter((a) => a.id !== itemId);
-    setEvents((prev) => prev.map((e) => (e.id === ev.id ? { ...e, agenda: nextAgenda } : e)));
-    try {
-      await updateEventAgenda(ev.id, nextAgenda);
-    } catch (e: any) {
-      toast.error("Kunde inte ta bort punkt", { description: e.message });
-      setEvents((prev) => prev.map((x) => (x.id === ev.id ? { ...x, agenda: ev.agenda } : x)));
-    }
+    await updateAgendaMutation.mutateAsync({ id: ev.id, agenda: nextAgenda });
   }
 
   function confirmRemoveAgendaItem() {
@@ -205,17 +267,9 @@ function KalenderPage() {
       cancelAgendaItemEdit();
       return;
     }
-    const nextAgenda = (event.agenda ?? []).map((a) =>
-      a.id === item.id ? { ...a, text: trimmed } : a
-    );
-    setEvents((prev) => prev.map((e) => (e.id === event.id ? { ...e, agenda: nextAgenda } : e)));
+    const nextAgenda = (event.agenda ?? []).map((a) => (a.id === item.id ? { ...a, text: trimmed } : a));
     cancelAgendaItemEdit();
-    try {
-      await updateEventAgenda(event.id, nextAgenda);
-    } catch (e: any) {
-      toast.error("Kunde inte spara ändring", { description: e.message });
-      setEvents((prev) => prev.map((x) => (x.id === event.id ? { ...x, agenda: event.agenda } : x)));
-    }
+    await updateAgendaMutation.mutateAsync({ id: event.id, agenda: nextAgenda });
   }
 
   function openCreate(start?: Date, end?: Date) {
@@ -256,46 +310,30 @@ function KalenderPage() {
       toast.error("Titel krävs");
       return;
     }
-    try {
-      const payload = {
-        side,
-        title: form.title.trim(),
-        description: form.description || null,
-        location: form.location || null,
-        lead_id: form.lead_id,
-        job_id: form.job_id,
-        start_at: new Date(form.start_at).toISOString(),
-        end_at: new Date(form.end_at).toISOString(),
-        all_day: form.all_day,
-        agenda: form.agenda,
-        shared_users: form.shared_users,
-        shared_roles: form.shared_roles,
-      };
-      if (editing) {
-        await updateCalendarEvent(editing.id, payload);
-        toast.success("Händelse uppdaterad");
-      } else {
-        await createCalendarEvent(payload);
-        toast.success("Händelse skapad");
-      }
-      setDialogOpen(false);
-      refresh();
-    } catch (e: any) {
-      toast.error("Kunde inte spara", { description: e.message });
+    const payload: CalendarEventInput & { id?: string } = {
+      side,
+      title: form.title.trim(),
+      description: form.description || null,
+      location: form.location || null,
+      lead_id: form.lead_id,
+      job_id: form.job_id,
+      start_at: new Date(form.start_at).toISOString(),
+      end_at: new Date(form.end_at).toISOString(),
+      all_day: form.all_day,
+      agenda: form.agenda,
+      shared_users: form.shared_users,
+      shared_roles: form.shared_roles,
+    };
+    if (editing) {
+      payload.id = editing.id;
     }
+    await saveEventMutation.mutateAsync(payload);
   }
 
   async function remove() {
     if (!editing) return;
     if (!confirm("Ta bort händelsen?")) return;
-    try {
-      await deleteCalendarEvent(editing.id);
-      toast.success("Händelse borttagen");
-      setDialogOpen(false);
-      refresh();
-    } catch (e: any) {
-      toast.error("Kunde inte ta bort", { description: e.message });
-    }
+    await deleteEventMutation.mutateAsync(editing.id);
   }
 
   const rbcEvents = useMemo(
@@ -317,8 +355,8 @@ function KalenderPage() {
     if (value === "__all__") {
       setCustomerFilter(null);
     } else {
-      const [kind, id] = value.split(":");
-      setCustomerFilter({ kind: kind as "lead" | "job", id });
+      const [kind, ...rest] = value.split(":");
+      setCustomerFilter({ kind: kind as "lead" | "job", id: rest.join(":") });
     }
   }
 
@@ -326,7 +364,8 @@ function KalenderPage() {
     if (value === "__none__") {
       setForm({ ...form, lead_id: null, job_id: null });
     } else {
-      const [kind, id] = value.split(":");
+      const [kind, ...rest] = value.split(":");
+      const id = rest.join(":");
       if (kind === "lead") setForm({ ...form, lead_id: id, job_id: null });
       else setForm({ ...form, lead_id: null, job_id: id });
     }
@@ -344,7 +383,7 @@ function KalenderPage() {
   function addFormAgendaItem() {
     const text = newAgendaText.trim();
     if (!text) return;
-    const item: AgendaItem = { id: crypto.randomUUID(), text, done: false };
+    const item: AgendaItem = { id: generateId(), text, done: false };
     setForm({ ...form, agenda: [...form.agenda, item] });
     setNewAgendaText("");
   }
@@ -424,9 +463,9 @@ function KalenderPage() {
                 startAccessor="start"
                 endAccessor="end"
                 view={view}
-                onView={setView}
+                onView={setViewValue}
                 date={date}
-                onNavigate={setDate}
+                onNavigate={setDateValue}
                 views={["month", "week", "day", "agenda"]}
                 selectable
                 onSelectSlot={(slot) => openCreate(slot.start as Date, slot.end as Date)}
@@ -765,6 +804,13 @@ function addHour(d: Date) {
 function toLocalInput(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function generateId() {
+  if (typeof crypto !== "undefined" && (crypto as any).randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
 function AddAgendaInline({ onAdd }: { onAdd: (text: string) => void | Promise<void> }) {
