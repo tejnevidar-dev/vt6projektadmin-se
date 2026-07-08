@@ -97,6 +97,7 @@ function KalenderPage() {
   const [form, setForm] = useState(() => emptyForm());
   const [customerFilter, setCustomerFilter] = useState<CustomerFilter>(null);
   const [newAgendaText, setNewAgendaText] = useState("");
+  const [agendaToDelete, setAgendaToDelete] = useState<{ event: CalendarEvent; item: AgendaItem } | null>(null);
 
   const allowedRoles = side === "extern" ? EXTERN_ROLES : INTERN_ROLES;
 
