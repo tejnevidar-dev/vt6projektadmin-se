@@ -142,9 +142,9 @@ function KalenderPage() {
     queryFn: listCustomerOptions,
   });
 
-  const events = eventsQuery.data ?? [];
-  const people = peopleQuery.data ?? [];
-  const customers = customersQuery.data ?? [];
+  const events = eventsQuery.data ?? EMPTY_EVENTS;
+  const people = peopleQuery.data ?? EMPTY_PEOPLE;
+  const customers = customersQuery.data ?? EMPTY_CUSTOMERS;
   const loading = eventsQuery.isLoading || peopleQuery.isLoading || customersQuery.isLoading;
 
   const allowedRoles = side === "extern" ? EXTERN_ROLES : INTERN_ROLES;
