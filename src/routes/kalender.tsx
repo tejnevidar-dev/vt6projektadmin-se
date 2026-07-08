@@ -95,6 +95,10 @@ const MESSAGES = {
 
 type CustomerFilter = { kind: "lead" | "job"; id: string } | null;
 
+const EMPTY_EVENTS: CalendarEvent[] = [];
+const EMPTY_PEOPLE: ShareablePerson[] = [];
+const EMPTY_CUSTOMERS: CustomerOption[] = [];
+
 function KalenderPage() {
   const { user } = useAuth();
   const { side } = useWorkspace();
