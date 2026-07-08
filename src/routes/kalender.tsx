@@ -300,7 +300,7 @@ function KalenderPage() {
     ? customers.find((c) => c.kind === customerFilter.kind && c.id === customerFilter.id) ?? null
     : null;
 
-  function addAgendaItem() {
+  function addFormAgendaItem() {
     const text = newAgendaText.trim();
     if (!text) return;
     const item: AgendaItem = { id: crypto.randomUUID(), text, done: false };
