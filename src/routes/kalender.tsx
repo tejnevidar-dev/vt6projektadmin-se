@@ -148,6 +148,35 @@ function KalenderPage() {
     }
   }
 
+  async function addAgendaItem(ev: CalendarEvent, text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const item: AgendaItem = {
+      id: (crypto as any)?.randomUUID?.() ?? Math.random().toString(36).slice(2),
+      text: trimmed,
+      done: false,
+    };
+    const nextAgenda = [...(ev.agenda ?? []), item];
+    setEvents((prev) => prev.map((e) => (e.id === ev.id ? { ...e, agenda: nextAgenda } : e)));
+    try {
+      await updateEventAgenda(ev.id, nextAgenda);
+    } catch (e: any) {
+      toast.error("Kunde inte lägga till punkt", { description: e.message });
+      setEvents((prev) => prev.map((x) => (x.id === ev.id ? { ...x, agenda: ev.agenda } : x)));
+    }
+  }
+
+  async function removeAgendaItem(ev: CalendarEvent, itemId: string) {
+    const nextAgenda = (ev.agenda ?? []).filter((a) => a.id !== itemId);
+    setEvents((prev) => prev.map((e) => (e.id === ev.id ? { ...e, agenda: nextAgenda } : e)));
+    try {
+      await updateEventAgenda(ev.id, nextAgenda);
+    } catch (e: any) {
+      toast.error("Kunde inte ta bort punkt", { description: e.message });
+      setEvents((prev) => prev.map((x) => (x.id === ev.id ? { ...x, agenda: ev.agenda } : x)));
+    }
+  }
+
   function openCreate(start?: Date, end?: Date) {
     setEditing(null);
     const base = emptyForm();
