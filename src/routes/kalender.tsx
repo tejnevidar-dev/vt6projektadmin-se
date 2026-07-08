@@ -168,11 +168,11 @@ function KalenderPage() {
       );
       return { previous };
     },
-    onError: (err: any, _vars, context) => {
+    onError: (err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(["calendar-events", side], context.previous);
       }
-      toast.error("Kunde inte spara agenda", { description: err.message });
+      toast.error("Kunde inte spara agenda", { description: errorMessage(err) });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["calendar-events", side] });
