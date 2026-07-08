@@ -142,6 +142,14 @@ export async function deleteCalendarEvent(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function updateEventAgenda(id: string, agenda: AgendaItem[]): Promise<void> {
+  const { error } = await supabase
+    .from("calendar_events")
+    .update({ agenda: agenda as any })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 async function syncShares(eventId: string, users: string[], roles: AppRole[]) {
   await supabase.from("calendar_event_shares_users").delete().eq("event_id", eventId);
   await supabase.from("calendar_event_shares_roles").delete().eq("event_id", eventId);
