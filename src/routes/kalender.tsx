@@ -36,6 +36,8 @@ import {
   type ShareablePerson,
 } from "@/lib/calendar-api";
 
+type Search = z.infer<typeof searchSchema>;
+
 const searchSchema = z.object({
   customer: z.string().optional().catch(undefined),
   view: z.enum(["month", "week", "day", "agenda"]).optional().catch("month"),
