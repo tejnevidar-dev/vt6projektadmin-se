@@ -187,6 +187,37 @@ function KalenderPage() {
     removeAgendaItem(event, item.id);
   }
 
+  function startEditingAgendaItem(ev: CalendarEvent, item: AgendaItem) {
+    setEditingAgendaItem({ event: ev, item });
+    setEditAgendaText(item.text);
+  }
+
+  function cancelAgendaItemEdit() {
+    setEditingAgendaItem(null);
+    setEditAgendaText("");
+  }
+
+  async function commitAgendaItemEdit() {
+    if (!editingAgendaItem) return;
+    const { event, item } = editingAgendaItem;
+    const trimmed = editAgendaText.trim();
+    if (!trimmed || trimmed === item.text) {
+      cancelAgendaItemEdit();
+      return;
+    }
+    const nextAgenda = (event.agenda ?? []).map((a) =>
+      a.id === item.id ? { ...a, text: trimmed } : a
+    );
+    setEvents((prev) => prev.map((e) => (e.id === event.id ? { ...e, agenda: nextAgenda } : e)));
+    cancelAgendaItemEdit();
+    try {
+      await updateEventAgenda(event.id, nextAgenda);
+    } catch (e: any) {
+      toast.error("Kunde inte spara ändring", { description: e.message });
+      setEvents((prev) => prev.map((x) => (x.id === event.id ? { ...x, agenda: event.agenda } : x)));
+    }
+  }
+
   function openCreate(start?: Date, end?: Date) {
     setEditing(null);
     const base = emptyForm();
