@@ -483,9 +483,32 @@ function KalenderPage() {
                           onCheckedChange={() => toggleAgendaItem(e, a.id)}
                           className="mt-0.5"
                         />
-                        <span className={`flex-1 ${a.done ? "line-through text-muted-foreground" : ""}`}>
-                          {a.text}
-                        </span>
+                        {editingAgendaItem?.event.id === e.id && editingAgendaItem?.item.id === a.id ? (
+                          <Input
+                            value={editAgendaText}
+                            onChange={(ev) => setEditAgendaText(ev.target.value)}
+                            onKeyDown={(ev) => {
+                              if (ev.key === "Enter") {
+                                ev.preventDefault();
+                                commitAgendaItemEdit();
+                              } else if (ev.key === "Escape") {
+                                ev.preventDefault();
+                                cancelAgendaItemEdit();
+                              }
+                            }}
+                            onBlur={commitAgendaItemEdit}
+                            autoFocus
+                            className="h-6 text-xs flex-1"
+                          />
+                        ) : (
+                          <span
+                            onClick={() => startEditingAgendaItem(e, a)}
+                            className={`flex-1 cursor-pointer ${a.done ? "line-through text-muted-foreground" : ""}`}
+                            title="Klicka för att redigera"
+                          >
+                            {a.text}
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => setAgendaToDelete({ event: e, item: a })}
