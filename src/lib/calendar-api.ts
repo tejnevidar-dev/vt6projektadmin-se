@@ -190,3 +190,26 @@ export async function listShareablePeople(): Promise<ShareablePerson[]> {
     roles: rolesByUser.get(p.id) ?? [],
   }));
 }
+
+export interface CustomerOption {
+  kind: "lead" | "job";
+  id: string;
+  label: string;
+  sub?: string | null;
+}
+
+export async function listCustomerOptions(): Promise<CustomerOption[]> {
+  const [{ data: leads }, { data: jobs }] = await Promise.all([
+    supabase.from("leads").select("id, name, phone, pipeline_stage").order("name", { ascending: true }),
+    supabase.from("jobs").select("id, customer_name, address, status").order("customer_name", { ascending: true }),
+  ]);
+  const opts: CustomerOption[] = [];
+  (leads ?? []).forEach((l: any) => {
+    opts.push({ kind: "lead", id: l.id, label: l.name ?? "Okänd lead", sub: l.pipeline_stage ?? l.phone ?? null });
+  });
+  (jobs ?? []).forEach((j: any) => {
+    opts.push({ kind: "job", id: j.id, label: j.customer_name ?? "Jobb", sub: j.address ?? j.status ?? null });
+  });
+  return opts;
+}
+
