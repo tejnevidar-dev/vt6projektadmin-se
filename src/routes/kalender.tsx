@@ -683,3 +683,32 @@ function toLocalInput(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+function AddAgendaInline({ onAdd }: { onAdd: (text: string) => void | Promise<void> }) {
+  const [text, setText] = useState("");
+  async function submit() {
+    const t = text.trim();
+    if (!t) return;
+    setText("");
+    await onAdd(t);
+  }
+  return (
+    <div className="flex gap-1 mt-2">
+      <Input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            submit();
+          }
+        }}
+        placeholder="Ny agendapunkt…"
+        className="h-7 text-xs"
+      />
+      <Button type="button" variant="outline" size="icon" className="h-7 w-7" onClick={submit}>
+        <Plus className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
