@@ -436,19 +436,28 @@ function KalenderPage() {
                 {e.agenda && e.agenda.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {e.agenda.map((a) => (
-                      <li key={a.id} className="flex items-start gap-2 text-xs">
+                      <li key={a.id} className="flex items-start gap-2 text-xs group">
                         <Checkbox
                           checked={a.done}
                           onCheckedChange={() => toggleAgendaItem(e, a.id)}
                           className="mt-0.5"
                         />
-                        <span className={a.done ? "line-through text-muted-foreground" : ""}>
+                        <span className={`flex-1 ${a.done ? "line-through text-muted-foreground" : ""}`}>
                           {a.text}
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => removeAgendaItem(e, a.id)}
+                          className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                          aria-label="Ta bort punkt"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </li>
                     ))}
                   </ul>
                 )}
+                <AddAgendaInline onAdd={(text) => addAgendaItem(e, text)} />
               </div>
             ))}
           </div>
