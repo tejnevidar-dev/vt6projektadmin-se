@@ -124,13 +124,15 @@ function KalkylPage() {
     ranndalarMeter: number;
     platItems: PlatItem[];
     arbeteTimmar: number;
-  } | null>(null);
+  }>({ roofAreaKvm: 0, ranndalarMeter: 0, platItems: [], arbeteTimmar: 0 });
+  const [hydratedFromExisting, setHydratedFromExisting] = useState(false);
+  const [addPlatKey, setAddPlatKey] = useState<string>("");
 
   const fileInput = useRef<HTMLInputElement>(null);
 
-  // När en tidigare kalkyl finns – förifyll dropdown/analys så användaren ser den
+  // När en tidigare kalkyl finns – förifyll formuläret en gång
   useMemo(() => {
-    if (existing && !analysis) {
+    if (existing && !hydratedFromExisting) {
       setMaterialKey(existing.material_key ?? "");
       setAnalysis({
         roofAreaKvm: Number(existing.roof_area_kvm) || 0,
@@ -139,12 +141,13 @@ function KalkylPage() {
         arbeteTimmar: Number(existing.arbete_timmar) || 0,
       });
       setNotes(existing.notes ?? "");
+      setHydratedFromExisting(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existing]);
 
   const calcInput: CalcInput | null = useMemo(() => {
-    if (!analysis || !materialKey) return null;
+    if (!materialKey) return null;
     return {
       roofAreaKvm: analysis.roofAreaKvm,
       materialKey,
