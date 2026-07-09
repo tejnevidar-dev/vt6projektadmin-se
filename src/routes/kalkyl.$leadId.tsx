@@ -10,10 +10,11 @@ import {
   Upload,
   Trash2,
   ExternalLink,
-  ImageIcon,
+  Plus,
 } from "lucide-react";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -123,13 +124,15 @@ function KalkylPage() {
     ranndalarMeter: number;
     platItems: PlatItem[];
     arbeteTimmar: number;
-  } | null>(null);
+  }>({ roofAreaKvm: 0, ranndalarMeter: 0, platItems: [], arbeteTimmar: 0 });
+  const [hydratedFromExisting, setHydratedFromExisting] = useState(false);
+  const [addPlatKey, setAddPlatKey] = useState<string>("");
 
   const fileInput = useRef<HTMLInputElement>(null);
 
-  // När en tidigare kalkyl finns – förifyll dropdown/analys så användaren ser den
+  // När en tidigare kalkyl finns – förifyll formuläret en gång
   useMemo(() => {
-    if (existing && !analysis) {
+    if (existing && !hydratedFromExisting) {
       setMaterialKey(existing.material_key ?? "");
       setAnalysis({
         roofAreaKvm: Number(existing.roof_area_kvm) || 0,
@@ -138,12 +141,13 @@ function KalkylPage() {
         arbeteTimmar: Number(existing.arbete_timmar) || 0,
       });
       setNotes(existing.notes ?? "");
+      setHydratedFromExisting(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existing]);
 
   const calcInput: CalcInput | null = useMemo(() => {
-    if (!analysis || !materialKey) return null;
+    if (!materialKey) return null;
     return {
       roofAreaKvm: analysis.roofAreaKvm,
       materialKey,
@@ -325,9 +329,11 @@ function KalkylPage() {
 
           {/* 2. Bilder */}
           <section className="rounded-lg border border-border bg-card p-5">
-            <h3 className="mb-1 text-sm font-semibold">2. Ladda upp bilder med mått</h3>
+            <h3 className="mb-1 text-sm font-semibold">
+              2. Ladda upp bilder med mått <span className="font-normal text-muted-foreground">(valfritt)</span>
+            </h3>
             <p className="mb-3 text-xs text-muted-foreground">
-              Skisser, ritningar eller foton där mått i meter är inritade. Max 10 bilder, 8 MB per bild.
+              AI:n tolkar måtten och förfyller formuläret nedan. Du kan även hoppa över detta steg och fylla i allt manuellt. Max 10 bilder, 8 MB per bild.
             </p>
 
             <button
@@ -397,66 +403,135 @@ function KalkylPage() {
             </Button>
           </section>
 
-          {/* 3. AI-resultat */}
-          {analysis && (
-            <section className="rounded-lg border border-border bg-card p-5">
-              <h3 className="mb-3 text-sm font-semibold">3. AI-uppskattning</h3>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <MetricBox label="Takyta" value={`${analysis.roofAreaKvm} kvm`} />
-                <MetricBox
-                  label="Ränndalar"
-                  value={`${analysis.ranndalarMeter} m`}
-                />
-                <MetricBox
-                  label="Arbetstimmar"
-                  value={`${analysis.arbeteTimmar} h`}
-                />
-                <MetricBox
-                  label="Plåtdetaljer"
-                  value={`${analysis.platItems.length} st`}
-                />
-              </div>
+          {/* 3. Redigerbart formulär (förfylls av AI eller ifylls manuellt) */}
+          <section className="rounded-lg border border-border bg-card p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold">3. Mått & arbete</h3>
+              <span className="text-xs text-muted-foreground">
+                Redigera fritt – AI-förslagen är bara utgångsläge
+              </span>
+            </div>
 
-              {analysis.platItems.length > 0 && (
-                <div className="mt-4 space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">
-                    Föreslagna plåtdetaljer
-                  </Label>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <NumberField
+                label="Takyta (kvm)"
+                value={analysis.roofAreaKvm}
+                onChange={(v) => setAnalysis((a) => ({ ...a, roofAreaKvm: v }))}
+              />
+              <NumberField
+                label="Ränndalar (m)"
+                value={analysis.ranndalarMeter}
+                onChange={(v) => setAnalysis((a) => ({ ...a, ranndalarMeter: v }))}
+              />
+              <NumberField
+                label="Arbetstimmar"
+                value={analysis.arbeteTimmar}
+                onChange={(v) => setAnalysis((a) => ({ ...a, arbeteTimmar: v }))}
+              />
+            </div>
+
+            <div className="mt-5">
+              <Label className="text-xs text-muted-foreground">Plåtdetaljer</Label>
+              {analysis.platItems.length === 0 ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Inga plåtdetaljer valda. Lägg till nedan.
+                </p>
+              ) : (
+                <div className="mt-1.5 space-y-1.5">
                   {analysis.platItems.map((p, i) => (
                     <div
                       key={`${p.key}-${i}`}
-                      className="flex items-center justify-between rounded-md border border-border/60 bg-muted/20 px-3 py-1.5 text-sm"
+                      className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-1.5 text-sm"
                     >
-                      <span>{platLabelFor(p.key)}</span>
-                      <span className="text-muted-foreground">
-                        {p.quantity} {platUnitFor(p.key)}
+                      <span className="flex-1 truncate">{platLabelFor(p.key)}</span>
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.1"
+                        value={p.quantity}
+                        onChange={(e) => {
+                          const q = Number(e.target.value) || 0;
+                          setAnalysis((a) => ({
+                            ...a,
+                            platItems: a.platItems.map((it, idx) =>
+                              idx === i ? { ...it, quantity: q } : it,
+                            ),
+                          }));
+                        }}
+                        className="h-8 w-24"
+                      />
+                      <span className="w-8 text-xs text-muted-foreground">
+                        {platUnitFor(p.key)}
                       </span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() =>
+                          setAnalysis((a) => ({
+                            ...a,
+                            platItems: a.platItems.filter((_, idx) => idx !== i),
+                          }))
+                        }
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   ))}
                 </div>
               )}
 
-              <div className="mt-4">
-                <Label className="text-xs text-muted-foreground">
-                  AI-anteckningar
-                </Label>
-                <Textarea
-                  rows={2}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Interna anteckningar från AI-analysen (redigerbara)"
-                />
+              {/* Lägg till plåtdetalj */}
+              <div className="mt-2 flex gap-2">
+                <Select value={addPlatKey} onValueChange={setAddPlatKey}>
+                  <SelectTrigger className="h-9 flex-1">
+                    <SelectValue placeholder="Lägg till plåtdetalj…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {priceRows
+                      .filter(
+                        (r) =>
+                          r.category === "plat" &&
+                          r.key !== "ranndalar_meter" &&
+                          !analysis.platItems.some((it) => it.key === r.key),
+                      )
+                      .map((r) => (
+                        <SelectItem key={r.id} value={r.key}>
+                          {r.label} ({formatSek(r.unit_price)}/{r.unit})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!addPlatKey}
+                  onClick={() => {
+                    if (!addPlatKey) return;
+                    setAnalysis((a) => ({
+                      ...a,
+                      platItems: [...a.platItems, { key: addPlatKey, quantity: 1 }],
+                    }));
+                    setAddPlatKey("");
+                  }}
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" /> Lägg till
+                </Button>
               </div>
-            </section>
-          )}
+            </div>
 
-          {!analysis && (
-            <section className="rounded-lg border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
-              <ImageIcon className="mx-auto mb-2 h-8 w-8 opacity-40" />
-              Välj taktyp, ladda upp bilder och kör AI-analysen så räknas priset ut automatiskt.
-            </section>
-          )}
+            <div className="mt-5">
+              <Label className="text-xs text-muted-foreground">Anteckningar</Label>
+              <Textarea
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Interna anteckningar (fylls i av AI eller manuellt)"
+              />
+            </div>
+          </section>
         </div>
+
 
         {/* Höger: summering + draft/offer */}
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
@@ -535,11 +610,25 @@ function KalkylPage() {
   );
 }
 
-function MetricBox({ label, value }: { label: string; value: string }) {
+function NumberField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
   return (
-    <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-base font-semibold">{value}</div>
+    <div className="space-y-1">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Input
+        type="number"
+        min={0}
+        step="0.1"
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value) || 0)}
+      />
     </div>
   );
 }
