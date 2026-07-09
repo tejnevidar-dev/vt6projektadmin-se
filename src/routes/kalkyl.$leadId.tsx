@@ -969,16 +969,6 @@ function ReviewDialog({
                 <p className="mt-1 text-xs text-destructive">{errorFor("ranndalarMeter")}</p>
               )}
             </div>
-            <div>
-              <NumberField
-                label="Arbetstimmar"
-                value={draft.arbeteTimmar}
-                onChange={(v) => setDraft({ ...draft, arbeteTimmar: v })}
-              />
-              {errorFor("arbeteTimmar") && (
-                <p className="mt-1 text-xs text-destructive">{errorFor("arbeteTimmar")}</p>
-              )}
-            </div>
           </div>
 
           <div>
