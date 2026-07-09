@@ -845,7 +845,7 @@ function ReviewDialog({
     if (!Number.isFinite(p.quantity) || p.quantity <= 0) {
       errors.push({
         field: `plat-${i}`,
-        message: `${labelForKey(priceRows, p.key)}: antal måste vara större än 0 (eller ta bort raden).`,
+        message: `${priceRows.find((r) => r.key === p.key)?.label ?? p.key}: antal måste vara större än 0 (eller ta bort raden).`,
       });
     }
   });
