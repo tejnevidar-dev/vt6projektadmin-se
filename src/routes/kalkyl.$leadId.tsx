@@ -25,6 +25,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchActivePriceList } from "@/lib/price-list-api";
@@ -166,6 +174,16 @@ function KalkylPage() {
     [calcInput, priceRows],
   );
 
+  // AI-granskning: resultatet läggs i "pending"-läge – användaren måste
+  // bekräfta/rätta måtten innan de tillämpas och priset räknas ut.
+  const [pendingReview, setPendingReview] = useState<{
+    roofAreaKvm: number;
+    ranndalarMeter: number;
+    platItems: PlatItem[];
+    arbeteTimmar: number;
+    notes: string;
+  } | null>(null);
+
   const analyzeFn = useServerFn(analyzeRoofImages);
   const analyzeMutation = useMutation({
     mutationFn: async () => {
@@ -178,50 +196,63 @@ function KalkylPage() {
         },
       });
     },
-    onSuccess: async (out) => {
-      const nextAnalysis = {
+    onSuccess: (out) => {
+      setPendingReview({
         roofAreaKvm: out.roofAreaKvm,
         ranndalarMeter: out.ranndalarMeter,
         platItems: out.platItems as PlatItem[],
         arbeteTimmar: out.arbeteTimmar,
-      };
-      setAnalysis(nextAnalysis);
-      setNotes(out.notes ?? "");
-
-      // Räkna om priset lokalt och spara direkt som draft-kalkyl
-      const nextInput: CalcInput = {
-        roofAreaKvm: nextAnalysis.roofAreaKvm,
-        materialKey,
-        ranndalarMeter: nextAnalysis.ranndalarMeter,
-        platItems: nextAnalysis.platItems,
-        tillagg: [],
-        arbeteTimmar: nextAnalysis.arbeteTimmar,
-        arbeteTimpris: DEFAULT_TIMPRIS,
-        marginalProcent: DEFAULT_MARGINAL,
-        rotAvdrag: true,
-      };
-      const nextResult = computeCalc(nextInput, priceRows as PriceRow[]);
-      try {
-        await upsertCalculation({
-          leadId,
-          calc: nextInput,
-          result: nextResult,
-          notes: out.notes ?? null,
-        });
-        qc.invalidateQueries({ queryKey: ["calculation", leadId] });
-        toast.success(
-          `AI räknade ut pris: ${formatSek(nextResult.total)} inkl. moms – sparad som draft`,
-        );
-      } catch (e) {
-        toast.error(
-          "Priset räknades ut men kunde inte sparas: " +
-            (e instanceof Error ? e.message : "okänt fel"),
-        );
-      }
+        notes: out.notes ?? "",
+      });
+      toast.success("AI klar – granska och rätta måtten innan du bekräftar");
     },
     onError: (e: unknown) =>
       toast.error(e instanceof Error ? e.message : "AI-analys misslyckades"),
   });
+
+  const applyReview = async (approved: {
+    roofAreaKvm: number;
+    ranndalarMeter: number;
+    platItems: PlatItem[];
+    arbeteTimmar: number;
+    notes: string;
+  }) => {
+    const nextAnalysis = {
+      roofAreaKvm: approved.roofAreaKvm,
+      ranndalarMeter: approved.ranndalarMeter,
+      platItems: approved.platItems,
+      arbeteTimmar: approved.arbeteTimmar,
+    };
+    setAnalysis(nextAnalysis);
+    setNotes(approved.notes);
+    setPendingReview(null);
+
+    const nextInput: CalcInput = {
+      ...nextAnalysis,
+      materialKey,
+      tillagg: [],
+      arbeteTimpris: DEFAULT_TIMPRIS,
+      marginalProcent: DEFAULT_MARGINAL,
+      rotAvdrag: true,
+    };
+    const nextResult = computeCalc(nextInput, priceRows as PriceRow[]);
+    try {
+      await upsertCalculation({
+        leadId,
+        calc: nextInput,
+        result: nextResult,
+        notes: approved.notes || null,
+      });
+      qc.invalidateQueries({ queryKey: ["calculation", leadId] });
+      toast.success(`Pris uppdaterat: ${formatSek(nextResult.total)} inkl. moms`);
+    } catch (e) {
+      toast.error(
+        "Kunde inte spara: " + (e instanceof Error ? e.message : "okänt fel"),
+      );
+    }
+  };
+
+
 
   const generateFn = useServerFn(generateOffer);
   const generateMutation = useMutation({
@@ -606,6 +637,14 @@ function KalkylPage() {
           )}
         </aside>
       </div>
+
+      <ReviewDialog
+        open={!!pendingReview}
+        review={pendingReview}
+        priceRows={priceRows as PriceRow[]}
+        onCancel={() => setPendingReview(null)}
+        onConfirm={applyReview}
+      />
     </AppShell>
   );
 }
@@ -745,5 +784,208 @@ function OfferItem({
         )}
       </div>
     </div>
+  );
+}
+
+type ReviewData = {
+  roofAreaKvm: number;
+  ranndalarMeter: number;
+  platItems: PlatItem[];
+  arbeteTimmar: number;
+  notes: string;
+};
+
+function ReviewDialog({
+  open,
+  review,
+  priceRows,
+  onCancel,
+  onConfirm,
+}: {
+  open: boolean;
+  review: ReviewData | null;
+  priceRows: PriceRow[];
+  onCancel: () => void;
+  onConfirm: (r: ReviewData) => void | Promise<void>;
+}) {
+  const [draft, setDraft] = useState<ReviewData | null>(review);
+  const [addKey, setAddKey] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  // Synka in nya AI-resultat när dialogen öppnas
+  useMemo(() => {
+    if (review) {
+      setDraft(review);
+      setAddKey("");
+    }
+  }, [review]);
+
+  if (!open || !draft) return null;
+
+  const labelFor = (key: string) =>
+    priceRows.find((r) => r.key === key)?.label ?? key;
+  const unitFor = (key: string) =>
+    priceRows.find((r) => r.key === key)?.unit ?? "";
+
+  const availablePlat = priceRows.filter(
+    (r) =>
+      r.category === "plat" &&
+      r.key !== "ranndalar_meter" &&
+      !draft.platItems.some((it) => it.key === r.key),
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && !saving && onCancel()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" /> Granska AI-mått
+          </DialogTitle>
+          <DialogDescription>
+            Rätta eventuella fel innan priset räknas ut och sparas som draft.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <NumberField
+              label="Takyta (kvm)"
+              value={draft.roofAreaKvm}
+              onChange={(v) => setDraft({ ...draft, roofAreaKvm: v })}
+            />
+            <NumberField
+              label="Ränndalar (m)"
+              value={draft.ranndalarMeter}
+              onChange={(v) => setDraft({ ...draft, ranndalarMeter: v })}
+            />
+            <NumberField
+              label="Arbetstimmar"
+              value={draft.arbeteTimmar}
+              onChange={(v) => setDraft({ ...draft, arbeteTimmar: v })}
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs text-muted-foreground">
+              Föreslagna plåtdetaljer
+            </Label>
+            {draft.platItems.length === 0 ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                AI:n föreslog inga plåtdetaljer.
+              </p>
+            ) : (
+              <div className="mt-1.5 space-y-1.5">
+                {draft.platItems.map((p, i) => (
+                  <div
+                    key={`${p.key}-${i}`}
+                    className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-1.5 text-sm"
+                  >
+                    <span className="flex-1 truncate">{labelFor(p.key)}</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.1"
+                      value={p.quantity}
+                      onChange={(e) => {
+                        const q = Number(e.target.value) || 0;
+                        setDraft({
+                          ...draft,
+                          platItems: draft.platItems.map((it, idx) =>
+                            idx === i ? { ...it, quantity: q } : it,
+                          ),
+                        });
+                      }}
+                      className="h-8 w-24"
+                    />
+                    <span className="w-8 text-xs text-muted-foreground">
+                      {unitFor(p.key)}
+                    </span>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={() =>
+                        setDraft({
+                          ...draft,
+                          platItems: draft.platItems.filter((_, idx) => idx !== i),
+                        })
+                      }
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {availablePlat.length > 0 && (
+              <div className="mt-2 flex gap-2">
+                <Select value={addKey} onValueChange={setAddKey}>
+                  <SelectTrigger className="h-9 flex-1">
+                    <SelectValue placeholder="Lägg till plåtdetalj…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePlat.map((r) => (
+                      <SelectItem key={r.id} value={r.key}>
+                        {r.label} ({formatSek(r.unit_price)}/{r.unit})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!addKey}
+                  onClick={() => {
+                    if (!addKey) return;
+                    setDraft({
+                      ...draft,
+                      platItems: [...draft.platItems, { key: addKey, quantity: 1 }],
+                    });
+                    setAddKey("");
+                  }}
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" /> Lägg till
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-xs text-muted-foreground">
+              AI-anteckningar
+            </Label>
+            <Textarea
+              rows={2}
+              value={draft.notes}
+              onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+              placeholder="AI:ns antaganden och osäkerheter"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel} disabled={saving}>
+            Avbryt
+          </Button>
+          <Button
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await onConfirm(draft);
+              } finally {
+                setSaving(false);
+              }
+            }}
+            disabled={saving}
+          >
+            {saving ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            ) : null}
+            Bekräfta & räkna ut pris
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
