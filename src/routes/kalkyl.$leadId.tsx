@@ -329,9 +329,11 @@ function KalkylPage() {
 
           {/* 2. Bilder */}
           <section className="rounded-lg border border-border bg-card p-5">
-            <h3 className="mb-1 text-sm font-semibold">2. Ladda upp bilder med mått</h3>
+            <h3 className="mb-1 text-sm font-semibold">
+              2. Ladda upp bilder med mått <span className="font-normal text-muted-foreground">(valfritt)</span>
+            </h3>
             <p className="mb-3 text-xs text-muted-foreground">
-              Skisser, ritningar eller foton där mått i meter är inritade. Max 10 bilder, 8 MB per bild.
+              AI:n tolkar måtten och förfyller formuläret nedan. Du kan även hoppa över detta steg och fylla i allt manuellt. Max 10 bilder, 8 MB per bild.
             </p>
 
             <button
