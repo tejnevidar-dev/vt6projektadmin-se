@@ -822,6 +822,36 @@ function ReviewDialog({
 
   if (!open || !draft) return null;
 
+  // ---- Validering ----
+  const errors: { field: string; message: string }[] = [];
+  if (!Number.isFinite(draft.roofAreaKvm) || draft.roofAreaKvm <= 0) {
+    errors.push({ field: "roofAreaKvm", message: "Takyta måste anges (större än 0 kvm)." });
+  } else if (draft.roofAreaKvm > 2000) {
+    errors.push({ field: "roofAreaKvm", message: "Takyta verkar orimlig (max 2000 kvm)." });
+  } else if (draft.roofAreaKvm < 5) {
+    errors.push({ field: "roofAreaKvm", message: "Takyta verkar orimligt liten (under 5 kvm)." });
+  }
+  if (!Number.isFinite(draft.ranndalarMeter) || draft.ranndalarMeter < 0) {
+    errors.push({ field: "ranndalarMeter", message: "Ränndalar kan inte vara negativt." });
+  } else if (draft.ranndalarMeter > 500) {
+    errors.push({ field: "ranndalarMeter", message: "Ränndalar verkar orimligt (max 500 m)." });
+  }
+  if (!Number.isFinite(draft.arbeteTimmar) || draft.arbeteTimmar <= 0) {
+    errors.push({ field: "arbeteTimmar", message: "Arbetstimmar måste anges (större än 0)." });
+  } else if (draft.arbeteTimmar > 1000) {
+    errors.push({ field: "arbeteTimmar", message: "Arbetstimmar verkar orimligt (max 1000 h)." });
+  }
+  draft.platItems.forEach((p, i) => {
+    if (!Number.isFinite(p.quantity) || p.quantity <= 0) {
+      errors.push({
+        field: `plat-${i}`,
+        message: `${priceRows.find((r) => r.key === p.key)?.label ?? p.key}: antal måste vara större än 0 (eller ta bort raden).`,
+      });
+    }
+  });
+  const errorFor = (field: string) => errors.find((e) => e.field === field)?.message;
+  const hasErrors = errors.length > 0;
+
   const labelFor = (key: string) =>
     priceRows.find((r) => r.key === key)?.label ?? key;
   const unitFor = (key: string) =>
@@ -848,21 +878,36 @@ function ReviewDialog({
 
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <NumberField
-              label="Takyta (kvm)"
-              value={draft.roofAreaKvm}
-              onChange={(v) => setDraft({ ...draft, roofAreaKvm: v })}
-            />
-            <NumberField
-              label="Ränndalar (m)"
-              value={draft.ranndalarMeter}
-              onChange={(v) => setDraft({ ...draft, ranndalarMeter: v })}
-            />
-            <NumberField
-              label="Arbetstimmar"
-              value={draft.arbeteTimmar}
-              onChange={(v) => setDraft({ ...draft, arbeteTimmar: v })}
-            />
+            <div>
+              <NumberField
+                label="Takyta (kvm)"
+                value={draft.roofAreaKvm}
+                onChange={(v) => setDraft({ ...draft, roofAreaKvm: v })}
+              />
+              {errorFor("roofAreaKvm") && (
+                <p className="mt-1 text-xs text-destructive">{errorFor("roofAreaKvm")}</p>
+              )}
+            </div>
+            <div>
+              <NumberField
+                label="Ränndalar (m)"
+                value={draft.ranndalarMeter}
+                onChange={(v) => setDraft({ ...draft, ranndalarMeter: v })}
+              />
+              {errorFor("ranndalarMeter") && (
+                <p className="mt-1 text-xs text-destructive">{errorFor("ranndalarMeter")}</p>
+              )}
+            </div>
+            <div>
+              <NumberField
+                label="Arbetstimmar"
+                value={draft.arbeteTimmar}
+                onChange={(v) => setDraft({ ...draft, arbeteTimmar: v })}
+              />
+              {errorFor("arbeteTimmar") && (
+                <p className="mt-1 text-xs text-destructive">{errorFor("arbeteTimmar")}</p>
+              )}
+            </div>
           </div>
 
           <div>
@@ -875,46 +920,57 @@ function ReviewDialog({
               </p>
             ) : (
               <div className="mt-1.5 space-y-1.5">
-                {draft.platItems.map((p, i) => (
-                  <div
-                    key={`${p.key}-${i}`}
-                    className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-1.5 text-sm"
-                  >
-                    <span className="flex-1 truncate">{labelFor(p.key)}</span>
-                    <Input
-                      type="number"
-                      min={0}
-                      step="0.1"
-                      value={p.quantity}
-                      onChange={(e) => {
-                        const q = Number(e.target.value) || 0;
-                        setDraft({
-                          ...draft,
-                          platItems: draft.platItems.map((it, idx) =>
-                            idx === i ? { ...it, quantity: q } : it,
-                          ),
-                        });
-                      }}
-                      className="h-8 w-24"
-                    />
-                    <span className="w-8 text-xs text-muted-foreground">
-                      {unitFor(p.key)}
-                    </span>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={() =>
-                        setDraft({
-                          ...draft,
-                          platItems: draft.platItems.filter((_, idx) => idx !== i),
-                        })
-                      }
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                ))}
+                {draft.platItems.map((p, i) => {
+                  const rowErr = errorFor(`plat-${i}`);
+                  return (
+                    <div key={`${p.key}-${i}`}>
+                      <div
+                        className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm ${
+                          rowErr
+                            ? "border-destructive/60 bg-destructive/5"
+                            : "border-border/60 bg-muted/20"
+                        }`}
+                      >
+                        <span className="flex-1 truncate">{labelFor(p.key)}</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.1"
+                          value={p.quantity}
+                          onChange={(e) => {
+                            const q = Number(e.target.value) || 0;
+                            setDraft({
+                              ...draft,
+                              platItems: draft.platItems.map((it, idx) =>
+                                idx === i ? { ...it, quantity: q } : it,
+                              ),
+                            });
+                          }}
+                          className="h-8 w-24"
+                        />
+                        <span className="w-8 text-xs text-muted-foreground">
+                          {unitFor(p.key)}
+                        </span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            setDraft({
+                              ...draft,
+                              platItems: draft.platItems.filter((_, idx) => idx !== i),
+                            })
+                          }
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      {rowErr && (
+                        <p className="mt-1 text-xs text-destructive">{rowErr}</p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -964,12 +1020,29 @@ function ReviewDialog({
           </div>
         </div>
 
+        {hasErrors && (
+          <div className="rounded-md border border-destructive/50 bg-destructive/5 p-3">
+            <p className="text-xs font-semibold text-destructive">
+              Rätta följande innan priset räknas ut:
+            </p>
+            <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs text-destructive">
+              {errors.map((e, i) => (
+                <li key={i}>{e.message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} disabled={saving}>
             Avbryt
           </Button>
           <Button
             onClick={async () => {
+              if (hasErrors) {
+                toast.error("Rätta felen i formuläret först");
+                return;
+              }
               setSaving(true);
               try {
                 await onConfirm(draft);
@@ -977,7 +1050,7 @@ function ReviewDialog({
                 setSaving(false);
               }
             }}
-            disabled={saving}
+            disabled={saving || hasErrors}
           >
             {saving ? (
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
