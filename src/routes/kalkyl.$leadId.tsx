@@ -920,46 +920,57 @@ function ReviewDialog({
               </p>
             ) : (
               <div className="mt-1.5 space-y-1.5">
-                {draft.platItems.map((p, i) => (
-                  <div
-                    key={`${p.key}-${i}`}
-                    className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-1.5 text-sm"
-                  >
-                    <span className="flex-1 truncate">{labelFor(p.key)}</span>
-                    <Input
-                      type="number"
-                      min={0}
-                      step="0.1"
-                      value={p.quantity}
-                      onChange={(e) => {
-                        const q = Number(e.target.value) || 0;
-                        setDraft({
-                          ...draft,
-                          platItems: draft.platItems.map((it, idx) =>
-                            idx === i ? { ...it, quantity: q } : it,
-                          ),
-                        });
-                      }}
-                      className="h-8 w-24"
-                    />
-                    <span className="w-8 text-xs text-muted-foreground">
-                      {unitFor(p.key)}
-                    </span>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={() =>
-                        setDraft({
-                          ...draft,
-                          platItems: draft.platItems.filter((_, idx) => idx !== i),
-                        })
-                      }
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                ))}
+                {draft.platItems.map((p, i) => {
+                  const rowErr = errorFor(`plat-${i}`);
+                  return (
+                    <div key={`${p.key}-${i}`}>
+                      <div
+                        className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm ${
+                          rowErr
+                            ? "border-destructive/60 bg-destructive/5"
+                            : "border-border/60 bg-muted/20"
+                        }`}
+                      >
+                        <span className="flex-1 truncate">{labelFor(p.key)}</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.1"
+                          value={p.quantity}
+                          onChange={(e) => {
+                            const q = Number(e.target.value) || 0;
+                            setDraft({
+                              ...draft,
+                              platItems: draft.platItems.map((it, idx) =>
+                                idx === i ? { ...it, quantity: q } : it,
+                              ),
+                            });
+                          }}
+                          className="h-8 w-24"
+                        />
+                        <span className="w-8 text-xs text-muted-foreground">
+                          {unitFor(p.key)}
+                        </span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            setDraft({
+                              ...draft,
+                              platItems: draft.platItems.filter((_, idx) => idx !== i),
+                            })
+                          }
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      {rowErr && (
+                        <p className="mt-1 text-xs text-destructive">{rowErr}</p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
