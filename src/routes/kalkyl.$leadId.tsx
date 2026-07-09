@@ -948,7 +948,7 @@ function ReviewDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <NumberField
                 label="Takyta (kvm)"
