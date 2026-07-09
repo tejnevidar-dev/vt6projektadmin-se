@@ -608,11 +608,25 @@ function KalkylPage() {
   );
 }
 
-function MetricBox({ label, value }: { label: string; value: string }) {
+function NumberField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
   return (
-    <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-base font-semibold">{value}</div>
+    <div className="space-y-1">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Input
+        type="number"
+        min={0}
+        step="0.1"
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value) || 0)}
+      />
     </div>
   );
 }
