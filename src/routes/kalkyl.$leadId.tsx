@@ -166,6 +166,16 @@ function KalkylPage() {
     [calcInput, priceRows],
   );
 
+  // AI-granskning: resultatet läggs i "pending"-läge – användaren måste
+  // bekräfta/rätta måtten innan de tillämpas och priset räknas ut.
+  const [pendingReview, setPendingReview] = useState<{
+    roofAreaKvm: number;
+    ranndalarMeter: number;
+    platItems: PlatItem[];
+    arbeteTimmar: number;
+    notes: string;
+  } | null>(null);
+
   const analyzeFn = useServerFn(analyzeRoofImages);
   const analyzeMutation = useMutation({
     mutationFn: async () => {
@@ -178,50 +188,63 @@ function KalkylPage() {
         },
       });
     },
-    onSuccess: async (out) => {
-      const nextAnalysis = {
+    onSuccess: (out) => {
+      setPendingReview({
         roofAreaKvm: out.roofAreaKvm,
         ranndalarMeter: out.ranndalarMeter,
         platItems: out.platItems as PlatItem[],
         arbeteTimmar: out.arbeteTimmar,
-      };
-      setAnalysis(nextAnalysis);
-      setNotes(out.notes ?? "");
-
-      // Räkna om priset lokalt och spara direkt som draft-kalkyl
-      const nextInput: CalcInput = {
-        roofAreaKvm: nextAnalysis.roofAreaKvm,
-        materialKey,
-        ranndalarMeter: nextAnalysis.ranndalarMeter,
-        platItems: nextAnalysis.platItems,
-        tillagg: [],
-        arbeteTimmar: nextAnalysis.arbeteTimmar,
-        arbeteTimpris: DEFAULT_TIMPRIS,
-        marginalProcent: DEFAULT_MARGINAL,
-        rotAvdrag: true,
-      };
-      const nextResult = computeCalc(nextInput, priceRows as PriceRow[]);
-      try {
-        await upsertCalculation({
-          leadId,
-          calc: nextInput,
-          result: nextResult,
-          notes: out.notes ?? null,
-        });
-        qc.invalidateQueries({ queryKey: ["calculation", leadId] });
-        toast.success(
-          `AI räknade ut pris: ${formatSek(nextResult.total)} inkl. moms – sparad som draft`,
-        );
-      } catch (e) {
-        toast.error(
-          "Priset räknades ut men kunde inte sparas: " +
-            (e instanceof Error ? e.message : "okänt fel"),
-        );
-      }
+        notes: out.notes ?? "",
+      });
+      toast.success("AI klar – granska och rätta måtten innan du bekräftar");
     },
     onError: (e: unknown) =>
       toast.error(e instanceof Error ? e.message : "AI-analys misslyckades"),
   });
+
+  const applyReview = async (approved: {
+    roofAreaKvm: number;
+    ranndalarMeter: number;
+    platItems: PlatItem[];
+    arbeteTimmar: number;
+    notes: string;
+  }) => {
+    const nextAnalysis = {
+      roofAreaKvm: approved.roofAreaKvm,
+      ranndalarMeter: approved.ranndalarMeter,
+      platItems: approved.platItems,
+      arbeteTimmar: approved.arbeteTimmar,
+    };
+    setAnalysis(nextAnalysis);
+    setNotes(approved.notes);
+    setPendingReview(null);
+
+    const nextInput: CalcInput = {
+      ...nextAnalysis,
+      materialKey,
+      tillagg: [],
+      arbeteTimpris: DEFAULT_TIMPRIS,
+      marginalProcent: DEFAULT_MARGINAL,
+      rotAvdrag: true,
+    };
+    const nextResult = computeCalc(nextInput, priceRows as PriceRow[]);
+    try {
+      await upsertCalculation({
+        leadId,
+        calc: nextInput,
+        result: nextResult,
+        notes: approved.notes || null,
+      });
+      qc.invalidateQueries({ queryKey: ["calculation", leadId] });
+      toast.success(`Pris uppdaterat: ${formatSek(nextResult.total)} inkl. moms`);
+    } catch (e) {
+      toast.error(
+        "Kunde inte spara: " + (e instanceof Error ? e.message : "okänt fel"),
+      );
+    }
+  };
+
+
 
   const generateFn = useServerFn(generateOffer);
   const generateMutation = useMutation({
