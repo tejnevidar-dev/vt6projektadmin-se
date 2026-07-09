@@ -174,6 +174,44 @@ function KalkylPage() {
     [calcInput, priceRows],
   );
 
+  // Validering av huvudformuläret – samma regler som granskningsdialogen
+  const formErrors = useMemo(() => {
+    const errs: { field: string; message: string }[] = [];
+    if (!Number.isFinite(analysis.roofAreaKvm) || analysis.roofAreaKvm <= 0) {
+      errs.push({ field: "roofAreaKvm", message: "Takyta måste anges (större än 0 kvm)." });
+    } else if (analysis.roofAreaKvm > 2000) {
+      errs.push({ field: "roofAreaKvm", message: "Takyta verkar orimlig (max 2000 kvm)." });
+    } else if (analysis.roofAreaKvm < 5) {
+      errs.push({ field: "roofAreaKvm", message: "Takyta verkar orimligt liten (under 5 kvm)." });
+    }
+    if (!Number.isFinite(analysis.ranndalarMeter) || analysis.ranndalarMeter < 0) {
+      errs.push({ field: "ranndalarMeter", message: "Ränndalar kan inte vara negativt." });
+    } else if (analysis.ranndalarMeter > 500) {
+      errs.push({ field: "ranndalarMeter", message: "Ränndalar verkar orimligt (max 500 m)." });
+    }
+    if (!Number.isFinite(analysis.arbeteTimmar) || analysis.arbeteTimmar <= 0) {
+      errs.push({ field: "arbeteTimmar", message: "Arbetstimmar måste anges (större än 0)." });
+    } else if (analysis.arbeteTimmar > 1000) {
+      errs.push({ field: "arbeteTimmar", message: "Arbetstimmar verkar orimligt (max 1000 h)." });
+    }
+    if (!materialKey) {
+      errs.push({ field: "materialKey", message: "Välj taktyp." });
+    }
+    analysis.platItems.forEach((p, i) => {
+      if (!Number.isFinite(p.quantity) || p.quantity <= 0) {
+        const label = priceRows.find((r) => r.key === p.key)?.label ?? p.key;
+        errs.push({
+          field: `plat-${i}`,
+          message: `${label}: antal måste vara större än 0 (eller ta bort raden).`,
+        });
+      }
+    });
+    return errs;
+  }, [analysis, materialKey, priceRows]);
+  const formErrorFor = (field: string) =>
+    formErrors.find((e) => e.field === field)?.message;
+  const hasFormErrors = formErrors.length > 0;
+
   // AI-granskning: resultatet läggs i "pending"-läge – användaren måste
   // bekräfta/rätta måtten innan de tillämpas och priset räknas ut.
   const [pendingReview, setPendingReview] = useState<{
