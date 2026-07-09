@@ -174,6 +174,44 @@ function KalkylPage() {
     [calcInput, priceRows],
   );
 
+  // Validering av huvudformuläret – samma regler som granskningsdialogen
+  const formErrors = useMemo(() => {
+    const errs: { field: string; message: string }[] = [];
+    if (!Number.isFinite(analysis.roofAreaKvm) || analysis.roofAreaKvm <= 0) {
+      errs.push({ field: "roofAreaKvm", message: "Takyta måste anges (större än 0 kvm)." });
+    } else if (analysis.roofAreaKvm > 2000) {
+      errs.push({ field: "roofAreaKvm", message: "Takyta verkar orimlig (max 2000 kvm)." });
+    } else if (analysis.roofAreaKvm < 5) {
+      errs.push({ field: "roofAreaKvm", message: "Takyta verkar orimligt liten (under 5 kvm)." });
+    }
+    if (!Number.isFinite(analysis.ranndalarMeter) || analysis.ranndalarMeter < 0) {
+      errs.push({ field: "ranndalarMeter", message: "Ränndalar kan inte vara negativt." });
+    } else if (analysis.ranndalarMeter > 500) {
+      errs.push({ field: "ranndalarMeter", message: "Ränndalar verkar orimligt (max 500 m)." });
+    }
+    if (!Number.isFinite(analysis.arbeteTimmar) || analysis.arbeteTimmar <= 0) {
+      errs.push({ field: "arbeteTimmar", message: "Arbetstimmar måste anges (större än 0)." });
+    } else if (analysis.arbeteTimmar > 1000) {
+      errs.push({ field: "arbeteTimmar", message: "Arbetstimmar verkar orimligt (max 1000 h)." });
+    }
+    if (!materialKey) {
+      errs.push({ field: "materialKey", message: "Välj taktyp." });
+    }
+    analysis.platItems.forEach((p, i) => {
+      if (!Number.isFinite(p.quantity) || p.quantity <= 0) {
+        const label = priceRows.find((r) => r.key === p.key)?.label ?? p.key;
+        errs.push({
+          field: `plat-${i}`,
+          message: `${label}: antal måste vara större än 0 (eller ta bort raden).`,
+        });
+      }
+    });
+    return errs;
+  }, [analysis, materialKey, priceRows]);
+  const formErrorFor = (field: string) =>
+    formErrors.find((e) => e.field === field)?.message;
+  const hasFormErrors = formErrors.length > 0;
+
   // AI-granskning: resultatet läggs i "pending"-läge – användaren måste
   // bekräfta/rätta måtten innan de tillämpas och priset räknas ut.
   const [pendingReview, setPendingReview] = useState<{
@@ -444,21 +482,36 @@ function KalkylPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <NumberField
-                label="Takyta (kvm)"
-                value={analysis.roofAreaKvm}
-                onChange={(v) => setAnalysis((a) => ({ ...a, roofAreaKvm: v }))}
-              />
-              <NumberField
-                label="Ränndalar (m)"
-                value={analysis.ranndalarMeter}
-                onChange={(v) => setAnalysis((a) => ({ ...a, ranndalarMeter: v }))}
-              />
-              <NumberField
-                label="Arbetstimmar"
-                value={analysis.arbeteTimmar}
-                onChange={(v) => setAnalysis((a) => ({ ...a, arbeteTimmar: v }))}
-              />
+              <div>
+                <NumberField
+                  label="Takyta (kvm)"
+                  value={analysis.roofAreaKvm}
+                  onChange={(v) => setAnalysis((a) => ({ ...a, roofAreaKvm: v }))}
+                />
+                {formErrorFor("roofAreaKvm") && (
+                  <p className="mt-1 text-xs text-destructive">{formErrorFor("roofAreaKvm")}</p>
+                )}
+              </div>
+              <div>
+                <NumberField
+                  label="Ränndalar (m)"
+                  value={analysis.ranndalarMeter}
+                  onChange={(v) => setAnalysis((a) => ({ ...a, ranndalarMeter: v }))}
+                />
+                {formErrorFor("ranndalarMeter") && (
+                  <p className="mt-1 text-xs text-destructive">{formErrorFor("ranndalarMeter")}</p>
+                )}
+              </div>
+              <div>
+                <NumberField
+                  label="Arbetstimmar"
+                  value={analysis.arbeteTimmar}
+                  onChange={(v) => setAnalysis((a) => ({ ...a, arbeteTimmar: v }))}
+                />
+                {formErrorFor("arbeteTimmar") && (
+                  <p className="mt-1 text-xs text-destructive">{formErrorFor("arbeteTimmar")}</p>
+                )}
+              </div>
             </div>
 
             <div className="mt-5">
@@ -469,46 +522,57 @@ function KalkylPage() {
                 </p>
               ) : (
                 <div className="mt-1.5 space-y-1.5">
-                  {analysis.platItems.map((p, i) => (
-                    <div
-                      key={`${p.key}-${i}`}
-                      className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-1.5 text-sm"
-                    >
-                      <span className="flex-1 truncate">{platLabelFor(p.key)}</span>
-                      <Input
-                        type="number"
-                        min={0}
-                        step="0.1"
-                        value={p.quantity}
-                        onChange={(e) => {
-                          const q = Number(e.target.value) || 0;
-                          setAnalysis((a) => ({
-                            ...a,
-                            platItems: a.platItems.map((it, idx) =>
-                              idx === i ? { ...it, quantity: q } : it,
-                            ),
-                          }));
-                        }}
-                        className="h-8 w-24"
-                      />
-                      <span className="w-8 text-xs text-muted-foreground">
-                        {platUnitFor(p.key)}
-                      </span>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        onClick={() =>
-                          setAnalysis((a) => ({
-                            ...a,
-                            platItems: a.platItems.filter((_, idx) => idx !== i),
-                          }))
-                        }
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  ))}
+                  {analysis.platItems.map((p, i) => {
+                    const rowErr = formErrorFor(`plat-${i}`);
+                    return (
+                      <div key={`${p.key}-${i}`}>
+                        <div
+                          className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm ${
+                            rowErr
+                              ? "border-destructive/60 bg-destructive/5"
+                              : "border-border/60 bg-muted/20"
+                          }`}
+                        >
+                          <span className="flex-1 truncate">{platLabelFor(p.key)}</span>
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.1"
+                            value={p.quantity}
+                            onChange={(e) => {
+                              const q = Number(e.target.value) || 0;
+                              setAnalysis((a) => ({
+                                ...a,
+                                platItems: a.platItems.map((it, idx) =>
+                                  idx === i ? { ...it, quantity: q } : it,
+                                ),
+                              }));
+                            }}
+                            className="h-8 w-24"
+                          />
+                          <span className="w-8 text-xs text-muted-foreground">
+                            {platUnitFor(p.key)}
+                          </span>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={() =>
+                              setAnalysis((a) => ({
+                                ...a,
+                                platItems: a.platItems.filter((_, idx) => idx !== i),
+                              }))
+                            }
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        {rowErr && (
+                          <p className="mt-1 text-xs text-destructive">{rowErr}</p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -609,11 +673,33 @@ function KalkylPage() {
               </p>
             )}
 
+            {hasFormErrors && (
+              <div className="mt-4 rounded-md border border-destructive/50 bg-destructive/5 p-3">
+                <p className="text-xs font-semibold text-destructive">
+                  Rätta följande innan offerten kan genereras:
+                </p>
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs text-destructive">
+                  {formErrors.map((e, i) => (
+                    <li key={i}>{e.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <Button
               className="mt-5 w-full"
-              onClick={() => generateMutation.mutate()}
+              onClick={() => {
+                if (hasFormErrors) {
+                  toast.error("Rätta felen i formuläret först");
+                  return;
+                }
+                generateMutation.mutate();
+              }}
               disabled={
-                generateMutation.isPending || !result || result.subtotal <= 0
+                generateMutation.isPending ||
+                !result ||
+                result.subtotal <= 0 ||
+                hasFormErrors
               }
             >
               {generateMutation.isPending ? (
