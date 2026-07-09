@@ -481,7 +481,7 @@ function KalkylPage() {
               </span>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <NumberField
                   label="Takyta (kvm)"
@@ -500,16 +500,6 @@ function KalkylPage() {
                 />
                 {formErrorFor("ranndalarMeter") && (
                   <p className="mt-1 text-xs text-destructive">{formErrorFor("ranndalarMeter")}</p>
-                )}
-              </div>
-              <div>
-                <NumberField
-                  label="Arbetstimmar"
-                  value={analysis.arbeteTimmar}
-                  onChange={(v) => setAnalysis((a) => ({ ...a, arbeteTimmar: v }))}
-                />
-                {formErrorFor("arbeteTimmar") && (
-                  <p className="mt-1 text-xs text-destructive">{formErrorFor("arbeteTimmar")}</p>
                 )}
               </div>
             </div>
