@@ -878,21 +878,36 @@ function ReviewDialog({
 
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <NumberField
-              label="Takyta (kvm)"
-              value={draft.roofAreaKvm}
-              onChange={(v) => setDraft({ ...draft, roofAreaKvm: v })}
-            />
-            <NumberField
-              label="Ränndalar (m)"
-              value={draft.ranndalarMeter}
-              onChange={(v) => setDraft({ ...draft, ranndalarMeter: v })}
-            />
-            <NumberField
-              label="Arbetstimmar"
-              value={draft.arbeteTimmar}
-              onChange={(v) => setDraft({ ...draft, arbeteTimmar: v })}
-            />
+            <div>
+              <NumberField
+                label="Takyta (kvm)"
+                value={draft.roofAreaKvm}
+                onChange={(v) => setDraft({ ...draft, roofAreaKvm: v })}
+              />
+              {errorFor("roofAreaKvm") && (
+                <p className="mt-1 text-xs text-destructive">{errorFor("roofAreaKvm")}</p>
+              )}
+            </div>
+            <div>
+              <NumberField
+                label="Ränndalar (m)"
+                value={draft.ranndalarMeter}
+                onChange={(v) => setDraft({ ...draft, ranndalarMeter: v })}
+              />
+              {errorFor("ranndalarMeter") && (
+                <p className="mt-1 text-xs text-destructive">{errorFor("ranndalarMeter")}</p>
+              )}
+            </div>
+            <div>
+              <NumberField
+                label="Arbetstimmar"
+                value={draft.arbeteTimmar}
+                onChange={(v) => setDraft({ ...draft, arbeteTimmar: v })}
+              />
+              {errorFor("arbeteTimmar") && (
+                <p className="mt-1 text-xs text-destructive">{errorFor("arbeteTimmar")}</p>
+              )}
+            </div>
           </div>
 
           <div>
