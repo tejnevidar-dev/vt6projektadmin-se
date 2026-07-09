@@ -189,10 +189,8 @@ function KalkylPage() {
     } else if (analysis.ranndalarMeter > 500) {
       errs.push({ field: "ranndalarMeter", message: "Ränndalar verkar orimligt (max 500 m)." });
     }
-    if (!Number.isFinite(analysis.arbeteTimmar) || analysis.arbeteTimmar <= 0) {
-      errs.push({ field: "arbeteTimmar", message: "Arbetstimmar måste anges (större än 0)." });
-    } else if (analysis.arbeteTimmar > 1000) {
-      errs.push({ field: "arbeteTimmar", message: "Arbetstimmar verkar orimligt (max 1000 h)." });
+    if (!Number.isFinite(analysis.arbeteTimmar) || analysis.arbeteTimmar < 0) {
+      analysis.arbeteTimmar = 0;
     }
     if (!materialKey) {
       errs.push({ field: "materialKey", message: "Välj taktyp." });
