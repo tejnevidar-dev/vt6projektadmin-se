@@ -482,21 +482,36 @@ function KalkylPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <NumberField
-                label="Takyta (kvm)"
-                value={analysis.roofAreaKvm}
-                onChange={(v) => setAnalysis((a) => ({ ...a, roofAreaKvm: v }))}
-              />
-              <NumberField
-                label="Ränndalar (m)"
-                value={analysis.ranndalarMeter}
-                onChange={(v) => setAnalysis((a) => ({ ...a, ranndalarMeter: v }))}
-              />
-              <NumberField
-                label="Arbetstimmar"
-                value={analysis.arbeteTimmar}
-                onChange={(v) => setAnalysis((a) => ({ ...a, arbeteTimmar: v }))}
-              />
+              <div>
+                <NumberField
+                  label="Takyta (kvm)"
+                  value={analysis.roofAreaKvm}
+                  onChange={(v) => setAnalysis((a) => ({ ...a, roofAreaKvm: v }))}
+                />
+                {formErrorFor("roofAreaKvm") && (
+                  <p className="mt-1 text-xs text-destructive">{formErrorFor("roofAreaKvm")}</p>
+                )}
+              </div>
+              <div>
+                <NumberField
+                  label="Ränndalar (m)"
+                  value={analysis.ranndalarMeter}
+                  onChange={(v) => setAnalysis((a) => ({ ...a, ranndalarMeter: v }))}
+                />
+                {formErrorFor("ranndalarMeter") && (
+                  <p className="mt-1 text-xs text-destructive">{formErrorFor("ranndalarMeter")}</p>
+                )}
+              </div>
+              <div>
+                <NumberField
+                  label="Arbetstimmar"
+                  value={analysis.arbeteTimmar}
+                  onChange={(v) => setAnalysis((a) => ({ ...a, arbeteTimmar: v }))}
+                />
+                {formErrorFor("arbeteTimmar") && (
+                  <p className="mt-1 text-xs text-destructive">{formErrorFor("arbeteTimmar")}</p>
+                )}
+              </div>
             </div>
 
             <div className="mt-5">
