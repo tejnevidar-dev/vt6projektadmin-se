@@ -1020,12 +1020,29 @@ function ReviewDialog({
           </div>
         </div>
 
+        {hasErrors && (
+          <div className="rounded-md border border-destructive/50 bg-destructive/5 p-3">
+            <p className="text-xs font-semibold text-destructive">
+              Rätta följande innan priset räknas ut:
+            </p>
+            <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs text-destructive">
+              {errors.map((e, i) => (
+                <li key={i}>{e.message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} disabled={saving}>
             Avbryt
           </Button>
           <Button
             onClick={async () => {
+              if (hasErrors) {
+                toast.error("Rätta felen i formuläret först");
+                return;
+              }
               setSaving(true);
               try {
                 await onConfirm(draft);
@@ -1033,7 +1050,7 @@ function ReviewDialog({
                 setSaving(false);
               }
             }}
-            disabled={saving}
+            disabled={saving || hasErrors}
           >
             {saving ? (
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
