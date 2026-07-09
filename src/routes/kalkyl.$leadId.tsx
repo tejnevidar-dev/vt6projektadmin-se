@@ -189,11 +189,6 @@ function KalkylPage() {
     } else if (analysis.ranndalarMeter > 500) {
       errs.push({ field: "ranndalarMeter", message: "Ränndalar verkar orimligt (max 500 m)." });
     }
-    if (!Number.isFinite(analysis.arbeteTimmar) || analysis.arbeteTimmar <= 0) {
-      errs.push({ field: "arbeteTimmar", message: "Arbetstimmar måste anges (större än 0)." });
-    } else if (analysis.arbeteTimmar > 1000) {
-      errs.push({ field: "arbeteTimmar", message: "Arbetstimmar verkar orimligt (max 1000 h)." });
-    }
     if (!materialKey) {
       errs.push({ field: "materialKey", message: "Välj taktyp." });
     }
@@ -481,7 +476,7 @@ function KalkylPage() {
               </span>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <NumberField
                   label="Takyta (kvm)"
@@ -500,16 +495,6 @@ function KalkylPage() {
                 />
                 {formErrorFor("ranndalarMeter") && (
                   <p className="mt-1 text-xs text-destructive">{formErrorFor("ranndalarMeter")}</p>
-                )}
-              </div>
-              <div>
-                <NumberField
-                  label="Arbetstimmar"
-                  value={analysis.arbeteTimmar}
-                  onChange={(v) => setAnalysis((a) => ({ ...a, arbeteTimmar: v }))}
-                />
-                {formErrorFor("arbeteTimmar") && (
-                  <p className="mt-1 text-xs text-destructive">{formErrorFor("arbeteTimmar")}</p>
                 )}
               </div>
             </div>
@@ -922,11 +907,6 @@ function ReviewDialog({
   } else if (draft.ranndalarMeter > 500) {
     errors.push({ field: "ranndalarMeter", message: "Ränndalar verkar orimligt (max 500 m)." });
   }
-  if (!Number.isFinite(draft.arbeteTimmar) || draft.arbeteTimmar <= 0) {
-    errors.push({ field: "arbeteTimmar", message: "Arbetstimmar måste anges (större än 0)." });
-  } else if (draft.arbeteTimmar > 1000) {
-    errors.push({ field: "arbeteTimmar", message: "Arbetstimmar verkar orimligt (max 1000 h)." });
-  }
   draft.platItems.forEach((p, i) => {
     if (!Number.isFinite(p.quantity) || p.quantity <= 0) {
       errors.push({
@@ -963,7 +943,7 @@ function ReviewDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <NumberField
                 label="Takyta (kvm)"
@@ -982,16 +962,6 @@ function ReviewDialog({
               />
               {errorFor("ranndalarMeter") && (
                 <p className="mt-1 text-xs text-destructive">{errorFor("ranndalarMeter")}</p>
-              )}
-            </div>
-            <div>
-              <NumberField
-                label="Arbetstimmar"
-                value={draft.arbeteTimmar}
-                onChange={(v) => setDraft({ ...draft, arbeteTimmar: v })}
-              />
-              {errorFor("arbeteTimmar") && (
-                <p className="mt-1 text-xs text-destructive">{errorFor("arbeteTimmar")}</p>
               )}
             </div>
           </div>
