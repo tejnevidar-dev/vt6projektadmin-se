@@ -907,11 +907,6 @@ function ReviewDialog({
   } else if (draft.ranndalarMeter > 500) {
     errors.push({ field: "ranndalarMeter", message: "Ränndalar verkar orimligt (max 500 m)." });
   }
-  if (!Number.isFinite(draft.arbeteTimmar) || draft.arbeteTimmar <= 0) {
-    errors.push({ field: "arbeteTimmar", message: "Arbetstimmar måste anges (större än 0)." });
-  } else if (draft.arbeteTimmar > 1000) {
-    errors.push({ field: "arbeteTimmar", message: "Arbetstimmar verkar orimligt (max 1000 h)." });
-  }
   draft.platItems.forEach((p, i) => {
     if (!Number.isFinite(p.quantity) || p.quantity <= 0) {
       errors.push({
