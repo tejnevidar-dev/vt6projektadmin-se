@@ -822,6 +822,36 @@ function ReviewDialog({
 
   if (!open || !draft) return null;
 
+  // ---- Validering ----
+  const errors: { field: string; message: string }[] = [];
+  if (!Number.isFinite(draft.roofAreaKvm) || draft.roofAreaKvm <= 0) {
+    errors.push({ field: "roofAreaKvm", message: "Takyta måste anges (större än 0 kvm)." });
+  } else if (draft.roofAreaKvm > 2000) {
+    errors.push({ field: "roofAreaKvm", message: "Takyta verkar orimlig (max 2000 kvm)." });
+  } else if (draft.roofAreaKvm < 5) {
+    errors.push({ field: "roofAreaKvm", message: "Takyta verkar orimligt liten (under 5 kvm)." });
+  }
+  if (!Number.isFinite(draft.ranndalarMeter) || draft.ranndalarMeter < 0) {
+    errors.push({ field: "ranndalarMeter", message: "Ränndalar kan inte vara negativt." });
+  } else if (draft.ranndalarMeter > 500) {
+    errors.push({ field: "ranndalarMeter", message: "Ränndalar verkar orimligt (max 500 m)." });
+  }
+  if (!Number.isFinite(draft.arbeteTimmar) || draft.arbeteTimmar <= 0) {
+    errors.push({ field: "arbeteTimmar", message: "Arbetstimmar måste anges (större än 0)." });
+  } else if (draft.arbeteTimmar > 1000) {
+    errors.push({ field: "arbeteTimmar", message: "Arbetstimmar verkar orimligt (max 1000 h)." });
+  }
+  draft.platItems.forEach((p, i) => {
+    if (!Number.isFinite(p.quantity) || p.quantity <= 0) {
+      errors.push({
+        field: `plat-${i}`,
+        message: `${labelForKey(priceRows, p.key)}: antal måste vara större än 0 (eller ta bort raden).`,
+      });
+    }
+  });
+  const errorFor = (field: string) => errors.find((e) => e.field === field)?.message;
+  const hasErrors = errors.length > 0;
+
   const labelFor = (key: string) =>
     priceRows.find((r) => r.key === key)?.label ?? key;
   const unitFor = (key: string) =>
