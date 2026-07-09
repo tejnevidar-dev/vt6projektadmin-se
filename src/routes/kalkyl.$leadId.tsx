@@ -637,6 +637,14 @@ function KalkylPage() {
           )}
         </aside>
       </div>
+
+      <ReviewDialog
+        open={!!pendingReview}
+        review={pendingReview}
+        priceRows={priceRows as PriceRow[]}
+        onCancel={() => setPendingReview(null)}
+        onConfirm={applyReview}
+      />
     </AppShell>
   );
 }
