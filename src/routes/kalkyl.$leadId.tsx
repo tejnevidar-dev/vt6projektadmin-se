@@ -673,11 +673,33 @@ function KalkylPage() {
               </p>
             )}
 
+            {hasFormErrors && (
+              <div className="mt-4 rounded-md border border-destructive/50 bg-destructive/5 p-3">
+                <p className="text-xs font-semibold text-destructive">
+                  Rätta följande innan offerten kan genereras:
+                </p>
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs text-destructive">
+                  {formErrors.map((e, i) => (
+                    <li key={i}>{e.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <Button
               className="mt-5 w-full"
-              onClick={() => generateMutation.mutate()}
+              onClick={() => {
+                if (hasFormErrors) {
+                  toast.error("Rätta felen i formuläret först");
+                  return;
+                }
+                generateMutation.mutate();
+              }}
               disabled={
-                generateMutation.isPending || !result || result.subtotal <= 0
+                generateMutation.isPending ||
+                !result ||
+                result.subtotal <= 0 ||
+                hasFormErrors
               }
             >
               {generateMutation.isPending ? (
