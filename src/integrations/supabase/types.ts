@@ -734,6 +734,47 @@ export type Database = {
           },
         ]
       }
+      offer_drafts: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          label: string
+          lead_id: string | null
+          payload: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          kind?: string
+          label?: string
+          lead_id?: string | null
+          payload?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          label?: string
+          lead_id?: string | null
+          payload?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_drafts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offers: {
         Row: {
           accepted_at: string | null
