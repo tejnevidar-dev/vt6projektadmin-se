@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { template as selfChecksClientTemplate } from './self-checks-client'
+import { template as bookingReminderTemplate } from './booking-reminder'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -12,4 +13,5 @@ export interface TemplateEntry {
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'self-checks-client': selfChecksClientTemplate,
+  'booking-reminder': bookingReminderTemplate,
 }
