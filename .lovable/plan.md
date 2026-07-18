@@ -1,78 +1,49 @@
+# Plan: Offert & Kalkyl – sammanslagning + drafts
 
-# Kalkyl- och offertsystem
+## 1. Navigation
+- Byt namn på "Ny offert"-fliken i sidomenyn till **Offert & Kalkyl**.
+- Ta bort separat "Kalkyl"-flik från sidebar (kalkyl per lead nås fortsatt via lead-vyn, men huvudflödet flyttas till den nya sidan).
+- Route: behåll `/offert/ny` för URL-stabilitet, men rendera nya sidan där.
 
-Vi bygger allt inuti Lovable — ingen ChatGPT-integration. Motivering: priser måste vara deterministiska, offerten ska auto-kopplas till lead/säljare, och PDF:en ska sparas på leaden precis som idag (`offers`-bucketen finns redan).
+## 2. Ny sida `/offert/ny` – två flikar
+- **Flik "Offert"**: nuvarande manuella offertformulär (oförändrat innehåll).
+- **Flik "Kalkyl"**: bildanalys + formulär från `/kalkyl/$leadId`, fristående (ingen lead krävs).
+- Delad state: när kalkylen räknas ut → knapp "Använd i offert" som fyller belopp (entreprenadpris, material) i offert-fliken.
 
-## 1. Databas (ny)
+## 3. Drafts (per användare)
+- Ny tabell `offer_drafts`:
+  - `id`, `created_by`, `kind` ('offer' | 'calc' | 'combined'), `payload jsonb`, `label text`, `lead_id` (nullable), `updated_at`.
+  - RLS: ägaren + admin. GRANTs.
+- UI: draft-lista i toppen av sidan ("Mina utkast"), knappar **Spara utkast** och **Uppdatera utkast**. Autosave var 30:e sekund vid ändring.
+- Öppna draft → laddar payload in i formuläret.
 
-**`price_list`** — redigerbar prislista (endast admin)
-- `category` (enum: `material`, `arbete`, `plat`, `tillagg`)
-- `key` (t.ex. `betongpannor`, `tegelpannor`, `ranndalar_meter`, `skorstensinkladnad`)
-- `label`, `unit` (`kvm`, `meter`, `st`, `timme`, `paket`), `unit_price`, `is_active`, `sort_order`
-- Seedas med startvärden du får ändra i admin
+## 4. Historik & status per kund
+- Använd befintlig `offers`-tabell. När PDF genereras och en kund är vald (lead_id finns): skapa `offers`-rad med `version` = max+1, `status='draft'`, `total_amount`.
+- Panel "Tidigare offerter för kunden" när kund vald: version, datum, status, knappar **Markera skickad / accepterad / avvisad**.
 
-**`calculations`** — en kalkyl per lead (1:1)
-- `lead_id` (FK), `created_by`, `roof_area_kvm`, `material_key` (ref prislista), `ranndalar_meter`
-- `plat_items` jsonb (lista av `{key, quantity}` för plåtarbeten som skorstensinklädnad)
-- `tillagg` jsonb (fritextrader `{label, qty, unit_price}` för säljaren)
-- `arbete_timmar`, `arbete_timpris`, `marginal_procent`, `rot_avdrag` (bool)
-- `subtotal`, `moms`, `total`, `rot_belopp`, `att_betala` (räknas server-side vid save)
+## 5. "Välj kund"-dialog
+- Knapp i offert-fliken bredvid Kund-rubriken.
+- Dialog med:
+  - Sökfält (namn, adress, telefon, mail) – filtrerar client-side över hämtade leads.
+  - Lista med lead-namn + adress + status.
+  - Klick på lead → fyller `kundNamn`, `objektadress`, `telefon`, `mail`, `fastighetsbeteckning` från lead/property. Sparar `lead_id` internt för historik/drafts.
+- Ta bort valet: knapp "Rensa kund".
 
-**`offers`** — genererade offerter (historik, en lead kan ha flera versioner)
-- `lead_id`, `calculation_id`, `version` (auto-inkrement per lead)
-- `pdf_path` (i befintlig `offers`-bucket), `status` (`draft`, `skickad`, `accepterad`, `avvisad`)
-- `sent_at`, `accepted_at`, `total_amount`, `created_by`
+## Tekniska detaljer
+- Filer att skapa:
+  - `supabase/migrations/*_offer_drafts.sql`
+  - `src/lib/offer-drafts.ts` (CRUD via supabase-klient, RLS-skyddat)
+  - `src/components/SelectCustomerDialog.tsx`
+  - `src/components/OfferTab.tsx` (extraherad från nuvarande `offert.ny.tsx`)
+  - `src/components/CalcTab.tsx` (extraherad från `kalkyl.$leadId.tsx`)
+- Filer att ändra:
+  - `src/routes/offert.ny.tsx` → wrapper med Tabs + drafts + kundvalslogik
+  - `src/components/AppShell.tsx` → byt navlabel, ta bort separat kalkyl-flik
+  - `src/lib/calculations-api.ts` → ev. lägg till "orphan calc" (utan lead) om vi vill spara kalkyler utan lead — annars endast draft.
 
-**RLS**: säljare ser bara kalkyler/offerter på leads de själva skapat; admin ser allt. Prislistan är läsbar för alla inloggade men bara admin kan skriva.
+## Vad som INTE ingår (kan komma sen om du vill)
+- E-postutskick av PDF till kund.
+- Redigering av befintliga offer-rader (bara statusbyte).
+- Delning av utkast mellan användare.
 
-## 2. Kalkyl-UI (`/kalkyl/$leadId` under `_authenticated`)
-
-En sida med tre kolumner (desktop) / staplat (mobil):
-- **Vänster: input** — kvm, materialdropdown (från prislista), ränndalar (m), checkboxar för plåtarbeten (skorstensinklädnad m.fl.), fri "extra rader"-tabell, timmar/timpris, marginal-slider, ROT-toggle
-- **Mitten: live-uppdelning** — varje rad med qty × pris = summa, grupperat per kategori
-- **Höger: totaler** (sticky) — subtotal, moms 25%, ROT-avdrag, "att betala", knappar: **Spara kalkyl**, **Generera offert**
-
-Auto-räknar i realtid; sparas vid Spara.
-
-## 3. Offert-PDF (server-side)
-
-`createServerFn` `generateOffer({ calculationId })`:
-1. Läser lead + kalkyl + prislista + säljarens kontaktuppgifter
-2. Genererar PDF med `pdf-lib` (WASM-vänligt, funkar på Cloudflare Worker)
-3. Layout: header med VT6-logga + offertnr, kunduppgifter, säljarens kontakt, specificerad radtabell, totaler, ROT-info, villkor (fri textmall vi definierar tillsammans), signaturruta
-4. Sparar i `offers/{leadId}/offert-v{n}.pdf`, skapar `offers`-rad, kopplar också till leadens `offer_pdf_path` så befintliga `OfferPdfCard` fortsätter fungera
-5. Retur: signed URL för visning + download
-
-Version bumpas varje gång man klickar "Generera offert" så du har full historik.
-
-## 4. Admin-vy för prislistan
-
-Ny flik i `/settings` (eller `/admin`): tabell med inline-redigering av priser, lägg till/ta bort rader, aktivera/inaktivera. Bara admin kan öppna.
-
-## 5. Access
-
-- Säljare (roll `saljare`): kan öppna `/kalkyl/$leadId` på sina egna leads, generera offert
-- Admin: allt + prislistan
-- Hantverkare/UE/arbetsledare: ingen tillgång till kalkyl/offert (de ser bara arbetsordern som idag)
-
-## Vad jag INTE bygger nu (kan komma senare)
-
-- E-signering av offert direkt i systemet
-- Automatisk e-postutskick av offert till kund (vi genererar PDF, du skickar manuellt tills vidare)
-- AI-genererad beskrivningstext i offerten
-- Kundens acceptera/avvisa-länk
-
-## Teknisk stack
-
-- DB via Supabase-migration (RLS + GRANT enligt reglerna)
-- Kalkyl/offert-logik i `src/lib/calculations.functions.ts` + `src/lib/offers.functions.ts` med `requireSupabaseAuth`
-- PDF: `pdf-lib` (bundlas i workern, ingen native binär)
-- UI: TanStack-route under `_authenticated`
-
-## Fråga innan vi kör
-
-**Startpriser till prislistan** — vill du att jag seedar med rimliga placeholder-priser (t.ex. betongpannor 450 kr/kvm, tegelpannor 550, ränndalar 350/m, skorstensinklädnad 8500/st, timpris 650) som du sen redigerar i admin? Eller vill du ge mig dina riktiga siffror nu?
-
-**Villkorstext på offerten** — har du en färdig villkorstext (giltighetstid, betalvillkor, garanti, ansvar) jag ska klistra in, eller vill du att jag skriver ett standard-utkast som du sen redigerar?
-
-Svara på de två frågorna så börjar jag med migrationen.
+Säg till om jag ska köra på detta eller justera något innan jag bygger.
