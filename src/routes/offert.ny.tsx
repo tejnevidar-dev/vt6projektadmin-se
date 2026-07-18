@@ -129,7 +129,7 @@ interface FormState {
 
 function initialForm(): FormState {
   return {
-    offertnr: `${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+    offertnr: "",
     offertdatum: todayISO(),
     giltigTom: plusDaysISO(30),
     betalningsvillkor: "10 dagar netto",
@@ -180,7 +180,18 @@ function OffertNyPage() {
   };
   useEffect(() => {
     loadDrafts();
+    peekNextOfferNr();
   }, []);
+
+  const peekNextOfferNr = async () => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.rpc("peek_offer_number" as any);
+      if (!error && typeof data === "string") {
+        setForm((f) => (f.offertnr ? f : { ...f, offertnr: data }));
+      }
+    } catch { /* ignore */ }
+  };
 
   const handleSaveDraft = async () => {
     try {
@@ -228,6 +239,7 @@ function OffertNyPage() {
   const handleNewDraft = () => {
     setForm(initialForm());
     setActiveDraftId(null);
+    peekNextOfferNr();
     toast.info("Nytt utkast");
   };
 
@@ -455,7 +467,11 @@ function OffertNyPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success("Offert genererad");
+      if (res.offertnr) {
+        setForm((f) => ({ ...f, offertnr: res.offertnr }));
+      }
+      toast.success(`Offert ${res.offertnr ?? ""} genererad`);
+      peekNextOfferNr();
     } catch (e: any) {
       toast.error(e?.message ?? "Kunde inte generera offert");
     } finally {

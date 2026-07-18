@@ -775,6 +775,24 @@ export type Database = {
           },
         ]
       }
+      offer_number_counters: {
+        Row: {
+          last_number: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          last_number?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          last_number?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       offers: {
         Row: {
           accepted_at: string | null
@@ -1243,6 +1261,7 @@ export type Database = {
         }
         Returns: number
       }
+      peek_offer_number: { Args: never; Returns: string }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -1251,6 +1270,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      reserve_offer_number: { Args: never; Returns: string }
     }
     Enums: {
       activity_type:
