@@ -239,6 +239,7 @@ function OffertNyPage() {
   const handleNewDraft = () => {
     setForm(initialForm());
     setActiveDraftId(null);
+    peekNextOfferNr();
     toast.info("Nytt utkast");
   };
 
