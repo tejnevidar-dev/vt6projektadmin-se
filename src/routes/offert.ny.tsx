@@ -129,7 +129,7 @@ interface FormState {
 
 function initialForm(): FormState {
   return {
-    offertnr: `${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+    offertnr: "",
     offertdatum: todayISO(),
     giltigTom: plusDaysISO(30),
     betalningsvillkor: "10 dagar netto",
