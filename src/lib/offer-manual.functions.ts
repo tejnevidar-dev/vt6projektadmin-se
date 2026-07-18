@@ -61,14 +61,19 @@ function fmtDate(iso: string): string {
 export const generateManualOffer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: OfferInput) => {
-    if (!input?.offertnr) throw new Error("Offertnr saknas");
     if (!input.kundNamn) throw new Error("Kundnamn saknas");
     if (!Array.isArray(input.rader) || input.rader.length === 0)
       throw new Error("Minst en rad krävs");
     return input;
   })
-  .handler(async ({ data }): Promise<{ filename: string; base64: string }> => {
+  .handler(async ({ data, context }): Promise<{ filename: string; base64: string; offertnr: string }> => {
+    // Reservera nästa offertnummer atomiskt (t.ex. "2026-2020")
+    const { data: reserved, error: rErr } = await context.supabase.rpc("reserve_offer_number" as any);
+    if (rErr) throw new Error("Kunde inte reservera offertnummer: " + rErr.message);
+    data.offertnr = String(reserved);
+
     const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+
 
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);
