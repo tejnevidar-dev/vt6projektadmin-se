@@ -45,6 +45,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicSelfCheckPdfSplatRouteImport } from './routes/api/public/self-check-pdf.$'
+import { Route as ApiPublicHooksSendBookingRemindersRouteImport } from './routes/api/public/hooks/send-booking-reminders'
 
 const WebhookLogsRoute = WebhookLogsRouteImport.update({
   id: '/webhook-logs',
@@ -232,6 +233,12 @@ const ApiPublicSelfCheckPdfSplatRoute =
     path: '/api/public/self-check-pdf/$',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSendBookingRemindersRoute =
+  ApiPublicHooksSendBookingRemindersRouteImport.update({
+    id: '/api/public/hooks/send-booking-reminders',
+    path: '/api/public/hooks/send-booking-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -264,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -301,6 +309,7 @@ export interface FileRoutesByTo {
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -340,6 +349,7 @@ export interface FileRoutesById {
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -380,6 +390,7 @@ export interface FileRouteTypes {
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/send-booking-reminders'
     | '/api/public/self-check-pdf/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -417,6 +428,7 @@ export interface FileRouteTypes {
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/send-booking-reminders'
     | '/api/public/self-check-pdf/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -455,6 +467,7 @@ export interface FileRouteTypes {
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
     | '/lovable/email/suppression'
+    | '/api/public/hooks/send-booking-reminders'
     | '/api/public/self-check-pdf/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -492,6 +505,7 @@ export interface RootRouteChildren {
   ApiPublicLookupInviteRoute: typeof ApiPublicLookupInviteRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicHooksSendBookingRemindersRoute: typeof ApiPublicHooksSendBookingRemindersRoute
   ApiPublicSelfCheckPdfSplatRoute: typeof ApiPublicSelfCheckPdfSplatRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -754,6 +768,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSelfCheckPdfSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/send-booking-reminders': {
+      id: '/api/public/hooks/send-booking-reminders'
+      path: '/api/public/hooks/send-booking-reminders'
+      fullPath: '/api/public/hooks/send-booking-reminders'
+      preLoaderRoute: typeof ApiPublicHooksSendBookingRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -800,6 +821,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLookupInviteRoute: ApiPublicLookupInviteRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicHooksSendBookingRemindersRoute:
+    ApiPublicHooksSendBookingRemindersRoute,
   ApiPublicSelfCheckPdfSplatRoute: ApiPublicSelfCheckPdfSplatRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
