@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_reminders: {
+        Row: {
+          attempts: number
+          channel: string
+          created_at: string
+          error_message: string | null
+          id: string
+          lead_id: string
+          message_id: string | null
+          offset_minutes: number
+          recipient_email: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          recipient_type: string
+          recipient_user_id: string | null
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          lead_id: string
+          message_id?: string | null
+          offset_minutes: number
+          recipient_email?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          recipient_type: string
+          recipient_user_id?: string | null
+          scheduled_at: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          lead_id?: string
+          message_id?: string | null
+          offset_minutes?: number
+          recipient_email?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          recipient_type?: string
+          recipient_user_id?: string | null
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_reminders_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calculations: {
         Row: {
           arbete_timmar: number
@@ -1271,6 +1339,10 @@ export type Database = {
         }[]
       }
       reserve_offer_number: { Args: never; Returns: string }
+      schedule_booking_reminders: {
+        Args: { _lead_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       activity_type:
