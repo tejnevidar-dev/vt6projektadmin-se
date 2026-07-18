@@ -574,7 +574,7 @@ export const generateManualOffer = createServerFn({ method: "POST" })
       data.filnamn?.trim() ||
       `RoslagsTak_Offert_${data.offertnr}_${data.kundNamn.replace(/\s+/g, "_")}.pdf`;
 
-    return { filename, base64 };
+    return { filename, base64, offertnr: data.offertnr };
   });
 
 function sanitize(s: string): string {
