@@ -180,7 +180,18 @@ function OffertNyPage() {
   };
   useEffect(() => {
     loadDrafts();
+    peekNextOfferNr();
   }, []);
+
+  const peekNextOfferNr = async () => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.rpc("peek_offer_number" as any);
+      if (!error && typeof data === "string") {
+        setForm((f) => (f.offertnr ? f : { ...f, offertnr: data }));
+      }
+    } catch { /* ignore */ }
+  };
 
   const handleSaveDraft = async () => {
     try {
