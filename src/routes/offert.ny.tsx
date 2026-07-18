@@ -466,7 +466,11 @@ function OffertNyPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success("Offert genererad");
+      if (res.offertnr) {
+        setForm((f) => ({ ...f, offertnr: res.offertnr }));
+      }
+      toast.success(`Offert ${res.offertnr ?? ""} genererad`);
+      peekNextOfferNr();
     } catch (e: any) {
       toast.error(e?.message ?? "Kunde inte generera offert");
     } finally {
