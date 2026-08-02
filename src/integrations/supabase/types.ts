@@ -1159,6 +1159,119 @@ export type Database = {
           },
         ]
       }
+      signature_requests: {
+        Row: {
+          base_pdf_path: string
+          company_date: string
+          company_place: string
+          company_signature_png: string
+          company_signed_at: string
+          company_signer_name: string
+          created_at: string
+          created_by: string
+          customer_date: string | null
+          customer_email: string
+          customer_ip: string | null
+          customer_name: string
+          customer_place: string | null
+          customer_signature_png: string | null
+          customer_signed_at: string | null
+          customer_signer_name: string | null
+          customer_user_agent: string | null
+          expires_at: string
+          id: string
+          lead_id: string | null
+          offer_number: string
+          otp_attempts: number
+          otp_code_hash: string | null
+          otp_sent_at: string | null
+          otp_verified_at: string | null
+          sent_at: string | null
+          signed_pdf_path: string | null
+          status: string
+          token: string
+          total_amount: number | null
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          base_pdf_path: string
+          company_date: string
+          company_place: string
+          company_signature_png: string
+          company_signed_at?: string
+          company_signer_name: string
+          created_at?: string
+          created_by: string
+          customer_date?: string | null
+          customer_email: string
+          customer_ip?: string | null
+          customer_name: string
+          customer_place?: string | null
+          customer_signature_png?: string | null
+          customer_signed_at?: string | null
+          customer_signer_name?: string | null
+          customer_user_agent?: string | null
+          expires_at?: string
+          id?: string
+          lead_id?: string | null
+          offer_number: string
+          otp_attempts?: number
+          otp_code_hash?: string | null
+          otp_sent_at?: string | null
+          otp_verified_at?: string | null
+          sent_at?: string | null
+          signed_pdf_path?: string | null
+          status?: string
+          token: string
+          total_amount?: number | null
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          base_pdf_path?: string
+          company_date?: string
+          company_place?: string
+          company_signature_png?: string
+          company_signed_at?: string
+          company_signer_name?: string
+          created_at?: string
+          created_by?: string
+          customer_date?: string | null
+          customer_email?: string
+          customer_ip?: string | null
+          customer_name?: string
+          customer_place?: string | null
+          customer_signature_png?: string | null
+          customer_signed_at?: string | null
+          customer_signer_name?: string | null
+          customer_user_agent?: string | null
+          expires_at?: string
+          id?: string
+          lead_id?: string | null
+          offer_number?: string
+          otp_attempts?: number
+          otp_code_hash?: string | null
+          otp_sent_at?: string | null
+          otp_verified_at?: string | null
+          sent_at?: string | null
+          signed_pdf_path?: string | null
+          status?: string
+          token?: string
+          total_amount?: number | null
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_requests_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppressed_emails: {
         Row: {
           created_at: string
