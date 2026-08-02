@@ -291,11 +291,38 @@ function OffertNyPage() {
     const arbeteInklMoms = arbeteExMoms * (1 + form.momsProcent / 100);
     const rotTak = form.antalAgare * 50000;
     const rotRaknat = Math.round(arbeteInklMoms * 0.3);
-    const rotBelopp = form.inkluderaRot ? Math.min(rotRaknat, rotTak) : 0;
-    const rotKapad = form.inkluderaRot && rotRaknat > rotTak;
+    const rotAuto = Math.min(rotRaknat, rotTak);
+    const rotManuelltClamped = Math.max(
+      0,
+      Math.min(Math.round(form.rotManuelltBelopp || 0), Math.min(rotTak, totalInkl)),
+    );
+    const rotBelopp = !form.inkluderaRot
+      ? 0
+      : form.rotManuell
+        ? rotManuelltClamped
+        : rotAuto;
+    const rotKapad = form.inkluderaRot && !form.rotManuell && rotRaknat > rotTak;
     const attBetala = totalInkl - rotBelopp;
-    return { moms, totalInkl, rotBelopp, attBetala, arbeteExMoms, rotTak, rotRaknat, rotKapad };
-  }, [form.entreprenadpris, form.materialkostnad, form.momsProcent, form.inkluderaRot, form.antalAgare]);
+    return {
+      moms,
+      totalInkl,
+      rotBelopp,
+      attBetala,
+      arbeteExMoms,
+      rotTak,
+      rotRaknat,
+      rotAuto,
+      rotKapad,
+    };
+  }, [
+    form.entreprenadpris,
+    form.materialkostnad,
+    form.momsProcent,
+    form.inkluderaRot,
+    form.antalAgare,
+    form.rotManuell,
+    form.rotManuelltBelopp,
+  ]);
   const rotEtikett = form.antalAgare === 2 ? "(2 ägare)" : "";
 
   // ---------- Villkor ----------
