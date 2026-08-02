@@ -148,6 +148,8 @@ function initialForm(): FormState {
     momsProcent: 25,
     inkluderaRot: true,
     antalAgare: 1,
+    rotManuell: false,
+    rotManuelltBelopp: 0,
     noteringarText: "",
     villkor: STANDARD_VILLKOR,
     leadId: null,
