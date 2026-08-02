@@ -122,6 +122,8 @@ interface FormState {
   momsProcent: number;
   inkluderaRot: boolean;
   antalAgare: 1 | 2;
+  rotManuell: boolean;
+  rotManuelltBelopp: number;
   noteringarText: string;
   villkor: OfferVillkorSektion[];
   leadId: string | null;
