@@ -28,6 +28,7 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JobbIndexRouteImport } from './routes/jobb.index'
 import { Route as EgenkontrollerIndexRouteImport } from './routes/egenkontroller.index'
+import { Route as SigneraTokenRouteImport } from './routes/signera.$token'
 import { Route as OffertNyRouteImport } from './routes/offert.ny'
 import { Route as KalkylLeadIdRouteImport } from './routes/kalkyl.$leadId'
 import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
@@ -44,6 +45,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicSignTokenRouteImport } from './routes/api/public/sign.$token'
 import { Route as ApiPublicSelfCheckPdfSplatRouteImport } from './routes/api/public/self-check-pdf.$'
 import { Route as ApiPublicHooksSendBookingRemindersRouteImport } from './routes/api/public/hooks/send-booking-reminders'
 
@@ -142,6 +144,11 @@ const EgenkontrollerIndexRoute = EgenkontrollerIndexRouteImport.update({
   path: '/',
   getParentRoute: () => EgenkontrollerRoute,
 } as any)
+const SigneraTokenRoute = SigneraTokenRouteImport.update({
+  id: '/signera/$token',
+  path: '/signera/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OffertNyRoute = OffertNyRouteImport.update({
   id: '/offert/ny',
   path: '/offert/ny',
@@ -227,6 +234,11 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSignTokenRoute = ApiPublicSignTokenRouteImport.update({
+  id: '/api/public/sign/$token',
+  path: '/api/public/sign/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSelfCheckPdfSplatRoute =
   ApiPublicSelfCheckPdfSplatRouteImport.update({
     id: '/api/public/self-check-pdf/$',
@@ -266,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/offert/ny': typeof OffertNyRoute
+  '/signera/$token': typeof SigneraTokenRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
@@ -273,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
+  '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -304,6 +318,7 @@ export interface FileRoutesByTo {
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/offert/ny': typeof OffertNyRoute
+  '/signera/$token': typeof SigneraTokenRoute
   '/egenkontroller': typeof EgenkontrollerIndexRoute
   '/jobb': typeof JobbIndexRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
@@ -311,6 +326,7 @@ export interface FileRoutesByTo {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
+  '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -344,6 +360,7 @@ export interface FileRoutesById {
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/offert/ny': typeof OffertNyRoute
+  '/signera/$token': typeof SigneraTokenRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
@@ -351,6 +368,7 @@ export interface FileRoutesById {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
+  '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -385,6 +403,7 @@ export interface FileRouteTypes {
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
     | '/offert/ny'
+    | '/signera/$token'
     | '/egenkontroller/'
     | '/jobb/'
     | '/api/public/lookup-invite'
@@ -392,6 +411,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/hooks/send-booking-reminders'
     | '/api/public/self-check-pdf/$'
+    | '/api/public/sign/$token'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -423,6 +443,7 @@ export interface FileRouteTypes {
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
     | '/offert/ny'
+    | '/signera/$token'
     | '/egenkontroller'
     | '/jobb'
     | '/api/public/lookup-invite'
@@ -430,6 +451,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/hooks/send-booking-reminders'
     | '/api/public/self-check-pdf/$'
+    | '/api/public/sign/$token'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -462,6 +484,7 @@ export interface FileRouteTypes {
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
     | '/offert/ny'
+    | '/signera/$token'
     | '/egenkontroller/'
     | '/jobb/'
     | '/api/public/lookup-invite'
@@ -469,6 +492,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/api/public/hooks/send-booking-reminders'
     | '/api/public/self-check-pdf/$'
+    | '/api/public/sign/$token'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -501,12 +525,14 @@ export interface RootRouteChildren {
   JobbJobIdRoute: typeof JobbJobIdRoute
   KalkylLeadIdRoute: typeof KalkylLeadIdRoute
   OffertNyRoute: typeof OffertNyRoute
+  SigneraTokenRoute: typeof SigneraTokenRoute
   JobbIndexRoute: typeof JobbIndexRoute
   ApiPublicLookupInviteRoute: typeof ApiPublicLookupInviteRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksSendBookingRemindersRoute: typeof ApiPublicHooksSendBookingRemindersRoute
   ApiPublicSelfCheckPdfSplatRoute: typeof ApiPublicSelfCheckPdfSplatRoute
+  ApiPublicSignTokenRoute: typeof ApiPublicSignTokenRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -649,6 +675,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EgenkontrollerIndexRouteImport
       parentRoute: typeof EgenkontrollerRoute
     }
+    '/signera/$token': {
+      id: '/signera/$token'
+      path: '/signera/$token'
+      fullPath: '/signera/$token'
+      preLoaderRoute: typeof SigneraTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/offert/ny': {
       id: '/offert/ny'
       path: '/offert/ny'
@@ -761,6 +794,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sign/$token': {
+      id: '/api/public/sign/$token'
+      path: '/api/public/sign/$token'
+      fullPath: '/api/public/sign/$token'
+      preLoaderRoute: typeof ApiPublicSignTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/self-check-pdf/$': {
       id: '/api/public/self-check-pdf/$'
       path: '/api/public/self-check-pdf/$'
@@ -817,6 +857,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobbJobIdRoute: JobbJobIdRoute,
   KalkylLeadIdRoute: KalkylLeadIdRoute,
   OffertNyRoute: OffertNyRoute,
+  SigneraTokenRoute: SigneraTokenRoute,
   JobbIndexRoute: JobbIndexRoute,
   ApiPublicLookupInviteRoute: ApiPublicLookupInviteRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
@@ -824,6 +865,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSendBookingRemindersRoute:
     ApiPublicHooksSendBookingRemindersRoute,
   ApiPublicSelfCheckPdfSplatRoute: ApiPublicSelfCheckPdfSplatRoute,
+  ApiPublicSignTokenRoute: ApiPublicSignTokenRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
@@ -833,13 +875,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

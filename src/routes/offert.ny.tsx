@@ -25,6 +25,9 @@ import {
   ArrowUp,
   ArrowDown,
   UserRound,
+  PenTool,
+  Send,
+  ExternalLink,
   Save,
   FolderOpen,
   X,
@@ -52,6 +55,13 @@ import {
   type OfferRow as OfferHistoryRow,
 } from "@/lib/calculations-api";
 import { SelectCustomerDialog, type CustomerPick } from "@/components/SelectCustomerDialog";
+import { SignAndSendDialog } from "@/components/SignAndSendDialog";
+import {
+  listSigningRequests,
+  resendSigningEmail,
+  getSigningPdfUrl,
+  type SigningRequestRow,
+} from "@/lib/signing.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/offert/ny")({
@@ -168,6 +178,26 @@ function OffertNyPage() {
 
   const [loading, setLoading] = useState(false);
   const [parsing, setParsing] = useState(false);
+
+  // ---------- Signering ----------
+  const [lastPdf, setLastPdf] = useState<{ base64: string; offertnr: string } | null>(null);
+  const [signOpen, setSignOpen] = useState(false);
+  const [signings, setSignings] = useState<SigningRequestRow[]>([]);
+  const callListSignings = useServerFn(listSigningRequests);
+  const callResendSigning = useServerFn(resendSigningEmail);
+  const callSigningPdf = useServerFn(getSigningPdfUrl);
+
+  const loadSignings = async () => {
+    try {
+      setSignings(await callListSignings({ data: undefined as never }));
+    } catch {
+      /* ignore */
+    }
+  };
+  useEffect(() => {
+    void loadSignings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   // ---------- Drafts ----------
@@ -501,6 +531,7 @@ function OffertNyPage() {
       if (res.offertnr) {
         setForm((f) => ({ ...f, offertnr: res.offertnr }));
       }
+      setLastPdf({ base64: res.base64, offertnr: res.offertnr ?? form.offertnr });
       toast.success(`Offert ${res.offertnr ?? ""} genererad`);
       peekNextOfferNr();
     } catch (e: any) {
@@ -526,6 +557,20 @@ function OffertNyPage() {
           <Button variant="outline" size="sm" onClick={handleSaveDraft}>
             <Save className="mr-1 h-4 w-4" />
             {activeDraftId ? "Uppdatera utkast" : "Spara utkast"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (!lastPdf) {
+                toast.error("Generera PDF först");
+                return;
+              }
+              setSignOpen(true);
+            }}
+          >
+            <PenTool className="mr-1 h-4 w-4" />
+            Signera & skicka
           </Button>
           <Button onClick={handleGenerate} disabled={loading}>
             {loading ? (
@@ -1157,6 +1202,94 @@ function OffertNyPage() {
         onOpenChange={setPickerOpen}
         onSelect={applyCustomer}
       />
+
+      <SignAndSendDialog
+        open={signOpen}
+        onOpenChange={setSignOpen}
+        pdfBase64={lastPdf?.base64 ?? null}
+        offerNumber={lastPdf?.offertnr ?? form.offertnr}
+        customerName={form.kundNamn}
+        customerEmail={form.mail}
+        leadId={form.leadId}
+        totalAmount={totals.attBetala}
+        onCreated={loadSignings}
+      />
+
+      {signings.length > 0 && (
+        <Card className="mt-4">
+          <CardHeader className="py-3">
+            <CardTitle className="text-sm">Signeringar</CardTitle>
+          </CardHeader>
+          <CardContent className="py-2">
+            <ul className="divide-y divide-border">
+              {signings.map((s) => (
+                <li key={s.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
+                  <div className="min-w-[180px] flex-1">
+                    <span className="font-medium">{s.offer_number}</span>{" "}
+                    <span className="text-muted-foreground">· {s.customer_name}</span>
+                  </div>
+                  <Badge variant={s.status === "signed" ? "default" : "secondary"}>
+                    {s.status === "signed"
+                      ? "Signerad av kund"
+                      : s.status === "viewed"
+                        ? "Öppnad av kund"
+                        : s.status === "cancelled"
+                          ? "Avbruten"
+                          : "Väntar"}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(
+                        `${window.location.origin}/signera/${s.token}`,
+                      );
+                      toast.success("Länk kopierad");
+                    }}
+                  >
+                    Kopiera länk
+                  </Button>
+                  {s.status !== "signed" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={async () => {
+                        try {
+                          await callResendSigning({ data: { id: s.id } });
+                          toast.success("Påminnelse skickad");
+                          void loadSignings();
+                        } catch (e: any) {
+                          toast.error(e?.message ?? "Kunde inte skicka");
+                        }
+                      }}
+                    >
+                      <Send className="mr-1 h-3.5 w-3.5" />
+                      Skicka igen
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      try {
+                        const res = await callSigningPdf({
+                          data: { id: s.id, signed: s.status === "signed" },
+                        });
+                        window.open(res.url, "_blank", "noopener,noreferrer");
+                      } catch {
+                        toast.error("Kunde inte öppna PDF");
+                      }
+                    }}
+                  >
+                    <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                    PDF
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
     </AppShell>
   );
 }
