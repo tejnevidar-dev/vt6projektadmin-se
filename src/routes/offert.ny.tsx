@@ -122,6 +122,8 @@ interface FormState {
   momsProcent: number;
   inkluderaRot: boolean;
   antalAgare: 1 | 2;
+  rotManuell: boolean;
+  rotManuelltBelopp: number;
   noteringarText: string;
   villkor: OfferVillkorSektion[];
   leadId: string | null;
@@ -146,6 +148,8 @@ function initialForm(): FormState {
     momsProcent: 25,
     inkluderaRot: true,
     antalAgare: 1,
+    rotManuell: false,
+    rotManuelltBelopp: 0,
     noteringarText: "",
     villkor: STANDARD_VILLKOR,
     leadId: null,
@@ -287,11 +291,38 @@ function OffertNyPage() {
     const arbeteInklMoms = arbeteExMoms * (1 + form.momsProcent / 100);
     const rotTak = form.antalAgare * 50000;
     const rotRaknat = Math.round(arbeteInklMoms * 0.3);
-    const rotBelopp = form.inkluderaRot ? Math.min(rotRaknat, rotTak) : 0;
-    const rotKapad = form.inkluderaRot && rotRaknat > rotTak;
+    const rotAuto = Math.min(rotRaknat, rotTak);
+    const rotManuelltClamped = Math.max(
+      0,
+      Math.min(Math.round(form.rotManuelltBelopp || 0), Math.min(rotTak, totalInkl)),
+    );
+    const rotBelopp = !form.inkluderaRot
+      ? 0
+      : form.rotManuell
+        ? rotManuelltClamped
+        : rotAuto;
+    const rotKapad = form.inkluderaRot && !form.rotManuell && rotRaknat > rotTak;
     const attBetala = totalInkl - rotBelopp;
-    return { moms, totalInkl, rotBelopp, attBetala, arbeteExMoms, rotTak, rotRaknat, rotKapad };
-  }, [form.entreprenadpris, form.materialkostnad, form.momsProcent, form.inkluderaRot, form.antalAgare]);
+    return {
+      moms,
+      totalInkl,
+      rotBelopp,
+      attBetala,
+      arbeteExMoms,
+      rotTak,
+      rotRaknat,
+      rotAuto,
+      rotKapad,
+    };
+  }, [
+    form.entreprenadpris,
+    form.materialkostnad,
+    form.momsProcent,
+    form.inkluderaRot,
+    form.antalAgare,
+    form.rotManuell,
+    form.rotManuelltBelopp,
+  ]);
   const rotEtikett = form.antalAgare === 2 ? "(2 ägare)" : "";
 
   // ---------- Villkor ----------
@@ -832,6 +863,56 @@ function OffertNyPage() {
                   </label>
                 </div>
               </div>
+              {form.inkluderaRot && (
+                <div className="sm:col-span-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="rot-manuell"
+                      type="checkbox"
+                      checked={form.rotManuell}
+                      onChange={(e) => {
+                        const on = e.target.checked;
+                        setForm((f) => ({
+                          ...f,
+                          rotManuell: on,
+                          rotManuelltBelopp: on && !f.rotManuelltBelopp
+                            ? totals.rotAuto
+                            : f.rotManuelltBelopp,
+                        }));
+                      }}
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="rot-manuell" className="!m-0">
+                      Justera ROT-avdraget manuellt (kunden har begränsat ROT-utrymme)
+                    </Label>
+                  </div>
+                  {form.rotManuell && (
+                    <div>
+                      <Label>ROT-avdrag (kr)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={Math.min(totals.rotTak, totals.totalInkl)}
+                        value={form.rotManuelltBelopp}
+                        onChange={(e) =>
+                          set("rotManuelltBelopp", Number(e.target.value))
+                        }
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Beräknat ROT: {totals.rotAuto.toLocaleString("sv-SE")} kr · tak{" "}
+                        {totals.rotTak.toLocaleString("sv-SE")} kr
+                        {form.rotManuelltBelopp >
+                          Math.min(totals.rotTak, totals.totalInkl) && (
+                          <span className="ml-1 text-destructive">
+                            – beloppet begränsas till{" "}
+                            {Math.min(totals.rotTak, totals.totalInkl).toLocaleString("sv-SE")} kr
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="sm:col-span-2 rounded-md border p-3 text-sm bg-muted/30 space-y-1">
                 <div className="flex justify-between">
                   <span>Arbetskostnad ex. moms</span>
