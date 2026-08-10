@@ -68,10 +68,8 @@ export const getSeoOverview = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<SeoOverview> => {
     const { supabase, userId } = context;
     const { data: roleRows } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-    const allowed = (roleRows ?? []).some(
-      (r: { role: string }) => r.role === "admin" || r.role === "saljare",
-    );
-    if (!allowed) throw new Error("Behörighet saknas");
+    const isAdmin = (roleRows ?? []).some((r: { role: string }) => r.role === "admin");
+    if (!isAdmin) throw new Error("Behörighet saknas");
 
     const { resolveSiteUrl, searchAnalytics, inspectUrl, TARGET_SITE } = await import("./gsc.server");
 
