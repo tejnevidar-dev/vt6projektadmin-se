@@ -195,6 +195,7 @@ export const getSeoOverview = createServerFn({ method: "GET" })
       weeks,
       topQueries: mapRows(queries.rows),
       topPages: mapRows(pages.rows),
+      index,
       fetchedAt: new Date().toISOString(),
     };
   });
