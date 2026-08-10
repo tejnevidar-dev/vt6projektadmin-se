@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X, Calculator, CalendarDays, FileDown } from "lucide-react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X, Calculator, CalendarDays, FileDown, TrendingUp } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type Side } from "@/hooks/use-role";
@@ -56,6 +56,7 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
 
     // Gemensamt (Hantera)
     { to: "/prislista", label: "Kalkyl", icon: Calculator, group: "Hantera", side: "extern", adminOnly: true },
+    { to: "/seo", label: "SEO", icon: TrendingUp, group: "Hantera", side: "extern", adminOnly: true },
     { to: "/admin", label: "Roller & inbjudningar", icon: Shield, group: "Hantera", side: "both", adminOnly: true },
     { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "Hantera", side: "extern", adminOnly: true },
     { to: "/settings", label: "Inställningar", icon: Settings, group: "Hantera", side: "both" },
