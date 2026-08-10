@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { MousePointerClick, Eye, Percent, Gauge, RefreshCw, Search, FileText, ShieldCheck } from "lucide-react";
 import { AppShell, RequireAuth } from "@/components/AppShell";
+import { useUserRoles } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getSeoOverview, type SeoRow, type SeoWeek } from "@/lib/seo.functions";
