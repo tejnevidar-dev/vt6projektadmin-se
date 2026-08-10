@@ -13,6 +13,7 @@ import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
 import { Route as UppdateraKontoRouteImport } from './routes/uppdatera-konto'
 import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SeoRouteImport } from './routes/seo'
 import { Route as PrislistaRouteImport } from './routes/prislista'
 import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as PagaendeRouteImport } from './routes/pagaende'
@@ -67,6 +68,11 @@ const SlutfordaRoute = SlutfordaRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeoRoute = SeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrislistaRoute = PrislistaRouteImport.update({
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
   '/prislista': typeof PrislistaRoute
+  '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
   '/prislista': typeof PrislistaRoute
+  '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
   '/prislista': typeof PrislistaRoute
+  '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
@@ -391,6 +400,7 @@ export interface FileRouteTypes {
     | '/pagaende'
     | '/personal'
     | '/prislista'
+    | '/seo'
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
@@ -431,6 +441,7 @@ export interface FileRouteTypes {
     | '/pagaende'
     | '/personal'
     | '/prislista'
+    | '/seo'
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
@@ -472,6 +483,7 @@ export interface FileRouteTypes {
     | '/pagaende'
     | '/personal'
     | '/prislista'
+    | '/seo'
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
@@ -514,6 +526,7 @@ export interface RootRouteChildren {
   PagaendeRoute: typeof PagaendeRoute
   PersonalRoute: typeof PersonalRoute
   PrislistaRoute: typeof PrislistaRoute
+  SeoRoute: typeof SeoRoute
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
   UppdateraKontoRoute: typeof UppdateraKontoRoute
@@ -568,6 +581,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seo': {
+      id: '/seo'
+      path: '/seo'
+      fullPath: '/seo'
+      preLoaderRoute: typeof SeoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/prislista': {
@@ -846,6 +866,7 @@ const rootRouteChildren: RootRouteChildren = {
   PagaendeRoute: PagaendeRoute,
   PersonalRoute: PersonalRoute,
   PrislistaRoute: PrislistaRoute,
+  SeoRoute: SeoRoute,
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,
   UppdateraKontoRoute: UppdateraKontoRoute,
@@ -875,13 +896,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
