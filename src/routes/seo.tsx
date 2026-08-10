@@ -45,9 +45,35 @@ function Delta({ current, previous, invert }: { current: number; previous: numbe
 function SeoPage() {
   return (
     <RequireAuth>
-      <SeoContent />
+      <SeoGuard />
     </RequireAuth>
   );
+}
+
+function SeoGuard() {
+  const { isAdmin, loading } = useUserRoles();
+  if (loading) {
+    return (
+      <AppShell title="SEO – roslagstak.se">
+        <div className="mx-auto max-w-7xl rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+          Kontrollerar behörighet…
+        </div>
+      </AppShell>
+    );
+  }
+  if (!isAdmin) {
+    return (
+      <AppShell title="SEO – roslagstak.se">
+        <div className="mx-auto max-w-2xl rounded-lg border border-border bg-card p-8 text-center">
+          <h2 className="text-lg font-semibold">Endast för administratörer</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Du saknar behörighet att se SEO-panelen.
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+  return <SeoContent />;
 }
 
 function SeoContent() {
