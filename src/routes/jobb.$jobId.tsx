@@ -211,9 +211,11 @@ function JobDetailPage() {
     try {
       const res = await sendSelfChecksToClient(job.id);
       toast.success(
-        `Egenkontroller mejlade till ${res.to} (${res.count} PDF:er, ${res.imageCount} bilder)`,
+        `Egenkontroller mejlade till ${res.to} (${res.count} PDF:er, ${res.imageCount} bilder)` +
+          (res.skippedImageCount ? ` – ${res.skippedImageCount} bild(er) kunde inte bifogas` : ""),
         { id: toastId },
       );
+
       void reload();
     } catch (e: any) {
       toast.error(`Kunde inte mejla egenkontroller: ${e.message ?? ""}`, { id: toastId });
