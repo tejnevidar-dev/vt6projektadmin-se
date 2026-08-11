@@ -304,6 +304,16 @@ async function buildSelfCheckPdf(args: {
     }
   }
 
+  const notes = [...(args.failedNotes ?? []), ...failedImages.map((f) => f.name)];
+  if (notes.length > 0) {
+    y -= 8;
+    draw("Bilder som inte kunde bifogas", { font: bold, size: 11 });
+    for (const n of notes) {
+      draw(`- ${n}`, { size: 10, color: rgb(0.45, 0.45, 0.45) });
+    }
+  }
+
+
   return {
     bytes: await pdf.save(),
     embeddedImageCount,
