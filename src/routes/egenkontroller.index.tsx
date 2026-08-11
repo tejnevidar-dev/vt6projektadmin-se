@@ -498,6 +498,9 @@ function ChecksTable({
                 {c.job?.customer_name ?? "—"}
               </td>
               <td className="px-3 py-2 text-muted-foreground">
+                {c.offer_number ?? "—"}
+              </td>
+              <td className="px-3 py-2 text-muted-foreground">
                 {c.performer?.display_name ?? c.performer?.email ?? "—"}
               </td>
               <td className="px-3 py-2">
