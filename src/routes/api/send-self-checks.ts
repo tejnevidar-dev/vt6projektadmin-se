@@ -167,6 +167,8 @@ async function buildSelfCheckPdf(args: {
   createdAt: string;
   performerName: string | null;
   imagesByField: Record<string, EmbeddedSelfCheckImage[]>;
+  failedNotes?: string[];
+
 }): Promise<PdfBuildResult> {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -301,6 +303,16 @@ async function buildSelfCheckPdf(args: {
       y -= 4;
     }
   }
+
+  const notes = [...(args.failedNotes ?? []), ...failedImages.map((f) => f.name)];
+  if (notes.length > 0) {
+    y -= 8;
+    draw("Bilder som inte kunde bifogas", { font: bold, size: 11 });
+    for (const n of notes) {
+      draw(`- ${n}`, { size: 10, color: rgb(0.45, 0.45, 0.45) });
+    }
+  }
+
 
   return {
     bytes: await pdf.save(),
@@ -460,6 +472,8 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const origin = new URL(request.url).origin;
         const links: { label: string; url: string }[] = [];
         let totalEmbeddedImages = 0;
+        const skippedImages: string[] = [];
+
 
         // Ta bort tidigare genererade PDF:er för projektet så användaren och
         // beställaren inte råkar öppna gamla, trasiga filer efter ett omskick.
@@ -498,21 +512,10 @@ export const Route = createFileRoute("/api/send-self-checks")({
             }
             if (arr.length > 0) resolvedImages[field] = arr;
           }
-          if (failedDownloads.length > 0) {
-            const detail = failedDownloads
-              .slice(0, 5)
-              .map((f) => `${f.name} – ${f.reason}`)
-              .join("; ");
-            const more =
-              failedDownloads.length > 5 ? ` (+${failedDownloads.length - 5} till)` : "";
-            return jsonResponse(
-              {
-                error: `Kunde inte förbereda ${failedDownloads.length} bifogade bilder till egenkontroll ${i + 1}. Inget mejl skickades. Detaljer: ${detail}${more}`,
-                failedImages: failedDownloads,
-                selfCheckIndex: i + 1,
-              },
-              500,
-            );
+          // Enskilda bilder som inte går att läsa ska inte stoppa hela utskicket –
+          // de listas istället i PDF:en och rapporteras tillbaka till användaren.
+          for (const f of failedDownloads) {
+            skippedImages.push(`Egenkontroll ${i + 1}: ${f.name} – ${f.reason}`);
           }
 
           const pdfResult = await buildSelfCheckPdf({
@@ -525,25 +528,12 @@ export const Route = createFileRoute("/api/send-self-checks")({
             createdAt: sc.created_at,
             performerName: sc.user_id ? nameMap[sc.user_id] ?? null : null,
             imagesByField: resolvedImages,
+            failedNotes: failedDownloads.map((f) => f.name),
           });
-          if (pdfResult.failedImages.length > 0) {
-            const detail = pdfResult.failedImages
-              .slice(0, 5)
-              .map((f) => `${f.name} – ${f.reason}`)
-              .join("; ");
-            const more =
-              pdfResult.failedImages.length > 5
-                ? ` (+${pdfResult.failedImages.length - 5} till)`
-                : "";
-            return jsonResponse(
-              {
-                error: `Kunde inte bädda in ${pdfResult.failedImages.length} bilder i egenkontroll ${i + 1}. Inget mejl skickades. Detaljer: ${detail}${more}`,
-                failedImages: pdfResult.failedImages,
-                selfCheckIndex: i + 1,
-              },
-              500,
-            );
+          for (const f of pdfResult.failedImages) {
+            skippedImages.push(`Egenkontroll ${i + 1}: ${f.name} – ${f.reason}`);
           }
+
 
           const filename = `egenkontroll-${i + 1}-${slugify(sc.template_key)}.pdf`;
           const path = `${jobId}/${Date.now()}-${i + 1}-${filename}`;
@@ -616,7 +606,10 @@ export const Route = createFileRoute("/api/send-self-checks")({
           to: job.client_email,
           count: checks.length,
           imageCount: totalEmbeddedImages,
+          skippedImageCount: skippedImages.length,
+          skippedImages: skippedImages.slice(0, 20),
         });
+
       },
     },
   },

@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { prepareImageForUpload } from "@/lib/image-prepare";
+
 
 export type JobStatus = "ej_paborjad" | "pagaende" | "klar";
 export type JobAssignmentType = "arbetsledare" | "underentreprenor";
@@ -184,7 +186,7 @@ export async function createManualJob(input: CreateJobInput): Promise<string> {
 /** Send all self-checks for a job to the client's email address. */
 export async function sendSelfChecksToClient(
   jobId: string,
-): Promise<{ to: string; count: number; imageCount: number }> {
+): Promise<{ to: string; count: number; imageCount: number; skippedImageCount: number }> {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
   if (!token) throw new Error("Inte inloggad");
@@ -201,10 +203,17 @@ export async function sendSelfChecksToClient(
     to?: string;
     count?: number;
     imageCount?: number;
+    skippedImageCount?: number;
   };
   if (!resp.ok) throw new Error(json.error ?? "Kunde inte skicka egenkontroller");
-  return { to: json.to ?? "", count: json.count ?? 0, imageCount: json.imageCount ?? 0 };
+  return {
+    to: json.to ?? "",
+    count: json.count ?? 0,
+    imageCount: json.imageCount ?? 0,
+    skippedImageCount: json.skippedImageCount ?? 0,
+  };
 }
+
 
 /** Clear the "self-checks emailed" state so it can be resent fresh. */
 export async function revokeSelfChecksSent(jobId: string): Promise<void> {
@@ -268,13 +277,18 @@ export interface SelfCheck {
   created_at: string;
 }
 
-/** Upload an image attached to a self-check. Returns the storage path + original filename. */
+/**
+ * Upload an image attached to a self-check.
+ * Telefonbilder (HEIC/stora JPEG) normaliseras till en kompakt JPEG i webbläsaren
+ * innan uppladdning, så att PDF-generatorn alltid kan bädda in dem.
+ */
 export async function uploadSelfCheckImage(jobId: string, file: File): Promise<SelfCheckImage> {
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const prepared = await prepareImageForUpload(file);
+  const safeName = prepared.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const path = `${jobId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
   const { error } = await supabase.storage
     .from("self-check-images")
-    .upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
+    .upload(path, prepared, { contentType: "image/jpeg", upsert: false });
   if (error) throw error;
   const { data: userData } = await supabase.auth.getUser();
   return {
@@ -284,6 +298,7 @@ export async function uploadSelfCheckImage(jobId: string, file: File): Promise<S
     uploadedAt: new Date().toISOString(),
   };
 }
+
 
 /** Fetch display names for a set of user IDs. Returns id → display name (or email). */
 export async function getProfileNames(userIds: string[]): Promise<Record<string, string>> {

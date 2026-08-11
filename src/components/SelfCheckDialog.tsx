@@ -129,24 +129,25 @@ export function SelfCheckDialog({ open, onOpenChange, jobId, existing, initialTe
 
   async function addImagesToField(fieldLabel: string, files: FileList | null) {
     if (!files || files.length === 0) return;
-    try {
-      const uploaded: SelfCheckImage[] = [];
-      for (const f of Array.from(files)) {
-        if (!f.type.startsWith("image/")) {
-          toast.error(`${f.name} är inte en bildfil`);
-          continue;
-        }
-        const img = await uploadSelfCheckImage(jobId, f);
-        uploaded.push(img);
+    const uploaded: SelfCheckImage[] = [];
+    const failed: string[] = [];
+    for (const f of Array.from(files)) {
+      try {
+        uploaded.push(await uploadSelfCheckImage(jobId, f));
+      } catch (e: any) {
+        failed.push(e?.message ?? f.name);
       }
+    }
+    if (uploaded.length > 0) {
       setImagesByField((prev) => ({
         ...prev,
         [fieldLabel]: [...(prev[fieldLabel] ?? []), ...uploaded],
       }));
-    } catch (e: any) {
-      toast.error(e.message);
+      toast.success(`${uploaded.length} bild(er) uppladdade`);
     }
+    for (const msg of failed) toast.error(msg);
   }
+
 
   async function removeImage(fieldLabel: string, path: string) {
     try {
@@ -425,7 +426,8 @@ function ImageAttachments({
             <input
               id={inputId}
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
+
               multiple
               className="hidden"
               disabled={uploading}
