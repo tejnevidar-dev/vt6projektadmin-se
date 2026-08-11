@@ -671,11 +671,16 @@ export async function listAllSelfChecks(): Promise<SelfCheckWithContext[]> {
     new Set((jobs ?? []).map((j: any) => j.lead_id).filter(Boolean) as string[])
   );
   let leadPropMap: Record<string, string | null> = {};
+  let leadOfferMap: Record<string, string | null> = {};
   if (leadIds.length) {
-    const { data: leads } = await supabase
-      .from("leads")
-      .select("id, property_id")
-      .in("id", leadIds);
+    const [{ data: leads }, { data: offers }] = await Promise.all([
+      supabase.from("leads").select("id, property_id").in("id", leadIds),
+      supabase
+        .from("offers")
+        .select("lead_id, offer_number")
+        .in("lead_id", leadIds)
+        .order("created_at", { ascending: false }),
+    ]);
     const propIds = Array.from(
       new Set((leads ?? []).map((l: any) => l.property_id).filter(Boolean) as string[])
     );
@@ -690,6 +695,11 @@ export async function listAllSelfChecks(): Promise<SelfCheckWithContext[]> {
     leadPropMap = Object.fromEntries(
       (leads ?? []).map((l: any) => [l.id, l.property_id ? propAddr[l.property_id] ?? null : null])
     );
+    for (const o of (offers ?? []) as any[]) {
+      if (o.lead_id && !(o.lead_id in leadOfferMap)) {
+        leadOfferMap[o.lead_id] = o.offer_number ?? null;
+      }
+    }
   }
 
   const jobMap = Object.fromEntries((jobs ?? []).map((j: any) => [j.id, j]));
@@ -710,6 +720,7 @@ export async function listAllSelfChecks(): Promise<SelfCheckWithContext[]> {
         : null,
       property_address: propAddress,
       performer: profMap[r.user_id] ?? null,
+      offer_number: j?.lead_id ? leadOfferMap[j.lead_id] ?? null : null,
     } as SelfCheckWithContext;
   });
 }
