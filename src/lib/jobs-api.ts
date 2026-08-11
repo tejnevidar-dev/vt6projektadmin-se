@@ -105,7 +105,7 @@ export async function processWorkOrder(jobId: string): Promise<string> {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(templateKeys?.length ? { jobId, templateKeys } : { jobId }),
+    body: JSON.stringify({ jobId }),
   });
   const json = await resp.json().catch(() => ({}));
   if (!resp.ok) throw new Error((json as { error?: string }).error ?? "AI-fel");
