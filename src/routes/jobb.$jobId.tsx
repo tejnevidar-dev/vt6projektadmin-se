@@ -1144,6 +1144,17 @@ function ChecksTab({
         )}
       </div>
 
+      <div className="mb-4">
+        <SelfCheckStatusPanel
+          jobId={jobId}
+          checks={checks}
+          templates={applicableTemplates}
+          refreshKey={checks.length}
+        />
+      </div>
+
+
+
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap h-auto">
