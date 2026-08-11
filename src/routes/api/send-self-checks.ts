@@ -606,7 +606,10 @@ export const Route = createFileRoute("/api/send-self-checks")({
           to: job.client_email,
           count: checks.length,
           imageCount: totalEmbeddedImages,
+          skippedImageCount: skippedImages.length,
+          skippedImages: skippedImages.slice(0, 20),
         });
+
       },
     },
   },
