@@ -651,15 +651,14 @@ export const Route = createFileRoute("/api/send-self-checks")({
         });
         const sendBody = await sendResp.json().catch(() => ({}));
         if (!sendResp.ok) {
-          return jsonResponse(
-            {
-              error: `E-postutskick misslyckades: ${
-                (sendBody as { error?: string }).error ?? sendResp.status
-              }`,
-            },
-            502,
-          );
+          const reason = `E-postutskick misslyckades: ${
+            (sendBody as { error?: string }).error ?? sendResp.status
+          }`;
+          await logDeliveries(reason);
+          return jsonResponse({ error: reason }, 502);
         }
+
+        await logDeliveries(null);
 
         await admin
           .from("jobs")
@@ -668,6 +667,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
             self_checks_emailed_to: job.client_email,
           })
           .eq("id", jobId);
+
 
         return jsonResponse({
           success: true,
