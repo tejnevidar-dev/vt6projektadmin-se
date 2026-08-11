@@ -167,6 +167,8 @@ async function buildSelfCheckPdf(args: {
   createdAt: string;
   performerName: string | null;
   imagesByField: Record<string, EmbeddedSelfCheckImage[]>;
+  failedNotes?: string[];
+
 }): Promise<PdfBuildResult> {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
