@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { prepareImageForUpload } from "@/lib/image-prepare";
+
 
 export type JobStatus = "ej_paborjad" | "pagaende" | "klar";
 export type JobAssignmentType = "arbetsledare" | "underentreprenor";
