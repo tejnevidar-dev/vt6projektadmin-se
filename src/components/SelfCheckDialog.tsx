@@ -426,7 +426,8 @@ function ImageAttachments({
             <input
               id={inputId}
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif"
+
               multiple
               className="hidden"
               disabled={uploading}
