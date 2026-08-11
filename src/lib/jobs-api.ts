@@ -378,6 +378,7 @@ export interface SelfCheckWithContext extends SelfCheck {
   } | null;
   property_address: string | null;
   performer: { display_name: string | null; email: string } | null;
+  offer_number: string | null;
 }
 
 
