@@ -158,7 +158,7 @@ function AdminReviewPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filtrera på adress eller kund..."
+            placeholder="Sök på namn, adress eller ärendenummer..."
             className="pl-8"
           />
         </div>
