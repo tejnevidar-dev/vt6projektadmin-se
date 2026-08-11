@@ -91,7 +91,16 @@ function AdminReviewPage() {
       if (!q) return true;
       const addr = addressOf(c).toLowerCase();
       const cust = (c.job?.customer_name ?? "").toLowerCase();
-      return addr.includes(q) || cust.includes(q);
+      const performer = (c.performer?.display_name ?? c.performer?.email ?? "").toLowerCase();
+      const offerNo = (c.offer_number ?? "").toLowerCase();
+      const template = SELF_CHECK_TEMPLATES.find((t) => t.key === c.template_key)?.name.toLowerCase() ?? "";
+      return (
+        addr.includes(q) ||
+        cust.includes(q) ||
+        performer.includes(q) ||
+        offerNo.includes(q) ||
+        template.includes(q)
+      );
     });
   }, [items, query]);
 
