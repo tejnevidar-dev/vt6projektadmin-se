@@ -473,6 +473,15 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const links: { label: string; url: string }[] = [];
         let totalEmbeddedImages = 0;
         const skippedImages: string[] = [];
+        const perCheck: {
+          self_check_id: string;
+          template_key: string;
+          pdf_path: string | null;
+          embedded: number;
+          skipped: string[];
+          error: string | null;
+        }[] = [];
+
 
 
         // Ta bort tidigare genererade PDF:er för projektet så användaren och
