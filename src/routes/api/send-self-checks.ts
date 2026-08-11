@@ -34,6 +34,8 @@ const corsHeaders = {
 
 const InputSchema = z.object({
   jobId: z.string().uuid(),
+  /** Skicka endast dessa mallar (omskick per egenkontroll). Tomt = alla. */
+  templateKeys: z.array(z.string()).min(1).optional(),
 });
 
 function jsonResponse(body: unknown, status = 200) {
@@ -354,7 +356,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const body = await request.json().catch(() => null);
         const parsed = InputSchema.safeParse(body);
         if (!parsed.success) return jsonResponse({ error: "Invalid input" }, 400);
-        const { jobId } = parsed.data;
+        const { jobId, templateKeys } = parsed.data;
 
         const { data: job, error: jobErr } = await userClient
           .from("jobs")
@@ -392,8 +394,11 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const CLIENT_TEMPLATE_KEYS = new Set(
           SELF_CHECK_TEMPLATES.filter((t) => t.sentToClient).map((t) => t.key),
         );
-        const checks = (allChecks ?? []).filter((c) =>
-          CLIENT_TEMPLATE_KEYS.has(c.template_key),
+        const templateFilter = templateKeys ? new Set(templateKeys) : null;
+        const checks = (allChecks ?? []).filter(
+          (c) =>
+            CLIENT_TEMPLATE_KEYS.has(c.template_key) &&
+            (!templateFilter || templateFilter.has(c.template_key)),
         );
         if (checks.length === 0) {
           return jsonResponse(
@@ -486,14 +491,16 @@ export const Route = createFileRoute("/api/send-self-checks")({
 
         // Ta bort tidigare genererade PDF:er för projektet så användaren och
         // beställaren inte råkar öppna gamla, trasiga filer efter ett omskick.
-        const { data: oldPdfs } = await admin.storage
-          .from("self-check-pdfs")
-          .list(jobId, { limit: 1000 });
-        const oldPdfPaths = (oldPdfs ?? [])
-          .filter((f) => f.name.toLowerCase().endsWith(".pdf"))
-          .map((f) => `${jobId}/${f.name}`);
-        if (oldPdfPaths.length > 0) {
-          await admin.storage.from("self-check-pdfs").remove(oldPdfPaths);
+        if (!templateFilter) {
+          const { data: oldPdfs } = await admin.storage
+            .from("self-check-pdfs")
+            .list(jobId, { limit: 1000 });
+          const oldPdfPaths = (oldPdfs ?? [])
+            .filter((f) => f.name.toLowerCase().endsWith(".pdf"))
+            .map((f) => `${jobId}/${f.name}`);
+          if (oldPdfPaths.length > 0) {
+            await admin.storage.from("self-check-pdfs").remove(oldPdfPaths);
+          }
         }
 
         for (let i = 0; i < checks.length; i++) {
@@ -676,6 +683,10 @@ export const Route = createFileRoute("/api/send-self-checks")({
           imageCount: totalEmbeddedImages,
           skippedImageCount: skippedImages.length,
           skippedImages: skippedImages.slice(0, 20),
+          attempts: perCheck.map((p) => ({
+            template_key: p.template_key,
+            attempt: (attemptMap[p.self_check_id] ?? 0) + 1,
+          })),
         });
 
       },

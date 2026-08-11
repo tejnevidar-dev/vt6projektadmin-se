@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, Clock, RotateCw, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { AlertTriangle, CheckCircle2, Clock, Loader2, RotateCw, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   getSelfCheckDeliveries,
+  sendSelfChecksToClient,
   type SelfCheck,
   type SelfCheckDelivery,
 } from "@/lib/jobs-api";
@@ -69,6 +72,8 @@ export function SelfCheckStatusPanel({ jobId, checks, templates, refreshKey }: P
   const [deliveries, setDeliveries] = useState<SelfCheckDelivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [resending, setResending] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,7 +89,31 @@ export function SelfCheckStatusPanel({ jobId, checks, templates, refreshKey }: P
     return () => {
       cancelled = true;
     };
-  }, [jobId, refreshKey]);
+  }, [jobId, refreshKey, reloadKey]);
+
+  const handleResend = useCallback(
+    async (templateKey: string, templateName: string) => {
+      setResending(templateKey);
+      try {
+        const res = await sendSelfChecksToClient(jobId, [templateKey]);
+        const attempt = res.attempts.find((a) => a.template_key === templateKey)?.attempt;
+        toast.success(
+          `${templateName} skickad till ${res.to}${attempt ? ` (försök ${attempt})` : ""}`,
+          res.skippedImageCount
+            ? { description: `${res.skippedImageCount} bild(er) kunde inte bifogas.` }
+            : undefined,
+        );
+      } catch (e) {
+        toast.error(`Kunde inte skicka om ${templateName}`, {
+          description: (e as Error).message,
+        });
+      } finally {
+        setResending(null);
+        setReloadKey((k) => k + 1);
+      }
+    },
+    [jobId],
+  );
 
   const rows = templates.map((t) => {
     const tplChecks = checks.filter((c) => c.template_key === t.key);
@@ -141,6 +170,22 @@ export function SelfCheckStatusPanel({ jobId, checks, templates, refreshKey }: P
                   <span className="text-[11px] text-muted-foreground">
                     Skickas inte till beställaren
                   </span>
+                )}
+                {template.sentToClient && submitted > 0 && (
+                  <Button
+                    size="sm"
+                    variant={status === "failed" ? "default" : "outline"}
+                    className="ml-auto h-7 gap-1.5 text-xs"
+                    disabled={resending !== null}
+                    onClick={() => handleResend(template.key, template.name)}
+                  >
+                    {resending === template.key ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <RotateCw className="h-3 w-3" />
+                    )}
+                    {attempts > 0 ? `Skicka om (försök ${attempts + 1})` : "Skicka"}
+                  </Button>
                 )}
               </div>
 
