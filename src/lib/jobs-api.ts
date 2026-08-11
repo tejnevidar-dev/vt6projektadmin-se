@@ -183,7 +183,37 @@ export async function createManualJob(input: CreateJobInput): Promise<string> {
   return (data as { id: string }).id;
 }
 
+export interface SelfCheckDelivery {
+  id: string;
+  job_id: string;
+  self_check_id: string | null;
+  template_key: string;
+  recipient_email: string | null;
+  status: "sent" | "failed";
+  attempt: number;
+  error_message: string | null;
+  skipped_images: string[];
+  embedded_image_count: number;
+  pdf_path: string | null;
+  created_at: string;
+}
+
+/** Utskickshistorik per egenkontroll för ett projekt (senaste först). */
+export async function getSelfCheckDeliveries(jobId: string): Promise<SelfCheckDelivery[]> {
+  const { data, error } = await supabase
+    .from("self_check_deliveries")
+    .select("*")
+    .eq("job_id", jobId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((d: any) => ({
+    ...d,
+    skipped_images: Array.isArray(d.skipped_images) ? (d.skipped_images as string[]) : [],
+  })) as SelfCheckDelivery[];
+}
+
 /** Send all self-checks for a job to the client's email address. */
+
 export async function sendSelfChecksToClient(
   jobId: string,
 ): Promise<{ to: string; count: number; imageCount: number; skippedImageCount: number }> {
