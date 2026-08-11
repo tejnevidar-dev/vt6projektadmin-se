@@ -483,6 +483,7 @@ function ChecksTable({
           <tr>
             <th className="px-3 py-2">Adress</th>
             <th className="px-3 py-2">Kund</th>
+            <th className="px-3 py-2">Ärendenummer</th>
             <th className="px-3 py-2">Utförd av</th>
             <th className="px-3 py-2">Status</th>
             <th className="px-3 py-2">Datum</th>
