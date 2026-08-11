@@ -510,21 +510,10 @@ export const Route = createFileRoute("/api/send-self-checks")({
             }
             if (arr.length > 0) resolvedImages[field] = arr;
           }
-          if (failedDownloads.length > 0) {
-            const detail = failedDownloads
-              .slice(0, 5)
-              .map((f) => `${f.name} – ${f.reason}`)
-              .join("; ");
-            const more =
-              failedDownloads.length > 5 ? ` (+${failedDownloads.length - 5} till)` : "";
-            return jsonResponse(
-              {
-                error: `Kunde inte förbereda ${failedDownloads.length} bifogade bilder till egenkontroll ${i + 1}. Inget mejl skickades. Detaljer: ${detail}${more}`,
-                failedImages: failedDownloads,
-                selfCheckIndex: i + 1,
-              },
-              500,
-            );
+          // Enskilda bilder som inte går att läsa ska inte stoppa hela utskicket –
+          // de listas istället i PDF:en och rapporteras tillbaka till användaren.
+          for (const f of failedDownloads) {
+            skippedImages.push(`Egenkontroll ${i + 1}: ${f.name} – ${f.reason}`);
           }
 
           const pdfResult = await buildSelfCheckPdf({
@@ -537,25 +526,12 @@ export const Route = createFileRoute("/api/send-self-checks")({
             createdAt: sc.created_at,
             performerName: sc.user_id ? nameMap[sc.user_id] ?? null : null,
             imagesByField: resolvedImages,
+            failedNotes: failedDownloads.map((f) => f.name),
           });
-          if (pdfResult.failedImages.length > 0) {
-            const detail = pdfResult.failedImages
-              .slice(0, 5)
-              .map((f) => `${f.name} – ${f.reason}`)
-              .join("; ");
-            const more =
-              pdfResult.failedImages.length > 5
-                ? ` (+${pdfResult.failedImages.length - 5} till)`
-                : "";
-            return jsonResponse(
-              {
-                error: `Kunde inte bädda in ${pdfResult.failedImages.length} bilder i egenkontroll ${i + 1}. Inget mejl skickades. Detaljer: ${detail}${more}`,
-                failedImages: pdfResult.failedImages,
-                selfCheckIndex: i + 1,
-              },
-              500,
-            );
+          for (const f of pdfResult.failedImages) {
+            skippedImages.push(`Egenkontroll ${i + 1}: ${f.name} – ${f.reason}`);
           }
+
 
           const filename = `egenkontroll-${i + 1}-${slugify(sc.template_key)}.pdf`;
           const path = `${jobId}/${Date.now()}-${i + 1}-${filename}`;
