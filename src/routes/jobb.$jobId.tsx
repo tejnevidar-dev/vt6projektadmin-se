@@ -39,6 +39,8 @@ import {
 } from "@/lib/jobs-api";
 import { listUsersWithRole, type RoleUser } from "@/lib/leads-api";
 import { SelfCheckDialog } from "@/components/SelfCheckDialog";
+import { SelfCheckStatusPanel } from "@/components/SelfCheckStatusPanel";
+
 import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel, getApplicableTemplates } from "@/lib/self-check-templates";
 
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
@@ -1143,6 +1145,17 @@ function ChecksTab({
           </div>
         )}
       </div>
+
+      <div className="mb-4">
+        <SelfCheckStatusPanel
+          jobId={jobId}
+          checks={checks}
+          templates={applicableTemplates}
+          refreshKey={checks.length}
+        />
+      </div>
+
+
 
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

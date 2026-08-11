@@ -1079,6 +1079,69 @@ export type Database = {
           },
         ]
       }
+      self_check_deliveries: {
+        Row: {
+          attempt: number
+          created_at: string
+          embedded_image_count: number
+          error_message: string | null
+          id: string
+          job_id: string
+          pdf_path: string | null
+          recipient_email: string | null
+          self_check_id: string | null
+          skipped_images: Json
+          status: string
+          template_key: string
+          triggered_by: string | null
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          embedded_image_count?: number
+          error_message?: string | null
+          id?: string
+          job_id: string
+          pdf_path?: string | null
+          recipient_email?: string | null
+          self_check_id?: string | null
+          skipped_images?: Json
+          status: string
+          template_key: string
+          triggered_by?: string | null
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          embedded_image_count?: number
+          error_message?: string | null
+          id?: string
+          job_id?: string
+          pdf_path?: string | null
+          recipient_email?: string | null
+          self_check_id?: string | null
+          skipped_images?: Json
+          status?: string
+          template_key?: string
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "self_check_deliveries_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "self_check_deliveries_self_check_id_fkey"
+            columns: ["self_check_id"]
+            isOneToOne: false
+            referencedRelation: "self_checks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       self_check_instructions: {
         Row: {
           created_at: string

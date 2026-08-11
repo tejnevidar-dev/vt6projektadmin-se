@@ -473,6 +473,15 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const links: { label: string; url: string }[] = [];
         let totalEmbeddedImages = 0;
         const skippedImages: string[] = [];
+        const perCheck: {
+          self_check_id: string;
+          template_key: string;
+          pdf_path: string | null;
+          embedded: number;
+          skipped: string[];
+          error: string | null;
+        }[] = [];
+
 
 
         // Ta bort tidigare genererade PDF:er för projektet så användaren och
@@ -543,11 +552,23 @@ export const Route = createFileRoute("/api/send-self-checks")({
               contentType: "application/pdf",
               upsert: true,
             });
+          const checkSkipped = [
+            ...failedDownloads.map((f) => `${f.name} – ${f.reason}`),
+            ...pdfResult.failedImages.map((f) => `${f.name} – ${f.reason}`),
+          ];
           if (upErr) {
-            return jsonResponse(
-              { error: `Kunde inte ladda upp PDF: ${upErr.message}` },
-              500,
+            perCheck.push({
+              self_check_id: sc.id,
+              template_key: sc.template_key,
+              pdf_path: null,
+              embedded: pdfResult.embeddedImageCount,
+              skipped: checkSkipped,
+              error: `Kunde inte ladda upp PDF: ${upErr.message}`,
+            });
+            skippedImages.push(
+              `Egenkontroll ${i + 1}: PDF kunde inte laddas upp – ${upErr.message}`,
             );
+            continue;
           }
           const safePath = path
             .split("/")
@@ -557,8 +578,55 @@ export const Route = createFileRoute("/api/send-self-checks")({
             label: `Egenkontroll ${i + 1} – ${templateLabel(sc.template_key)}`,
             url: `${origin}/api/public/self-check-pdf/${safePath}`,
           });
+          perCheck.push({
+            self_check_id: sc.id,
+            template_key: sc.template_key,
+            pdf_path: path,
+            embedded: pdfResult.embeddedImageCount,
+            skipped: checkSkipped,
+            error: null,
+          });
           totalEmbeddedImages += pdfResult.embeddedImageCount;
         }
+
+        // Nästa försöksnummer per egenkontroll (för "skickad om"-status).
+        const { data: prevDeliveries } = await admin
+          .from("self_check_deliveries")
+          .select("self_check_id, attempt")
+          .eq("job_id", jobId);
+        const attemptMap: Record<string, number> = {};
+        for (const d of prevDeliveries ?? []) {
+          const key = (d as { self_check_id: string | null }).self_check_id ?? "";
+          const n = (d as { attempt: number }).attempt ?? 1;
+          if (!attemptMap[key] || attemptMap[key] < n) attemptMap[key] = n;
+        }
+
+        async function logDeliveries(emailError: string | null) {
+          if (perCheck.length === 0) return;
+          const rows = perCheck.map((p) => ({
+            job_id: jobId,
+            self_check_id: p.self_check_id,
+            template_key: p.template_key,
+            recipient_email: job!.client_email,
+            status: p.error || emailError ? "failed" : "sent",
+            attempt: (attemptMap[p.self_check_id] ?? 0) + 1,
+            error_message: p.error ?? emailError,
+            skipped_images: p.skipped,
+            embedded_image_count: p.embedded,
+            pdf_path: p.pdf_path,
+            triggered_by: userData.user!.id,
+          }));
+          await admin.from("self_check_deliveries").insert(rows);
+        }
+
+        if (links.length === 0) {
+          await logDeliveries("Inga PDF:er kunde genereras");
+          return jsonResponse(
+            { error: "Inga PDF:er kunde genereras – inget mejl skickades." },
+            500,
+          );
+        }
+
 
 
         const greetName = job.client_company || job.client_contact_name || "";
@@ -583,15 +651,14 @@ export const Route = createFileRoute("/api/send-self-checks")({
         });
         const sendBody = await sendResp.json().catch(() => ({}));
         if (!sendResp.ok) {
-          return jsonResponse(
-            {
-              error: `E-postutskick misslyckades: ${
-                (sendBody as { error?: string }).error ?? sendResp.status
-              }`,
-            },
-            502,
-          );
+          const reason = `E-postutskick misslyckades: ${
+            (sendBody as { error?: string }).error ?? sendResp.status
+          }`;
+          await logDeliveries(reason);
+          return jsonResponse({ error: reason }, 502);
         }
+
+        await logDeliveries(null);
 
         await admin
           .from("jobs")
@@ -600,6 +667,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
             self_checks_emailed_to: job.client_email,
           })
           .eq("id", jobId);
+
 
         return jsonResponse({
           success: true,
