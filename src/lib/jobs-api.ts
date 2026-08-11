@@ -105,7 +105,7 @@ export async function processWorkOrder(jobId: string): Promise<string> {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ jobId }),
+    body: JSON.stringify(templateKeys?.length ? { jobId, templateKeys } : { jobId }),
   });
   const json = await resp.json().catch(() => ({}));
   if (!resp.ok) throw new Error((json as { error?: string }).error ?? "AI-fel");
@@ -216,7 +216,14 @@ export async function getSelfCheckDeliveries(jobId: string): Promise<SelfCheckDe
 
 export async function sendSelfChecksToClient(
   jobId: string,
-): Promise<{ to: string; count: number; imageCount: number; skippedImageCount: number }> {
+  templateKeys?: string[],
+): Promise<{
+  to: string;
+  count: number;
+  imageCount: number;
+  skippedImageCount: number;
+  attempts: { template_key: string; attempt: number }[];
+}> {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
   if (!token) throw new Error("Inte inloggad");
@@ -226,7 +233,7 @@ export async function sendSelfChecksToClient(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ jobId }),
+    body: JSON.stringify(templateKeys?.length ? { jobId, templateKeys } : { jobId }),
   });
   const json = (await resp.json().catch(() => ({}))) as {
     error?: string;
@@ -234,6 +241,7 @@ export async function sendSelfChecksToClient(
     count?: number;
     imageCount?: number;
     skippedImageCount?: number;
+    attempts?: { template_key: string; attempt: number }[];
   };
   if (!resp.ok) throw new Error(json.error ?? "Kunde inte skicka egenkontroller");
   return {
@@ -241,6 +249,7 @@ export async function sendSelfChecksToClient(
     count: json.count ?? 0,
     imageCount: json.imageCount ?? 0,
     skippedImageCount: json.skippedImageCount ?? 0,
+    attempts: json.attempts ?? [],
   };
 }
 
