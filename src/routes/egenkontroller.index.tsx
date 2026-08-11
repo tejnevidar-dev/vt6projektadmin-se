@@ -32,6 +32,8 @@ import {
 import { listJobs } from "@/lib/jobs.functions";
 import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
 import { useUserRoles } from "@/hooks/use-role";
+import { SelfCheckDataView } from "@/components/SelfCheckDataView";
+
 
 export const Route = createFileRoute("/egenkontroller/")({
   component: () => (
@@ -227,15 +229,14 @@ function AdminReviewPage() {
                 {reviewItem.performer?.display_name ?? reviewItem.performer?.email ?? "—"}
               </div>
               {reviewItem.data && Object.keys(reviewItem.data).length > 0 && (
-                <details className="rounded border border-border bg-muted/30 p-2">
-                  <summary className="cursor-pointer text-xs text-muted-foreground">
-                    Visa inlämnad data
-                  </summary>
-                  <pre className="mt-2 whitespace-pre-wrap text-xs">
-                    {JSON.stringify(reviewItem.data, null, 2)}
-                  </pre>
-                </details>
+                <div className="max-h-[45vh] overflow-y-auto rounded border border-border bg-muted/20 p-2">
+                  <SelfCheckDataView
+                    templateKey={reviewItem.template_key}
+                    data={reviewItem.data as Record<string, any>}
+                  />
+                </div>
               )}
+
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
                   Granskningsanteckning (valfri)
