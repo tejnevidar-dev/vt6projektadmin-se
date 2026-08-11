@@ -268,13 +268,18 @@ export interface SelfCheck {
   created_at: string;
 }
 
-/** Upload an image attached to a self-check. Returns the storage path + original filename. */
+/**
+ * Upload an image attached to a self-check.
+ * Telefonbilder (HEIC/stora JPEG) normaliseras till en kompakt JPEG i webbläsaren
+ * innan uppladdning, så att PDF-generatorn alltid kan bädda in dem.
+ */
 export async function uploadSelfCheckImage(jobId: string, file: File): Promise<SelfCheckImage> {
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const prepared = await prepareImageForUpload(file);
+  const safeName = prepared.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const path = `${jobId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
   const { error } = await supabase.storage
     .from("self-check-images")
-    .upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
+    .upload(path, prepared, { contentType: "image/jpeg", upsert: false });
   if (error) throw error;
   const { data: userData } = await supabase.auth.getUser();
   return {
@@ -284,6 +289,7 @@ export async function uploadSelfCheckImage(jobId: string, file: File): Promise<S
     uploadedAt: new Date().toISOString(),
   };
 }
+
 
 /** Fetch display names for a set of user IDs. Returns id → display name (or email). */
 export async function getProfileNames(userIds: string[]): Promise<Record<string, string>> {
