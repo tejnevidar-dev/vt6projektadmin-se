@@ -472,6 +472,8 @@ export const Route = createFileRoute("/api/send-self-checks")({
         const origin = new URL(request.url).origin;
         const links: { label: string; url: string }[] = [];
         let totalEmbeddedImages = 0;
+        const skippedImages: string[] = [];
+
 
         // Ta bort tidigare genererade PDF:er för projektet så användaren och
         // beställaren inte råkar öppna gamla, trasiga filer efter ett omskick.
