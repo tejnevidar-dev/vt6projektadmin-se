@@ -32,6 +32,8 @@ import {
 import { listJobs } from "@/lib/jobs.functions";
 import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
 import { useUserRoles } from "@/hooks/use-role";
+import { SelfCheckDataView } from "@/components/SelfCheckDataView";
+
 
 export const Route = createFileRoute("/egenkontroller/")({
   component: () => (
