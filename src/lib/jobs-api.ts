@@ -186,7 +186,7 @@ export async function createManualJob(input: CreateJobInput): Promise<string> {
 /** Send all self-checks for a job to the client's email address. */
 export async function sendSelfChecksToClient(
   jobId: string,
-): Promise<{ to: string; count: number; imageCount: number }> {
+): Promise<{ to: string; count: number; imageCount: number; skippedImageCount: number }> {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
   if (!token) throw new Error("Inte inloggad");
@@ -203,10 +203,17 @@ export async function sendSelfChecksToClient(
     to?: string;
     count?: number;
     imageCount?: number;
+    skippedImageCount?: number;
   };
   if (!resp.ok) throw new Error(json.error ?? "Kunde inte skicka egenkontroller");
-  return { to: json.to ?? "", count: json.count ?? 0, imageCount: json.imageCount ?? 0 };
+  return {
+    to: json.to ?? "",
+    count: json.count ?? 0,
+    imageCount: json.imageCount ?? 0,
+    skippedImageCount: json.skippedImageCount ?? 0,
+  };
 }
+
 
 /** Clear the "self-checks emailed" state so it can be resent fresh. */
 export async function revokeSelfChecksSent(jobId: string): Promise<void> {
