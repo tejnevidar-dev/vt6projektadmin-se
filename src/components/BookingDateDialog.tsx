@@ -11,6 +11,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarCheck, CalendarIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listEmployees, type Employee } from "@/lib/employees-api";
+import { Checkbox } from "@/components/ui/checkbox";
+import { missingRotUnderlag, normalizePersonalNumber } from "@/lib/types";
+import { AlertTriangle } from "lucide-react";
 
 export type AssignmentType = "none" | "subcontractor" | "foreman";
 
@@ -23,6 +26,9 @@ export interface BookingDetails {
   subcontractorPrice: number | null;
   foremanName: string | null;
   foremanUserId: string | null;
+  personalNumber: string | null;
+  rotEligible: boolean;
+  propertyDesignation: string | null;
 }
 
 interface Props {
@@ -36,6 +42,10 @@ interface Props {
   initialSubcontractorPrice?: number | null;
   initialForemanName?: string | null;
   initialForemanUserId?: string | null;
+  initialPersonalNumber?: string | null;
+  initialRotEligible?: boolean;
+  initialPropertyDesignation?: string | null;
+  requireRotUnderlag?: boolean;
   onCancel: () => void;
   onConfirm: (details: BookingDetails) => void | Promise<void>;
 }
@@ -61,6 +71,10 @@ export function BookingDateDialog({
   initialSubcontractorPrice,
   initialForemanName,
   initialForemanUserId,
+  initialPersonalNumber,
+  initialRotEligible,
+  initialPropertyDesignation,
+  requireRotUnderlag = true,
   onCancel,
   onConfirm,
 }: Props) {
@@ -73,6 +87,9 @@ export function BookingDateDialog({
   const [subName, setSubName] = useState<string>(initialSubcontractorName ?? "");
   const [subPrice, setSubPrice] = useState<string>(initialSubcontractorPrice != null ? String(initialSubcontractorPrice) : "");
   const [foremanUserId, setForemanUserId] = useState<string>(initialForemanUserId ?? "");
+  const [personalNumber, setPersonalNumber] = useState<string>(initialPersonalNumber ?? "");
+  const [rotEligible, setRotEligible] = useState<boolean>(initialRotEligible ?? true);
+  const [propertyDesignation, setPropertyDesignation] = useState<string>(initialPropertyDesignation ?? "");
   const [foremen, setForemen] = useState<Employee[]>([]);
   const [foremenLoading, setForemenLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -88,9 +105,12 @@ export function BookingDateDialog({
       setSubName(initialSubcontractorName ?? "");
       setSubPrice(initialSubcontractorPrice != null ? String(initialSubcontractorPrice) : "");
       setForemanUserId(initialForemanUserId ?? "");
+      setPersonalNumber(initialPersonalNumber ?? "");
+      setRotEligible(initialRotEligible ?? true);
+      setPropertyDesignation(initialPropertyDesignation ?? "");
       setSaving(false);
     }
-  }, [open, initialDate, initialPrice, initialRotAmount, initialAssignmentType, initialSubcontractorName, initialSubcontractorPrice, initialForemanName, initialForemanUserId]);
+  }, [open, initialDate, initialPrice, initialRotAmount, initialAssignmentType, initialSubcontractorName, initialSubcontractorPrice, initialForemanName, initialForemanUserId, initialPersonalNumber, initialRotEligible, initialPropertyDesignation]);
 
   useEffect(() => {
     if (!open) return;
@@ -109,8 +129,17 @@ export function BookingDateDialog({
     ? (selectedForeman.full_name || selectedForeman.email)
     : initialForemanName ?? null;
 
+  const missing = missingRotUnderlag({
+    rotEligible,
+    personalNumber,
+    propertyDesignation,
+    price: priceNum,
+    rotAmount: rotNum,
+  });
+  const blocked = requireRotUnderlag && missing.length > 0;
+
   const submit = async () => {
-    if (!date) return;
+    if (!date || blocked) return;
     const [h, m] = time.split(":").map(Number);
     const iso = new Date(date.getFullYear(), date.getMonth(), date.getDate(), h, m).toISOString();
     setSaving(true);
@@ -124,6 +153,9 @@ export function BookingDateDialog({
         subcontractorPrice: assignmentType === "subcontractor" && subPrice ? parseFloat(subPrice) : null,
         foremanName: assignmentType === "foreman" ? foremanLabel : null,
         foremanUserId: assignmentType === "foreman" ? (foremanUserId || null) : null,
+        personalNumber: personalNumber.trim() ? normalizePersonalNumber(personalNumber) : null,
+        rotEligible,
+        propertyDesignation: propertyDesignation.trim() || null,
       });
     } finally {
       setSaving(false);
@@ -242,6 +274,47 @@ export function BookingDateDialog({
           </div>
 
 
+          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">ROT-underlag</Label>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Checkbox
+                  checked={!rotEligible}
+                  onCheckedChange={(c) => setRotEligible(!c)}
+                />
+                Inget ROT-avdrag
+              </label>
+            </div>
+            {rotEligible && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="booking-pnr">Personnummer</Label>
+                  <Input
+                    id="booking-pnr"
+                    placeholder="ÅÅÅÅMMDD-XXXX"
+                    value={personalNumber}
+                    onChange={(e) => setPersonalNumber(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="booking-fastighet">Fastighetsbeteckning</Label>
+                  <Input
+                    id="booking-fastighet"
+                    placeholder="t.ex. Norrtälje Vigelsjö 3:12"
+                    value={propertyDesignation}
+                    onChange={(e) => setPropertyDesignation(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+            {blocked && (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>Kan inte bokas – saknas: {missing.join(", ")}.</span>
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="assignment-type">Tilldela</Label>
             <Select value={assignmentType} onValueChange={(v) => setAssignmentType(v as AssignmentType)}>
@@ -313,7 +386,7 @@ export function BookingDateDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} disabled={saving}>Avbryt</Button>
-          <Button onClick={submit} disabled={!date || !time || saving}>
+          <Button onClick={submit} disabled={!date || !time || saving || blocked}>
             {saving ? "Sparar…" : "Bekräfta bokning"}
           </Button>
         </DialogFooter>
