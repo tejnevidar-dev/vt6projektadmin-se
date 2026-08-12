@@ -18,6 +18,7 @@ import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import { useEffect } from "react";
 import { waitForJobByLead } from "@/lib/jobs-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
+import { InvoiceRotPanel } from "@/components/InvoiceRotPanel";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
