@@ -1537,6 +1537,7 @@ export type Database = {
         | "arbetsledare"
         | "hantverkare"
         | "underentreprenor"
+        | "ekonomi"
       employment_type:
         | "timanstalld"
         | "fast"
@@ -1710,6 +1711,7 @@ export const Constants = {
         "arbetsledare",
         "hantverkare",
         "underentreprenor",
+        "ekonomi",
       ],
       employment_type: [
         "timanstalld",
