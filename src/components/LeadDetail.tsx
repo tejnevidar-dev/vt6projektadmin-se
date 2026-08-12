@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2, FileSignature, ExternalLink, CheckCircle, Calculator } from "lucide-react";
+import { X, Phone, MapPin, Calendar as CalendarIcon, Home, User, FileText, MessageSquare, Pencil, Save, ArrowRight, ArrowLeft, CheckCircle2, Trash2, FileSignature, ExternalLink, CheckCircle, Calculator, ChevronDown, ChevronUp } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -52,6 +52,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [bookingFor, setBookingFor] = useState<null | { from: Lead["pipelineStage"] }>(null);
+  const [showAllInfo, setShowAllInfo] = useState(false);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -233,16 +234,16 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             <h2 className="truncate text-xl font-bold text-card-foreground">{lead.name}</h2>
             <p className="text-sm text-muted-foreground">{lead.age} år · {sourceLabels[lead.source]}</p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onClose}
-            className="shrink-0"
-            aria-label="Stäng"
-          >
-            <X className="mr-1 h-4 w-4" />
-            Stäng
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)} aria-label="Redigera">
+              <Pencil className="h-4 w-4" />
+              <span className="hidden sm:inline">Redigera</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={onClose} aria-label="Stäng">
+              <X className="h-4 w-4" />
+              <span className="hidden sm:inline">Stäng</span>
+            </Button>
+          </div>
         </div>
 
         {/* Scrollable content */}
@@ -257,24 +258,60 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               </InfoRow>
             </div>
 
-            <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
-              <InfoRow icon={User} label="Personnummer">
-                <span className="font-medium">{lead.personalNumber || "—"}</span>
-              </InfoRow>
-              <InfoRow icon={FileText} label="Fastighetsbeteckning">
-                <span className="font-medium">{lead.propertyDesignation || "—"}</span>
-              </InfoRow>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowAllInfo((v) => !v)}
+              className="inline-flex items-center gap-1 rounded-md text-sm font-medium text-primary hover:underline"
+            >
+              {showAllInfo ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {showAllInfo ? "Dölj uppgifter" : "Visa alla uppgifter"}
+            </button>
 
-            <InfoRow icon={MapPin} label="Adress"><span>{lead.address}</span></InfoRow>
+            {showAllInfo && (
+              <div className="space-y-4 rounded-lg border border-border bg-muted/20 p-3">
+                <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
+                  <InfoRow icon={User} label="Personnummer">
+                    <span className="font-medium">{lead.personalNumber || "—"}</span>
+                  </InfoRow>
+                  <InfoRow icon={FileText} label="Fastighetsbeteckning">
+                    <span className="font-medium">{lead.propertyDesignation || "—"}</span>
+                  </InfoRow>
+                </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <InfoRow icon={CalendarIcon} label="Byggnadsår"><span className="font-medium">{lead.buildYear}</span></InfoRow>
-              <InfoRow icon={Home} label="Taktyp"><span>{lead.roofType}</span></InfoRow>
-              <InfoRow icon={Home} label="Takålder">
-                <span className={`font-medium ${lead.roofAge > 40 ? "text-destructive" : ""}`}>{lead.roofAge} år</span>
-              </InfoRow>
-            </div>
+                <InfoRow icon={MapPin} label="Adress"><span>{lead.address}</span></InfoRow>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <InfoRow icon={CalendarIcon} label="Byggnadsår"><span className="font-medium">{lead.buildYear}</span></InfoRow>
+                  <InfoRow icon={Home} label="Taktyp"><span>{lead.roofType}</span></InfoRow>
+                  <InfoRow icon={Home} label="Takålder">
+                    <span className={`font-medium ${lead.roofAge > 40 ? "text-destructive" : ""}`}>{lead.roofAge} år</span>
+                  </InfoRow>
+                </div>
+
+                {lead.hasRoofPermit && (
+                  <div className="rounded-lg bg-warning/10 p-3">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-warning-foreground" />
+                      <span className="text-sm font-medium text-warning-foreground">Bygglov ansökt (takarbete)</span>
+                    </div>
+                  </div>
+                )}
+
+                {lead.notes && (
+                  <div className="rounded-lg bg-muted p-3">
+                    <div className="mb-1 flex items-center gap-1.5">
+                      <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">Anteckningar</span>
+                    </div>
+                    <p className="text-sm text-card-foreground">{lead.notes}</p>
+                  </div>
+                )}
+
+                {lead.lastContact && (
+                  <p className="text-xs text-muted-foreground">Senast kontaktad: {lead.lastContact}</p>
+                )}
+              </div>
+            )}
 
             {!(lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford") && (
               <ContactPersonSection lead={lead} onSaved={onUpdated} />
@@ -284,28 +321,15 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               <BookingSection lead={lead} onSaved={onUpdated} />
             )}
 
-            {lead.hasRoofPermit && (
-              <div className="rounded-lg bg-warning/10 p-3">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-warning-foreground" />
-                  <span className="text-sm font-medium text-warning-foreground">Bygglov ansökt (takarbete)</span>
-                </div>
-              </div>
+            {lead.pipelineStage === "offererad" && (
+              <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
             )}
 
-            {lead.notes && (
-              <div className="rounded-lg bg-muted p-3">
-                <div className="mb-1 flex items-center gap-1.5">
-                  <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium text-muted-foreground">Anteckningar</span>
-                </div>
-                <p className="text-sm text-card-foreground">{lead.notes}</p>
-              </div>
+            {lead.pipelineStage === "slutford" && (
+              <InvoiceRotPanel lead={lead} onUpdated={onUpdated} />
             )}
 
-            {lead.lastContact && (
-              <p className="text-xs text-muted-foreground">Senast kontaktad: {lead.lastContact}</p>
-            )}
+            <LeadDocumentsCard leadId={lead.id} />
           </div>
         </div>
 
@@ -317,14 +341,6 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               Öppna kalkyl & offert
             </Link>
           </Button>
-          {lead.pipelineStage === "offererad" && (
-            <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
-          )}
-          {lead.pipelineStage === "slutford" && (
-            <InvoiceRotPanel lead={lead} onUpdated={onUpdated} />
-          )}
-
-          <LeadDocumentsCard leadId={lead.id} />
           <div className="rounded-lg border border-border bg-muted/40 p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">Pipeline-status</span>
@@ -392,18 +408,12 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               );
             })()}
           </div>
-          <div className="flex gap-3">
-            <Button className="flex-1" asChild>
-              <a href={`tel:${lead.phone.replace(/[\s-]/g, "")}`}>
-                <Phone className="mr-2 h-4 w-4" />
-                Ring
-              </a>
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={() => setEditing(true)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Redigera
-            </Button>
-          </div>
+          <Button asChild className="w-full">
+            <a href={`tel:${lead.phone.replace(/[\s-]/g, "")}`}>
+              <Phone className="mr-2 h-4 w-4" />
+              Ring kund
+            </a>
+          </Button>
           <Button
             variant="outline"
             className={cn(
