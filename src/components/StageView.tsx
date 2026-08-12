@@ -122,6 +122,16 @@ function StageContent({ stage, description }: Props) {
   );
 
   const handleStageChange = async (leadId: string, newStage: PipelineStage) => {
+    if (newStage === "bokad") {
+      const lead = leads.find((l) => l.id === leadId);
+      const missing = lead ? leadMissingRotUnderlag(lead) : [];
+      if (missing.length > 0) {
+        toast.error(`Kan inte bokas – saknas: ${missing.join(", ")}`, {
+          description: "Öppna leaden och fyll i ROT-underlaget innan bokning.",
+        });
+        return;
+      }
+    }
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, pipelineStage: newStage } : l)));
     const toastId = toast.loading(
       newStage === "pagaende" ? "Flyttar till Pågående…" : `Flyttar till ${PIPELINE_STAGE_LABELS[newStage]}…`

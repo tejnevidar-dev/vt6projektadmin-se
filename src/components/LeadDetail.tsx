@@ -458,6 +458,9 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           initialSubcontractorPrice={lead.subcontractorPrice}
           initialForemanName={lead.foremanName}
           initialForemanUserId={lead.assignedTo}
+          initialPersonalNumber={lead.personalNumber}
+          initialRotEligible={lead.rotEligible}
+          initialPropertyDesignation={lead.propertyDesignation}
           onCancel={() => setBookingFor(null)}
           onConfirm={async (details) => {
             try {
@@ -470,6 +473,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                 subcontractorPrice: details.subcontractorPrice,
                 foremanName: details.foremanName,
                 foremanUserId: details.foremanUserId,
+                personalNumber: details.personalNumber,
+                rotEligible: details.rotEligible,
+                propertyDesignation: details.propertyDesignation,
+                propertyId: lead.propertyId,
               });
               onUpdated?.();
               setBookingFor(null);

@@ -120,6 +120,16 @@ function LeadsContent() {
   };
 
   const handleStageChange = async (leadId: string, stage: Lead["pipelineStage"]) => {
+    if (stage === "bokad") {
+      const lead = leads.find((l) => l.id === leadId);
+      const missing = lead ? leadMissingRotUnderlag(lead) : [];
+      if (missing.length > 0) {
+        toast.error(`Kan inte bokas – saknas: ${missing.join(", ")}`, {
+          description: "Öppna leaden och fyll i ROT-underlaget innan bokning.",
+        });
+        return;
+      }
+    }
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, pipelineStage: stage } : l)));
     try {
       await updateLeadPipelineStage(leadId, stage);
