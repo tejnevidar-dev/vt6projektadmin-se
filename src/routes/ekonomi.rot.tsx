@@ -52,7 +52,7 @@ function EkonomiRotPage() {
   const match = (l: Lead) => {
     const q = search.trim().toLowerCase();
     if (!q) return true;
-    return [l.name, l.address, l.phone, l.personalNumber, l.propertyDesignation]
+    return [l.name, l.address, l.phone, l.personalNumber, l.propertyDesignation, l.economyNote]
       .filter(Boolean)
       .some((v) => String(v).toLowerCase().includes(q));
   };
