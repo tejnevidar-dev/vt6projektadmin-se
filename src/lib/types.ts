@@ -229,6 +229,13 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     needsOffer: (lp as { needs_offer?: boolean | null }).needs_offer ?? false,
     rotPaid: (lp as { rot_paid?: boolean | null }).rot_paid ?? false,
     contactPersonId: (lp as { contact_person_id?: string | null }).contact_person_id ?? null,
+    propertyDesignation: lp.property?.property_designation ?? null,
+    personalNumber: (lp as { personal_number?: string | null }).personal_number ?? null,
+    rotEligible: (lp as { rot_eligible?: boolean | null }).rot_eligible ?? true,
+    invoiced: (lp as { invoiced?: boolean | null }).invoiced ?? false,
+    invoicedAt: (lp as { invoiced_at?: string | null }).invoiced_at ?? null,
+    invoiceDueDate: (lp as { invoice_due_date?: string | null }).invoice_due_date ?? null,
+    rotAppliedAt: (lp as { rot_applied_at?: string | null }).rot_applied_at ?? null,
   };
 }
 
