@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AppShell } from "@/components/AppShell";
-import { RequireAuth } from "@/components/RequireAuth";
+import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads, setLeadRotPaid, setLeadInvoiced } from "@/lib/leads-api";
 import { isRotApplicationDue, type Lead } from "@/lib/types";

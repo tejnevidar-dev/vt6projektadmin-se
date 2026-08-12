@@ -72,6 +72,7 @@ const ROLE_LABELS: Record<AppRole, string> = {
   arbetsledare: "Arbetsledare",
   hantverkare: "Hantverkare",
   underentreprenor: "Underentreprenör",
+  ekonomi: "Ekonomi",
 };
 
 const MESSAGES = {
