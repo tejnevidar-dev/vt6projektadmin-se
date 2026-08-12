@@ -104,6 +104,13 @@ export interface Lead {
   needsOffer: boolean;
   rotPaid: boolean;
   contactPersonId: string | null;
+  propertyDesignation: string | null;
+  personalNumber: string | null;
+  rotEligible: boolean;
+  invoiced: boolean;
+  invoicedAt: string | null;
+  invoiceDueDate: string | null;
+  rotAppliedAt: string | null;
 }
 
 /** True om en bokad lead saknar pris eller tilldelning (UE / arbetsledare). */
@@ -112,6 +119,76 @@ export function hasIncompleteBooking(lead: Pick<Lead, "pipelineStage" | "price" 
   const missingPrice = lead.price == null;
   const missingAssignment = !lead.assignmentType || lead.assignmentType === "none";
   return missingPrice || missingAssignment;
+}
+
+export interface RotUnderlag {
+  rotEligible: boolean;
+  personalNumber: string | null;
+  propertyDesignation: string | null;
+  price: number | null;
+  rotAmount: number | null;
+  address?: string;
+}
+
+/** Normaliserar personnummer till 12 siffror (ÅÅÅÅMMDDXXXX) om möjligt. */
+export function normalizePersonalNumber(input: string): string {
+  const digits = input.replace(/\D/g, "");
+  if (digits.length === 12) return digits;
+  if (digits.length === 10) {
+    const yy = Number(digits.slice(0, 2));
+    const currentYY = new Date().getFullYear() % 100;
+    const century = yy > currentYY ? "19" : "20";
+    return century + digits;
+  }
+  return digits;
+}
+
+export function isValidPersonalNumber(input: string | null | undefined): boolean {
+  if (!input) return false;
+  const digits = input.replace(/\D/g, "");
+  return digits.length === 10 || digits.length === 12;
+}
+
+/** Returnerar lista med saknade fält i ROT-underlaget. Tom lista = komplett. */
+export function missingRotUnderlag(u: RotUnderlag): string[] {
+  const missing: string[] = [];
+  if (u.price == null) missing.push("Pris");
+  if (!u.rotEligible) return missing;
+  if (!isValidPersonalNumber(u.personalNumber)) missing.push("Personnummer");
+  if (!u.propertyDesignation || !u.propertyDesignation.trim()) missing.push("Fastighetsbeteckning");
+  if (u.rotAmount == null) missing.push("ROT-belopp");
+  if (u.address !== undefined && !u.address.trim()) missing.push("Adress");
+  return missing;
+}
+
+export function leadMissingRotUnderlag(lead: Lead): string[] {
+  return missingRotUnderlag({
+    rotEligible: lead.rotEligible,
+    personalNumber: lead.personalNumber,
+    propertyDesignation: lead.propertyDesignation,
+    price: lead.price,
+    rotAmount: lead.rotAmount,
+    address: lead.address,
+  });
+}
+
+/** Slutförd men ännu inte fakturerad. */
+export function isUninvoiced(lead: Lead): boolean {
+  return lead.pipelineStage === "slutford" && !lead.invoiced;
+}
+
+/**
+ * ROT ska ansökas: fakturerad, ROT-belopp finns, ej redan ansökt och
+ * det har gått minst 1 dag sedan fakturans förfallodatum.
+ */
+export function isRotApplicationDue(lead: Lead, now: Date = new Date()): boolean {
+  if (!lead.rotEligible) return false;
+  if (lead.rotPaid) return false;
+  if ((lead.rotAmount ?? 0) <= 0) return false;
+  if (!lead.invoiced || !lead.invoiceDueDate) return false;
+  const due = new Date(`${lead.invoiceDueDate}T00:00:00`);
+  const threshold = new Date(due.getTime() + 24 * 60 * 60 * 1000);
+  return now >= threshold;
 }
 
 // Convert DB join result to flat Lead
