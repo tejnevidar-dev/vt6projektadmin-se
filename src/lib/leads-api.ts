@@ -73,19 +73,14 @@ export async function updateLeadPipelineStage(
 ): Promise<void> {
   const patch: Record<string, unknown> = { pipeline_stage: stage };
   if (booking) {
-    if (booking.bookingDate !== undefined) patch.booking_date = booking.bookingDate;
-    if (booking.price !== undefined) patch.price = booking.price;
-    if (booking.rotAmount !== undefined) patch.rot_amount = booking.rotAmount;
-    if (booking.assignmentType !== undefined) patch.assignment_type = booking.assignmentType;
-    if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
-    if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
-    if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
-    if (booking.foremanUserId !== undefined) patch.assigned_to = booking.foremanUserId;
+    applyBookingPatch(patch, booking);
+    await saveBookingPropertyDesignation(booking);
   }
   const { error } = await (supabase.from("leads") as any)
     .update(patch)
     .eq("id", id);
   if (error) throw error;
+
   const parts: string[] = [];
   if (booking?.bookingDate) {
     parts.push(`bokat ${new Date(booking.bookingDate).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}`);
