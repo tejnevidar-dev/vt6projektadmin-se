@@ -78,7 +78,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
     status: lead.status as LeadStatus,
     jobType: lead.jobType as JobType,
     notes: lead.notes,
+    personalNumber: lead.personalNumber ?? "",
+    propertyDesignation: lead.propertyDesignation ?? "",
   });
+
 
   const set = (field: string, value: string | number) =>
     setForm((prev) => ({ ...prev, [field]: value }));
