@@ -86,10 +86,10 @@ interface Invitation {
 }
 
 const roleLabel = (r: AppRole) =>
-  r === "admin" ? "Administratör" : r === "saljare" ? "Säljare" : "Viewer";
+  r === "admin" ? "Administratör" : r === "saljare" ? "Säljare" : r === "ekonomi" ? "Ekonomi" : "Viewer";
 
 const roleVariant = (r: AppRole): "default" | "secondary" | "outline" =>
-  r === "admin" ? "default" : r === "saljare" ? "secondary" : "outline";
+  r === "admin" ? "default" : r === "saljare" || r === "ekonomi" ? "secondary" : "outline";
 
 function AdminPage() {
   const { user } = useAuth();
@@ -315,7 +315,9 @@ function AdminPage() {
                     </TableHeader>
                     <TableBody>
                       {members.map((m) => {
-                        const currentRole: AppRole = m.roles.includes("admin")
+                        const currentRole: AppRole = m.roles.includes("ekonomi")
+                          ? "ekonomi"
+                          : m.roles.includes("admin")
                           ? "admin"
                           : m.roles.includes("saljare")
                           ? "saljare"
@@ -344,6 +346,7 @@ function AdminPage() {
                                   <SelectContent>
                                     <SelectItem value="admin">Administratör</SelectItem>
                                     <SelectItem value="saljare">Säljare</SelectItem>
+                                    <SelectItem value="ekonomi">Ekonomi</SelectItem>
                                     <SelectItem value="viewer">Viewer</SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -512,6 +515,7 @@ function AdminPage() {
                   <SelectContent>
                     <SelectItem value="admin">Administratör – full åtkomst</SelectItem>
                     <SelectItem value="saljare">Säljare – kan redigera leads</SelectItem>
+                    <SelectItem value="ekonomi">Ekonomi – löner, fakturor & ROT</SelectItem>
                     <SelectItem value="viewer">Viewer – endast läsa</SelectItem>
                   </SelectContent>
                 </Select>

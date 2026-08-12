@@ -18,6 +18,7 @@ import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import { useEffect } from "react";
 import { waitForJobByLead } from "@/lib/jobs-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
+import { InvoiceRotPanel } from "@/components/InvoiceRotPanel";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
@@ -278,45 +279,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           {lead.pipelineStage === "offererad" && (
             <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
           )}
-          {lead.pipelineStage === "slutford" && (lead.rotAmount ?? 0) > 0 && (
-            <div className={cn(
-              "rounded-lg border p-3 space-y-2",
-              lead.rotPaid ? "border-success/40 bg-success/10" : "border-warning/40 bg-warning/10"
-            )}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">ROT-avdrag</span>
-                <span className="text-sm font-semibold text-card-foreground">{lead.rotAmount?.toLocaleString("sv-SE")} kr</span>
-              </div>
-              <Button variant="outline" className="w-full" asChild>
-                <a
-                  href="https://www7.skatteverket.se/portal/rotrut/begar-utbetalning/rot/kopare"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Begär ROT hos Skatteverket
-                </a>
-              </Button>
-              <Button
-                variant={lead.rotPaid ? "default" : "outline"}
-                className={cn(
-                  "w-full",
-                  lead.rotPaid ? "bg-success text-success-foreground hover:bg-success/90" : ""
-                )}
-                onClick={async () => {
-                  try {
-                    await setLeadRotPaid(lead.id, !lead.rotPaid);
-                    onUpdated?.();
-                  } catch (err) {
-                    console.error("Failed to toggle rot paid:", err);
-                  }
-                }}
-              >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                {lead.rotPaid ? "ROT begärd ✓" : "Markera ROT som begärd"}
-              </Button>
-            </div>
+          {lead.pipelineStage === "slutford" && (
+            <InvoiceRotPanel lead={lead} onUpdated={onUpdated} />
           )}
+
           <LeadDocumentsCard leadId={lead.id} />
           <div className="rounded-lg border border-border bg-muted/40 p-3">
             <div className="mb-2 flex items-center justify-between">
@@ -458,6 +424,9 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
           initialSubcontractorPrice={lead.subcontractorPrice}
           initialForemanName={lead.foremanName}
           initialForemanUserId={lead.assignedTo}
+          initialPersonalNumber={lead.personalNumber}
+          initialRotEligible={lead.rotEligible}
+          initialPropertyDesignation={lead.propertyDesignation}
           onCancel={() => setBookingFor(null)}
           onConfirm={async (details) => {
             try {
@@ -470,6 +439,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                 subcontractorPrice: details.subcontractorPrice,
                 foremanName: details.foremanName,
                 foremanUserId: details.foremanUserId,
+                personalNumber: details.personalNumber,
+                rotEligible: details.rotEligible,
+                propertyDesignation: details.propertyDesignation,
+                propertyId: lead.propertyId,
               });
               onUpdated?.();
               setBookingFor(null);

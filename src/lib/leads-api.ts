@@ -23,7 +23,34 @@ export interface BookingPatch {
   subcontractorPrice?: number | null;
   foremanName?: string | null;
   foremanUserId?: string | null;
+  personalNumber?: string | null;
+  rotEligible?: boolean;
+  propertyDesignation?: string | null;
+  propertyId?: string | null;
 }
+
+function applyBookingPatch(patch: Record<string, unknown>, booking: BookingPatch) {
+  if (booking.bookingDate !== undefined) patch.booking_date = booking.bookingDate;
+  if (booking.price !== undefined) patch.price = booking.price;
+  if (booking.rotAmount !== undefined) patch.rot_amount = booking.rotAmount;
+  if (booking.assignmentType !== undefined) patch.assignment_type = booking.assignmentType;
+  if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
+  if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
+  if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
+  if (booking.foremanUserId !== undefined) patch.assigned_to = booking.foremanUserId;
+  if (booking.personalNumber !== undefined) patch.personal_number = booking.personalNumber;
+  if (booking.rotEligible !== undefined) patch.rot_eligible = booking.rotEligible;
+}
+
+/** Sparar fastighetsbeteckning på leadens fastighet (om den finns). */
+export async function saveBookingPropertyDesignation(booking: BookingPatch): Promise<void> {
+  if (booking.propertyDesignation === undefined || !booking.propertyId) return;
+  const { error } = await (supabase.from("properties") as any)
+    .update({ property_designation: booking.propertyDesignation })
+    .eq("id", booking.propertyId);
+  if (error) throw error;
+}
+
 
 export interface RoleUser {
   id: string;
@@ -46,19 +73,14 @@ export async function updateLeadPipelineStage(
 ): Promise<void> {
   const patch: Record<string, unknown> = { pipeline_stage: stage };
   if (booking) {
-    if (booking.bookingDate !== undefined) patch.booking_date = booking.bookingDate;
-    if (booking.price !== undefined) patch.price = booking.price;
-    if (booking.rotAmount !== undefined) patch.rot_amount = booking.rotAmount;
-    if (booking.assignmentType !== undefined) patch.assignment_type = booking.assignmentType;
-    if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
-    if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
-    if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
-    if (booking.foremanUserId !== undefined) patch.assigned_to = booking.foremanUserId;
+    applyBookingPatch(patch, booking);
+    await saveBookingPropertyDesignation(booking);
   }
   const { error } = await (supabase.from("leads") as any)
     .update(patch)
     .eq("id", id);
   if (error) throw error;
+
   const parts: string[] = [];
   if (booking?.bookingDate) {
     parts.push(`bokat ${new Date(booking.bookingDate).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}`);
@@ -84,17 +106,12 @@ export async function updateLeadPipelineStage(
 
 export async function updateLeadBooking(id: string, booking: BookingPatch): Promise<void> {
   const patch: Record<string, unknown> = {};
-  if (booking.bookingDate !== undefined) patch.booking_date = booking.bookingDate;
-  if (booking.price !== undefined) patch.price = booking.price;
-  if (booking.rotAmount !== undefined) patch.rot_amount = booking.rotAmount;
-  if (booking.assignmentType !== undefined) patch.assignment_type = booking.assignmentType;
-  if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
-  if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
-  if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
-  if (booking.foremanUserId !== undefined) patch.assigned_to = booking.foremanUserId;
+  applyBookingPatch(patch, booking);
+  await saveBookingPropertyDesignation(booking);
   if (Object.keys(patch).length === 0) return;
   const { error } = await (supabase.from("leads") as any).update(patch).eq("id", id);
   if (error) throw error;
+
   const parts: string[] = [];
   if (booking.bookingDate !== undefined) {
     parts.push(booking.bookingDate
@@ -124,7 +141,7 @@ export async function setLeadNeedsOffer(id: string, needsOffer: boolean): Promis
 
 export async function setLeadRotPaid(id: string, rotPaid: boolean): Promise<void> {
   const { error } = await (supabase.from("leads") as any)
-    .update({ rot_paid: rotPaid })
+    .update({ rot_paid: rotPaid, rot_applied_at: rotPaid ? new Date().toISOString() : null })
     .eq("id", id);
   if (error) throw error;
   await logActivity(
@@ -134,6 +151,47 @@ export async function setLeadRotPaid(id: string, rotPaid: boolean): Promise<void
     { rot_paid: rotPaid }
   );
 }
+
+/** Markerar leaden som fakturerad med förfallodatum (YYYY-MM-DD), eller rensar faktureringen. */
+export async function setLeadInvoiced(
+  id: string,
+  invoiced: boolean,
+  invoiceDueDate?: string | null,
+): Promise<void> {
+  const patch: Record<string, unknown> = invoiced
+    ? {
+        invoiced: true,
+        invoiced_at: new Date().toISOString(),
+        invoice_due_date: invoiceDueDate ?? null,
+      }
+    : { invoiced: false, invoiced_at: null, invoice_due_date: null };
+  const { error } = await (supabase.from("leads") as any).update(patch).eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "updated",
+    invoiced
+      ? `Markerad som fakturerad${invoiceDueDate ? ` (förfaller ${invoiceDueDate})` : ""}`
+      : "Fakturering återställd (ej fakturerad)",
+    patch,
+  );
+}
+
+/** Uppdaterar ROT-underlag (personnummer, om ROT ska nyttjas, ROT-belopp). */
+export async function updateLeadRotUnderlag(
+  id: string,
+  input: { personalNumber?: string | null; rotEligible?: boolean; rotAmount?: number | null },
+): Promise<void> {
+  const patch: Record<string, unknown> = {};
+  if (input.personalNumber !== undefined) patch.personal_number = input.personalNumber;
+  if (input.rotEligible !== undefined) patch.rot_eligible = input.rotEligible;
+  if (input.rotAmount !== undefined) patch.rot_amount = input.rotAmount;
+  if (Object.keys(patch).length === 0) return;
+  const { error } = await (supabase.from("leads") as any).update(patch).eq("id", id);
+  if (error) throw error;
+  await logActivity(id, "updated", "ROT-underlag uppdaterat", patch);
+}
+
 
 export async function deleteLead(id: string): Promise<void> {
   const { error } = await supabase.from("leads").delete().eq("id", id);

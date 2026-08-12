@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X, Calculator, CalendarDays, FileDown, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X, Calculator, CalendarDays, FileDown, TrendingUp, Landmark } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type Side } from "@/hooks/use-role";
@@ -23,6 +23,7 @@ type NavItem = {
   group: string;
   side: Side | "both";
   adminOnly?: boolean;
+  ekonomiOnly?: boolean;
   children?: NavChild[];
 };
 
@@ -52,6 +53,7 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
       ],
     },
     { to: "/kalender", label: "Kalender", icon: CalendarDays, group: "Arbeta", side: "intern" },
+    { to: "/ekonomi/rot", label: "ROT-ansökningar", icon: Landmark, group: "Ekonomi", side: "both", ekonomiOnly: true },
     { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "both", adminOnly: true },
 
     // Gemensamt (Hantera)
@@ -78,7 +80,7 @@ interface AppShellProps extends PageHeaderProps {
 
 export function AppShell({ children, title, description, meta, actions, tabs, topbarActions }: AppShellProps) {
   const { signOut, user } = useAuth();
-  const { isAdmin } = useUserRoles();
+  const { isAdmin, isEkonomi } = useUserRoles();
   const { side, setSide, canSwitch } = useWorkspace();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -98,6 +100,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
   const navItems = buildNavItems(isAdmin);
   const visibleNav = navItems.filter((i) => {
     if (i.adminOnly && !isAdmin) return false;
+    if (i.ekonomiOnly && !isEkonomi) return false;
     return i.side === "both" || i.side === side;
   });
   const groups = Array.from(new Set(visibleNav.map((i) => i.group)));
