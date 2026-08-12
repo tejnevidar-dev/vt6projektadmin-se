@@ -707,6 +707,7 @@ export type Database = {
           contact_person_id: string | null
           created_at: string
           created_by: string | null
+          economy_note: string | null
           email: string | null
           external_id: string | null
           foreman_name: string | null
@@ -744,6 +745,7 @@ export type Database = {
           contact_person_id?: string | null
           created_at?: string
           created_by?: string | null
+          economy_note?: string | null
           email?: string | null
           external_id?: string | null
           foreman_name?: string | null
@@ -781,6 +783,7 @@ export type Database = {
           contact_person_id?: string | null
           created_at?: string
           created_by?: string | null
+          economy_note?: string | null
           email?: string | null
           external_id?: string | null
           foreman_name?: string | null
