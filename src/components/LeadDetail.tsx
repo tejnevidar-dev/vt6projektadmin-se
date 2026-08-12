@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import { waitForJobByLead } from "@/lib/jobs-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { InvoiceRotPanel } from "@/components/InvoiceRotPanel";
+import { EconomyNoteCard } from "@/components/EconomyNoteCard";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
@@ -328,6 +329,8 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             {lead.pipelineStage === "slutford" && (
               <InvoiceRotPanel lead={lead} onUpdated={onUpdated} />
             )}
+
+            <EconomyNoteCard leadId={lead.id} note={lead.economyNote} onUpdated={onUpdated} />
 
             <LeadDocumentsCard leadId={lead.id} />
           </div>

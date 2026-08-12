@@ -52,7 +52,7 @@ function EkonomiRotPage() {
   const match = (l: Lead) => {
     const q = search.trim().toLowerCase();
     if (!q) return true;
-    return [l.name, l.address, l.phone, l.personalNumber, l.propertyDesignation]
+    return [l.name, l.address, l.phone, l.personalNumber, l.propertyDesignation, l.economyNote]
       .filter(Boolean)
       .some((v) => String(v).toLowerCase().includes(q));
   };
@@ -130,13 +130,14 @@ function EkonomiRotPage() {
             <TableHead className="text-right">Pris</TableHead>
             <TableHead className="text-right">ROT</TableHead>
             <TableHead>Faktura</TableHead>
+            <TableHead>Kommentar</TableHead>
             <TableHead className="text-right">Åtgärd</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={9} className="py-8 text-center text-sm text-muted-foreground">
                 Inget att visa här.
               </TableCell>
             </TableRow>
@@ -159,6 +160,13 @@ function EkonomiRotPage() {
                   </span>
                 ) : (
                   <Badge variant="destructive">Ej fakturerad</Badge>
+                )}
+              </TableCell>
+              <TableCell className="max-w-[220px] text-sm">
+                {l.economyNote ? (
+                  <span className="whitespace-pre-wrap">{l.economyNote}</span>
+                ) : (
+                  <span className="text-muted-foreground">–</span>
                 )}
               </TableCell>
               <TableCell className="text-right">
