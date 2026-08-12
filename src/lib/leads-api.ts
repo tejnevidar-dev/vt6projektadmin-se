@@ -141,7 +141,7 @@ export async function setLeadNeedsOffer(id: string, needsOffer: boolean): Promis
 
 export async function setLeadRotPaid(id: string, rotPaid: boolean): Promise<void> {
   const { error } = await (supabase.from("leads") as any)
-    .update({ rot_paid: rotPaid })
+    .update({ rot_paid: rotPaid, rot_applied_at: rotPaid ? new Date().toISOString() : null })
     .eq("id", id);
   if (error) throw error;
   await logActivity(
@@ -151,6 +151,47 @@ export async function setLeadRotPaid(id: string, rotPaid: boolean): Promise<void
     { rot_paid: rotPaid }
   );
 }
+
+/** Markerar leaden som fakturerad med förfallodatum (YYYY-MM-DD), eller rensar faktureringen. */
+export async function setLeadInvoiced(
+  id: string,
+  invoiced: boolean,
+  invoiceDueDate?: string | null,
+): Promise<void> {
+  const patch: Record<string, unknown> = invoiced
+    ? {
+        invoiced: true,
+        invoiced_at: new Date().toISOString(),
+        invoice_due_date: invoiceDueDate ?? null,
+      }
+    : { invoiced: false, invoiced_at: null, invoice_due_date: null };
+  const { error } = await (supabase.from("leads") as any).update(patch).eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "updated",
+    invoiced
+      ? `Markerad som fakturerad${invoiceDueDate ? ` (förfaller ${invoiceDueDate})` : ""}`
+      : "Fakturering återställd (ej fakturerad)",
+    patch,
+  );
+}
+
+/** Uppdaterar ROT-underlag (personnummer, om ROT ska nyttjas, ROT-belopp). */
+export async function updateLeadRotUnderlag(
+  id: string,
+  input: { personalNumber?: string | null; rotEligible?: boolean; rotAmount?: number | null },
+): Promise<void> {
+  const patch: Record<string, unknown> = {};
+  if (input.personalNumber !== undefined) patch.personal_number = input.personalNumber;
+  if (input.rotEligible !== undefined) patch.rot_eligible = input.rotEligible;
+  if (input.rotAmount !== undefined) patch.rot_amount = input.rotAmount;
+  if (Object.keys(patch).length === 0) return;
+  const { error } = await (supabase.from("leads") as any).update(patch).eq("id", id);
+  if (error) throw error;
+  await logActivity(id, "updated", "ROT-underlag uppdaterat", patch);
+}
+
 
 export async function deleteLead(id: string): Promise<void> {
   const { error } = await supabase.from("leads").delete().eq("id", id);
