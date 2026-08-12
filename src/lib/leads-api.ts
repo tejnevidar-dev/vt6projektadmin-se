@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { LeadWithProperty, Lead } from "./types";
-import { toFlatLead } from "./types";
+import { toFlatLead, normalizePersonalNumber } from "./types";
 import type { LeadStatus, LeadSource, JobType, PipelineStage } from "./types";
 import { calculateLeadScore } from "./lead-scoring";
 import { logActivity } from "./activities-api";
