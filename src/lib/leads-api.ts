@@ -23,7 +23,34 @@ export interface BookingPatch {
   subcontractorPrice?: number | null;
   foremanName?: string | null;
   foremanUserId?: string | null;
+  personalNumber?: string | null;
+  rotEligible?: boolean;
+  propertyDesignation?: string | null;
+  propertyId?: string | null;
 }
+
+function applyBookingPatch(patch: Record<string, unknown>, booking: BookingPatch) {
+  if (booking.bookingDate !== undefined) patch.booking_date = booking.bookingDate;
+  if (booking.price !== undefined) patch.price = booking.price;
+  if (booking.rotAmount !== undefined) patch.rot_amount = booking.rotAmount;
+  if (booking.assignmentType !== undefined) patch.assignment_type = booking.assignmentType;
+  if (booking.subcontractorName !== undefined) patch.subcontractor_name = booking.subcontractorName;
+  if (booking.subcontractorPrice !== undefined) patch.subcontractor_price = booking.subcontractorPrice;
+  if (booking.foremanName !== undefined) patch.foreman_name = booking.foremanName;
+  if (booking.foremanUserId !== undefined) patch.assigned_to = booking.foremanUserId;
+  if (booking.personalNumber !== undefined) patch.personal_number = booking.personalNumber;
+  if (booking.rotEligible !== undefined) patch.rot_eligible = booking.rotEligible;
+}
+
+/** Sparar fastighetsbeteckning på leadens fastighet (om den finns). */
+export async function saveBookingPropertyDesignation(booking: BookingPatch): Promise<void> {
+  if (booking.propertyDesignation === undefined || !booking.propertyId) return;
+  const { error } = await (supabase.from("properties") as any)
+    .update({ property_designation: booking.propertyDesignation })
+    .eq("id", booking.propertyId);
+  if (error) throw error;
+}
+
 
 export interface RoleUser {
   id: string;
