@@ -31,7 +31,8 @@ export function LeadDocumentsCard({ leadId }: LeadDocumentsCardProps) {
   const load = async () => {
     setLoading(true);
     try {
-      setDocs(await fetchLeadDocuments(leadId));
+      const all = await fetchLeadDocuments(leadId);
+      setDocs(all.filter((d) => !isInvoiceDocument(d)));
     } catch (err) {
       console.error(err);
     } finally {
