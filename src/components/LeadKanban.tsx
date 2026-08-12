@@ -1,4 +1,4 @@
-import { Receipt, Landmark, useState } from "react";
+import { useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -10,7 +10,7 @@ import {
   DragOverlay,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { Phone, MapPin, Calendar, Hammer, Droplets, Wrench, Flame, AlertTriangle, FileSignature } from "lucide-react";
+import { Phone, MapPin, Calendar, Hammer, Droplets, Wrench, Flame, AlertTriangle, FileSignature, Receipt, Landmark } from "lucide-react";
 import type { Lead, PipelineStage, JobType, LeadStatus } from "@/lib/types";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, hasIncompleteBooking, isUninvoiced, isRotApplicationDue } from "@/lib/types";
 import { scoreLabel } from "@/lib/lead-scoring";
