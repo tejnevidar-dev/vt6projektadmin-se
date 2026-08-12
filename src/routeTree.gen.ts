@@ -34,6 +34,7 @@ import { Route as OffertNyRouteImport } from './routes/offert.ny'
 import { Route as KalkylLeadIdRouteImport } from './routes/kalkyl.$leadId'
 import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as EkonomiRotRouteImport } from './routes/ekonomi.rot'
 import { Route as EgenkontrollerInstruktionerRouteImport } from './routes/egenkontroller.instruktioner'
 import { Route as ApiSendSelfChecksRouteImport } from './routes/api/send-self-checks'
 import { Route as ApiProcessWorkOrderRouteImport } from './routes/api/process-work-order'
@@ -175,6 +176,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EkonomiRotRoute = EkonomiRotRouteImport.update({
+  id: '/ekonomi/rot',
+  path: '/ekonomi/rot',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EgenkontrollerInstruktionerRoute =
   EgenkontrollerInstruktionerRouteImport.update({
     id: '/instruktioner',
@@ -281,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
+  '/ekonomi/rot': typeof EkonomiRotRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
+  '/ekonomi/rot': typeof EkonomiRotRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
+  '/ekonomi/rot': typeof EkonomiRotRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
@@ -409,6 +418,7 @@ export interface FileRouteTypes {
     | '/api/process-work-order'
     | '/api/send-self-checks'
     | '/egenkontroller/instruktioner'
+    | '/ekonomi/rot'
     | '/email/unsubscribe'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/api/process-work-order'
     | '/api/send-self-checks'
     | '/egenkontroller/instruktioner'
+    | '/ekonomi/rot'
     | '/email/unsubscribe'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
@@ -492,6 +503,7 @@ export interface FileRouteTypes {
     | '/api/process-work-order'
     | '/api/send-self-checks'
     | '/egenkontroller/instruktioner'
+    | '/ekonomi/rot'
     | '/email/unsubscribe'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
@@ -534,6 +546,7 @@ export interface RootRouteChildren {
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
   ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
+  EkonomiRotRoute: typeof EkonomiRotRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   JobbJobIdRoute: typeof JobbJobIdRoute
   KalkylLeadIdRoute: typeof KalkylLeadIdRoute
@@ -730,6 +743,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ekonomi/rot': {
+      id: '/ekonomi/rot'
+      path: '/ekonomi/rot'
+      fullPath: '/ekonomi/rot'
+      preLoaderRoute: typeof EkonomiRotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/egenkontroller/instruktioner': {
       id: '/egenkontroller/instruktioner'
       path: '/instruktioner'
@@ -874,6 +894,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
   ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
+  EkonomiRotRoute: EkonomiRotRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   JobbJobIdRoute: JobbJobIdRoute,
   KalkylLeadIdRoute: KalkylLeadIdRoute,
