@@ -242,7 +242,7 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
           Att ansöka om ROT
         </div>
       )}
-      {isBooked && lead.bookingDate && (
+      {isBooked && lead.pipelineStage !== "slutford" && lead.bookingDate && (
         <div className="mt-2 flex items-center gap-1.5 rounded-md bg-warning px-2 py-1 text-[11px] font-bold text-warning-foreground shadow-sm">
           <Calendar className="h-3 w-3" />
           {new Date(lead.bookingDate).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}
