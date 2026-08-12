@@ -434,22 +434,28 @@ export async function updateLead(input: {
   jobType: JobType;
   notes: string;
   propertyId: string | null;
+  personalNumber?: string | null;
+  propertyDesignation?: string | null;
 }): Promise<Lead> {
   if (input.propertyId) {
-    const { error: propError } = await supabase
-      .from("properties")
-      .update({
-        address: input.address,
-        municipality: input.municipality,
-        region: input.region,
-        build_year: input.buildYear || null,
-        roof_type: input.roofType,
-        roof_age: input.buildYear ? new Date().getFullYear() - input.buildYear : null,
-      })
+    const propPatch: Record<string, unknown> = {
+      address: input.address,
+      municipality: input.municipality,
+      region: input.region,
+      build_year: input.buildYear || null,
+      roof_type: input.roofType,
+      roof_age: input.buildYear ? new Date().getFullYear() - input.buildYear : null,
+    };
+    if (input.propertyDesignation !== undefined) {
+      propPatch.property_designation = input.propertyDesignation || null;
+    }
+    const { error: propError } = await (supabase.from("properties") as any)
+      .update(propPatch)
       .eq("id", input.propertyId);
 
     if (propError) throw propError;
   }
+
 
   // Hämta gammalt status för att kunna logga
   const { data: prev } = await supabase.from("leads").select("status").eq("id", input.id).single();
