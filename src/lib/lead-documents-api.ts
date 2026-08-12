@@ -33,9 +33,20 @@ export async function fetchLeadDocuments(leadId: string): Promise<LeadDocument[]
   }));
 }
 
-export async function uploadLeadDocument(leadId: string, file: File): Promise<LeadDocument> {
+/** Filprefix som markerar att dokumentet är en faktura. */
+export const INVOICE_FOLDER = "faktura";
+
+export function isInvoiceDocument(doc: LeadDocument): boolean {
+  return doc.filePath.includes(`/${INVOICE_FOLDER}/`);
+}
+
+export async function uploadLeadDocument(
+  leadId: string,
+  file: File,
+  folder?: string,
+): Promise<LeadDocument> {
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const path = `${leadId}/${Date.now()}-${safeName}`;
+  const path = `${leadId}/${folder ? `${folder}/` : ""}${Date.now()}-${safeName}`;
   const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
     contentType: file.type || "application/octet-stream",
     upsert: false,

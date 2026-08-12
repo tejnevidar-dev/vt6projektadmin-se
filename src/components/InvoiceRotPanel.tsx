@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CalendarIcon, CheckCircle, ExternalLink, Landmark, Receipt } from "lucide-react";
+import { InvoiceUploadCard } from "@/components/InvoiceUploadCard";
 import { setLeadInvoiced, setLeadRotPaid } from "@/lib/leads-api";
 import { isRotApplicationDue, type Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -100,6 +101,7 @@ export function InvoiceRotPanel({ lead, onUpdated }: Props) {
             Markera som fakturerad
           </Button>
         )}
+        <InvoiceUploadCard leadId={lead.id} />
       </div>
 
       {hasRot && (
