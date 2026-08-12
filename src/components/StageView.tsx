@@ -20,7 +20,7 @@ import { waitForJobByLead, type JobWithLead } from "@/lib/jobs-api";
 import { listJobs } from "@/lib/jobs.functions";
 import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import type { Lead, PipelineStage, JobType } from "@/lib/types";
-import { PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS, JOB_TYPES, hasIncompleteBooking } from "@/lib/types";
+import { PIPELINE_STAGE_LABELS, JOB_TYPE_LABELS, JOB_TYPES, hasIncompleteBooking, leadMissingRotUnderlag } from "@/lib/types";
 import { KanbanSquare, Table as TableIcon, Search, X, UserCheck, UserPlus, AlertTriangle, Calendar } from "lucide-react";
 
 interface Props {
