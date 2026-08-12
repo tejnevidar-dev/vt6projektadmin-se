@@ -6,6 +6,7 @@ import {
   uploadLeadDocument,
   deleteLeadDocument,
   getLeadDocumentUrl,
+  isInvoiceDocument,
   type LeadDocument,
 } from "@/lib/lead-documents-api";
 
