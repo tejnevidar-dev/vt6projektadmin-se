@@ -162,6 +162,13 @@ function EkonomiRotPage() {
                   <Badge variant="destructive">Ej fakturerad</Badge>
                 )}
               </TableCell>
+              <TableCell className="max-w-[220px] text-sm">
+                {l.economyNote ? (
+                  <span className="whitespace-pre-wrap">{l.economyNote}</span>
+                ) : (
+                  <span className="text-muted-foreground">–</span>
+                )}
+              </TableCell>
               <TableCell className="text-right">
                 {variant === "invoice" ? (
                   <Button size="sm" variant="outline" disabled={busyId === l.id} onClick={() => markInvoiced(l)}>
