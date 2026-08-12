@@ -193,6 +193,21 @@ export async function updateLeadRotUnderlag(
 }
 
 
+/** Sparar en fri kommentar/notering till ekonomi på leaden. */
+export async function setLeadEconomyNote(id: string, note: string | null): Promise<void> {
+  const value = note && note.trim() ? note.trim() : null;
+  const { error } = await (supabase.from("leads") as any)
+    .update({ economy_note: value })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "updated",
+    value ? "Kommentar till ekonomi uppdaterad" : "Kommentar till ekonomi rensad",
+    { economy_note: value },
+  );
+}
+
 export async function deleteLead(id: string): Promise<void> {
   const { error } = await supabase.from("leads").delete().eq("id", id);
   if (error) throw error;
