@@ -460,19 +460,26 @@ export async function updateLead(input: {
   // Hämta gammalt status för att kunna logga
   const { data: prev } = await supabase.from("leads").select("status").eq("id", input.id).single();
 
-  const { data: lead, error: leadError } = await supabase
-    .from("leads")
-    .update({
-      name: input.name,
-      phone: input.phone,
-      age: input.age || null,
-      status: input.status,
-      job_type: input.jobType,
-      notes: input.notes,
-    })
+  const leadPatch: Record<string, unknown> = {
+    name: input.name,
+    phone: input.phone,
+    age: input.age || null,
+    status: input.status,
+    job_type: input.jobType,
+    notes: input.notes,
+  };
+  if (input.personalNumber !== undefined) {
+    leadPatch.personal_number = input.personalNumber
+      ? normalizePersonalNumber(input.personalNumber)
+      : null;
+  }
+
+  const { data: lead, error: leadError } = await (supabase.from("leads") as any)
+    .update(leadPatch)
     .eq("id", input.id)
     .select("*, property:properties(*)")
     .single();
+
 
   if (leadError) throw leadError;
   const flat = toFlatLead(lead as LeadWithProperty);
