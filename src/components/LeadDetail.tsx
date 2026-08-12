@@ -257,6 +257,15 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               </InfoRow>
             </div>
 
+            <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
+              <InfoRow icon={User} label="Personnummer">
+                <span className="font-medium">{lead.personalNumber || "—"}</span>
+              </InfoRow>
+              <InfoRow icon={FileText} label="Fastighetsbeteckning">
+                <span className="font-medium">{lead.propertyDesignation || "—"}</span>
+              </InfoRow>
+            </div>
+
             <InfoRow icon={MapPin} label="Adress"><span>{lead.address}</span></InfoRow>
 
             <div className="grid grid-cols-3 gap-4">
