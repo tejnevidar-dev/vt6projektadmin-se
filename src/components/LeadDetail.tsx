@@ -330,7 +330,9 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               <InvoiceRotPanel lead={lead} onUpdated={onUpdated} />
             )}
 
-            <EconomyNoteCard leadId={lead.id} note={lead.economyNote} onUpdated={onUpdated} />
+            {lead.pipelineStage === "slutford" && lead.rotEligible && (lead.rotAmount ?? 0) > 0 && (
+              <EconomyNoteCard leadId={lead.id} note={lead.economyNote} onUpdated={onUpdated} />
+            )}
 
             <LeadDocumentsCard leadId={lead.id} />
           </div>
