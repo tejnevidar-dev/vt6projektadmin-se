@@ -711,17 +711,23 @@ export type Database = {
           external_id: string | null
           foreman_name: string | null
           id: string
+          invoice_due_date: string | null
+          invoiced: boolean
+          invoiced_at: string | null
           job_type: Database["public"]["Enums"]["job_type"]
           last_contact: string | null
           name: string
           needs_offer: boolean
           notes: string | null
           offer_pdf_path: string | null
+          personal_number: string | null
           phone: string | null
           pipeline_stage: Database["public"]["Enums"]["pipeline_stage"]
           price: number | null
           property_id: string | null
           rot_amount: number | null
+          rot_applied_at: string | null
+          rot_eligible: boolean
           rot_paid: boolean
           score: number | null
           source: Database["public"]["Enums"]["lead_source"]
@@ -742,17 +748,23 @@ export type Database = {
           external_id?: string | null
           foreman_name?: string | null
           id?: string
+          invoice_due_date?: string | null
+          invoiced?: boolean
+          invoiced_at?: string | null
           job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
           name: string
           needs_offer?: boolean
           notes?: string | null
           offer_pdf_path?: string | null
+          personal_number?: string | null
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           price?: number | null
           property_id?: string | null
           rot_amount?: number | null
+          rot_applied_at?: string | null
+          rot_eligible?: boolean
           rot_paid?: boolean
           score?: number | null
           source?: Database["public"]["Enums"]["lead_source"]
@@ -773,17 +785,23 @@ export type Database = {
           external_id?: string | null
           foreman_name?: string | null
           id?: string
+          invoice_due_date?: string | null
+          invoiced?: boolean
+          invoiced_at?: string | null
           job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
           name?: string
           needs_offer?: boolean
           notes?: string | null
           offer_pdf_path?: string | null
+          personal_number?: string | null
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           price?: number | null
           property_id?: string | null
           rot_amount?: number | null
+          rot_applied_at?: string | null
+          rot_eligible?: boolean
           rot_paid?: boolean
           score?: number | null
           source?: Database["public"]["Enums"]["lead_source"]
