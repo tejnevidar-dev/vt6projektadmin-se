@@ -78,7 +78,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
     status: lead.status as LeadStatus,
     jobType: lead.jobType as JobType,
     notes: lead.notes,
+    personalNumber: lead.personalNumber ?? "",
+    propertyDesignation: lead.propertyDesignation ?? "",
   });
+
 
   const set = (field: string, value: string | number) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -174,7 +177,36 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             <Field label="Anteckningar">
               <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={3} />
             </Field>
+
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                ROT-underlag
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Personnummer">
+                  <Input
+                    value={form.personalNumber}
+                    onChange={(e) => set("personalNumber", e.target.value)}
+                    placeholder="ÅÅÅÅMMDD-XXXX"
+                  />
+                </Field>
+                <Field label="Fastighetsbeteckning">
+                  <Input
+                    value={form.propertyDesignation}
+                    onChange={(e) => set("propertyDesignation", e.target.value)}
+                    placeholder="T.ex. Norrtälje Tälje 1:2"
+                    disabled={!lead.propertyId}
+                  />
+                </Field>
+              </div>
+              {!lead.propertyId && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Fastighetsbeteckning kan sparas först när leaden har en kopplad fastighet/adress.
+                </p>
+              )}
+            </div>
           </div>
+
 
           <div className="mt-6 flex gap-3">
             <Button className="flex-1" onClick={handleSave} disabled={saving}>
