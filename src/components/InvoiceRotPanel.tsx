@@ -100,6 +100,7 @@ export function InvoiceRotPanel({ lead, onUpdated }: Props) {
             Markera som fakturerad
           </Button>
         )}
+        <InvoiceUploadCard leadId={lead.id} />
       </div>
 
       {hasRot && (
