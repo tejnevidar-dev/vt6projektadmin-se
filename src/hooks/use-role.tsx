@@ -8,7 +8,8 @@ export type AppRole =
   | "viewer"
   | "arbetsledare"
   | "hantverkare"
-  | "underentreprenor";
+  | "underentreprenor"
+  | "ekonomi";
 
 export type Side = "intern" | "extern";
 
@@ -43,6 +44,7 @@ export function useUserRoles() {
   }, [user?.id]);
 
   const isAdmin = roles.includes("admin");
+  const isEkonomi = roles.includes("ekonomi") || isAdmin;
   const isSaljare = roles.includes("saljare") || isAdmin;
   const isInternal = isAdmin || roles.some((r) => INTERNAL_ROLES.includes(r));
   const isExternal = isAdmin || roles.some((r) => EXTERNAL_ROLES.includes(r));
@@ -51,6 +53,7 @@ export function useUserRoles() {
     roles,
     loading,
     isAdmin,
+    isEkonomi,
     isSaljare,
     isInternal,
     isExternal,
