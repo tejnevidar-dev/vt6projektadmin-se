@@ -18,10 +18,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return (localStorage.getItem(STORAGE_KEY) as Side) || "extern";
   });
 
-  // När rollerna är laddade, se till att sidan matchar användarens behörighet
+  // Konton kan ha roller på båda sidorna (t.ex. säljare + hantverkare).
+  // Vi tvingar bara om sidan när användaren saknar behörighet till den valda.
+  const canSwitch = isAdmin || (isInternal && isExternal);
+
   useEffect(() => {
     if (loading) return;
-    if (isAdmin) return; // admin får välja fritt
+    if (canSwitch) return; // får välja fritt
     if (isInternal && !isExternal && side !== "intern") {
       setSideState("intern");
     } else if (isExternal && !isInternal && side !== "extern") {
@@ -30,7 +33,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       // Inga sidospecifika roller (t.ex. viewer) – visa extern som standard
       setSideState("extern");
     }
-  }, [loading, isAdmin, isInternal, isExternal, side]);
+  }, [loading, canSwitch, isInternal, isExternal, side]);
 
   const setSide = (s: Side) => {
     setSideState(s);
@@ -38,7 +41,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <WorkspaceContext.Provider value={{ side, setSide, canSwitch: isAdmin }}>
+    <WorkspaceContext.Provider value={{ side, setSide, canSwitch }}>
       {children}
     </WorkspaceContext.Provider>
   );
