@@ -17,6 +17,14 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -85,8 +93,23 @@ interface Invitation {
   created_at: string;
 }
 
-const roleLabel = (r: AppRole) =>
-  r === "admin" ? "Administratör" : r === "saljare" ? "Säljare" : r === "ekonomi" ? "Ekonomi" : "Viewer";
+const ROLE_LABELS: Record<AppRole, string> = {
+  admin: "Administratör",
+  saljare: "Säljare",
+  ekonomi: "Ekonomi",
+  arbetsledare: "Arbetsledare",
+  hantverkare: "Hantverkare",
+  underentreprenor: "Underentreprenör",
+  viewer: "Viewer",
+};
+
+/** Roller grupperade per arbetsyta så admin ser vilken sida rollen ger tillgång till. */
+const EXTERN_ROLES: AppRole[] = ["saljare"];
+const INTERN_ROLES: AppRole[] = ["arbetsledare", "hantverkare", "underentreprenor"];
+const OTHER_ROLES: AppRole[] = ["admin", "ekonomi", "viewer"];
+const ALL_ROLES: AppRole[] = [...OTHER_ROLES, ...EXTERN_ROLES, ...INTERN_ROLES];
+
+const roleLabel = (r: AppRole) => ROLE_LABELS[r] ?? r;
 
 const roleVariant = (r: AppRole): "default" | "secondary" | "outline" =>
   r === "admin" ? "default" : r === "saljare" || r === "ekonomi" ? "secondary" : "outline";
@@ -143,13 +166,41 @@ function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rolesLoading, isAdmin]);
 
-  const setMemberRole = async (userId: string, newRole: AppRole) => {
-    await supabase.from("user_roles").delete().eq("user_id", userId);
-    const { error } = await supabase
-      .from("user_roles")
-      .insert({ user_id: userId, role: newRole });
-    if (error) toast.error("Kunde inte uppdatera roll: " + error.message);
-    else toast.success("Roll uppdaterad");
+  /**
+   * Slår på/av en enskild roll. Ett konto kan ha flera roller samtidigt
+   * (t.ex. säljare på extern + hantverkare på intern). Vi rör aldrig
+   * användarens övriga roller, så en misslyckad ändring kan inte längre
+   * lämna kontot helt utan åtkomst.
+   */
+  const toggleMemberRole = async (userId: string, role: AppRole, enabled: boolean) => {
+    // Optimistisk uppdatering så UI:t inte hoppar tillbaka
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.id === userId
+          ? {
+              ...m,
+              roles: enabled
+                ? Array.from(new Set([...m.roles, role]))
+                : m.roles.filter((r) => r !== role),
+            }
+          : m,
+      ),
+    );
+
+    const { error } = enabled
+      ? await supabase.from("user_roles").upsert(
+          { user_id: userId, role },
+          { onConflict: "user_id,role", ignoreDuplicates: true },
+        )
+      : await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role);
+
+    if (error) {
+      toast.error("Kunde inte uppdatera roll: " + error.message);
+    } else {
+      toast.success(
+        enabled ? `${roleLabel(role)} tillagd` : `${roleLabel(role)} borttagen`,
+      );
+    }
     loadData();
   };
 
@@ -315,13 +366,6 @@ function AdminPage() {
                     </TableHeader>
                     <TableBody>
                       {members.map((m) => {
-                        const currentRole: AppRole = m.roles.includes("ekonomi")
-                          ? "ekonomi"
-                          : m.roles.includes("admin")
-                          ? "admin"
-                          : m.roles.includes("saljare")
-                          ? "saljare"
-                          : "viewer";
                         const isSelf = m.id === user?.id;
                         return (
                           <TableRow key={m.id}>
@@ -335,26 +379,63 @@ function AdminPage() {
                             </TableCell>
                             <TableCell className="text-muted-foreground">{m.email}</TableCell>
                             <TableCell>
-                              {isAdmin && !isSelf ? (
-                                <Select
-                                  value={m.roles.length ? currentRole : "viewer"}
-                                  onValueChange={(v) => setMemberRole(m.id, v as AppRole)}
-                                >
-                                  <SelectTrigger className="h-8 w-40">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="admin">Administratör</SelectItem>
-                                    <SelectItem value="saljare">Säljare</SelectItem>
-                                    <SelectItem value="ekonomi">Ekonomi</SelectItem>
-                                    <SelectItem value="viewer">Viewer</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <Badge variant={roleVariant(currentRole)}>
-                                  {m.roles.length ? roleLabel(currentRole) : "Ingen åtkomst"}
-                                </Badge>
-                              )}
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                {m.roles.length === 0 ? (
+                                  <Badge variant="destructive">Ingen åtkomst</Badge>
+                                ) : (
+                                  m.roles.map((r) => (
+                                    <Badge key={r} variant={roleVariant(r)}>
+                                      {roleLabel(r)}
+                                    </Badge>
+                                  ))
+                                )}
+                                {isAdmin && !isSelf && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs">
+                                        Ändra roller
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className="w-56">
+                                      <DropdownMenuLabel>Gemensamt</DropdownMenuLabel>
+                                      {OTHER_ROLES.map((r) => (
+                                        <DropdownMenuCheckboxItem
+                                          key={r}
+                                          checked={m.roles.includes(r)}
+                                          onSelect={(e) => e.preventDefault()}
+                                          onCheckedChange={(v) => toggleMemberRole(m.id, r, !!v)}
+                                        >
+                                          {roleLabel(r)}
+                                        </DropdownMenuCheckboxItem>
+                                      ))}
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuLabel>Extern (sälj)</DropdownMenuLabel>
+                                      {EXTERN_ROLES.map((r) => (
+                                        <DropdownMenuCheckboxItem
+                                          key={r}
+                                          checked={m.roles.includes(r)}
+                                          onSelect={(e) => e.preventDefault()}
+                                          onCheckedChange={(v) => toggleMemberRole(m.id, r, !!v)}
+                                        >
+                                          {roleLabel(r)}
+                                        </DropdownMenuCheckboxItem>
+                                      ))}
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuLabel>Intern (personal)</DropdownMenuLabel>
+                                      {INTERN_ROLES.map((r) => (
+                                        <DropdownMenuCheckboxItem
+                                          key={r}
+                                          checked={m.roles.includes(r)}
+                                          onSelect={(e) => e.preventDefault()}
+                                          onCheckedChange={(v) => toggleMemberRole(m.id, r, !!v)}
+                                        >
+                                          {roleLabel(r)}
+                                        </DropdownMenuCheckboxItem>
+                                      ))}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                               {new Date(m.created_at).toLocaleDateString("sv-SE")}

@@ -46,22 +46,35 @@ export const refreshEmployeeAccount = createServerFn({ method: "POST" })
       }
     }
 
-    let signedOut = false;
-    if (targetUserId) {
-      try {
-        await supabaseAdmin.auth.admin.signOut(targetUserId, "global");
-        signedOut = true;
-      } catch {
-        /* signOut kan saknas i vissa versioner – inte kritiskt */
-      }
+    if (!targetUserId) {
+      throw new Error(
+        `Hittade inget konto med e-postadressen ${email}. Bjud in personen i stället.`,
+      );
     }
 
-    const { error: mailErr } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+    let signedOut = false;
+    try {
+      await supabaseAdmin.auth.admin.signOut(targetUserId, "global");
+      signedOut = true;
+    } catch {
+      /* signOut kan saknas i vissa versioner – inte kritiskt */
+    }
+
+    // Återställningsmailet måste skickas med den publika nyckeln – service
+    // role-klienten går inte genom Auth:s vanliga mailflöde.
+    const { createClient } = await import("@supabase/supabase-js");
+    const publicClient = createClient(
+      process.env["SUPABASE_URL"]!,
+      process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_ANON_KEY"]!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+
+    const { error: mailErr } = await publicClient.auth.resetPasswordForEmail(email, {
       redirectTo: data.redirectTo,
     });
     if (mailErr) throw new Error(mailErr.message);
 
-    return { ok: true, foundUser: !!targetUserId, signedOut };
+    return { ok: true, foundUser: true, signedOut };
   });
 
 /**

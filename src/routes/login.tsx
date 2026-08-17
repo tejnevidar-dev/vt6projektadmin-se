@@ -94,16 +94,27 @@ function LoginPage() {
         .eq("user_id", uid);
       const userRoles = (roleRows ?? []).map((r: any) => r.role as AppRole);
 
-      if (!rolesAllowSide(userRoles, side)) {
+      // Ett konto kan ha roller på båda sidorna. Om vald sida inte passar
+      // men den andra gör det, byter vi bara arbetsyta i stället för att
+      // logga ut användaren.
+      const otherSide: Side = side === "intern" ? "extern" : "intern";
+      let targetSide: Side | null = null;
+      if (rolesAllowSide(userRoles, side)) targetSide = side;
+      else if (rolesAllowSide(userRoles, otherSide)) targetSide = otherSide;
+
+      if (!targetSide) {
         await signOut();
         setError(
-          side === "intern"
-            ? "Detta konto har inte tillgång till intern-sidan. Logga in som extern istället."
-            : "Detta konto har inte tillgång till extern-sidan. Logga in som intern istället."
+          userRoles.length === 0
+            ? "Kontot saknar behörighet i systemet. Be en administratör tilldela dig en roll."
+            : "Detta konto har ingen arbetsyta kopplad till sina roller. Kontakta en administratör."
         );
         return;
       }
 
+      if (typeof window !== "undefined") {
+        localStorage.setItem("vt6.workspace.side", targetSide);
+      }
       navigate({ to: "/" });
     } catch (err: any) {
       setError(err.message || "Något gick fel");
