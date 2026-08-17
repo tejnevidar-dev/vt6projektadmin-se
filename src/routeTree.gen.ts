@@ -15,6 +15,7 @@ import { Route as UppdateraKontoRouteImport } from './routes/uppdatera-konto'
 import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SeoRouteImport } from './routes/seo'
+import { Route as SaljdashRouteImport } from './routes/saljdash'
 import { Route as ProvisionRouteImport } from './routes/provision'
 import { Route as PrislistaRouteImport } from './routes/prislista'
 import { Route as PersonalRouteImport } from './routes/personal'
@@ -81,6 +82,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const SeoRoute = SeoRouteImport.update({
   id: '/seo',
   path: '/seo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SaljdashRoute = SaljdashRouteImport.update({
+  id: '/saljdash',
+  path: '/saljdash',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProvisionRoute = ProvisionRouteImport.update({
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/personal': typeof PersonalRoute
   '/prislista': typeof PrislistaRoute
   '/provision': typeof ProvisionRoute
+  '/saljdash': typeof SaljdashRoute
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/personal': typeof PersonalRoute
   '/prislista': typeof PrislistaRoute
   '/provision': typeof ProvisionRoute
+  '/saljdash': typeof SaljdashRoute
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
@@ -381,6 +389,7 @@ export interface FileRoutesById {
   '/personal': typeof PersonalRoute
   '/prislista': typeof PrislistaRoute
   '/provision': typeof ProvisionRoute
+  '/saljdash': typeof SaljdashRoute
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
@@ -428,6 +437,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/prislista'
     | '/provision'
+    | '/saljdash'
     | '/seo'
     | '/settings'
     | '/slutforda'
@@ -472,6 +482,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/prislista'
     | '/provision'
+    | '/saljdash'
     | '/seo'
     | '/settings'
     | '/slutforda'
@@ -517,6 +528,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/prislista'
     | '/provision'
+    | '/saljdash'
     | '/seo'
     | '/settings'
     | '/slutforda'
@@ -563,6 +575,7 @@ export interface RootRouteChildren {
   PersonalRoute: typeof PersonalRoute
   PrislistaRoute: typeof PrislistaRoute
   ProvisionRoute: typeof ProvisionRoute
+  SaljdashRoute: typeof SaljdashRoute
   SeoRoute: typeof SeoRoute
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
@@ -634,6 +647,13 @@ declare module '@tanstack/react-router' {
       path: '/seo'
       fullPath: '/seo'
       preLoaderRoute: typeof SeoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saljdash': {
+      id: '/saljdash'
+      path: '/saljdash'
+      fullPath: '/saljdash'
+      preLoaderRoute: typeof SaljdashRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/provision': {
@@ -927,6 +947,7 @@ const rootRouteChildren: RootRouteChildren = {
   PersonalRoute: PersonalRoute,
   PrislistaRoute: PrislistaRoute,
   ProvisionRoute: ProvisionRoute,
+  SaljdashRoute: SaljdashRoute,
   SeoRoute: SeoRoute,
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,
