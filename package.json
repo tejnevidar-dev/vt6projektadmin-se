@@ -104,9 +104,9 @@
     "vite": "^7.3.1",
     "vitest": "^4.1.10"
   },
-  "resolutions": {
-    "htmlparser2/entities": "4.5.0",
-    "dom-serializer/entities": "4.5.0",
-    "parse5/entities": "8.0.0"
-  }
+  "dependenciesMeta": {
+    "entities": {}
+  },
+  "trustedDependencies": []
 }
+
