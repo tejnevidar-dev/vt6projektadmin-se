@@ -158,13 +158,41 @@ function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rolesLoading, isAdmin]);
 
-  const setMemberRole = async (userId: string, newRole: AppRole) => {
-    await supabase.from("user_roles").delete().eq("user_id", userId);
-    const { error } = await supabase
-      .from("user_roles")
-      .insert({ user_id: userId, role: newRole });
-    if (error) toast.error("Kunde inte uppdatera roll: " + error.message);
-    else toast.success("Roll uppdaterad");
+  /**
+   * Slår på/av en enskild roll. Ett konto kan ha flera roller samtidigt
+   * (t.ex. säljare på extern + hantverkare på intern). Vi rör aldrig
+   * användarens övriga roller, så en misslyckad ändring kan inte längre
+   * lämna kontot helt utan åtkomst.
+   */
+  const toggleMemberRole = async (userId: string, role: AppRole, enabled: boolean) => {
+    // Optimistisk uppdatering så UI:t inte hoppar tillbaka
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.id === userId
+          ? {
+              ...m,
+              roles: enabled
+                ? Array.from(new Set([...m.roles, role]))
+                : m.roles.filter((r) => r !== role),
+            }
+          : m,
+      ),
+    );
+
+    const { error } = enabled
+      ? await supabase.from("user_roles").upsert(
+          { user_id: userId, role },
+          { onConflict: "user_id,role", ignoreDuplicates: true },
+        )
+      : await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role);
+
+    if (error) {
+      toast.error("Kunde inte uppdatera roll: " + error.message);
+    } else {
+      toast.success(
+        enabled ? `${roleLabel(role)} tillagd` : `${roleLabel(role)} borttagen`,
+      );
+    }
     loadData();
   };
 
