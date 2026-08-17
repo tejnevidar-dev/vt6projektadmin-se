@@ -112,6 +112,9 @@ export interface Lead {
   invoiceDueDate: string | null;
   rotAppliedAt: string | null;
   economyNote: string | null;
+  sellerId: string | null;
+  commissionRate: number | null;
+  completedAt: string | null;
 }
 
 /** True om en bokad lead saknar pris eller tilldelning (UE / arbetsledare). */
