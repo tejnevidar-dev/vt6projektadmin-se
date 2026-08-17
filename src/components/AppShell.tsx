@@ -116,7 +116,11 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
     return i.side === "both" || i.side === side;
   });
   const groups = Array.from(new Set(visibleNav.map((i) => i.group)));
-  const activeNav = visibleNav.find((i) => pathname === i.to || (i.to !== "/dashboard" && pathname.startsWith(i.to)));
+  const activeNav = visibleNav.find((i) =>
+    pathname === i.to ||
+    (i.to !== "/dashboard" && pathname.startsWith(i.to)) ||
+    (i.children ?? []).some((c) => pathname === c.to || pathname.startsWith(c.to + "/"))
+  );
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
 
   const sideLabel = side === "intern" ? "Intern" : "Extern";
