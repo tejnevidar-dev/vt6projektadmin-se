@@ -704,6 +704,8 @@ export type Database = {
           assigned_to: string | null
           assignment_type: string | null
           booking_date: string | null
+          commission_rate: number | null
+          completed_at: string | null
           contact_person_id: string | null
           created_at: string
           created_by: string | null
@@ -731,6 +733,7 @@ export type Database = {
           rot_eligible: boolean
           rot_paid: boolean
           score: number | null
+          seller_id: string | null
           source: Database["public"]["Enums"]["lead_source"]
           status: Database["public"]["Enums"]["lead_status"]
           subcontractor_name: string | null
@@ -742,6 +745,8 @@ export type Database = {
           assigned_to?: string | null
           assignment_type?: string | null
           booking_date?: string | null
+          commission_rate?: number | null
+          completed_at?: string | null
           contact_person_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -769,6 +774,7 @@ export type Database = {
           rot_eligible?: boolean
           rot_paid?: boolean
           score?: number | null
+          seller_id?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
           subcontractor_name?: string | null
@@ -780,6 +786,8 @@ export type Database = {
           assigned_to?: string | null
           assignment_type?: string | null
           booking_date?: string | null
+          commission_rate?: number | null
+          completed_at?: string | null
           contact_person_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -807,6 +815,7 @@ export type Database = {
           rot_eligible?: boolean
           rot_paid?: boolean
           score?: number | null
+          seller_id?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
           subcontractor_name?: string | null

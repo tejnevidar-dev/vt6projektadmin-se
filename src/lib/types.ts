@@ -112,6 +112,9 @@ export interface Lead {
   invoiceDueDate: string | null;
   rotAppliedAt: string | null;
   economyNote: string | null;
+  sellerId: string | null;
+  commissionRate: number | null;
+  completedAt: string | null;
 }
 
 /** True om en bokad lead saknar pris eller tilldelning (UE / arbetsledare). */
@@ -238,6 +241,9 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     invoiceDueDate: (lp as { invoice_due_date?: string | null }).invoice_due_date ?? null,
     rotAppliedAt: (lp as { rot_applied_at?: string | null }).rot_applied_at ?? null,
     economyNote: (lp as { economy_note?: string | null }).economy_note ?? null,
+    sellerId: (lp as { seller_id?: string | null }).seller_id ?? null,
+    commissionRate: (lp as { commission_rate?: number | null }).commission_rate ?? null,
+    completedAt: (lp as { completed_at?: string | null }).completed_at ?? null,
   };
 }
 

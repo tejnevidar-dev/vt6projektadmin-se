@@ -208,6 +208,25 @@ export async function setLeadEconomyNote(id: string, note: string | null): Promi
   );
 }
 
+/** Tilldelar säljare (och ev. avvikande provisionssats i %) på en affär. */
+export async function setLeadSeller(
+  id: string,
+  sellerId: string | null,
+  commissionRate?: number | null,
+  sellerName?: string,
+): Promise<void> {
+  const patch: Record<string, unknown> = { seller_id: sellerId };
+  if (commissionRate !== undefined) patch.commission_rate = commissionRate;
+  const { error } = await (supabase.from("leads") as any).update(patch).eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "assignment",
+    sellerId ? `Säljare: ${sellerName ?? "tilldelad"}` : "Säljare borttagen",
+    patch,
+  );
+}
+
 export async function deleteLead(id: string): Promise<void> {
   const { error } = await supabase.from("leads").delete().eq("id", id);
   if (error) throw error;

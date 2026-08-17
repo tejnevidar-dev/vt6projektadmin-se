@@ -20,6 +20,7 @@ import { waitForJobByLead } from "@/lib/jobs-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { InvoiceRotPanel } from "@/components/InvoiceRotPanel";
 import { EconomyNoteCard } from "@/components/EconomyNoteCard";
+import { SellerCard } from "@/components/SellerCard";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
@@ -325,6 +326,8 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             {lead.pipelineStage === "offererad" && (
               <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
             )}
+
+            <SellerCard lead={lead} onUpdated={() => onUpdated?.()} />
 
             {lead.pipelineStage === "slutford" && (
               <InvoiceRotPanel lead={lead} onUpdated={onUpdated} />
