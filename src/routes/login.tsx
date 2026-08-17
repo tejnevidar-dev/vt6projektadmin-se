@@ -51,10 +51,12 @@ function LoginPage() {
       });
   }, [invite]);
 
-  if (isAuthenticated) {
-    navigate({ to: "/valj-panel" });
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) navigate({ to: "/valj-panel" });
+  }, [isAuthenticated, navigate]);
+
+  if (isAuthenticated) return null;
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
