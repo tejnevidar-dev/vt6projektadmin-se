@@ -85,8 +85,23 @@ interface Invitation {
   created_at: string;
 }
 
-const roleLabel = (r: AppRole) =>
-  r === "admin" ? "Administratör" : r === "saljare" ? "Säljare" : r === "ekonomi" ? "Ekonomi" : "Viewer";
+const ROLE_LABELS: Record<AppRole, string> = {
+  admin: "Administratör",
+  saljare: "Säljare",
+  ekonomi: "Ekonomi",
+  arbetsledare: "Arbetsledare",
+  hantverkare: "Hantverkare",
+  underentreprenor: "Underentreprenör",
+  viewer: "Viewer",
+};
+
+/** Roller grupperade per arbetsyta så admin ser vilken sida rollen ger tillgång till. */
+const EXTERN_ROLES: AppRole[] = ["saljare"];
+const INTERN_ROLES: AppRole[] = ["arbetsledare", "hantverkare", "underentreprenor"];
+const OTHER_ROLES: AppRole[] = ["admin", "ekonomi", "viewer"];
+const ALL_ROLES: AppRole[] = [...OTHER_ROLES, ...EXTERN_ROLES, ...INTERN_ROLES];
+
+const roleLabel = (r: AppRole) => ROLE_LABELS[r] ?? r;
 
 const roleVariant = (r: AppRole): "default" | "secondary" | "outline" =>
   r === "admin" ? "default" : r === "saljare" || r === "ekonomi" ? "secondary" : "outline";
