@@ -157,7 +157,7 @@ function LoginPage() {
             {error && <p className="text-sm text-destructive">{error}</p>}
             {message && <p className="text-sm text-green-600">{message}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Vänta..." : isSignUp ? "Skapa konto" : `Logga in som ${side}`}
+              {loading ? "Vänta..." : isSignUp ? "Skapa konto" : "Logga in"}
             </Button>
           </form>
           {!invite && (
