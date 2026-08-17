@@ -358,13 +358,6 @@ function AdminPage() {
                     </TableHeader>
                     <TableBody>
                       {members.map((m) => {
-                        const currentRole: AppRole = m.roles.includes("ekonomi")
-                          ? "ekonomi"
-                          : m.roles.includes("admin")
-                          ? "admin"
-                          : m.roles.includes("saljare")
-                          ? "saljare"
-                          : "viewer";
                         const isSelf = m.id === user?.id;
                         return (
                           <TableRow key={m.id}>
@@ -378,26 +371,63 @@ function AdminPage() {
                             </TableCell>
                             <TableCell className="text-muted-foreground">{m.email}</TableCell>
                             <TableCell>
-                              {isAdmin && !isSelf ? (
-                                <Select
-                                  value={m.roles.length ? currentRole : "viewer"}
-                                  onValueChange={(v) => setMemberRole(m.id, v as AppRole)}
-                                >
-                                  <SelectTrigger className="h-8 w-40">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="admin">Administratör</SelectItem>
-                                    <SelectItem value="saljare">Säljare</SelectItem>
-                                    <SelectItem value="ekonomi">Ekonomi</SelectItem>
-                                    <SelectItem value="viewer">Viewer</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <Badge variant={roleVariant(currentRole)}>
-                                  {m.roles.length ? roleLabel(currentRole) : "Ingen åtkomst"}
-                                </Badge>
-                              )}
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                {m.roles.length === 0 ? (
+                                  <Badge variant="destructive">Ingen åtkomst</Badge>
+                                ) : (
+                                  m.roles.map((r) => (
+                                    <Badge key={r} variant={roleVariant(r)}>
+                                      {roleLabel(r)}
+                                    </Badge>
+                                  ))
+                                )}
+                                {isAdmin && !isSelf && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs">
+                                        Ändra roller
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className="w-56">
+                                      <DropdownMenuLabel>Gemensamt</DropdownMenuLabel>
+                                      {OTHER_ROLES.map((r) => (
+                                        <DropdownMenuCheckboxItem
+                                          key={r}
+                                          checked={m.roles.includes(r)}
+                                          onSelect={(e) => e.preventDefault()}
+                                          onCheckedChange={(v) => toggleMemberRole(m.id, r, !!v)}
+                                        >
+                                          {roleLabel(r)}
+                                        </DropdownMenuCheckboxItem>
+                                      ))}
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuLabel>Extern (sälj)</DropdownMenuLabel>
+                                      {EXTERN_ROLES.map((r) => (
+                                        <DropdownMenuCheckboxItem
+                                          key={r}
+                                          checked={m.roles.includes(r)}
+                                          onSelect={(e) => e.preventDefault()}
+                                          onCheckedChange={(v) => toggleMemberRole(m.id, r, !!v)}
+                                        >
+                                          {roleLabel(r)}
+                                        </DropdownMenuCheckboxItem>
+                                      ))}
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuLabel>Intern (personal)</DropdownMenuLabel>
+                                      {INTERN_ROLES.map((r) => (
+                                        <DropdownMenuCheckboxItem
+                                          key={r}
+                                          checked={m.roles.includes(r)}
+                                          onSelect={(e) => e.preventDefault()}
+                                          onCheckedChange={(v) => toggleMemberRole(m.id, r, !!v)}
+                                        >
+                                          {roleLabel(r)}
+                                        </DropdownMenuCheckboxItem>
+                                      ))}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">
                               {new Date(m.created_at).toLocaleDateString("sv-SE")}
