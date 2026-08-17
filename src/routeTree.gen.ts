@@ -16,6 +16,7 @@ import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SeoRouteImport } from './routes/seo'
 import { Route as SaljdashRouteImport } from './routes/saljdash'
+import { Route as ProvisionsoversiktRouteImport } from './routes/provisionsoversikt'
 import { Route as ProvisionRouteImport } from './routes/provision'
 import { Route as PrislistaRouteImport } from './routes/prislista'
 import { Route as PersonalRouteImport } from './routes/personal'
@@ -87,6 +88,11 @@ const SeoRoute = SeoRouteImport.update({
 const SaljdashRoute = SaljdashRouteImport.update({
   id: '/saljdash',
   path: '/saljdash',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProvisionsoversiktRoute = ProvisionsoversiktRouteImport.update({
+  id: '/provisionsoversikt',
+  path: '/provisionsoversikt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProvisionRoute = ProvisionRouteImport.update({
@@ -297,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/personal': typeof PersonalRoute
   '/prislista': typeof PrislistaRoute
   '/provision': typeof ProvisionRoute
+  '/provisionsoversikt': typeof ProvisionsoversiktRoute
   '/saljdash': typeof SaljdashRoute
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
@@ -342,6 +349,7 @@ export interface FileRoutesByTo {
   '/personal': typeof PersonalRoute
   '/prislista': typeof PrislistaRoute
   '/provision': typeof ProvisionRoute
+  '/provisionsoversikt': typeof ProvisionsoversiktRoute
   '/saljdash': typeof SaljdashRoute
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
@@ -389,6 +397,7 @@ export interface FileRoutesById {
   '/personal': typeof PersonalRoute
   '/prislista': typeof PrislistaRoute
   '/provision': typeof ProvisionRoute
+  '/provisionsoversikt': typeof ProvisionsoversiktRoute
   '/saljdash': typeof SaljdashRoute
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/prislista'
     | '/provision'
+    | '/provisionsoversikt'
     | '/saljdash'
     | '/seo'
     | '/settings'
@@ -482,6 +492,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/prislista'
     | '/provision'
+    | '/provisionsoversikt'
     | '/saljdash'
     | '/seo'
     | '/settings'
@@ -528,6 +539,7 @@ export interface FileRouteTypes {
     | '/personal'
     | '/prislista'
     | '/provision'
+    | '/provisionsoversikt'
     | '/saljdash'
     | '/seo'
     | '/settings'
@@ -575,6 +587,7 @@ export interface RootRouteChildren {
   PersonalRoute: typeof PersonalRoute
   PrislistaRoute: typeof PrislistaRoute
   ProvisionRoute: typeof ProvisionRoute
+  ProvisionsoversiktRoute: typeof ProvisionsoversiktRoute
   SaljdashRoute: typeof SaljdashRoute
   SeoRoute: typeof SeoRoute
   SettingsRoute: typeof SettingsRoute
@@ -654,6 +667,13 @@ declare module '@tanstack/react-router' {
       path: '/saljdash'
       fullPath: '/saljdash'
       preLoaderRoute: typeof SaljdashRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/provisionsoversikt': {
+      id: '/provisionsoversikt'
+      path: '/provisionsoversikt'
+      fullPath: '/provisionsoversikt'
+      preLoaderRoute: typeof ProvisionsoversiktRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/provision': {
@@ -947,6 +967,7 @@ const rootRouteChildren: RootRouteChildren = {
   PersonalRoute: PersonalRoute,
   PrislistaRoute: PrislistaRoute,
   ProvisionRoute: ProvisionRoute,
+  ProvisionsoversiktRoute: ProvisionsoversiktRoute,
   SaljdashRoute: SaljdashRoute,
   SeoRoute: SeoRoute,
   SettingsRoute: SettingsRoute,
