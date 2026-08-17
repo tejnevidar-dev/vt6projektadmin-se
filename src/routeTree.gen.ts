@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
+import { Route as ValjPanelRouteImport } from './routes/valj-panel'
 import { Route as UppdateraKontoRouteImport } from './routes/uppdatera-konto'
 import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -55,6 +56,11 @@ import { Route as ApiPublicHooksSendBookingRemindersRouteImport } from './routes
 const WebhookLogsRoute = WebhookLogsRouteImport.update({
   id: '/webhook-logs',
   path: '/webhook-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValjPanelRoute = ValjPanelRouteImport.update({
+  id: '/valj-panel',
+  path: '/valj-panel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UppdateraKontoRoute = UppdateraKontoRouteImport.update({
@@ -289,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
+  '/valj-panel': typeof ValjPanelRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
@@ -332,6 +339,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
+  '/valj-panel': typeof ValjPanelRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
@@ -377,6 +385,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
+  '/valj-panel': typeof ValjPanelRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
@@ -423,6 +432,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
+    | '/valj-panel'
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
@@ -466,6 +476,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
+    | '/valj-panel'
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
@@ -510,6 +521,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
+    | '/valj-panel'
     | '/webhook-logs'
     | '/api/ai-pitch'
     | '/api/process-work-order'
@@ -555,6 +567,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
   UppdateraKontoRoute: typeof UppdateraKontoRoute
+  ValjPanelRoute: typeof ValjPanelRoute
   WebhookLogsRoute: typeof WebhookLogsRoute
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
@@ -586,6 +599,13 @@ declare module '@tanstack/react-router' {
       path: '/webhook-logs'
       fullPath: '/webhook-logs'
       preLoaderRoute: typeof WebhookLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/valj-panel': {
+      id: '/valj-panel'
+      path: '/valj-panel'
+      fullPath: '/valj-panel'
+      preLoaderRoute: typeof ValjPanelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/uppdatera-konto': {
@@ -911,6 +931,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,
   UppdateraKontoRoute: UppdateraKontoRoute,
+  ValjPanelRoute: ValjPanelRoute,
   WebhookLogsRoute: WebhookLogsRoute,
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
