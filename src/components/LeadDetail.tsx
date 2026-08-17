@@ -327,7 +327,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
             )}
 
-            <SellerCard lead={lead} onUpdated={onUpdated} />
+            <SellerCard lead={lead} onUpdated={() => onUpdated?.()} />
 
             {lead.pipelineStage === "slutford" && (
               <InvoiceRotPanel lead={lead} onUpdated={onUpdated} />
