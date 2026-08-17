@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X, Calculator, CalendarDays, FileDown, TrendingUp, Landmark, BadgePercent, Trophy, Wallet } from "lucide-react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X, Calculator, CalendarDays, FileDown, TrendingUp, Landmark, Trophy } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type Side } from "@/hooks/use-role";
@@ -38,9 +38,18 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
     { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", side: "extern" },
     { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", side: "extern" },
     { to: "/kalender", label: "Kalender", icon: CalendarDays, group: "Arbeta", side: "extern" },
-    { to: "/provision", label: "Min provision", icon: BadgePercent, group: "Arbeta", side: "extern" },
-    { to: "/saljdash", label: "Säljdash", icon: Trophy, group: "Arbeta", side: "extern" },
-    { to: "/provisionsoversikt", label: "Provisionsöversikt", icon: Wallet, group: "Hantera", side: "extern", adminOnly: true },
+    {
+      to: "/saljdash",
+      label: "Säljpanel",
+      icon: Trophy,
+      group: "Arbeta",
+      side: "extern",
+      children: [
+        { to: "/saljdash", label: "Säljdash" },
+        { to: "/provision", label: "Min provision" },
+        ...(isAdmin ? [{ to: "/provisionsoversikt", label: "Provisionsöversikt" }] : []),
+      ],
+    },
 
     // Intern (personal)
     { to: "/jobb", label: "Projekt", icon: Hammer, group: "Arbeta", side: "intern" },
@@ -107,7 +116,11 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
     return i.side === "both" || i.side === side;
   });
   const groups = Array.from(new Set(visibleNav.map((i) => i.group)));
-  const activeNav = visibleNav.find((i) => pathname === i.to || (i.to !== "/dashboard" && pathname.startsWith(i.to)));
+  const activeNav = visibleNav.find((i) =>
+    pathname === i.to ||
+    (i.to !== "/dashboard" && pathname.startsWith(i.to)) ||
+    (i.children ?? []).some((c) => pathname === c.to || pathname.startsWith(c.to + "/"))
+  );
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
 
   const sideLabel = side === "intern" ? "Intern" : "Extern";
