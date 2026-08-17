@@ -39,6 +39,8 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
     { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", side: "extern" },
     { to: "/kalender", label: "Kalender", icon: CalendarDays, group: "Arbeta", side: "extern" },
     { to: "/provision", label: "Min provision", icon: BadgePercent, group: "Arbeta", side: "extern" },
+    { to: "/saljdash", label: "Säljdash", icon: Trophy, group: "Arbeta", side: "extern" },
+    { to: "/provisionsoversikt", label: "Provisionsöversikt", icon: Wallet, group: "Hantera", side: "extern", adminOnly: true },
 
     // Intern (personal)
     { to: "/jobb", label: "Projekt", icon: Hammer, group: "Arbeta", side: "intern" },
