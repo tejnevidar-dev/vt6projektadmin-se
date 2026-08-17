@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Tester (inloggningsflöde m.m.)
+    name: Enhetstester (inloggningsflöde m.m.)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,3 +26,37 @@ jobs:
 
       - name: Bygg (dev)
         run: bun run build:dev
+
+  e2e:
+    name: E2E-tester (Playwright, headless)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installera Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Installera beroenden
+        run: bun install --frozen-lockfile
+
+      - name: Installera Chromium
+        run: bunx playwright install --with-deps chromium
+
+      - name: Kör Playwright-tester
+        run: bun run test:e2e
+        env:
+          CI: "true"
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://example.supabase.co' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'public-anon-key' }}
+          VITE_SUPABASE_PROJECT_ID: ${{ vars.VITE_SUPABASE_PROJECT_ID || 'example' }}
+
+      - name: Ladda upp rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
