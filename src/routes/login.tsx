@@ -26,7 +26,6 @@ function LoginPage() {
   const { signIn, signUp, signOut, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { invite } = Route.useSearch();
-  const [side, setSide] = useState<Side>("extern");
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,12 +47,6 @@ function LoginPage() {
         if (data) {
           setInviteInfo(data as any);
           setEmail((data as any).email);
-          // Auto-välj sida baserat på inbjudningens roll
-          if (rolesAllowSide([(data as any).role as AppRole], "intern")) {
-            setSide("intern");
-          } else {
-            setSide("extern");
-          }
         } else {
           setError("Inbjudan är ogiltig eller har gått ut.");
         }
@@ -61,7 +54,7 @@ function LoginPage() {
   }, [invite]);
 
   if (isAuthenticated) {
-    navigate({ to: "/" });
+    navigate({ to: "/valj-panel" });
     return null;
   }
 
@@ -77,14 +70,15 @@ function LoginPage() {
         if (needsConfirmation) {
           setMessage("Kolla din e-post för att bekräfta kontot!");
         } else {
-          navigate({ to: "/" });
+          navigate({ to: "/valj-panel" });
         }
         return;
       }
 
       await signIn(email, password);
 
-      // Verifiera att kontot får logga in på vald sida
+      // Kontrollera att kontot har någon behörighet alls – valet av panel
+      // sker sedan på /valj-panel.
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) throw new Error("Kunde inte verifiera kontot.");
@@ -94,28 +88,13 @@ function LoginPage() {
         .eq("user_id", uid);
       const userRoles = (roleRows ?? []).map((r: any) => r.role as AppRole);
 
-      // Ett konto kan ha roller på båda sidorna. Om vald sida inte passar
-      // men den andra gör det, byter vi bara arbetsyta i stället för att
-      // logga ut användaren.
-      const otherSide: Side = side === "intern" ? "extern" : "intern";
-      let targetSide: Side | null = null;
-      if (rolesAllowSide(userRoles, side)) targetSide = side;
-      else if (rolesAllowSide(userRoles, otherSide)) targetSide = otherSide;
-
-      if (!targetSide) {
+      if (userRoles.length === 0) {
         await signOut();
-        setError(
-          userRoles.length === 0
-            ? "Kontot saknar behörighet i systemet. Be en administratör tilldela dig en roll."
-            : "Detta konto har ingen arbetsyta kopplad till sina roller. Kontakta en administratör."
-        );
+        setError("Kontot saknar behörighet i systemet. Be en administratör tilldela dig en roll.");
         return;
       }
 
-      if (typeof window !== "undefined") {
-        localStorage.setItem("vt6.workspace.side", targetSide);
-      }
-      navigate({ to: "/" });
+      navigate({ to: "/valj-panel" });
     } catch (err: any) {
       setError(err.message || "Något gick fel");
     } finally {
@@ -127,6 +106,7 @@ function LoginPage() {
     ({
       admin: "Administratör",
       saljare: "Säljare",
+      ekonomi: "Ekonomi",
       viewer: "Viewer",
       arbetsledare: "Arbetsledare",
       hantverkare: "Hantverkare",
@@ -147,37 +127,7 @@ function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Side selector */}
-          {!isSignUp && (
-            <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg border border-border bg-muted/40 p-1">
-              <button
-                type="button"
-                onClick={() => { setSide("extern"); setError(""); }}
-                className={cn(
-                  "flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  side === "extern"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Briefcase className="h-4 w-4" />
-                Extern
-              </button>
-              <button
-                type="button"
-                onClick={() => { setSide("intern"); setError(""); }}
-                className={cn(
-                  "flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  side === "intern"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <HardHat className="h-4 w-4" />
-                Intern
-              </button>
-            </div>
-          )}
+
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
