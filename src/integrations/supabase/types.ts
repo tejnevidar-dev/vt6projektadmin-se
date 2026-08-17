@@ -705,6 +705,7 @@ export type Database = {
           assignment_type: string | null
           booking_date: string | null
           commission_rate: number | null
+          completed_at: string | null
           contact_person_id: string | null
           created_at: string
           created_by: string | null
@@ -745,6 +746,7 @@ export type Database = {
           assignment_type?: string | null
           booking_date?: string | null
           commission_rate?: number | null
+          completed_at?: string | null
           contact_person_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -785,6 +787,7 @@ export type Database = {
           assignment_type?: string | null
           booking_date?: string | null
           commission_rate?: number | null
+          completed_at?: string | null
           contact_person_id?: string | null
           created_at?: string
           created_by?: string | null
