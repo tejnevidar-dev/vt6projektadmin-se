@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test:pdf": "bun run scripts/test-pdf-pipeline.ts"
+    "test:pdf": "bun run scripts/test-pdf-pipeline.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
