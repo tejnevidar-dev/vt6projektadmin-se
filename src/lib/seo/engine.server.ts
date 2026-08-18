@@ -18,6 +18,8 @@ import {
 import { crawlSite, SITE_ORIGIN } from "./crawler.server";
 import { ga4Status, runOrganicReport } from "./ga4.server";
 import { psiConfigured, runPsi } from "./psi.server";
+import { semrushConfigured } from "./semrush.server";
+
 import { inspectUrl, resolveSiteUrl, searchAnalytics, TARGET_SITE } from "../gsc.server";
 import type {
   ContentGap,
@@ -100,8 +102,17 @@ export async function dataSources(): Promise<DataSource[]> {
       required: ["PAGESPEED_API_KEY (valfritt men rekommenderat)"],
     },
     { id: "crawler", name: "Egen sitecrawler + sitemap", connected: true, detail: `Crawlar ${SITE_ORIGIN}`, required: [] },
-    { id: "serp", name: "Keyword/SERP/backlinks (extern)", connected: false, detail: "Ingen extern SEO-API ansluten. Sökvolym, backlinks, domain authority och konkurrentdata visas inte förrän en datakälla kopplas in.", required: ["API-nyckel för t.ex. Semrush/DataForSEO"] },
-    { id: "gbp", name: "Google Business Profile", connected: false, detail: "Ej ansluten. Krävs för lokal synlighet, kartvisningar och recensioner.", required: ["Google Business Profile-anslutning"] },
+    {
+      id: "serp",
+      name: "Semrush – keywords, backlinks, konkurrenter",
+      connected: semrushConfigured(),
+      detail: semrushConfigured()
+        ? "Ansluten. Sökvolym, keyword difficulty, backlinkprofil och konkurrenter hämtas live."
+        : "Ingen extern SEO-API ansluten. Sökvolym, backlinks och konkurrentdata visas inte förrän Semrush kopplas in.",
+      required: ["Semrush-anslutning"],
+    },
+    { id: "gbp", name: "Google Business Profile", connected: false, detail: "Ej ansluten. Det finns ingen Google Business Profile-connector i plattformen ännu – kräver egen OAuth-app mot Business Profile API.", required: ["Google Business Profile API (egen OAuth-app)"] },
+
   ];
 }
 

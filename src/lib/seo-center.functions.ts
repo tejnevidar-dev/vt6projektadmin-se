@@ -95,6 +95,27 @@ export const getSeoInsights = createServerFn({ method: "GET" })
     };
   });
 
+export const getSeoMarket = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { period?: SeoPeriodKey; database?: string } | undefined) => ({
+    period: (input?.period ?? "28d") as SeoPeriodKey,
+    database: (input?.database ?? "se").toLowerCase(),
+  }))
+  .handler(async ({ data, context }) => {
+    const sb = await assertAdmin(context);
+    const engine = await import("@/lib/seo/engine.server");
+    const { buildMarket } = await import("@/lib/seo/market.server");
+    const keywords = await engine.buildKeywords(sb, data.period, []);
+    return buildMarket(
+      keywords.rows
+        .slice()
+        .sort((a, b) => b.impressions - a.impressions)
+        .map((k) => ({ keyword: k.keyword, clicks: k.clicks, impressions: k.impressions, position: k.position })),
+      data.database,
+    );
+  });
+
+
 /* ---- lokala mål ---- */
 
 export const listLocalTargets = createServerFn({ method: "GET" })
