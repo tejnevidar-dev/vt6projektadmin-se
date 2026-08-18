@@ -1,47 +1,55 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { MousePointerClick, Eye, Percent, Gauge, RefreshCw, Search, FileText, ShieldCheck } from "lucide-react";
+import { Database, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell, RequireAuth } from "@/components/AppShell";
-import { useUserRoles } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getSeoOverview, type SeoRow, type SeoWeek } from "@/lib/seo.functions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUserRoles } from "@/hooks/use-role";
+import { SEO_PERIODS, type SeoPeriodKey } from "@/lib/seo/analysis";
+import type { OpportunityItem } from "@/lib/seo/types";
+import {
+  createSeoTask,
+  deleteLocalTarget,
+  deleteSeoTask,
+  getSeoInsights,
+  getSeoKeywords,
+  getSeoOverviewV2,
+  getSeoSources,
+  getSeoTechnical,
+  listLocalTargets,
+  listSeoTasks,
+  updateSeoTask,
+  upsertLocalTarget,
+} from "@/lib/seo-center.functions";
+import { OverviewTab } from "@/components/seo/OverviewTab";
+import { KeywordsTab } from "@/components/seo/KeywordsTab";
+import { OpportunitiesTab } from "@/components/seo/OpportunitiesTab";
+import { TechnicalTab } from "@/components/seo/TechnicalTab";
+import { GrowthTab } from "@/components/seo/GrowthTab";
+import { TasksTab } from "@/components/seo/TasksTab";
+import { Panel } from "@/components/seo/shared";
 
 export const Route = createFileRoute("/seo")({
   component: SeoPage,
   head: () => ({
     meta: [
-      { title: "SEO – roslagstak.se | admin.vt6" },
-      { name: "description", content: "Search Console-mått för roslagstak.se: klick, visningar, CTR, snittposition, indexering, toppsökningar och toppsidor per vecka." },
-      { property: "og:title", content: "SEO – roslagstak.se | admin.vt6" },
-      { property: "og:description", content: "Veckovis SEO-översikt från Google Search Console för roslagstak.se." },
+      { title: "SEO Command Center – roslagstak.se | admin.vt6" },
+      {
+        name: "description",
+        content:
+          "Datadriven SEO-panel för roslagstak.se: Search Console-mått, sökordsintelligens, möjlighetsmotor, teknisk revision, lokal SEO och uppgiftshantering.",
+      },
+      { property: "og:title", content: "SEO Command Center – roslagstak.se | admin.vt6" },
+      { property: "og:description", content: "Övervaka, analysera och förbättra webbplatsens organiska synlighet med riktig data." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
 });
-
-const nf = new Intl.NumberFormat("sv-SE");
-const pf = new Intl.NumberFormat("sv-SE", { style: "percent", maximumFractionDigits: 2 });
-const df = new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 1 });
-
-function fmtWeek(w: SeoWeek) {
-  const d = new Date(`${w.weekStart}T00:00:00Z`);
-  return d.toLocaleDateString("sv-SE", { day: "numeric", month: "short", timeZone: "UTC" });
-}
-
-function Delta({ current, previous, invert }: { current: number; previous: number | null | undefined; invert?: boolean }) {
-  if (previous == null || previous === 0) return null;
-  const diff = ((current - previous) / previous) * 100;
-  const good = invert ? diff < 0 : diff > 0;
-  return (
-    <span className={`text-xs font-medium ${good ? "text-success" : "text-destructive"}`}>
-      {diff > 0 ? "+" : ""}
-      {df.format(diff)} %
-    </span>
-  );
-}
 
 function SeoPage() {
   return (
@@ -53,259 +61,286 @@ function SeoPage() {
 
 function SeoGuard() {
   const { isAdmin, loading } = useUserRoles();
-  if (loading) {
+  if (loading)
     return (
-      <AppShell title="SEO – roslagstak.se">
+      <AppShell title="SEO Command Center">
         <div className="mx-auto max-w-7xl rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
           Kontrollerar behörighet…
         </div>
       </AppShell>
     );
-  }
-  if (!isAdmin) {
+  if (!isAdmin)
     return (
-      <AppShell title="SEO – roslagstak.se">
+      <AppShell title="SEO Command Center">
         <div className="mx-auto max-w-2xl rounded-lg border border-border bg-card p-8 text-center">
           <h2 className="text-lg font-semibold">Endast för administratörer</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Du saknar behörighet att se SEO-panelen.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">Du saknar behörighet att se SEO-panelen.</p>
         </div>
       </AppShell>
     );
-  }
-  return <SeoContent />;
+  return <SeoCenter />;
 }
 
-function SeoContent() {
-  const fetchOverview = useServerFn(getSeoOverview);
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ["seo-overview", 12],
-    queryFn: () => fetchOverview({ data: { weeks: 12 } }),
-    staleTime: 15 * 60 * 1000,
-    retry: false,
-  });
-
-  const maxClicks = Math.max(1, ...(data?.weeks ?? []).map((w) => w.clicks));
-  const maxImpr = Math.max(1, ...(data?.weeks ?? []).map((w) => w.impressions));
-
+function ErrorBox({ error }: { error: unknown }) {
+  if (!error) return null;
   return (
-    <AppShell
-      title="SEO – roslagstak.se"
-      description={
-        data
-          ? `Google Search Console · ${data.rangeStart} – ${data.rangeEnd}`
-          : "Google Search Console"
-      }
-      actions={
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-          Uppdatera
-        </Button>
-      }
-    >
-      <div className="mx-auto max-w-7xl space-y-6">
-        {error && (
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-            Kunde inte hämta Search Console-data: {(error as Error).message}
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            Hämtar Search Console-data…
-          </div>
-        )}
-
-        {data && (
-          <>
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-              {[
-                { label: "Klick", value: nf.format(data.totals.clicks), icon: MousePointerClick, delta: <Delta current={data.totals.clicks} previous={data.previousTotals?.clicks} /> },
-                { label: "Visningar", value: nf.format(data.totals.impressions), icon: Eye, delta: <Delta current={data.totals.impressions} previous={data.previousTotals?.impressions} /> },
-                { label: "CTR", value: pf.format(data.totals.ctr), icon: Percent, delta: <Delta current={data.totals.ctr} previous={data.previousTotals?.ctr} /> },
-                { label: "Snittposition", value: df.format(data.totals.position), icon: Gauge, delta: <Delta current={data.totals.position} previous={data.previousTotals?.position} invert /> },
-              ].map((s) => (
-                <div key={s.label} className="rounded-lg border border-border bg-card p-5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{s.label}</span>
-                    <s.icon className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="mt-3 flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">{s.value}</span>
-                    {s.delta}
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">Jämfört med föregående period</p>
-                </div>
-              ))}
-            </div>
-
-            <section className="rounded-lg border border-border bg-card p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold">Indexeringsstatus (startsidan)</h3>
-              </div>
-              {data.index.error ? (
-                <p className="text-sm text-muted-foreground">
-                  Indexeringsstatus kunde inte läsas: {data.index.error}
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                  {[
-                    ["Verdikt", data.index.verdict],
-                    ["Täckning", data.index.coverageState],
-                    ["Robots.txt", data.index.robotsTxtState],
-                    ["Indexering", data.index.indexingState],
-                    ["Hämtning", data.index.pageFetchState],
-                    ["Mobilanpassning", data.index.mobileVerdict],
-                    ["Googles kanoniska", data.index.googleCanonical],
-                    [
-                      "Senast crawlad",
-                      data.index.lastCrawlTime
-                        ? new Date(data.index.lastCrawlTime).toLocaleString("sv-SE")
-                        : null,
-                    ],
-                  ].map(([label, value]) => (
-                    <div key={label as string}>
-                      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-                      <div className="mt-1 break-words text-sm font-medium">
-                        {value ? (
-                          value === "PASS" ? (
-                            <Badge className="bg-success/15 text-success">{value}</Badge>
-                          ) : (
-                            String(value)
-                          )
-                        ) : (
-                          "—"
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className="rounded-lg border border-border bg-card p-5">
-              <h3 className="mb-4 font-semibold">Per vecka</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                      <th className="py-2 pr-4">Vecka</th>
-                      <th className="py-2 pr-4">Klick</th>
-                      <th className="py-2 pr-4">Visningar</th>
-                      <th className="py-2 pr-4">CTR</th>
-                      <th className="py-2">Snittposition</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.weeks.map((w) => (
-                      <tr key={w.weekStart} className="border-b border-border/60 last:border-0">
-                        <td className="py-2 pr-4 whitespace-nowrap font-medium">{fmtWeek(w)}</td>
-                        <td className="py-2 pr-4">
-                          <div className="flex items-center gap-2">
-                            <span className="w-10 tabular-nums">{nf.format(w.clicks)}</span>
-                            <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
-                              <div className="h-full bg-primary" style={{ width: `${(w.clicks / maxClicks) * 100}%` }} />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2 pr-4">
-                          <div className="flex items-center gap-2">
-                            <span className="w-14 tabular-nums">{nf.format(w.impressions)}</span>
-                            <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
-                              <div className="h-full bg-info" style={{ width: `${(w.impressions / maxImpr) * 100}%` }} />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2 pr-4 tabular-nums">{pf.format(w.ctr)}</td>
-                        <td className="py-2 tabular-nums">{df.format(w.position)}</td>
-                      </tr>
-                    ))}
-                    {data.weeks.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="py-6 text-center text-muted-foreground">
-                          Ingen rapporterad data för perioden.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              <RowTable title="Toppsökningar" icon={Search} rows={data.topQueries} />
-              <RowTable title="Toppsidor" icon={FileText} rows={data.topPages} linkify />
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              Källa: Google Search Console ({data.siteUrl}). Data släpar normalt 2–3 dagar och
-              lågvolymsökningar kan utelämnas av Google.
-            </p>
-          </>
-        )}
-      </div>
-    </AppShell>
+    <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+      {(error as Error).message}
+    </div>
   );
 }
 
-function RowTable({
-  title,
-  icon: Icon,
-  rows,
-  linkify,
-}: {
-  title: string;
-  icon: typeof Search;
-  rows: SeoRow[];
-  linkify?: boolean;
-}) {
+function Loading({ label }: { label: string }) {
+  return <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">{label}</div>;
+}
+
+function SeoCenter() {
+  const qc = useQueryClient();
+  const [period, setPeriod] = useState<SeoPeriodKey>("28d");
+  const [tab, setTab] = useState("overview");
+  const [maxPages, setMaxPages] = useState(40);
+
+  const fnSources = useServerFn(getSeoSources);
+  const fnOverview = useServerFn(getSeoOverviewV2);
+  const fnKeywords = useServerFn(getSeoKeywords);
+  const fnTechnical = useServerFn(getSeoTechnical);
+  const fnInsights = useServerFn(getSeoInsights);
+  const fnTargets = useServerFn(listLocalTargets);
+  const fnTasks = useServerFn(listSeoTasks);
+  const fnUpsertTarget = useServerFn(upsertLocalTarget);
+  const fnDeleteTarget = useServerFn(deleteLocalTarget);
+  const fnCreateTask = useServerFn(createSeoTask);
+  const fnUpdateTask = useServerFn(updateSeoTask);
+  const fnDeleteTask = useServerFn(deleteSeoTask);
+
+  const sources = useQuery({ queryKey: ["seo-sources"], queryFn: () => fnSources({}), staleTime: 10 * 60_000, retry: false });
+  const overview = useQuery({ queryKey: ["seo-overview", period], queryFn: () => fnOverview({ data: { period } }), staleTime: 10 * 60_000, retry: false });
+  const keywords = useQuery({
+    queryKey: ["seo-keywords", period],
+    queryFn: () => fnKeywords({ data: { period } }),
+    enabled: tab === "keywords",
+    staleTime: 10 * 60_000,
+    retry: false,
+  });
+  const technical = useQuery({
+    queryKey: ["seo-technical", maxPages],
+    queryFn: () => fnTechnical({ data: { maxPages } }),
+    enabled: tab === "technical",
+    staleTime: 30 * 60_000,
+    retry: false,
+  });
+  const insights = useQuery({
+    queryKey: ["seo-insights", period],
+    queryFn: () => fnInsights({ data: { period } }),
+    enabled: tab === "opportunities" || tab === "growth",
+    staleTime: 10 * 60_000,
+    retry: false,
+  });
+  const targets = useQuery({ queryKey: ["seo-targets"], queryFn: () => fnTargets({}), enabled: tab === "growth", retry: false });
+  const tasks = useQuery({ queryKey: ["seo-tasks"], queryFn: () => fnTasks({}), enabled: tab === "tasks", retry: false });
+
+  const invalidate = (keys: string[]) => keys.forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
+
+  const taskMutation = useMutation({
+    mutationFn: (o: OpportunityItem) =>
+      fnCreateTask({
+        data: {
+          title: o.title,
+          category: o.category,
+          priority: o.priority,
+          impact: o.impact,
+          difficulty: o.difficulty,
+          opportunity_score: o.score,
+          affected_url: o.url,
+          target_keyword: o.keywords[0] ?? null,
+          problem: o.why,
+          recommendation: o.action,
+          source: "engine",
+          source_key: o.id,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("Uppgift skapad");
+      invalidate(["seo-tasks"]);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const manualTask = useMutation({
+    mutationFn: (title: string) => fnCreateTask({ data: { title, category: "Manuell", source: "manual" } }),
+    onSuccess: () => invalidate(["seo-tasks"]),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const patchTask = useMutation({
+    mutationFn: (v: { id: string; status: string }) => fnUpdateTask({ data: v }),
+    onSuccess: () => invalidate(["seo-tasks"]),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeTask = useMutation({
+    mutationFn: (id: string) => fnDeleteTask({ data: { id } }),
+    onSuccess: () => invalidate(["seo-tasks"]),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const addTarget = useMutation({
+    mutationFn: (v: { service: string; locality: string; landing_url: string | null }) => fnUpsertTarget({ data: v }),
+    onSuccess: () => {
+      toast.success("Lokalt mål tillagt");
+      invalidate(["seo-targets", "seo-insights"]);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeTarget = useMutation({
+    mutationFn: (id: string) => fnDeleteTarget({ data: { id } }),
+    onSuccess: () => invalidate(["seo-targets", "seo-insights"]),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const refreshing = overview.isFetching || keywords.isFetching || insights.isFetching || technical.isFetching;
+
   return (
-    <section className="rounded-lg border border-border bg-card p-5">
-      <div className="mb-4 flex items-center gap-2">
-        <Icon className="h-4 w-4 text-primary" />
-        <h3 className="font-semibold">{title}</h3>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="py-2 pr-4">{linkify ? "Sida" : "Sökning"}</th>
-              <th className="py-2 pr-4">Klick</th>
-              <th className="py-2 pr-4">Visn.</th>
-              <th className="py-2 pr-4">CTR</th>
-              <th className="py-2">Pos.</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.key} className="border-b border-border/60 last:border-0">
-                <td className="max-w-[18rem] truncate py-2 pr-4">
-                  {linkify ? (
-                    <a href={r.key} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                      {r.key.replace(/^https?:\/\/[^/]+/, "") || "/"}
-                    </a>
-                  ) : (
-                    r.key
-                  )}
-                </td>
-                <td className="py-2 pr-4 tabular-nums">{nf.format(r.clicks)}</td>
-                <td className="py-2 pr-4 tabular-nums">{nf.format(r.impressions)}</td>
-                <td className="py-2 pr-4 tabular-nums">{pf.format(r.ctr)}</td>
-                <td className="py-2 tabular-nums">{df.format(r.position)}</td>
-              </tr>
+    <AppShell
+      title="SEO Command Center"
+      description={overview.data ? `${overview.data.siteUrl} · ${overview.data.rangeStart} – ${overview.data.rangeEnd}` : "Google Search Console"}
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-md border border-border p-0.5">
+            {SEO_PERIODS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setPeriod(p.key)}
+                className={`rounded px-2.5 py-1 text-xs font-medium transition ${period === p.key ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              >
+                {p.label}
+              </button>
             ))}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={5} className="py-6 text-center text-muted-foreground">
-                  Ingen rapporterad data.
-                </td>
-              </tr>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={refreshing}
+            onClick={() => invalidate(["seo-overview", "seo-keywords", "seo-insights", "seo-technical", "seo-sources"])}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            Uppdatera
+          </Button>
+        </div>
+      }
+    >
+      <div className="mx-auto max-w-[1400px] space-y-6">
+        <div className="flex flex-wrap gap-2">
+          {(sources.data ?? []).map((s) => (
+            <Badge
+              key={s.id}
+              variant="outline"
+              title={`${s.detail}${s.required.length ? ` · Krävs: ${s.required.join(", ")}` : ""}`}
+              className={s.connected ? "border-success/40 bg-success/10 text-success" : "border-border bg-muted text-muted-foreground"}
+            >
+              <Database className="mr-1 h-3 w-3" />
+              {s.name}: {s.connected ? "ansluten" : "ej ansluten"}
+            </Badge>
+          ))}
+        </div>
+
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="flex w-full flex-wrap justify-start">
+            <TabsTrigger value="overview">Översikt</TabsTrigger>
+            <TabsTrigger value="keywords">Sökord</TabsTrigger>
+            <TabsTrigger value="opportunities">Möjligheter</TabsTrigger>
+            <TabsTrigger value="technical">Teknisk SEO</TabsTrigger>
+            <TabsTrigger value="growth">Lokalt & innehåll</TabsTrigger>
+            <TabsTrigger value="tasks">Uppgifter</TabsTrigger>
+            <TabsTrigger value="sources">Datakällor</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="mt-6 space-y-4">
+            <ErrorBox error={overview.error} />
+            {overview.isLoading && <Loading label="Hämtar Search Console-data…" />}
+            {overview.data && <OverviewTab data={overview.data} />}
+          </TabsContent>
+
+          <TabsContent value="keywords" className="mt-6 space-y-4">
+            <ErrorBox error={keywords.error} />
+            {keywords.isLoading && <Loading label="Analyserar sökord…" />}
+            {keywords.data && <KeywordsTab data={keywords.data} />}
+          </TabsContent>
+
+          <TabsContent value="opportunities" className="mt-6 space-y-4">
+            <ErrorBox error={insights.error} />
+            {insights.isLoading && <Loading label="Beräknar möjligheter…" />}
+            {insights.data && (
+              <OpportunitiesTab items={insights.data.opportunities} onCreateTask={(o) => taskMutation.mutate(o)} creating={taskMutation.isPending} />
             )}
-          </tbody>
-        </table>
+          </TabsContent>
+
+          <TabsContent value="technical" className="mt-6 space-y-4">
+            <ErrorBox error={technical.error} />
+            {technical.isLoading && <Loading label="Crawlar webbplatsen…" />}
+            {technical.data && (
+              <TechnicalTab
+                data={technical.data}
+                crawling={technical.isFetching}
+                onRecrawl={(n) => {
+                  setMaxPages(n);
+                  qc.invalidateQueries({ queryKey: ["seo-technical"] });
+                }}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="growth" className="mt-6 space-y-4">
+            <ErrorBox error={insights.error} />
+            {insights.isLoading && <Loading label="Analyserar lokal SEO och innehåll…" />}
+            {insights.data && (
+              <GrowthTab
+                local={insights.data.local}
+                gaps={insights.data.gaps}
+                links={insights.data.links}
+                targets={(targets.data ?? []) as any[]}
+                busy={addTarget.isPending || removeTarget.isPending}
+                onAddTarget={(service, locality, landing) => addTarget.mutate({ service, locality, landing_url: landing || null })}
+                onDeleteTarget={(id) => removeTarget.mutate(id)}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="tasks" className="mt-6 space-y-4">
+            <ErrorBox error={tasks.error} />
+            {tasks.isLoading && <Loading label="Hämtar uppgifter…" />}
+            {tasks.data && (
+              <TasksTab
+                tasks={tasks.data}
+                busy={patchTask.isPending || removeTask.isPending || manualTask.isPending}
+                onCreate={(title) => manualTask.mutate(title)}
+                onUpdate={(id, status) => patchTask.mutate({ id, status })}
+                onDelete={(id) => removeTask.mutate(id)}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="sources" className="mt-6 space-y-4">
+            <Panel title="Datakällor" description="Panelen visar aldrig uppskattade eller påhittade siffror – saknas en källa markeras den som ej ansluten.">
+              <ul className="space-y-3">
+                {(sources.data ?? []).map((s) => (
+                  <li key={s.id} className="rounded-md border border-border p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{s.name}</span>
+                      <Badge variant="outline" className={s.connected ? "border-success/40 bg-success/10 text-success" : ""}>
+                        {s.connected ? "Ansluten" : "Datakälla ej ansluten"}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">{s.detail}</p>
+                    {s.required.length > 0 && <p className="mt-1 text-xs text-muted-foreground">Krävs: {s.required.join(", ")}</p>}
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          </TabsContent>
+        </Tabs>
       </div>
-    </section>
+    </AppShell>
   );
 }
