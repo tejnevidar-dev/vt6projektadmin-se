@@ -1,36 +1,16 @@
 /** Marknadsdata (Semrush) för SEO Command Center. */
 import { SITE_ORIGIN } from "./crawler.server";
+import type { MarketResponse } from "./types";
 import {
   backlinkProfile,
   domainOverview,
   keywordMetrics,
   organicCompetitors,
   semrushConfigured,
-  type SemrushBacklinks,
-  type SemrushDomain,
 } from "./semrush.server";
 
-export type MarketKeyword = {
-  keyword: string;
-  clicks: number;
-  impressions: number;
-  position: number;
-  volume: number | null;
-  difficulty: number | null;
-  cpc: number | null;
-};
+export type { MarketResponse };
 
-export type MarketResponse = {
-  connected: boolean;
-  reason?: string;
-  domain: string;
-  database: string;
-  overview?: SemrushDomain;
-  backlinks?: SemrushBacklinks;
-  competitors?: { domain: string; commonKeywords: number; organicKeywords: number; organicTraffic: number }[];
-  keywords?: MarketKeyword[];
-  fetchedAt: string;
-};
 
 export function siteDomain(): string {
   try {
