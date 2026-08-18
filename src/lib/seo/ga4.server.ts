@@ -34,14 +34,14 @@ export async function runOrganicReport(_startDate: string, _endDate: string): Pr
   const status = ga4Status();
   if (!status.connected) throw new Error(status.reason);
   const res = await fetch(
-    `https://connector-gateway.lovable.dev/google_analytics/v1beta/properties/${status.propertyId}:runReport`,
+    `https://analyticsdata.googleapis.com/v1beta/properties/${status.propertyId}:runReport`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env["LOVABLE_API_KEY"]}`,
-        "X-Connection-Api-Key": process.env["GOOGLE_ANALYTICS_API_KEY"]!,
+        Authorization: `Bearer ${process.env["GA4_ACCESS_TOKEN"]}`,
         "Content-Type": "application/json",
       },
+
       body: JSON.stringify({
         dateRanges: [{ startDate: _startDate, endDate: _endDate }],
         dimensions: [{ name: "sessionDefaultChannelGroup" }],
