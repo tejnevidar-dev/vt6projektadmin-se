@@ -1252,6 +1252,264 @@ export type Database = {
           },
         ]
       }
+      seo_competitors: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          label: string | null
+          notes: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          label?: string | null
+          notes?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          label?: string | null
+          notes?: string | null
+        }
+        Relationships: []
+      }
+      seo_daily_metrics: {
+        Row: {
+          clicks: number
+          created_at: string
+          ctr: number
+          dimension: string
+          id: number
+          impressions: number
+          key1: string
+          key2: string
+          metric_date: string
+          position: number
+          site_url: string
+        }
+        Insert: {
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          dimension: string
+          id?: number
+          impressions?: number
+          key1?: string
+          key2?: string
+          metric_date: string
+          position?: number
+          site_url: string
+        }
+        Update: {
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          dimension?: string
+          id?: number
+          impressions?: number
+          key1?: string
+          key2?: string
+          metric_date?: string
+          position?: number
+          site_url?: string
+        }
+        Relationships: []
+      }
+      seo_local_targets: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          landing_url: string | null
+          locality: string
+          service: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          landing_url?: string | null
+          locality: string
+          service: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          landing_url?: string | null
+          locality?: string
+          service?: string
+        }
+        Relationships: []
+      }
+      seo_page_audits: {
+        Row: {
+          canonical: string | null
+          fetched_at: string
+          h1: string[] | null
+          headings: Json
+          health_score: number | null
+          html_bytes: number | null
+          id: string
+          images_missing_alt: number
+          images_total: number
+          in_sitemap: boolean
+          internal_links_out: string[]
+          issues: Json
+          meta_description: string | null
+          psi: Json | null
+          robots: string | null
+          status_code: number | null
+          structured_data: string[]
+          title: string | null
+          url: string
+          word_count: number | null
+        }
+        Insert: {
+          canonical?: string | null
+          fetched_at?: string
+          h1?: string[] | null
+          headings?: Json
+          health_score?: number | null
+          html_bytes?: number | null
+          id?: string
+          images_missing_alt?: number
+          images_total?: number
+          in_sitemap?: boolean
+          internal_links_out?: string[]
+          issues?: Json
+          meta_description?: string | null
+          psi?: Json | null
+          robots?: string | null
+          status_code?: number | null
+          structured_data?: string[]
+          title?: string | null
+          url: string
+          word_count?: number | null
+        }
+        Update: {
+          canonical?: string | null
+          fetched_at?: string
+          h1?: string[] | null
+          headings?: Json
+          health_score?: number | null
+          html_bytes?: number | null
+          id?: string
+          images_missing_alt?: number
+          images_total?: number
+          in_sitemap?: boolean
+          internal_links_out?: string[]
+          issues?: Json
+          meta_description?: string | null
+          psi?: Json | null
+          robots?: string | null
+          status_code?: number | null
+          structured_data?: string[]
+          title?: string | null
+          url?: string
+          word_count?: number | null
+        }
+        Relationships: []
+      }
+      seo_sync_log: {
+        Row: {
+          finished_at: string | null
+          id: string
+          message: string | null
+          rows_written: number
+          source: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          finished_at?: string | null
+          id?: string
+          message?: string | null
+          rows_written?: number
+          source: string
+          started_at?: string
+          status: string
+        }
+        Update: {
+          finished_at?: string | null
+          id?: string
+          message?: string | null
+          rows_written?: number
+          source?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      seo_tasks: {
+        Row: {
+          affected_url: string | null
+          baseline: Json | null
+          category: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          difficulty: number
+          id: string
+          impact: number
+          opportunity_score: number
+          priority: string
+          problem: string | null
+          recommendation: string | null
+          source: string
+          source_key: string | null
+          status: string
+          target_keyword: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          affected_url?: string | null
+          baseline?: Json | null
+          category?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          difficulty?: number
+          id?: string
+          impact?: number
+          opportunity_score?: number
+          priority?: string
+          problem?: string | null
+          recommendation?: string | null
+          source?: string
+          source_key?: string | null
+          status?: string
+          target_keyword?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          affected_url?: string | null
+          baseline?: Json | null
+          category?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          difficulty?: number
+          id?: string
+          impact?: number
+          opportunity_score?: number
+          priority?: string
+          problem?: string | null
+          recommendation?: string | null
+          source?: string
+          source_key?: string | null
+          status?: string
+          target_keyword?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       signature_requests: {
         Row: {
           base_pdf_path: string
