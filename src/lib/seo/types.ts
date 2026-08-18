@@ -10,6 +10,20 @@ export type DataSource = {
   required: string[];
 };
 
+export type PsiScores = {
+  strategy: "mobile" | "desktop";
+  performance: number | null;
+  seo: number | null;
+  accessibility: number | null;
+  bestPractices: number | null;
+  lcp: number | null;
+  cls: number | null;
+  inp: number | null;
+  ttfb: number | null;
+  fieldData: boolean;
+  fetchedAt: string;
+};
+
 export type Totals = { clicks: number; impressions: number; ctr: number; position: number };
 
 export type SeriesPoint = { date: string; clicks: number; impressions: number; ctr: number; position: number };
@@ -42,7 +56,7 @@ export type OverviewResponse = {
   keywordMovement: { improved: number; declined: number; added: number; lost: number };
   index: IndexStatus;
   analytics: { connected: boolean; reason?: string; users?: number; sessions?: number; conversions?: number };
-  pagespeed: { connected: boolean; reason?: string; mobile?: unknown; desktop?: unknown };
+  pagespeed: { connected: boolean; reason?: string; mobile?: PsiScores; desktop?: PsiScores };
   alerts: SeoAlert[];
   fetchedAt: string;
 };

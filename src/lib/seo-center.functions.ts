@@ -57,7 +57,7 @@ export const getSeoTechnical = createServerFn({ method: "GET" })
     recrawl: input?.recrawl ?? false,
     maxPages: Math.min(Math.max(input?.maxPages ?? 40, 5), 120),
   }))
-  .handler(async ({ data, context }): Promise<TechnicalResponse | { cached: true; pages: unknown[] }> => {
+  .handler(async ({ data, context }): Promise<TechnicalResponse> => {
     const sb = await assertAdmin(context);
     const { buildTechnical } = await import("@/lib/seo/engine.server");
     return buildTechnical(sb, data.maxPages);
