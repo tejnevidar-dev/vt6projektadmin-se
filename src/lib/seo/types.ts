@@ -174,3 +174,43 @@ export type SeoTask = {
   created_at: string;
   updated_at: string;
 };
+
+export type MarketKeyword = {
+  keyword: string;
+  clicks: number;
+  impressions: number;
+  position: number;
+  volume: number | null;
+  difficulty: number | null;
+  cpc: number | null;
+};
+
+export type MarketBacklinks = {
+  authorityScore: number;
+  totalBacklinks: number;
+  referringDomains: number;
+  referringIps: number;
+  follow: number;
+  nofollow: number;
+  topDomains: { domain: string; authority: number; backlinks: number }[];
+};
+
+export type MarketOverview = {
+  domain: string;
+  organicKeywords: number;
+  organicTraffic: number;
+  organicCost: number;
+  adsKeywords: number;
+};
+
+export type MarketResponse = {
+  connected: boolean;
+  reason?: string;
+  domain: string;
+  database: string;
+  overview?: MarketOverview;
+  backlinks?: MarketBacklinks;
+  competitors?: { domain: string; commonKeywords: number; organicKeywords: number; organicTraffic: number }[];
+  keywords?: MarketKeyword[];
+  fetchedAt: string;
+};

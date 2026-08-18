@@ -1,5 +1,5 @@
 import { Link2, Search, TrendingUp, Users } from "lucide-react";
-import type { MarketResponse } from "@/lib/seo/market.server";
+import type { MarketResponse } from "@/lib/seo/types";
 import { CsvButton, Empty, NotConnected, Panel, StatCard, df, nf } from "@/components/seo/shared";
 
 export function MarketTab({ data }: { data: MarketResponse }) {
