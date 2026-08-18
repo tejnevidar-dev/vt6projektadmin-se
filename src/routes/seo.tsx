@@ -17,6 +17,7 @@ import {
   deleteSeoTask,
   getSeoInsights,
   getSeoKeywords,
+  getSeoMarket,
   getSeoOverviewV2,
   getSeoSources,
   getSeoTechnical,
@@ -31,6 +32,7 @@ import { OpportunitiesTab } from "@/components/seo/OpportunitiesTab";
 import { TechnicalTab } from "@/components/seo/TechnicalTab";
 import { GrowthTab } from "@/components/seo/GrowthTab";
 import { TasksTab } from "@/components/seo/TasksTab";
+import { MarketTab } from "@/components/seo/MarketTab";
 import { Panel } from "@/components/seo/shared";
 
 export const Route = createFileRoute("/seo")({
@@ -104,6 +106,7 @@ function SeoCenter() {
   const fnOverview = useServerFn(getSeoOverviewV2);
   const fnKeywords = useServerFn(getSeoKeywords);
   const fnTechnical = useServerFn(getSeoTechnical);
+  const fnMarket = useServerFn(getSeoMarket);
   const fnInsights = useServerFn(getSeoInsights);
   const fnTargets = useServerFn(listLocalTargets);
   const fnTasks = useServerFn(listSeoTasks);
@@ -134,6 +137,13 @@ function SeoCenter() {
     queryFn: () => fnInsights({ data: { period } }),
     enabled: tab === "opportunities" || tab === "growth",
     staleTime: 10 * 60_000,
+    retry: false,
+  });
+  const market = useQuery({
+    queryKey: ["seo-market", period],
+    queryFn: () => fnMarket({ data: { period, database: "se" } }),
+    enabled: tab === "market",
+    staleTime: 60 * 60_000,
     retry: false,
   });
   const targets = useQuery({ queryKey: ["seo-targets"], queryFn: () => fnTargets({}), enabled: tab === "growth", retry: false });
@@ -251,6 +261,7 @@ function SeoCenter() {
             <TabsTrigger value="keywords">Sökord</TabsTrigger>
             <TabsTrigger value="opportunities">Möjligheter</TabsTrigger>
             <TabsTrigger value="technical">Teknisk SEO</TabsTrigger>
+            <TabsTrigger value="market">Marknad & länkar</TabsTrigger>
             <TabsTrigger value="growth">Lokalt & innehåll</TabsTrigger>
             <TabsTrigger value="tasks">Uppgifter</TabsTrigger>
             <TabsTrigger value="sources">Datakällor</TabsTrigger>
@@ -289,6 +300,12 @@ function SeoCenter() {
                 }}
               />
             )}
+          </TabsContent>
+
+          <TabsContent value="market" className="mt-6 space-y-4">
+            <ErrorBox error={market.error} />
+            {market.isLoading && <Loading label="Hämtar Semrush-data…" />}
+            {market.data && <MarketTab data={market.data} />}
           </TabsContent>
 
           <TabsContent value="growth" className="mt-6 space-y-4">
