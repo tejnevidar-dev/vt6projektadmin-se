@@ -18,6 +18,8 @@ import {
 import { crawlSite, SITE_ORIGIN } from "./crawler.server";
 import { ga4Status, runOrganicReport } from "./ga4.server";
 import { psiConfigured, runPsi } from "./psi.server";
+import { semrushConfigured } from "./semrush.server";
+
 import { inspectUrl, resolveSiteUrl, searchAnalytics, TARGET_SITE } from "../gsc.server";
 import type {
   ContentGap,
