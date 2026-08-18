@@ -110,8 +110,8 @@ export function TechnicalTab({
                               <div className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">Rubrikstruktur</div>
                               <ul className="mb-3 space-y-0.5 text-sm">
                                 {p.headings.slice(0, 14).map((h, idx) => (
-                                  <li key={idx} style={{ paddingLeft: (h.level - 1) * 12 }} className="truncate text-muted-foreground">
-                                    <span className="mr-1 font-mono text-[10px]">H{h.level}</span>{h.text}
+                                  <li key={idx} style={{ paddingLeft: (Number(h.tag.replace(/\D/g, "")) - 1) * 12 }} className="truncate text-muted-foreground">
+                                    <span className="mr-1 font-mono uppercase text-[10px]">{h.tag}</span>{h.text}
                                   </li>
                                 ))}
                                 {!p.headings.length && <li className="text-muted-foreground">Inga rubriker hittades.</li>}
