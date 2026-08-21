@@ -315,6 +315,8 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               </div>
             )}
 
+            <SellerCard lead={lead} onUpdated={() => onUpdated?.()} />
+
             {!(lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford") && (
               <ContactPersonSection lead={lead} onSaved={onUpdated} />
             )}
@@ -327,7 +329,6 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               <OfferPdfCard leadId={lead.id} offerPdfPath={lead.offerPdfPath} onChanged={onUpdated} />
             )}
 
-            <SellerCard lead={lead} onUpdated={() => onUpdated?.()} />
 
             {lead.pipelineStage === "slutford" && (
               <InvoiceRotPanel lead={lead} onUpdated={onUpdated} />

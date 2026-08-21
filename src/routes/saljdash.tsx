@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useAuth } from "@/hooks/use-auth";
+import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
-import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
+import { fetchSaljare, setSellerProvisionRate, type Saljare } from "@/lib/saljare-api";
 import {
   PERIOD_LABELS,
   commissionFor,
@@ -17,10 +18,14 @@ import {
 import type { Lead } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Crown, Flame, Loader2, Medal, Target, TrendingUp, Trophy } from "lucide-react";
+import { toast } from "sonner";
+import { Crown, Flame, Loader2, Medal, Percent, Target, TrendingUp, Trophy } from "lucide-react";
+
 
 export const Route = createFileRoute("/saljdash")({
   component: () => (
@@ -56,6 +61,8 @@ interface Row {
 
 function SaljDashPage() {
   const { user } = useAuth();
+  const { isAdmin } = useUserRoles();
+
   const [period, setPeriod] = useState<PeriodKey>("month");
 
   const { data: leads = [], isLoading } = useQuery({ queryKey: ["leads"], queryFn: fetchLeads });
@@ -157,7 +164,10 @@ function SaljDashPage() {
           </CardContent>
         </Card>
 
+        {isAdmin && <ProvisionRatesCard sellers={sellers} rows={rows} />}
+
         <div className="grid gap-4 lg:grid-cols-2">
+
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Pipeline per säljare (prognos)</CardTitle>
@@ -251,6 +261,84 @@ function Stat({
         </div>
         <div className={`mt-2 truncate text-2xl font-bold ${highlight ? "text-primary" : ""}`}>{value}</div>
         {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProvisionRatesCard({ sellers, rows }: { sellers: Saljare[]; rows: Row[] }) {
+  const qc = useQueryClient();
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  const valueFor = (s: Saljare) =>
+    drafts[s.id] ?? (s.provision_rate != null ? String(s.provision_rate) : "");
+
+  const save = async (s: Saljare) => {
+    const raw = valueFor(s).trim().replace(",", ".");
+    const parsed = raw === "" ? null : Number(raw);
+    if (parsed != null && (!Number.isFinite(parsed) || parsed < 0 || parsed > 100)) {
+      toast.error("Ange en sats mellan 0 och 100");
+      return;
+    }
+    setSavingId(s.id);
+    try {
+      await setSellerProvisionRate(s, parsed);
+      await qc.invalidateQueries({ queryKey: ["saljare"] });
+      setDrafts((d) => {
+        const next = { ...d };
+        delete next[s.id];
+        return next;
+      });
+      toast.success(`Provisionssats sparad för ${s.display_name}`);
+    } catch {
+      toast.error("Kunde inte spara provisionssats");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const commissionById = new Map(rows.map((r) => [r.seller.id, r.commission]));
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Percent className="h-4 w-4 text-primary" /> Provisionssatser (admin)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Ange procentsats per säljare. Provisionen räknas ut automatiskt på ordervärde exkl. moms för slutförda affärer.
+        </p>
+        {sellers.map((s) => {
+          const dirty =
+            (drafts[s.id] ?? null) !== null &&
+            drafts[s.id] !== (s.provision_rate != null ? String(s.provision_rate) : "");
+          return (
+            <div key={s.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3">
+              <span className="min-w-0 flex-1 truncate font-medium">{s.display_name}</span>
+              <span className="text-sm text-muted-foreground">{kr(commissionById.get(s.id) ?? 0)}</span>
+              <div className="flex items-center gap-2">
+                <Input
+                  className="w-24"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={valueFor(s)}
+                  onChange={(e) => setDrafts((d) => ({ ...d, [s.id]: e.target.value }))}
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+                <Button size="sm" variant="outline" disabled={!dirty || savingId === s.id} onClick={() => save(s)}>
+                  {savingId === s.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Spara
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+        {sellers.length === 0 && (
+          <p className="py-4 text-sm text-muted-foreground">Inga säljare registrerade.</p>
+        )}
       </CardContent>
     </Card>
   );
