@@ -291,7 +291,7 @@ function SaljDashPage() {
           </TabsContent>
 
           <TabsContent value="mal" className="mt-4">
-            <GoalsTab leads={leads as Lead[]} sellers={saljare} isAdmin={isAdmin} />
+            <GoalsTab leads={leads as Lead[]} sellers={sellers} isAdmin={isAdmin} />
           </TabsContent>
 
           <TabsContent value="forlorade" className="mt-4">
