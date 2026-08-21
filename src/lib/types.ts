@@ -8,53 +8,120 @@ export type LeadSource = Database["public"]["Enums"]["lead_source"];
 export type JobType = Database["public"]["Enums"]["job_type"];
 export type PipelineStage = Database["public"]["Enums"]["pipeline_stage"];
 
-export const PIPELINE_STAGES: PipelineStage[] = ["inkommande_webb", "saljpanel", "offererad", "bokad", "pagaende", "slutford"];
+export const PIPELINE_STAGES: PipelineStage[] = [
+  "inkommande_webb",
+  "saljpanel",
+  "kontaktad",
+  "mote_bokat",
+  "mote_genomfort",
+  "offererad",
+  "offert_skickad",
+  "uppfoljning",
+  "forhandling",
+  "bokad",
+  "pagaende",
+  "slutford",
+  "forlorad",
+];
+
+/** Stegen som visas i säljarnas kanban (hela säljresan). */
+export const SALES_PIPELINE_STAGES: PipelineStage[] = [
+  "saljpanel",
+  "kontaktad",
+  "mote_bokat",
+  "mote_genomfort",
+  "offererad",
+  "offert_skickad",
+  "uppfoljning",
+  "forhandling",
+  "bokad",
+  "forlorad",
+];
+
+/** Steg som räknas som vunnen affär. */
+export const WON_STAGES: PipelineStage[] = ["bokad", "pagaende", "slutford"];
 
 export const PIPELINE_STAGE_LABELS: Record<PipelineStage, string> = {
   inkommande_webb: "Inkommande webb",
-  saljpanel: "admin.vt6 leads",
-  offererad: "Offerterade",
-  bokad: "Bokade",
+  saljpanel: "Nytt lead",
+  kontaktad: "Kontaktad",
+  mote_bokat: "Möte bokat",
+  mote_genomfort: "Möte genomfört",
+  offererad: "Offert skapas",
+  offert_skickad: "Offert skickad",
+  uppfoljning: "Uppföljning",
+  forhandling: "Förhandling",
+  bokad: "Vunnen – jobb bokat",
   pagaende: "Pågående",
   slutford: "Slutförda",
+  forlorad: "Förlorad",
 };
 
 // Next stage in the pipeline (null = end)
 export const NEXT_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null> = {
   inkommande_webb: "saljpanel",
-  saljpanel: "offererad",
-  offererad: "bokad",
+  saljpanel: "kontaktad",
+  kontaktad: "mote_bokat",
+  mote_bokat: "mote_genomfort",
+  mote_genomfort: "offererad",
+  offererad: "offert_skickad",
+  offert_skickad: "uppfoljning",
+  uppfoljning: "forhandling",
+  forhandling: "bokad",
   bokad: "pagaende",
   pagaende: "slutford",
   slutford: null,
+  forlorad: null,
 };
 
 export const PREVIOUS_PIPELINE_STAGE: Record<PipelineStage, PipelineStage | null> = {
   inkommande_webb: null,
   saljpanel: "inkommande_webb",
-  offererad: "saljpanel",
-  bokad: "offererad",
+  kontaktad: "saljpanel",
+  mote_bokat: "kontaktad",
+  mote_genomfort: "mote_bokat",
+  offererad: "mote_genomfort",
+  offert_skickad: "offererad",
+  uppfoljning: "offert_skickad",
+  forhandling: "uppfoljning",
+  bokad: "forhandling",
   pagaende: "bokad",
   slutford: "pagaende",
+  forlorad: "saljpanel",
 };
 
 export const PIPELINE_BACK_LABELS: Record<PipelineStage, string> = {
   inkommande_webb: "Tillbaka",
   saljpanel: "Tillbaka till Inkommande webb",
-  offererad: "Tillbaka till admin.vt6",
-  bokad: "Tillbaka till Offerterade",
+  kontaktad: "Tillbaka till Nytt lead",
+  mote_bokat: "Tillbaka till Kontaktad",
+  mote_genomfort: "Tillbaka till Möte bokat",
+  offererad: "Tillbaka till Möte genomfört",
+  offert_skickad: "Tillbaka till Offert skapas",
+  uppfoljning: "Tillbaka till Offert skickad",
+  forhandling: "Tillbaka till Uppföljning",
+  bokad: "Tillbaka till Förhandling",
   pagaende: "Tillbaka till Bokade",
   slutford: "Tillbaka till Pågående",
+  forlorad: "Återöppna lead",
 };
 
 export const PIPELINE_ACTION_LABELS: Record<PipelineStage, string> = {
-  inkommande_webb: "Flytta till admin.vt6",
-  saljpanel: "Flytta till Offerterade",
-  offererad: "Flytta till Bokade",
+  inkommande_webb: "Flytta till Nytt lead",
+  saljpanel: "Markera som Kontaktad",
+  kontaktad: "Boka möte",
+  mote_bokat: "Möte genomfört",
+  mote_genomfort: "Skapa offert",
+  offererad: "Markera offert skickad",
+  offert_skickad: "Flytta till Uppföljning",
+  uppfoljning: "Flytta till Förhandling",
+  forhandling: "Markera som Vunnen",
   bokad: "Flytta till Pågående",
   pagaende: "Markera som Slutförd",
   slutford: "Slutförd",
+  forlorad: "Förlorad",
 };
+
 
 export const JOB_TYPE_LABELS: Record<JobType, string> = {
   roof_replacement: "Takbyte",
