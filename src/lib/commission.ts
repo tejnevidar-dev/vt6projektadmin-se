@@ -8,11 +8,25 @@ export function netValue(lead: Lead): number {
   return (lead.price ?? 0) / (1 + VAT_RATE);
 }
 
-/** Provisionssats i procent: avvikande sats på affären, annars säljarens sats. */
+/** Inkommande lead: kommer från webb/import — säljaren har inte skaffat kunden själv. */
+export function isInboundLead(lead: Lead): boolean {
+  if (lead.source === "roslagstak" || lead.source === "csv_import") return true;
+  if (!lead.createdBy) return true;
+  if (lead.sellerId && lead.createdBy !== lead.sellerId) return true;
+  return false;
+}
+
+/**
+ * Provisionssats i procent:
+ * avvikande sats på affären, annars säljarens sats för egen kund resp. inkommande lead.
+ */
 export function commissionRateFor(lead: Lead, seller?: Saljare | null): number {
   if (lead.commissionRate != null) return lead.commissionRate;
-  return seller?.provision_rate ?? 0;
+  if (!seller) return 0;
+  if (isInboundLead(lead)) return seller.provision_rate_inbound ?? seller.provision_rate ?? 0;
+  return seller.provision_rate ?? 0;
 }
+
 
 /** Provisionsbelopp för en affär (ordervärde exkl. moms × sats). */
 export function commissionFor(lead: Lead, seller?: Saljare | null): number {
