@@ -28,7 +28,7 @@ export function salesInsights(leads: Lead[], costs: SourceCosts = {}, now = new 
 
   // 1. Dagens viktigaste aktiviteter
   const actions = todaysActions(leads, now);
-  const high = actions.filter((a) => a.priority === "high");
+  const high = actions.filter((a) => a.priority === "hog");
   if (high.length > 0) {
     out.push({
       id: "today-high",
