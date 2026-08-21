@@ -6,7 +6,10 @@ export interface Saljare {
   display_name: string;
   email: string;
   employment_type?: EmploymentType | null;
+  /** Provisionssats (%) för egenskaffade kunder. */
   provision_rate?: number | null;
+  /** Provisionssats (%) för inkommande leads (webb/import). */
+  provision_rate_inbound?: number | null;
   monthly_salary?: number | null;
 }
 
@@ -28,11 +31,19 @@ export async function fetchSaljare(): Promise<Saljare[]> {
   if (profErr) throw profErr;
 
   const emails = (profiles ?? []).map((p) => p.email).filter(Boolean) as string[];
-  let salaryByEmail: Record<string, { employment_type: EmploymentType; provision_rate: number | null; monthly_salary: number | null }> = {};
+  let salaryByEmail: Record<
+    string,
+    {
+      employment_type: EmploymentType;
+      provision_rate: number | null;
+      provision_rate_inbound: number | null;
+      monthly_salary: number | null;
+    }
+  > = {};
   if (emails.length > 0) {
     const { data: emps, error: empErr } = await supabase
       .from("employees")
-      .select("email, employment_type, provision_rate, monthly_salary")
+      .select("email, employment_type, provision_rate, provision_rate_inbound, monthly_salary")
       .in("email", emails);
     if (!empErr && emps) {
       salaryByEmail = Object.fromEntries(
@@ -49,15 +60,24 @@ export async function fetchSaljare(): Promise<Saljare[]> {
       email: p.email,
       employment_type: salary?.employment_type ?? null,
       provision_rate: salary?.provision_rate ?? null,
+      provision_rate_inbound: salary?.provision_rate_inbound ?? null,
       monthly_salary: salary?.monthly_salary ?? null,
     };
   });
 }
 
-/** Admin: sätter säljarens provisionssats (%) på personalposten (matchas via e-post). */
+
+export interface ProvisionRates {
+  /** Egen kund (säljaren har skaffat leaden själv). */
+  provision_rate?: number | null;
+  /** Inkommande lead (webb/import). */
+  provision_rate_inbound?: number | null;
+}
+
+/** Admin: sätter säljarens provisionssatser (%) på personalposten (matchas via e-post). */
 export async function setSellerProvisionRate(
   seller: Pick<Saljare, "display_name" | "email">,
-  rate: number | null,
+  rates: ProvisionRates,
 ): Promise<void> {
   const email = seller.email?.toLowerCase();
   if (!email) throw new Error("Säljaren saknar e-post");
@@ -72,7 +92,7 @@ export async function setSellerProvisionRate(
   if (existing) {
     const { error } = await supabase
       .from("employees")
-      .update({ provision_rate: rate } as any)
+      .update(rates as any)
       .eq("id", (existing as any).id);
     if (error) throw error;
     return;
@@ -82,8 +102,10 @@ export async function setSellerProvisionRate(
     full_name: seller.display_name,
     email,
     employment_type: "provisionsbaserad",
-    provision_rate: rate,
+    provision_rate: rates.provision_rate ?? null,
+    provision_rate_inbound: rates.provision_rate_inbound ?? null,
     active: true,
+
   } as any);
   if (error) throw error;
 }

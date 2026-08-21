@@ -266,33 +266,45 @@ function Stat({
   );
 }
 
+type RateField = "provision_rate" | "provision_rate_inbound";
+
 function ProvisionRatesCard({ sellers, rows }: { sellers: Saljare[]; rows: Row[] }) {
   const qc = useQueryClient();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
 
-  const valueFor = (s: Saljare) =>
-    drafts[s.id] ?? (s.provision_rate != null ? String(s.provision_rate) : "");
+  const keyOf = (s: Saljare, f: RateField) => `${s.id}:${f}`;
+  const stored = (s: Saljare, f: RateField) => (s[f] != null ? String(s[f]) : "");
+  const valueFor = (s: Saljare, f: RateField) => drafts[keyOf(s, f)] ?? stored(s, f);
+
+  const parse = (raw: string): number | null | undefined => {
+    const v = raw.trim().replace(",", ".");
+    if (v === "") return null;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < 0 || n > 100) return undefined;
+    return n;
+  };
 
   const save = async (s: Saljare) => {
-    const raw = valueFor(s).trim().replace(",", ".");
-    const parsed = raw === "" ? null : Number(raw);
-    if (parsed != null && (!Number.isFinite(parsed) || parsed < 0 || parsed > 100)) {
-      toast.error("Ange en sats mellan 0 och 100");
+    const own = parse(valueFor(s, "provision_rate"));
+    const inbound = parse(valueFor(s, "provision_rate_inbound"));
+    if (own === undefined || inbound === undefined) {
+      toast.error("Ange satser mellan 0 och 100");
       return;
     }
     setSavingId(s.id);
     try {
-      await setSellerProvisionRate(s, parsed);
+      await setSellerProvisionRate(s, { provision_rate: own, provision_rate_inbound: inbound });
       await qc.invalidateQueries({ queryKey: ["saljare"] });
       setDrafts((d) => {
         const next = { ...d };
-        delete next[s.id];
+        delete next[keyOf(s, "provision_rate")];
+        delete next[keyOf(s, "provision_rate_inbound")];
         return next;
       });
-      toast.success(`Provisionssats sparad för ${s.display_name}`);
+      toast.success(`Provisionssatser sparade för ${s.display_name}`);
     } catch {
-      toast.error("Kunde inte spara provisionssats");
+      toast.error("Kunde inte spara provisionssatser");
     } finally {
       setSavingId(null);
     }
@@ -309,30 +321,44 @@ function ProvisionRatesCard({ sellers, rows }: { sellers: Saljare[]; rows: Row[]
       </CardHeader>
       <CardContent className="space-y-2">
         <p className="text-sm text-muted-foreground">
-          Ange procentsats per säljare. Provisionen räknas ut automatiskt på ordervärde exkl. moms för slutförda affärer.
+          Två satser per säljare: <strong>egen kund</strong> (säljaren har skaffat leaden själv) och{" "}
+          <strong>inkommande lead</strong> (t.ex. via hemsidan). Provisionen räknas ut automatiskt på
+          ordervärde exkl. moms för slutförda affärer.
         </p>
         {sellers.map((s) => {
           const dirty =
-            (drafts[s.id] ?? null) !== null &&
-            drafts[s.id] !== (s.provision_rate != null ? String(s.provision_rate) : "");
+            valueFor(s, "provision_rate") !== stored(s, "provision_rate") ||
+            valueFor(s, "provision_rate_inbound") !== stored(s, "provision_rate_inbound");
           return (
-            <div key={s.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3">
-              <span className="min-w-0 flex-1 truncate font-medium">{s.display_name}</span>
-              <span className="text-sm text-muted-foreground">{kr(commissionById.get(s.id) ?? 0)}</span>
-              <div className="flex items-center gap-2">
-                <Input
-                  className="w-24"
-                  inputMode="decimal"
-                  placeholder="0"
-                  value={valueFor(s)}
-                  onChange={(e) => setDrafts((d) => ({ ...d, [s.id]: e.target.value }))}
-                />
-                <span className="text-sm text-muted-foreground">%</span>
-                <Button size="sm" variant="outline" disabled={!dirty || savingId === s.id} onClick={() => save(s)}>
-                  {savingId === s.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Spara
-                </Button>
+            <div key={s.id} className="flex flex-wrap items-end gap-3 rounded-lg border border-border p-3">
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium">{s.display_name}</div>
+                <div className="text-sm text-muted-foreground">{kr(commissionById.get(s.id) ?? 0)}</div>
               </div>
+              {(
+                [
+                  ["provision_rate", "Egen kund"],
+                  ["provision_rate_inbound", "Inkommande lead"],
+                ] as [RateField, string][]
+              ).map(([field, label]) => (
+                <div key={field} className="space-y-1">
+                  <span className="text-xs text-muted-foreground">{label}</span>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      className="w-24"
+                      inputMode="decimal"
+                      placeholder="0"
+                      value={valueFor(s, field)}
+                      onChange={(e) => setDrafts((d) => ({ ...d, [keyOf(s, field)]: e.target.value }))}
+                    />
+                    <span className="text-sm text-muted-foreground">%</span>
+                  </div>
+                </div>
+              ))}
+              <Button size="sm" variant="outline" disabled={!dirty || savingId === s.id} onClick={() => save(s)}>
+                {savingId === s.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Spara
+              </Button>
             </div>
           );
         })}
@@ -343,3 +369,4 @@ function ProvisionRatesCard({ sellers, rows }: { sellers: Saljare[]; rows: Row[]
     </Card>
   );
 }
+
