@@ -61,8 +61,10 @@ function LeadsContent() {
   const [showAiDialog, setShowAiDialog] = useState(false);
   const [showChoiceDialog, setShowChoiceDialog] = useState(false);
   const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
-  const [view, setView] = useState<"kanban" | "pipeline" | "table">("kanban");
-  const [activePipeline, setActivePipeline] = useState<PipelineStage>("inkommande_webb");
+  const [view, setView] = useState<"kanban" | "table">("kanban");
+  const [stageFilter, setStageFilter] = useState<PipelineStage | "all">("all");
+  const [showFilters, setShowFilters] = useState(false);
+
 
   const loadLeads = useCallback(async () => {
     try {
@@ -119,6 +121,12 @@ function LeadsContent() {
     });
   }, [jobTypeLeads, search, region, municipality, statusFilter, assignedFilter, createdByFilter, needsOfferFilter]);
 
+  const stageLeads = useMemo(
+    () => (stageFilter === "all" ? filteredLeads : filteredLeads.filter((l) => l.pipelineStage === stageFilter)),
+    [filteredLeads, stageFilter]
+  );
+
+
   const resetFilters = () => {
     setSearch("");
     setRegion("");
@@ -161,15 +169,8 @@ function LeadsContent() {
           <KanbanSquare className="h-3.5 w-3.5" /> Board
         </button>
         <button
-          onClick={() => setView("pipeline")}
-          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
-            view === "pipeline" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <KanbanSquare className="h-3.5 w-3.5" /> Säljpipeline
-        </button>
-        <button
           onClick={() => setView("table")}
+
           className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
             view === "table" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           }`}
@@ -244,91 +245,78 @@ function LeadsContent() {
       <div className="space-y-6">
         <KpiCards leads={jobTypeLeads} />
 
-        <section className="rounded-xl border border-border/70 bg-card/40 shadow-[0_1px_0_0_color-mix(in_oklab,var(--foreground)_4%,transparent)]">
-          <div className="flex items-center justify-between border-b border-border/60 px-5 py-3">
+        <section className="rounded-xl border border-border/70 bg-card/40">
+          <button
+            onClick={() => setShowFilters((v) => !v)}
+            className="flex w-full items-center justify-between px-5 py-3 text-left"
+          >
             <div>
-              <h2 className="text-[13px] font-semibold text-foreground">Filter</h2>
-              <p className="text-[11.5px] text-muted-foreground">Förfina listan med region, kommun, status och fastighetsdata</p>
+              <h2 className="text-[13px] font-semibold text-foreground">Filter & sök</h2>
+              <p className="text-[11.5px] text-muted-foreground">Region, kommun, status, säljare</p>
             </div>
-          </div>
-          <div className="p-5">
-            <FilterPanel
-              search={search}
-              onSearchChange={setSearch}
-              region={region}
-              onRegionChange={setRegion}
-              municipality={municipality}
-              onMunicipalityChange={setMunicipality}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              assignedFilter={assignedFilter}
-              onAssignedFilterChange={setAssignedFilter}
-              createdByFilter={createdByFilter}
-              onCreatedByFilterChange={setCreatedByFilter}
-              needsOfferFilter={needsOfferFilter}
-              onNeedsOfferFilterChange={setNeedsOfferFilter}
-              onReset={resetFilters}
-            />
-          </div>
+            <span className="text-xs text-muted-foreground">{showFilters ? "Dölj" : "Visa"}</span>
+          </button>
+          {showFilters && (
+            <div className="border-t border-border/60 p-5">
+              <FilterPanel
+                search={search}
+                onSearchChange={setSearch}
+                region={region}
+                onRegionChange={setRegion}
+                municipality={municipality}
+                onMunicipalityChange={setMunicipality}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                assignedFilter={assignedFilter}
+                onAssignedFilterChange={setAssignedFilter}
+                createdByFilter={createdByFilter}
+                onCreatedByFilterChange={setCreatedByFilter}
+                needsOfferFilter={needsOfferFilter}
+                onNeedsOfferFilterChange={setNeedsOfferFilter}
+                onReset={resetFilters}
+              />
+            </div>
+          )}
         </section>
+
 
         <section className="rounded-xl border border-border/70 bg-card/40">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-3">
             <div>
-              <h2 className="text-[13px] font-semibold text-foreground">
-                {view === "table" ? "Lead-tabell" : view === "pipeline" ? "Säljpipeline" : "Pipeline"}
-              </h2>
+              <h2 className="text-[13px] font-semibold text-foreground">{view === "table" ? "Lead-tabell" : "Pipeline"}</h2>
               <p className="text-[11.5px] text-muted-foreground">
-                {loading
-                  ? "Laddar leads..."
-                  : `${filteredLeads.filter((l) => l.pipelineStage === activePipeline).length} av ${jobTypeLeads.filter((l) => l.pipelineStage === activePipeline).length} ${
-                      activeJobType === "all" ? "leads" : JOB_TYPE_LABELS[activeJobType].toLowerCase()
-                    }`}
+                {loading ? "Laddar leads..." : `${stageLeads.length} leads${stageFilter === "all" ? "" : ` i ${PIPELINE_STAGE_LABELS[stageFilter]}`}`}
               </p>
             </div>
-            <div className="flex flex-wrap gap-1 rounded-md border border-border bg-card/60 p-0.5">
-              {LEAD_VIEW_STAGES.map((stage) => {
-                const count = jobTypeLeads.filter((l) => l.pipelineStage === stage).length;
-                const label = STAGE_TAB_LABELS[stage] ?? PIPELINE_STAGE_LABELS[stage];
-                const active = activePipeline === stage;
-
-                return (
-                  <button
-                    key={stage}
-                    onClick={() => setActivePipeline(stage)}
-                    className={`flex items-center gap-1.5 rounded px-3 py-1 text-xs font-medium transition-colors ${
-                      active ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {label}
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${active ? "bg-primary-foreground/20" : "bg-muted"}`}>{count}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <select
+              value={stageFilter}
+              onChange={(e) => setStageFilter(e.target.value as PipelineStage | "all")}
+              className="h-8 rounded-md border border-border bg-card/60 px-2 text-xs text-foreground"
+            >
+              <option value="all">Alla steg ({jobTypeLeads.length})</option>
+              {LEAD_VIEW_STAGES.map((stage) => (
+                <option key={stage} value={stage}>
+                  {(STAGE_TAB_LABELS[stage] ?? PIPELINE_STAGE_LABELS[stage]) + ` (${jobTypeLeads.filter((l) => l.pipelineStage === stage).length})`}
+                </option>
+              ))}
+            </select>
           </div>
           <div className={view === "table" ? "" : "p-4"}>
-            {view === "pipeline" ? (
+            {view === "table" ? (
+              <LeadTable leads={stageLeads} onSelect={setSelectedLead} />
+            ) : (
               <div className="overflow-x-auto">
                 <LeadKanban
-                  leads={filteredLeads}
+                  leads={stageLeads}
                   onSelect={setSelectedLead}
                   onStageChange={handleStageChange}
-                  stages={SALES_PIPELINE_STAGES}
+                  stages={stageFilter === "all" ? LEAD_VIEW_STAGES : [stageFilter]}
                 />
               </div>
-            ) : view === "kanban" ? (
-              <LeadKanban
-                leads={filteredLeads.filter((l) => l.pipelineStage === activePipeline)}
-                onSelect={setSelectedLead}
-                onStageChange={handleStageChange}
-                stages={[activePipeline]}
-              />
-            ) : (
-              <LeadTable leads={filteredLeads.filter((l) => l.pipelineStage === activePipeline)} onSelect={setSelectedLead} />
             )}
           </div>
         </section>
+
       </div>
 
       {selectedLead && (
