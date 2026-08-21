@@ -121,6 +121,12 @@ function LeadsContent() {
     });
   }, [jobTypeLeads, search, region, municipality, statusFilter, assignedFilter, createdByFilter, needsOfferFilter]);
 
+  const stageLeads = useMemo(
+    () => (stageFilter === "all" ? filteredLeads : filteredLeads.filter((l) => l.pipelineStage === stageFilter)),
+    [filteredLeads, stageFilter]
+  );
+
+
   const resetFilters = () => {
     setSearch("");
     setRegion("");
