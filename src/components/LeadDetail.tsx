@@ -26,7 +26,7 @@ import { SellerCard } from "@/components/SellerCard";
 import { LostDealCard } from "@/components/LostDealCard";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
-import type { Lead, LeadStatus, JobType } from "@/lib/types";
+import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
 import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PREVIOUS_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_BACK_LABELS, PIPELINE_STAGE_LABELS, PIPELINE_STAGES } from "@/lib/types";
 
 interface LeadDetailProps {
