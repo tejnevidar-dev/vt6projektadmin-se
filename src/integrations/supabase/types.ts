@@ -831,6 +831,7 @@ export type Database = {
           lost_competitor: string | null
           lost_note: string | null
           lost_reason: Database["public"]["Enums"]["lost_reason"] | null
+          material_cost: number | null
           name: string
           needs_offer: boolean
           notes: string | null
@@ -877,6 +878,7 @@ export type Database = {
           lost_competitor?: string | null
           lost_note?: string | null
           lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
+          material_cost?: number | null
           name: string
           needs_offer?: boolean
           notes?: string | null
@@ -923,6 +925,7 @@ export type Database = {
           lost_competitor?: string | null
           lost_note?: string | null
           lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
+          material_cost?: number | null
           name?: string
           needs_offer?: boolean
           notes?: string | null
