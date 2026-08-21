@@ -21,6 +21,7 @@ import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { InvoiceRotPanel } from "@/components/InvoiceRotPanel";
 import { EconomyNoteCard } from "@/components/EconomyNoteCard";
 import { SellerCard } from "@/components/SellerCard";
+import { LostDealCard } from "@/components/LostDealCard";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
@@ -316,6 +317,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             )}
 
             <SellerCard lead={lead} onUpdated={() => onUpdated?.()} />
+
+            {(lead.pipelineStage === "forlorad" || lead.status === "lost") && (
+              <LostDealCard lead={lead} onUpdated={() => onUpdated?.()} />
+            )}
 
             {(lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford") && (
               <BookingSection lead={lead} onSaved={onUpdated} />
