@@ -28,7 +28,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { kr } from "@/lib/commission";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { kr, netValue, saleDate } from "@/lib/commission";
 import { delta, type Range } from "@/lib/sales-analytics";
 import {
   COMPARE_LABELS,
