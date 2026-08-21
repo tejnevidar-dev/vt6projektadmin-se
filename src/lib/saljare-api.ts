@@ -53,3 +53,37 @@ export async function fetchSaljare(): Promise<Saljare[]> {
     };
   });
 }
+
+/** Admin: sätter säljarens provisionssats (%) på personalposten (matchas via e-post). */
+export async function setSellerProvisionRate(
+  seller: Pick<Saljare, "display_name" | "email">,
+  rate: number | null,
+): Promise<void> {
+  const email = seller.email?.toLowerCase();
+  if (!email) throw new Error("Säljaren saknar e-post");
+
+  const { data: existing, error: findErr } = await supabase
+    .from("employees")
+    .select("id")
+    .ilike("email", email)
+    .maybeSingle();
+  if (findErr) throw findErr;
+
+  if (existing) {
+    const { error } = await supabase
+      .from("employees")
+      .update({ provision_rate: rate } as any)
+      .eq("id", (existing as any).id);
+    if (error) throw error;
+    return;
+  }
+
+  const { error } = await supabase.from("employees").insert({
+    full_name: seller.display_name,
+    email,
+    employment_type: "provisionsbaserad",
+    provision_rate: rate,
+    active: true,
+  } as any);
+  if (error) throw error;
+}
