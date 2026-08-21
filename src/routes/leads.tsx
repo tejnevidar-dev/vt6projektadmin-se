@@ -14,15 +14,23 @@ import { AiGenerateLeadsDialog } from "@/components/AiGenerateLeadsDialog";
 import { NewLeadChoiceDialog } from "@/components/NewLeadChoiceDialog";
 import { LeadKanban } from "@/components/LeadKanban";
 import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
-import type { Lead, LeadStatus, JobType } from "@/lib/types";
-import { JOB_TYPE_LABELS, SALES_PIPELINE_STAGES, leadMissingRotUnderlag } from "@/lib/types";
+import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
+import { JOB_TYPE_LABELS, PIPELINE_STAGE_LABELS, SALES_PIPELINE_STAGES, leadMissingRotUnderlag } from "@/lib/types";
 import { toast } from "sonner";
+
+/** Alla stadier som ska gå att se och filtrera på i leadvyn. */
+const LEAD_VIEW_STAGES: PipelineStage[] = ["inkommande_webb", ...SALES_PIPELINE_STAGES];
+
+const STAGE_TAB_LABELS: Partial<Record<PipelineStage, string>> = {
+  saljpanel: "admin.vt6 leads",
+};
 
 const JOB_TAB_ICONS: Record<JobType, typeof Hammer> = {
   roof_replacement: Hammer,
   roof_cleaning: Droplets,
   light_roof_work: Wrench,
 };
+
 
 export const Route = createFileRoute("/leads")({
   component: LeadsPage,
@@ -54,7 +62,7 @@ function LeadsContent() {
   const [showChoiceDialog, setShowChoiceDialog] = useState(false);
   const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
   const [view, setView] = useState<"kanban" | "pipeline" | "table">("kanban");
-  const [activePipeline, setActivePipeline] = useState<"inkommande_webb" | "saljpanel">("inkommande_webb");
+  const [activePipeline, setActivePipeline] = useState<PipelineStage>("inkommande_webb");
 
   const loadLeads = useCallback(async () => {
     try {
@@ -72,9 +80,10 @@ function LeadsContent() {
   }, [loadLeads]);
 
   const activeLeads = useMemo(
-    () => leads.filter((l) => l.pipelineStage === "inkommande_webb" || l.pipelineStage === "saljpanel"),
+    () => leads.filter((l) => LEAD_VIEW_STAGES.includes(l.pipelineStage)),
     [leads]
   );
+
 
   const jobTypeLeads = useMemo(
     () => (activeJobType === "all" ? activeLeads : activeLeads.filter((l) => l.jobType === activeJobType)),
@@ -277,11 +286,12 @@ function LeadsContent() {
                     }`}
               </p>
             </div>
-            <div className="flex rounded-md border border-border bg-card/60 p-0.5">
-              {(["inkommande_webb", "saljpanel"] as const).map((stage) => {
+            <div className="flex flex-wrap gap-1 rounded-md border border-border bg-card/60 p-0.5">
+              {LEAD_VIEW_STAGES.map((stage) => {
                 const count = jobTypeLeads.filter((l) => l.pipelineStage === stage).length;
-                const label = stage === "inkommande_webb" ? "Inkommande webb" : "admin.vt6 leads";
+                const label = STAGE_TAB_LABELS[stage] ?? PIPELINE_STAGE_LABELS[stage];
                 const active = activePipeline === stage;
+
                 return (
                   <button
                     key={stage}
