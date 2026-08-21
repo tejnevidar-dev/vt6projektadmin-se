@@ -67,10 +67,17 @@ export async function fetchSaljare(): Promise<Saljare[]> {
 }
 
 
-/** Admin: sätter säljarens provisionssats (%) på personalposten (matchas via e-post). */
+export interface ProvisionRates {
+  /** Egen kund (säljaren har skaffat leaden själv). */
+  provision_rate?: number | null;
+  /** Inkommande lead (webb/import). */
+  provision_rate_inbound?: number | null;
+}
+
+/** Admin: sätter säljarens provisionssatser (%) på personalposten (matchas via e-post). */
 export async function setSellerProvisionRate(
   seller: Pick<Saljare, "display_name" | "email">,
-  rate: number | null,
+  rates: ProvisionRates,
 ): Promise<void> {
   const email = seller.email?.toLowerCase();
   if (!email) throw new Error("Säljaren saknar e-post");
@@ -85,7 +92,7 @@ export async function setSellerProvisionRate(
   if (existing) {
     const { error } = await supabase
       .from("employees")
-      .update({ provision_rate: rate } as any)
+      .update(rates as any)
       .eq("id", (existing as any).id);
     if (error) throw error;
     return;
@@ -95,7 +102,10 @@ export async function setSellerProvisionRate(
     full_name: seller.display_name,
     email,
     employment_type: "provisionsbaserad",
-    provision_rate: rate,
+    provision_rate: rates.provision_rate ?? null,
+    provision_rate_inbound: rates.provision_rate_inbound ?? null,
+    active: true,
+
     active: true,
   } as any);
   if (error) throw error;
