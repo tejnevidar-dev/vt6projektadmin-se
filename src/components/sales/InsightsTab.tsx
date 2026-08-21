@@ -1,15 +1,24 @@
-import { useMemo } from "react";
-import { AlertTriangle, Info, Lightbulb, Sparkles, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
+import { AlertTriangle, Info, Lightbulb, Loader2, Sparkles, TrendingUp, Wand2 } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { salesInsights, type Insight } from "@/lib/sales-insights";
 import { readSourceCosts } from "@/lib/source-roi";
+import { generateAiInsights, type AiInsightsResult } from "@/lib/ai-insights.functions";
+import { daysSinceContact } from "@/lib/sales-actions";
+import { netValue } from "@/lib/commission";
+import { fetchOffers } from "@/lib/offer-intelligence";
 import type { Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface Props {
   leads: Lead[];
 }
+
 
 const TONE: Record<Insight["tone"], { icon: typeof Info; className: string; badge: string }> = {
   positive: { icon: TrendingUp, className: "border-success/40 bg-success/5", badge: "Möjlighet" },
