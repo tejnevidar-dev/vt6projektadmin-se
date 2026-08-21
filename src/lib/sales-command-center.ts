@@ -95,7 +95,6 @@ export function commandCenter(leads: Lead[], range: Range): CommandCenterMetrics
   const weighted = open.reduce((s, l) => s + netValue(l) * (STAGE_PROBABILITY[l.pipelineStage] ?? 0.3), 0);
 
   const meetings = created.filter((l) => reached(l, "mote_bokat")).length;
-  const contacted = created.filter((l) => reached(l, "kontaktad")).length;
   const offers = created.filter((l) => reached(l, "offert_skickad")).length;
   const won = created.filter(isWon).length;
   const lost = created.filter(isLost).length;
@@ -136,8 +135,6 @@ export function commandCenter(leads: Lead[], range: Range): CommandCenterMetrics
       avgCycleDays && avgCycleDays > 0
         ? Math.round((open.length * (avgOrderValue || 0) * (winRate / 100)) / avgCycleDays)
         : null,
-    // hjälpvärde för tratt
-    ...(contacted ? {} : {}),
   };
 }
 
