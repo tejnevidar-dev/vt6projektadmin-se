@@ -56,6 +56,7 @@ const pct = (n: number) => `${n.toFixed(0)} %`;
 export function CommandCenterTab({ leads, current, previous, periodLabel }: Props) {
   const [compare, setCompare] = useState<CompareMode>("month");
   const [goal, setGoal] = useState<number>(() => readMonthlyGoal());
+  const [drill, setDrill] = useState<PeriodBucket | null>(null);
 
   const now = useMemo(() => new Date(), []);
   const buckets = useMemo(() => salesBuckets(leads, now), [leads, now]);
