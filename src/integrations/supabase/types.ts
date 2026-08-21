@@ -380,6 +380,7 @@ export type Database = {
           personal_number: string | null
           phone: string | null
           provision_rate: number | null
+          provision_rate_inbound: number | null
           updated_at: string
           user_id: string | null
         }
@@ -398,6 +399,7 @@ export type Database = {
           personal_number?: string | null
           phone?: string | null
           provision_rate?: number | null
+          provision_rate_inbound?: number | null
           updated_at?: string
           user_id?: string | null
         }
@@ -416,6 +418,7 @@ export type Database = {
           personal_number?: string | null
           phone?: string | null
           provision_rate?: number | null
+          provision_rate_inbound?: number | null
           updated_at?: string
           user_id?: string | null
         }
