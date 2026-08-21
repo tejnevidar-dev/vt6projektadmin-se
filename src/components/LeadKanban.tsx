@@ -236,11 +236,19 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
           )}
         </div>
       )}
-      {lead.needsOffer && (
-        <div className="mt-2 flex items-center gap-1.5 rounded-md bg-warning px-2 py-1 text-[11px] font-bold text-warning-foreground shadow-sm">
+      {lead.offerAcceptedAt ? (
+        <div className="mt-2 flex items-center gap-1.5 rounded-md bg-info px-2 py-1 text-[11px] font-bold text-info-foreground shadow-sm">
           <FileSignature className="h-3 w-3" />
-          Att offertera
+          Godkänd offert ·{" "}
+          {new Date(lead.offerAcceptedAt).toLocaleDateString("sv-SE", { dateStyle: "short" })}
         </div>
+      ) : (
+        lead.needsOffer && (
+          <div className="mt-2 flex items-center gap-1.5 rounded-md bg-warning px-2 py-1 text-[11px] font-bold text-warning-foreground shadow-sm">
+            <FileSignature className="h-3 w-3" />
+            Att offertera
+          </div>
+        )
       )}
       {isUninvoiced(lead) && (
         <div className="mt-2 flex items-center gap-1.5 rounded-md bg-destructive/15 px-2 py-1 text-[11px] font-bold text-destructive shadow-sm">

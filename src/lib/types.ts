@@ -187,6 +187,8 @@ export interface Lead {
   score: number;
   bookingDate: string | null;
   price: number | null;
+  /** Materialkostnad (kr) – fylls i vid "Att offertera". */
+  materialCost: number | null;
   rotAmount: number | null;
   assignmentType: string | null;
   subcontractorName: string | null;
@@ -322,6 +324,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     score: (lp as { score?: number | null }).score ?? 0,
     bookingDate: (lp as { booking_date?: string | null }).booking_date ?? null,
     price: (lp as { price?: number | null }).price ?? null,
+    materialCost: (lp as { material_cost?: number | null }).material_cost ?? null,
     rotAmount: (lp as { rot_amount?: number | null }).rot_amount ?? null,
     assignmentType: (lp as { assignment_type?: string | null }).assignment_type ?? null,
     subcontractorName: (lp as { subcontractor_name?: string | null }).subcontractor_name ?? null,
