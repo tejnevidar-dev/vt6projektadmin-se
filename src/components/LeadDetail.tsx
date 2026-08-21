@@ -368,7 +368,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               const next = NEXT_PIPELINE_STAGE[lead.pipelineStage];
               const prev = PREVIOUS_PIPELINE_STAGE[lead.pipelineStage];
               const isDone = lead.pipelineStage === "slutford";
-              const move = async (target: typeof next) => {
+              const move = async (target: PipelineStage | null | undefined) => {
                 if (!target) return;
                 if (target === "bokad") {
                   setBookingFor({ from: lead.pipelineStage });
