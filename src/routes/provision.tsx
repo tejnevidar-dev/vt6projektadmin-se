@@ -6,17 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
 import { fetchSaljare } from "@/lib/saljare-api";
-import {
-  PERIOD_LABELS,
-  byMonth,
-  commissionFor,
-  commissionRateFor,
-  isInPeriod,
-  kr,
-  netValue,
-  summarize,
-  type PeriodKey,
-} from "@/lib/commission";
+import { PERIOD_LABELS, byMonth, commissionFor, commissionRateFor, isInPeriod, isSold, kr, netValue, saleDate, summarize, type PeriodKey } from "@/lib/commission";
 import type { Lead } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -79,15 +69,15 @@ function ProvisionPage() {
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return myLeads
-      .filter((l) => l.pipelineStage === "slutford" && isInPeriod(l, period))
+      .filter((l) => isSold(l) && isInPeriod(l, period))
       .filter((l) => !q || [l.name, l.address].some((v) => String(v ?? "").toLowerCase().includes(q)))
-      .sort((a, b) => String(b.completedAt ?? "").localeCompare(String(a.completedAt ?? "")));
+      .sort((a, b) => (saleDate(b)?.getTime() ?? 0) - (saleDate(a)?.getTime() ?? 0));
   }, [myLeads, period, search]);
 
   const openRows = useMemo(
     () =>
       myLeads
-        .filter((l) => l.pipelineStage !== "slutford" && (l.price ?? 0) > 0)
+        .filter((l) => !isSold(l) && (l.price ?? 0) > 0)
         .sort((a, b) => (b.price ?? 0) - (a.price ?? 0))
         .slice(0, 10),
     [myLeads],
@@ -185,7 +175,7 @@ function ProvisionPage() {
                         <div className="font-medium">{l.name}</div>
                         <div className="text-xs text-muted-foreground">{l.address}</div>
                       </TableCell>
-                      <TableCell>{dateStr(l.completedAt)}</TableCell>
+                      <TableCell>{dateStr(l.offerAcceptedAt ?? l.completedAt)}</TableCell>
                       <TableCell className="text-right">{kr(netValue(l))}</TableCell>
                       <TableCell className="text-right">{commissionRateFor(l, seller)} %</TableCell>
                       <TableCell className="text-right font-semibold">{kr(commissionFor(l, seller))}</TableCell>

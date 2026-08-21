@@ -1,5 +1,5 @@
 import type { Lead, LeadSource } from "@/lib/types";
-import { netValue } from "@/lib/commission";
+import { isSold, netValue, saleDate } from "@/lib/commission";
 
 const COST_KEY = "vt6:source-costs";
 
@@ -46,10 +46,10 @@ export function sourceRoi(leads: Lead[], costs: SourceCosts): SourceRoi[] {
 
   return [...map.entries()]
     .map(([source, rows]) => {
-      const won = rows.filter((l) => l.pipelineStage === "slutford");
+      const won = rows.filter(isSold);
       const lost = rows.filter((l) => l.pipelineStage === "forlorad" || l.status === "lost");
       const open = rows.filter(
-        (l) => l.pipelineStage !== "slutford" && l.pipelineStage !== "forlorad" && (l.price ?? 0) > 0,
+        (l) => !isSold(l) && l.pipelineStage !== "forlorad" && (l.price ?? 0) > 0,
       );
       const revenue = Math.round(won.reduce((s, l) => s + netValue(l), 0));
       const cost = Number(costs[source] ?? 0);
@@ -57,8 +57,8 @@ export function sourceRoi(leads: Lead[], costs: SourceCosts): SourceRoi[] {
 
       const cycles = won
         .map((l) =>
-          l.completedAt && l.createdAt
-            ? (new Date(l.completedAt).getTime() - new Date(l.createdAt).getTime()) / 86400000
+          saleDate(l) && l.createdAt
+            ? ((saleDate(l) as Date).getTime() - new Date(l.createdAt).getTime()) / 86400000
             : null,
         )
         .filter((n): n is number => n != null && n >= 0);
