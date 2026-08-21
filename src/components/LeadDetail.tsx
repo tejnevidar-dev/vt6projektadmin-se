@@ -20,6 +20,7 @@ import { waitForJobByLead } from "@/lib/jobs-api";
 import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { InvoiceRotPanel } from "@/components/InvoiceRotPanel";
 import { EconomyNoteCard } from "@/components/EconomyNoteCard";
+import { OfferAcceptedCard } from "@/components/OfferAcceptedCard";
 import { SellerCard } from "@/components/SellerCard";
 import { LostDealCard } from "@/components/LostDealCard";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
@@ -317,6 +318,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             )}
 
             <SellerCard lead={lead} onUpdated={() => onUpdated?.()} />
+
+            {lead.pipelineStage !== "forlorad" && lead.status !== "lost" && (
+              <OfferAcceptedCard lead={lead} onUpdated={() => onUpdated?.()} />
+            )}
 
             {(lead.pipelineStage === "forlorad" || lead.status === "lost") && (
               <LostDealCard lead={lead} onUpdated={() => onUpdated?.()} />
