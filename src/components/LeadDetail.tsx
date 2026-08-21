@@ -426,7 +426,29 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                       {PIPELINE_BACK_LABELS[lead.pipelineStage]}
                     </Button>
                   )}
+                  <div className="pt-1">
+                    <span className="mb-1 block text-[11px] font-medium text-muted-foreground">Flytta direkt till</span>
+                    <Select
+                      value={lead.pipelineStage}
+                      disabled={saving}
+                      onValueChange={(v) => {
+                        if (v !== lead.pipelineStage) move(v as PipelineStage);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PIPELINE_STAGES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {PIPELINE_STAGE_LABELS[s]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+
               );
             })()}
           </div>
