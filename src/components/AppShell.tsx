@@ -32,7 +32,19 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
     // Extern (sälj)
     { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", side: "extern" },
     { to: "/leads", label: "Leads", icon: Users, group: "Arbeta", side: "extern" },
-    { to: "/offerterade", label: "Offerterade", icon: ClipboardList, group: "Arbeta", side: "extern" },
+    {
+      to: "/offerterade",
+      label: "Offerter",
+      icon: ClipboardList,
+      group: "Arbeta",
+      side: "extern",
+      children: [
+        { to: "/offerterade", label: "Offert skapas" },
+        { to: "/offert-skickad", label: "Offert skickad" },
+        { to: "/uppfoljning", label: "Uppföljning" },
+        { to: "/forhandling", label: "Förhandling" },
+      ],
+    },
     { to: "/offert/ny", label: "Offert & Kalkyl", icon: FileDown, group: "Arbeta", side: "extern" },
     { to: "/bokade", label: "Bokade", icon: CalendarCheck, group: "Arbeta", side: "extern" },
     { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", side: "extern" },
