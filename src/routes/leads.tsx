@@ -239,33 +239,40 @@ function LeadsContent() {
       <div className="space-y-6">
         <KpiCards leads={jobTypeLeads} />
 
-        <section className="rounded-xl border border-border/70 bg-card/40 shadow-[0_1px_0_0_color-mix(in_oklab,var(--foreground)_4%,transparent)]">
-          <div className="flex items-center justify-between border-b border-border/60 px-5 py-3">
+        <section className="rounded-xl border border-border/70 bg-card/40">
+          <button
+            onClick={() => setShowFilters((v) => !v)}
+            className="flex w-full items-center justify-between px-5 py-3 text-left"
+          >
             <div>
-              <h2 className="text-[13px] font-semibold text-foreground">Filter</h2>
-              <p className="text-[11.5px] text-muted-foreground">Förfina listan med region, kommun, status och fastighetsdata</p>
+              <h2 className="text-[13px] font-semibold text-foreground">Filter & sök</h2>
+              <p className="text-[11.5px] text-muted-foreground">Region, kommun, status, säljare</p>
             </div>
-          </div>
-          <div className="p-5">
-            <FilterPanel
-              search={search}
-              onSearchChange={setSearch}
-              region={region}
-              onRegionChange={setRegion}
-              municipality={municipality}
-              onMunicipalityChange={setMunicipality}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              assignedFilter={assignedFilter}
-              onAssignedFilterChange={setAssignedFilter}
-              createdByFilter={createdByFilter}
-              onCreatedByFilterChange={setCreatedByFilter}
-              needsOfferFilter={needsOfferFilter}
-              onNeedsOfferFilterChange={setNeedsOfferFilter}
-              onReset={resetFilters}
-            />
-          </div>
+            <span className="text-xs text-muted-foreground">{showFilters ? "Dölj" : "Visa"}</span>
+          </button>
+          {showFilters && (
+            <div className="border-t border-border/60 p-5">
+              <FilterPanel
+                search={search}
+                onSearchChange={setSearch}
+                region={region}
+                onRegionChange={setRegion}
+                municipality={municipality}
+                onMunicipalityChange={setMunicipality}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                assignedFilter={assignedFilter}
+                onAssignedFilterChange={setAssignedFilter}
+                createdByFilter={createdByFilter}
+                onCreatedByFilterChange={setCreatedByFilter}
+                needsOfferFilter={needsOfferFilter}
+                onNeedsOfferFilterChange={setNeedsOfferFilter}
+                onReset={resetFilters}
+              />
+            </div>
+          )}
         </section>
+
 
         <section className="rounded-xl border border-border/70 bg-card/40">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-3">
