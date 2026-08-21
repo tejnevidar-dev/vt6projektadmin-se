@@ -29,6 +29,8 @@ export interface PeriodBucket {
   net: number;
   gross: number;
   deals: number;
+  /** Affärerna som ingår i perioden (för drill-down). */
+  rows: Lead[];
 }
 
 /** Försäljning idag / vecka / månad / kvartal / år (baserat på slutförandedatum). */
