@@ -575,3 +575,28 @@ export async function bulkDelete(leadIds: string[]): Promise<void> {
   const { error } = await supabase.from("leads").delete().in("id", leadIds);
   if (error) throw error;
 }
+
+/** Registrerar att kunden godkänt offerten (styr säljstatistiken), eller ångrar det. */
+export async function setLeadOfferAccepted(
+  id: string,
+  accepted: boolean,
+  acceptedDate?: string | null,
+): Promise<void> {
+  const iso = accepted
+    ? acceptedDate
+      ? new Date(`${acceptedDate}T12:00:00`).toISOString()
+      : new Date().toISOString()
+    : null;
+  const { error } = await (supabase.from("leads") as any)
+    .update({ offer_accepted_at: iso })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "updated",
+    accepted
+      ? `Offert godkänd av kund (${new Date(iso as string).toLocaleDateString("sv-SE")})`
+      : "Godkänd offert återställd",
+    { offer_accepted_at: iso },
+  );
+}
