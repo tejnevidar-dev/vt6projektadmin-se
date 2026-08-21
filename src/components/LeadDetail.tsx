@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer, setLeadRotPaid, setLeadContactPerson } from "@/lib/leads-api";
+import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer, setLeadRotPaid } from "@/lib/leads-api";
 import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
 import { useEffect } from "react";
 import { waitForJobByLead } from "@/lib/jobs-api";
@@ -316,10 +316,6 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             )}
 
             <SellerCard lead={lead} onUpdated={() => onUpdated?.()} />
-
-            {!(lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford") && (
-              <ContactPersonSection lead={lead} onSaved={onUpdated} />
-            )}
 
             {(lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford") && (
               <BookingSection lead={lead} onSaved={onUpdated} />
