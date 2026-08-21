@@ -15,7 +15,7 @@ import { NewLeadChoiceDialog } from "@/components/NewLeadChoiceDialog";
 import { LeadKanban } from "@/components/LeadKanban";
 import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
 import type { Lead, LeadStatus, JobType } from "@/lib/types";
-import { JOB_TYPE_LABELS, leadMissingRotUnderlag } from "@/lib/types";
+import { JOB_TYPE_LABELS, SALES_PIPELINE_STAGES, leadMissingRotUnderlag } from "@/lib/types";
 import { toast } from "sonner";
 
 const JOB_TAB_ICONS: Record<JobType, typeof Hammer> = {
