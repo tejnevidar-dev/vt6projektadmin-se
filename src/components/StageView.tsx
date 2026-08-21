@@ -400,6 +400,31 @@ function StageContent({ stage, description }: Props) {
       {selectedLead && (
         <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onUpdated={load} />
       )}
+
+      {offerValuesFor && (
+        <OfferValuesDialog
+          open
+          onOpenChange={(o) => !o && setOfferValuesFor(null)}
+          initialPrice={offerValuesFor.price}
+          initialMaterialCost={offerValuesFor.materialCost}
+          saving={savingOfferValues}
+          onConfirm={async ({ price, materialCost }) => {
+            const lead = offerValuesFor;
+            setSavingOfferValues(true);
+            try {
+              await setLeadOfferValues(lead.id, price, materialCost);
+              await updateLeadPipelineStage(lead.id, "offererad", lead.pipelineStage);
+              toast.success("Flyttad till Offert skapas");
+              setOfferValuesFor(null);
+              load();
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Kunde inte spara");
+            } finally {
+              setSavingOfferValues(false);
+            }
+          }}
+        />
+      )}
     </AppShell>
   );
 }
