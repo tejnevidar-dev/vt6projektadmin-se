@@ -15,7 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
+import { fetchLeads, updateLeadPipelineStage, setLeadOfferValues } from "@/lib/leads-api";
+import { OfferValuesDialog } from "@/components/OfferValuesDialog";
 import { waitForJobByLead, type JobWithLead } from "@/lib/jobs-api";
 import { listJobs } from "@/lib/jobs.functions";
 import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
@@ -40,6 +41,8 @@ function StageContent({ stage, description }: Props) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [offerValuesFor, setOfferValuesFor] = useState<Lead | null>(null);
+  const [savingOfferValues, setSavingOfferValues] = useState(false);
   const [view, setView] = useState<"kanban" | "table">("kanban");
   const [search, setSearch] = useState("");
   const [jobTypeFilter, setJobTypeFilter] = useState<JobType | "all">("all");
