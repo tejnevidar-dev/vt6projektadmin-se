@@ -106,7 +106,6 @@ export async function setSellerProvisionRate(
     provision_rate_inbound: rates.provision_rate_inbound ?? null,
     active: true,
 
-    active: true,
   } as any);
   if (error) throw error;
 }
