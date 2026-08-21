@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer, setLeadRotPaid } from "@/lib/leads-api";
+import { updateLead, updateLeadPipelineStage, updateLeadBooking, deleteLead, setLeadNeedsOffer, setLeadRotPaid, setLeadOfferValues } from "@/lib/leads-api";
 
 import { useEffect } from "react";
 import { waitForJobByLead } from "@/lib/jobs-api";
@@ -374,6 +374,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                   setBookingFor({ from: lead.pipelineStage });
                   return;
                 }
+                if (target === "offererad") {
+                  setOfferValuesOpen(true);
+                  return;
+                }
                 setSaving(true);
                 const toastId = toast.loading(
                   target === "pagaende" ? "Flyttar till Pågående…" : `Flyttar till ${PIPELINE_STAGE_LABELS[target]}…`
@@ -441,12 +445,8 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                 : ""
             )}
             onClick={async () => {
-              if (!lead.needsOffer) {
-                setOfferValuesOpen(true);
-                return;
-              }
               try {
-                await setLeadNeedsOffer(lead.id, false);
+                await setLeadNeedsOffer(lead.id, !lead.needsOffer);
                 onUpdated?.();
               } catch (err) {
                 console.error("Failed to toggle needs offer:", err);
@@ -467,10 +467,12 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               onConfirm={async ({ price, materialCost }) => {
                 setSavingOfferValues(true);
                 try {
-                  await setLeadNeedsOffer(lead.id, true, { price, materialCost });
-                  toast.success("Markerad som Att offertera");
+                  await setLeadOfferValues(lead.id, price, materialCost);
+                  await updateLeadPipelineStage(lead.id, "offererad", lead.pipelineStage);
+                  toast.success("Flyttad till Offert skapas");
                   setOfferValuesOpen(false);
                   onUpdated?.();
+                  onClose();
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : "Kunde inte spara");
                 } finally {

@@ -126,25 +126,34 @@ export async function updateLeadBooking(id: string, booking: BookingPatch): Prom
   await logActivity(id, "updated", `Bokning uppdaterad (${parts.join(", ")})`, booking as Record<string, unknown>);
 }
 
-export async function setLeadNeedsOffer(
-  id: string,
-  needsOffer: boolean,
-  values?: { price?: number | null; materialCost?: number | null },
-): Promise<void> {
-  const patch: Record<string, unknown> = { needs_offer: needsOffer };
-  if (values?.price !== undefined) patch.price = values.price;
-  if (values?.materialCost !== undefined) patch.material_cost = values.materialCost;
-  const { error } = await (supabase.from("leads") as any).update(patch).eq("id", id);
+export async function setLeadNeedsOffer(id: string, needsOffer: boolean): Promise<void> {
+  const { error } = await (supabase.from("leads") as any)
+    .update({ needs_offer: needsOffer })
+    .eq("id", id);
   if (error) throw error;
-  const extra =
-    needsOffer && values
-      ? ` (ordervärde ${values.price ?? "-"} kr, material ${values.materialCost ?? "-"} kr)`
-      : "";
   await logActivity(
     id,
     "updated",
-    (needsOffer ? "Markerad som Att offertera" : "Borttagen från Att offertera") + extra,
-    patch
+    needsOffer ? "Markerad som Att offertera" : "Borttagen från Att offertera",
+    { needs_offer: needsOffer }
+  );
+}
+
+/** Sparar ordervärde och materialkostnad (fylls i när leaden offereras). */
+export async function setLeadOfferValues(
+  id: string,
+  price: number,
+  materialCost: number,
+): Promise<void> {
+  const { error } = await (supabase.from("leads") as any)
+    .update({ price, material_cost: materialCost })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "updated",
+    `Ordervärde ${price.toLocaleString("sv-SE")} kr, materialkostnad ${materialCost.toLocaleString("sv-SE")} kr`,
+    { price, material_cost: materialCost }
   );
 }
 

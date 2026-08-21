@@ -15,7 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
+import { fetchLeads, updateLeadPipelineStage, setLeadOfferValues } from "@/lib/leads-api";
+import { OfferValuesDialog } from "@/components/OfferValuesDialog";
 import { waitForJobByLead, type JobWithLead } from "@/lib/jobs-api";
 import { listJobs } from "@/lib/jobs.functions";
 import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
@@ -40,6 +41,8 @@ function StageContent({ stage, description }: Props) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [offerValuesFor, setOfferValuesFor] = useState<Lead | null>(null);
+  const [savingOfferValues, setSavingOfferValues] = useState(false);
   const [view, setView] = useState<"kanban" | "table">("kanban");
   const [search, setSearch] = useState("");
   const [jobTypeFilter, setJobTypeFilter] = useState<JobType | "all">("all");
@@ -129,6 +132,13 @@ function StageContent({ stage, description }: Props) {
         toast.error(`Kan inte bokas – saknas: ${missing.join(", ")}`, {
           description: "Öppna leaden och fyll i ROT-underlaget innan bokning.",
         });
+        return;
+      }
+    }
+    if (newStage === "offererad") {
+      const lead = leads.find((l) => l.id === leadId);
+      if (lead) {
+        setOfferValuesFor(lead);
         return;
       }
     }
@@ -389,6 +399,31 @@ function StageContent({ stage, description }: Props) {
 
       {selectedLead && (
         <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onUpdated={load} />
+      )}
+
+      {offerValuesFor && (
+        <OfferValuesDialog
+          open
+          onOpenChange={(o) => !o && setOfferValuesFor(null)}
+          initialPrice={offerValuesFor.price}
+          initialMaterialCost={offerValuesFor.materialCost}
+          saving={savingOfferValues}
+          onConfirm={async ({ price, materialCost }) => {
+            const lead = offerValuesFor;
+            setSavingOfferValues(true);
+            try {
+              await setLeadOfferValues(lead.id, price, materialCost);
+              await updateLeadPipelineStage(lead.id, "offererad", lead.pipelineStage);
+              toast.success("Flyttad till Offert skapas");
+              setOfferValuesFor(null);
+              load();
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Kunde inte spara");
+            } finally {
+              setSavingOfferValues(false);
+            }
+          }}
+        />
       )}
     </AppShell>
   );
