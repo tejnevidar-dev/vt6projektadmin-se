@@ -61,6 +61,8 @@ interface Row {
 
 function SaljDashPage() {
   const { user } = useAuth();
+  const { isAdmin } = useUserRoles();
+
   const [period, setPeriod] = useState<PeriodKey>("month");
 
   const { data: leads = [], isLoading } = useQuery({ queryKey: ["leads"], queryFn: fetchLeads });
