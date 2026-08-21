@@ -40,19 +40,33 @@ function DashboardPage() {
 const STAGE_ROUTES: Record<PipelineStage, string> = {
   inkommande_webb: "/leads",
   saljpanel: "/leads",
+  kontaktad: "/leads",
+  mote_bokat: "/leads",
+  mote_genomfort: "/leads",
   offererad: "/offerterade",
+  offert_skickad: "/offerterade",
+  uppfoljning: "/offerterade",
+  forhandling: "/offerterade",
   bokad: "/bokade",
   pagaende: "/pagaende",
   slutford: "/slutforda",
+  forlorad: "/leads",
 };
 
 const STAGE_ICONS: Record<PipelineStage, typeof Inbox> = {
   inkommande_webb: Webhook,
   saljpanel: Inbox,
+  kontaktad: Inbox,
+  mote_bokat: CalendarCheck,
+  mote_genomfort: CalendarCheck,
   offererad: ClipboardList,
+  offert_skickad: ClipboardList,
+  uppfoljning: ClipboardList,
+  forhandling: ClipboardList,
   bokad: CalendarCheck,
   pagaende: Loader2,
   slutford: CheckCircle2,
+  forlorad: Inbox,
 };
 
 function timeAgo(iso: string) {
@@ -108,15 +122,8 @@ function DashboardContent() {
   );
 
   const byStage = useMemo(() => {
-    const map: Record<PipelineStage, Lead[]> = {
-      inkommande_webb: [],
-      saljpanel: [],
-      offererad: [],
-      bokad: [],
-      pagaende: [],
-      slutford: [],
-    };
-    for (const l of sorted) map[l.pipelineStage].push(l);
+    const map = Object.fromEntries(PIPELINE_STAGES.map((s) => [s, [] as Lead[]])) as Record<PipelineStage, Lead[]>;
+    for (const l of sorted) (map[l.pipelineStage] ??= []).push(l);
     return map;
   }, [sorted]);
 

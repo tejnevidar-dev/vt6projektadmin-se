@@ -19,10 +19,17 @@ import { cn } from "@/lib/utils";
 const STAGE_ACCENT: Record<PipelineStage, string> = {
   inkommande_webb: "border-l-info",
   saljpanel: "border-l-primary",
+  kontaktad: "border-l-primary",
+  mote_bokat: "border-l-info",
+  mote_genomfort: "border-l-info",
   offererad: "border-l-accent",
+  offert_skickad: "border-l-accent",
+  uppfoljning: "border-l-warning",
+  forhandling: "border-l-warning",
   bokad: "border-l-warning",
   pagaende: "border-l-chart-4",
   slutford: "border-l-success",
+  forlorad: "border-l-muted",
 };
 
 const STATUS_DOT: Record<LeadStatus, string> = {
