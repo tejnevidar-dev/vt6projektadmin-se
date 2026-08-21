@@ -163,15 +163,8 @@ function LeadsContent() {
           <KanbanSquare className="h-3.5 w-3.5" /> Board
         </button>
         <button
-          onClick={() => setView("pipeline")}
-          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
-            view === "pipeline" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <KanbanSquare className="h-3.5 w-3.5" /> Säljpipeline
-        </button>
-        <button
           onClick={() => setView("table")}
+
           className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
             view === "table" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           }`}
