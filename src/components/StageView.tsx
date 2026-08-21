@@ -132,6 +132,13 @@ function StageContent({ stage, description }: Props) {
         return;
       }
     }
+    if (newStage === "offererad") {
+      const lead = leads.find((l) => l.id === leadId);
+      if (lead) {
+        setOfferValuesFor(lead);
+        return;
+      }
+    }
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, pipelineStage: newStage } : l)));
     const toastId = toast.loading(
       newStage === "pagaende" ? "Flyttar till Pågående…" : `Flyttar till ${PIPELINE_STAGE_LABELS[newStage]}…`
