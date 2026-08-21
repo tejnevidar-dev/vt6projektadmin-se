@@ -286,11 +286,12 @@ function LeadsContent() {
                     }`}
               </p>
             </div>
-            <div className="flex rounded-md border border-border bg-card/60 p-0.5">
-              {(["inkommande_webb", "saljpanel"] as const).map((stage) => {
+            <div className="flex flex-wrap gap-1 rounded-md border border-border bg-card/60 p-0.5">
+              {LEAD_VIEW_STAGES.map((stage) => {
                 const count = jobTypeLeads.filter((l) => l.pipelineStage === stage).length;
-                const label = stage === "inkommande_webb" ? "Inkommande webb" : "admin.vt6 leads";
+                const label = STAGE_TAB_LABELS[stage] ?? PIPELINE_STAGE_LABELS[stage];
                 const active = activePipeline === stage;
+
                 return (
                   <button
                     key={stage}
