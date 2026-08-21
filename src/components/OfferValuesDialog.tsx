@@ -43,9 +43,9 @@ export function OfferValuesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Markera som Att offertera</DialogTitle>
+          <DialogTitle>Flytta till Offert skapas</DialogTitle>
           <DialogDescription>
-            Fyll i ordervärde och materialkostnad direkt – det används för ROT-underlaget och
+            Fyll i ordervärde och materialkostnad – det används för ROT-underlaget och
             säljstatistiken.
           </DialogDescription>
         </DialogHeader>
