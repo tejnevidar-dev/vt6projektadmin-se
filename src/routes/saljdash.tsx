@@ -29,7 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
 import { fetchSaljare, setSellerProvisionRate, type Saljare } from "@/lib/saljare-api";
-import { PERIOD_LABELS, commissionFor, kr, netValue, type PeriodKey } from "@/lib/commission";
+import { PERIOD_LABELS, commissionFor, isSold, kr, netValue, saleDate, type PeriodKey } from "@/lib/commission";
 import {
   STAGE_PROBABILITY,
   delta,
@@ -178,9 +178,9 @@ function SaljDashPage() {
     () =>
       (leads as Lead[]).filter(
         (l) =>
-          l.pipelineStage === "slutford" &&
-          l.completedAt &&
-          (!current.start || new Date(l.completedAt) >= current.start),
+          isSold(l) &&
+          saleDate(l) &&
+          (!current.start || (saleDate(l) as Date) >= current.start),
       ),
     [leads, current],
   );

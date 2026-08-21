@@ -5,16 +5,7 @@ import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
 import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
-import {
-  PERIOD_LABELS,
-  commissionFor,
-  commissionRateFor,
-  isInPeriod,
-  kr,
-  netValue,
-  summarize,
-  type PeriodKey,
-} from "@/lib/commission";
+import { PERIOD_LABELS, commissionFor, commissionRateFor, isInPeriod, isSold, kr, netValue, saleDate, summarize, type PeriodKey } from "@/lib/commission";
 import type { Lead } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -93,14 +84,14 @@ function OverviewPage() {
   );
 
   const completed = useMemo(
-    () => leads.filter((l: Lead) => l.pipelineStage === "slutford" && isInPeriod(l, period)),
+    () => leads.filter((l: Lead) => isSold(l) && isInPeriod(l, period)),
     [leads, period],
   );
 
   const totals = useMemo(() => {
     const commission = completed.reduce((s, l) => s + commissionFor(l, sellerFor(l)), 0);
     const revenue = completed.reduce((s, l) => s + netValue(l), 0);
-    const pipeline = leads.filter((l: Lead) => l.pipelineStage !== "slutford" && (l.price ?? 0) > 0);
+    const pipeline = leads.filter((l: Lead) => !isSold(l) && (l.price ?? 0) > 0);
     return {
       commission,
       revenue: Math.round(revenue),
@@ -115,8 +106,8 @@ function OverviewPage() {
   const months = useMemo(() => {
     const map = new Map<string, { commission: number; revenue: number; deals: number }>();
     for (const l of leads as Lead[]) {
-      if (l.pipelineStage !== "slutford" || !l.completedAt) continue;
-      const d = new Date(l.completedAt);
+      const d = isSold(l) ? saleDate(l) : null;
+      if (!d) continue;
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const cur = map.get(key) ?? { commission: 0, revenue: 0, deals: 0 };
       cur.commission += commissionFor(l, sellerFor(l));
@@ -137,18 +128,18 @@ function OverviewPage() {
         !q ||
         [l.name, l.address, sellerFor(l)?.display_name].some((v) => String(v ?? "").toLowerCase().includes(q)),
       )
-      .sort((a, b) => String(b.completedAt ?? "").localeCompare(String(a.completedAt ?? "")));
+      .sort((a, b) => (saleDate(b)?.getTime() ?? 0) - (saleDate(a)?.getTime() ?? 0));
   }, [completed, search, sellerById]);
 
   const exportCsv = () => {
-    const head = ["Kund", "Adress", "Säljare", "Slutförd", "Ordervärde exkl moms", "Sats %", "Provision"];
+    const head = ["Kund", "Adress", "Säljare", "Såld", "Ordervärde exkl moms", "Sats %", "Provision"];
     const body = rows.map((l) => {
       const s = sellerFor(l);
       return [
         l.name,
         l.address ?? "",
         s?.display_name ?? "Ej tilldelad",
-        l.completedAt ? new Date(l.completedAt).toISOString().slice(0, 10) : "",
+        saleDate(l)?.toISOString().slice(0, 10) ?? "",
         Math.round(netValue(l)),
         commissionRateFor(l, s),
         commissionFor(l, s),
@@ -305,7 +296,7 @@ function OverviewPage() {
                           <div className="text-xs text-muted-foreground">{l.address}</div>
                         </TableCell>
                         <TableCell>{s?.display_name ?? <span className="text-muted-foreground">Ej tilldelad</span>}</TableCell>
-                        <TableCell>{dateStr(l.completedAt)}</TableCell>
+                        <TableCell>{dateStr(l.offerAcceptedAt ?? l.completedAt)}</TableCell>
                         <TableCell className="text-right">{kr(netValue(l))}</TableCell>
                         <TableCell className="text-right">{commissionRateFor(l, s)} %</TableCell>
                         <TableCell className="text-right font-semibold">{kr(commissionFor(l, s))}</TableCell>

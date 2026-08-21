@@ -1,6 +1,6 @@
 import type { Lead, PipelineStage, LeadSource, JobType } from "@/lib/types";
 import type { Saljare } from "@/lib/saljare-api";
-import { commissionFor, commissionRateFor, isInboundLead, netValue, periodStart, type PeriodKey } from "@/lib/commission";
+import { commissionFor, commissionRateFor, isInboundLead, isSold, netValue, periodStart, saleDate, type PeriodKey } from "@/lib/commission";
 
 export interface Range {
   start: Date | null;
@@ -74,9 +74,9 @@ export const STAGE_PROBABILITY: Record<PipelineStage, number> = {
 };
 
 export function statsFor(leads: Lead[], seller: Saljare | null | undefined, range: Range): SellerStats {
-  const completed = leads.filter((l) => l.pipelineStage === "slutford" && inRange(dateOf(l.completedAt), range));
+  const completed = leads.filter((l) => isSold(l) && inRange(saleDate(l), range));
   const created = leads.filter((l) => inRange(dateOf(l.createdAt), range));
-  const open = leads.filter((l) => l.pipelineStage !== "slutford" && (l.price ?? 0) > 0);
+  const open = leads.filter((l) => !isSold(l) && (l.price ?? 0) > 0);
 
   const revenueNet = completed.reduce((s, l) => s + netValue(l), 0);
   const commission = completed.reduce((s, l) => s + commissionFor(l, seller), 0);
@@ -84,7 +84,7 @@ export function statsFor(leads: Lead[], seller: Saljare | null | undefined, rang
   const cycles = completed
     .map((l) => {
       const a = dateOf(l.createdAt);
-      const b = dateOf(l.completedAt);
+      const b = saleDate(l);
       return a && b ? (b.getTime() - a.getTime()) / 86400000 : null;
     })
     .filter((n): n is number => n != null && n >= 0);
@@ -98,7 +98,7 @@ export function statsFor(leads: Lead[], seller: Saljare | null | undefined, rang
     commission: Math.round(commission),
     avgDeal: completed.length ? Math.round(revenueNet / completed.length) : 0,
     leads: created.length,
-    winRate: created.length ? (created.filter((l) => l.pipelineStage === "slutford").length / created.length) * 100 : 0,
+    winRate: created.length ? (created.filter(isSold).length / created.length) * 100 : 0,
     avgCycleDays: cycles.length ? Math.round(cycles.reduce((a, b) => a + b, 0) / cycles.length) : null,
     avgCommission: completed.length ? Math.round(commission / completed.length) : 0,
     ownDeals: own.length,
@@ -169,8 +169,8 @@ export function timeSeries(
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
     const rows = leads.filter((l) => {
-      if (l.pipelineStage !== "slutford") return false;
-      const c = dateOf(l.completedAt);
+      if (!isSold(l)) return false;
+      const c = saleDate(l);
       return !!c && c >= d && c < next;
     });
     out.push({

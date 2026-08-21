@@ -834,6 +834,7 @@ export type Database = {
           name: string
           needs_offer: boolean
           notes: string | null
+          offer_accepted_at: string | null
           offer_pdf_path: string | null
           personal_number: string | null
           phone: string | null
@@ -879,6 +880,7 @@ export type Database = {
           name: string
           needs_offer?: boolean
           notes?: string | null
+          offer_accepted_at?: string | null
           offer_pdf_path?: string | null
           personal_number?: string | null
           phone?: string | null
@@ -924,6 +926,7 @@ export type Database = {
           name?: string
           needs_offer?: boolean
           notes?: string | null
+          offer_accepted_at?: string | null
           offer_pdf_path?: string | null
           personal_number?: string | null
           phone?: string | null

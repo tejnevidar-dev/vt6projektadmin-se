@@ -1,13 +1,13 @@
 import type { Lead, PipelineStage } from "@/lib/types";
 import { PIPELINE_STAGES, WON_STAGES } from "@/lib/types";
-import { VAT_RATE, netValue } from "@/lib/commission";
+import { VAT_RATE, isSold, netValue, saleDate } from "@/lib/commission";
 import { STAGE_PROBABILITY, type Range } from "@/lib/sales-analytics";
 
 const dateOf = (v: string | null | undefined) => (v ? new Date(v) : null);
 
 const stageIndex = (s: PipelineStage) => PIPELINE_STAGES.indexOf(s);
 
-export const isWon = (l: Lead) => WON_STAGES.includes(l.pipelineStage);
+export const isWon = (l: Lead) => isSold(l) || WON_STAGES.includes(l.pipelineStage);
 export const isLost = (l: Lead) => l.pipelineStage === "forlorad" || l.status === "lost";
 export const isOpen = (l: Lead) => !isWon(l) && !isLost(l);
 
@@ -49,10 +49,10 @@ export function salesBuckets(leads: Lead[], now = new Date()): PeriodBucket[] {
     { label: "I år", start: startOfYear },
   ];
 
-  const won = leads.filter((l) => l.pipelineStage === "slutford");
+  const won = leads.filter(isSold);
   return defs.map(({ label, start }) => {
     const rows = won.filter((l) => {
-      const d = dateOf(l.completedAt);
+      const d = saleDate(l);
       return !!d && d >= start && d <= now;
     });
     const net = rows.reduce((s, l) => s + netValue(l), 0);
@@ -86,7 +86,7 @@ export interface CommandCenterMetrics {
 }
 
 export function commandCenter(leads: Lead[], range: Range): CommandCenterMetrics {
-  const completed = leads.filter((l) => l.pipelineStage === "slutford" && inRange(dateOf(l.completedAt), range));
+  const completed = leads.filter((l) => isSold(l) && inRange(saleDate(l), range));
   const created = leads.filter((l) => inRange(dateOf(l.createdAt), range));
   const open = leads.filter(isOpen);
 
@@ -102,7 +102,7 @@ export function commandCenter(leads: Lead[], range: Range): CommandCenterMetrics
   const cycles = completed
     .map((l) => {
       const a = dateOf(l.createdAt);
-      const b = dateOf(l.completedAt);
+      const b = saleDate(l);
       return a && b ? (b.getTime() - a.getTime()) / 86400000 : null;
     })
     .filter((n): n is number => n != null && n >= 0);
@@ -182,7 +182,7 @@ export function salesSeries(
   mode: CompareMode,
   now = new Date(),
 ): { label: string; current: number; previous: number }[] {
-  const won = leads.filter((l) => l.pipelineStage === "slutford" && l.completedAt);
+  const won = leads.filter((l) => isSold(l) && saleDate(l));
   const bucket = (d: Date) => {
     if (mode === "week") return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     if (mode === "month") return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -192,7 +192,7 @@ export function salesSeries(
   const sumIn = (from: Date, to: Date) => {
     const map = new Map<string, number>();
     for (const l of won) {
-      const d = new Date(l.completedAt as string);
+      const d = saleDate(l) as Date;
       if (d < from || d >= to) continue;
       const k = bucket(d);
       map.set(k, (map.get(k) ?? 0) + netValue(l));
