@@ -164,7 +164,10 @@ function SaljDashPage() {
           </CardContent>
         </Card>
 
+        {isAdmin && <ProvisionRatesCard sellers={sellers} rows={rows} />}
+
         <div className="grid gap-4 lg:grid-cols-2">
+
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Pipeline per säljare (prognos)</CardTitle>
