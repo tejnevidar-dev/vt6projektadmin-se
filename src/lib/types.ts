@@ -207,6 +207,8 @@ export interface Lead {
   sellerId: string | null;
   commissionRate: number | null;
   completedAt: string | null;
+  /** Datum då kunden godkände offerten (styr säljstatistiken). */
+  offerAcceptedAt: string | null;
   lostReason: LostReason | null;
   lostCompetitor: string | null;
   lostNote: string | null;
@@ -340,6 +342,7 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     sellerId: (lp as { seller_id?: string | null }).seller_id ?? null,
     commissionRate: (lp as { commission_rate?: number | null }).commission_rate ?? null,
     completedAt: (lp as { completed_at?: string | null }).completed_at ?? null,
+    offerAcceptedAt: (lp as { offer_accepted_at?: string | null }).offer_accepted_at ?? null,
     lostReason: (lp as { lost_reason?: LostReason | null }).lost_reason ?? null,
     lostCompetitor: (lp as { lost_competitor?: string | null }).lost_competitor ?? null,
     lostNote: (lp as { lost_note?: string | null }).lost_note ?? null,

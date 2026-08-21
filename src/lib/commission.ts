@@ -67,16 +67,27 @@ export function periodStart(period: PeriodKey, now = new Date()): Date | null {
   }
 }
 
-/** Datum som styr vilken period affären hamnar i (slutförandedatum). */
-export function commissionDate(lead: Lead): Date | null {
-  const raw = lead.completedAt ?? null;
+/**
+ * Datum som styr vilken period affären hamnar i: när kunden godkände offerten.
+ * Faller tillbaka på slutförandedatum för äldre affärer utan godkännandedatum.
+ */
+export function saleDate(lead: Lead): Date | null {
+  const raw = lead.offerAcceptedAt ?? lead.completedAt ?? null;
   return raw ? new Date(raw) : null;
 }
+
+/** Såld affär = kunden har godkänt offerten (eller jobbet är slutfört historiskt). */
+export function isSold(lead: Lead): boolean {
+  return !!lead.offerAcceptedAt || lead.pipelineStage === "slutford";
+}
+
+/** @deprecated använd saleDate */
+export const commissionDate = saleDate;
 
 export function isInPeriod(lead: Lead, period: PeriodKey, now = new Date()): boolean {
   const start = periodStart(period, now);
   if (!start) return true;
-  const d = commissionDate(lead);
+  const d = saleDate(lead);
   return !!d && d >= start;
 }
 
@@ -95,8 +106,8 @@ export function summarize(
   period: PeriodKey,
   now = new Date(),
 ): CommissionSummary {
-  const completed = leads.filter((l) => l.pipelineStage === "slutford" && isInPeriod(l, period, now));
-  const pipeline = leads.filter((l) => l.pipelineStage !== "slutford" && (l.price ?? 0) > 0);
+  const completed = leads.filter((l) => isSold(l) && isInPeriod(l, period, now));
+  const pipeline = leads.filter((l) => !isSold(l) && (l.price ?? 0) > 0);
   return {
     deals: completed.length,
     revenueNet: Math.round(completed.reduce((s, l) => s + netValue(l), 0)),
@@ -113,8 +124,8 @@ export function byMonth(
 ): { month: string; commission: number; deals: number }[] {
   const map = new Map<string, { commission: number; deals: number }>();
   for (const l of leads) {
-    if (l.pipelineStage !== "slutford") continue;
-    const d = commissionDate(l);
+    if (!isSold(l)) continue;
+    const d = saleDate(l);
     if (!d) continue;
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const cur = map.get(key) ?? { commission: 0, deals: 0 };
