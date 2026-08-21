@@ -72,9 +72,10 @@ function LeadsContent() {
   }, [loadLeads]);
 
   const activeLeads = useMemo(
-    () => leads.filter((l) => l.pipelineStage === "inkommande_webb" || l.pipelineStage === "saljpanel"),
+    () => leads.filter((l) => LEAD_VIEW_STAGES.includes(l.pipelineStage)),
     [leads]
   );
+
 
   const jobTypeLeads = useMemo(
     () => (activeJobType === "all" ? activeLeads : activeLeads.filter((l) => l.jobType === activeJobType)),
