@@ -53,7 +53,7 @@ function LeadsContent() {
   const [showAiDialog, setShowAiDialog] = useState(false);
   const [showChoiceDialog, setShowChoiceDialog] = useState(false);
   const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
-  const [view, setView] = useState<"kanban" | "table">("kanban");
+  const [view, setView] = useState<"kanban" | "pipeline" | "table">("kanban");
   const [activePipeline, setActivePipeline] = useState<"inkommande_webb" | "saljpanel">("inkommande_webb");
 
   const loadLeads = useCallback(async () => {
@@ -150,6 +150,14 @@ function LeadsContent() {
           }`}
         >
           <KanbanSquare className="h-3.5 w-3.5" /> Board
+        </button>
+        <button
+          onClick={() => setView("pipeline")}
+          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+            view === "pipeline" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <KanbanSquare className="h-3.5 w-3.5" /> Säljpipeline
         </button>
         <button
           onClick={() => setView("table")}
@@ -259,7 +267,7 @@ function LeadsContent() {
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-3">
             <div>
               <h2 className="text-[13px] font-semibold text-foreground">
-                {view === "kanban" ? "Pipeline" : "Lead-tabell"}
+                {view === "table" ? "Lead-tabell" : view === "pipeline" ? "Säljpipeline" : "Pipeline"}
               </h2>
               <p className="text-[11.5px] text-muted-foreground">
                 {loading
@@ -289,8 +297,17 @@ function LeadsContent() {
               })}
             </div>
           </div>
-          <div className={view === "kanban" ? "p-4" : ""}>
-            {view === "kanban" ? (
+          <div className={view === "table" ? "" : "p-4"}>
+            {view === "pipeline" ? (
+              <div className="overflow-x-auto">
+                <LeadKanban
+                  leads={filteredLeads}
+                  onSelect={setSelectedLead}
+                  onStageChange={handleStageChange}
+                  stages={SALES_PIPELINE_STAGES}
+                />
+              </div>
+            ) : view === "kanban" ? (
               <LeadKanban
                 leads={filteredLeads.filter((l) => l.pipelineStage === activePipeline)}
                 onSelect={setSelectedLead}
