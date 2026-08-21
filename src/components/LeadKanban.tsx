@@ -10,7 +10,7 @@ import {
   DragOverlay,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { Phone, MapPin, Calendar, Hammer, Droplets, Wrench, Flame, AlertTriangle, FileSignature, Receipt, Landmark } from "lucide-react";
+import { Phone, MapPin, Calendar, Clock, Hammer, Droplets, Wrench, Flame, AlertTriangle, FileSignature, Receipt, Landmark } from "lucide-react";
 import type { Lead, PipelineStage, JobType, LeadStatus } from "@/lib/types";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, hasIncompleteBooking, isUninvoiced, isRotApplicationDue } from "@/lib/types";
 import { scoreLabel } from "@/lib/lead-scoring";
@@ -19,10 +19,17 @@ import { cn } from "@/lib/utils";
 const STAGE_ACCENT: Record<PipelineStage, string> = {
   inkommande_webb: "border-l-info",
   saljpanel: "border-l-primary",
+  kontaktad: "border-l-primary",
+  mote_bokat: "border-l-info",
+  mote_genomfort: "border-l-info",
   offererad: "border-l-accent",
+  offert_skickad: "border-l-accent",
+  uppfoljning: "border-l-warning",
+  forhandling: "border-l-warning",
   bokad: "border-l-warning",
   pagaende: "border-l-chart-4",
   slutford: "border-l-success",
+  forlorad: "border-l-muted",
 };
 
 const STATUS_DOT: Record<LeadStatus, string> = {
@@ -74,16 +81,17 @@ export function LeadKanban({ leads, onSelect, onStageChange, stages = PIPELINE_S
     }
   };
 
+  const wide = stages.length > 5;
   const cols = Math.min(Math.max(stages.length, 1), 5);
   const gridCols = ["", "grid-cols-1", "grid-cols-2", "grid-cols-3", "grid-cols-2 md:grid-cols-4", "grid-cols-2 md:grid-cols-3 xl:grid-cols-5"][cols];
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className={cn("grid gap-3 pb-2", gridCols)}>
+      <div className={cn("pb-2", wide ? "flex gap-3 overflow-x-auto" : cn("grid gap-3", gridCols))}>
         {stages.map((stage) => {
           const stageLeads = leads.filter((l) => l.pipelineStage === stage);
           return (
-            <KanbanColumn key={stage} stage={stage} count={stageLeads.length}>
+            <KanbanColumn key={stage} stage={stage} count={stageLeads.length} wide={wide}>
               {stageLeads.map((lead) => (
                 <KanbanCard key={lead.id} lead={lead} onSelect={onSelect} />
               ))}
@@ -98,10 +106,10 @@ export function LeadKanban({ leads, onSelect, onStageChange, stages = PIPELINE_S
   );
 }
 
-function KanbanColumn({ stage, count, children }: { stage: PipelineStage; count: number; children: React.ReactNode }) {
+function KanbanColumn({ stage, count, wide, children }: { stage: PipelineStage; count: number; wide?: boolean; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
   return (
-    <div className="flex min-w-0 flex-col">
+    <div className={cn("flex flex-col", wide ? "w-64 shrink-0" : "min-w-0")}>
       <div className="mb-2 flex items-center justify-between px-1">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {PIPELINE_STAGE_LABELS[stage]}
@@ -186,6 +194,12 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
           </span>
         )}
       </div>
+      {(lead.price ?? 0) > 0 && (
+        <div className="mt-1.5 text-sm font-semibold tabular-nums">
+          {Math.round((lead.price ?? 0) / 1.25).toLocaleString("sv-SE")} kr
+          <span className="ml-1 text-[10px] font-normal text-muted-foreground">exkl. moms</span>
+        </div>
+      )}
       <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className="h-3 w-3" />
         {lead.phone && (
@@ -194,12 +208,10 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
             <span className="truncate">{lead.phone}</span>
           </>
         )}
-        {lead.buildYear > 0 && (
-          <span className="ml-auto flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            {lead.buildYear}
-          </span>
-        )}
+        <span className="ml-auto flex items-center gap-1" title="Dagar sedan leadet skapades">
+          <Clock className="h-3 w-3" />
+          {Math.max(0, Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / 86400000))} d
+        </span>
       </div>
       {!isBooked && (
         <div className="mt-2 flex items-center justify-between gap-2">

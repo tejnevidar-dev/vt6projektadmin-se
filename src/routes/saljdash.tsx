@@ -17,6 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { AppShell, RequireAuth } from "@/components/AppShell";
+import { CommandCenterTab } from "@/components/sales/CommandCenterTab";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
@@ -261,13 +262,23 @@ function SaljDashPage() {
           />
         </div>
 
-        <Tabs defaultValue="topplista">
+        <Tabs defaultValue="oversikt">
           <TabsList className="flex-wrap">
+            <TabsTrigger value="oversikt">Command Center</TabsTrigger>
             <TabsTrigger value="topplista">Topplista</TabsTrigger>
             <TabsTrigger value="analys">Analys</TabsTrigger>
             <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
             <TabsTrigger value="detaljer">Detaljer</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="oversikt" className="mt-4">
+            <CommandCenterTab
+              leads={leads as Lead[]}
+              current={current}
+              previous={previous}
+              periodLabel={PERIOD_LABELS[period]}
+            />
+          </TabsContent>
 
           {/* TOPPLISTA */}
           <TabsContent value="topplista" className="mt-4 space-y-4">

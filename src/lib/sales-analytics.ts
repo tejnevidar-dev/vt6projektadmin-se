@@ -59,11 +59,18 @@ export interface SellerStats {
 /** Grov sannolikhet att en affär i respektive steg går i mål. */
 export const STAGE_PROBABILITY: Record<PipelineStage, number> = {
   inkommande_webb: 0.1,
-  saljpanel: 0.2,
-  offererad: 0.4,
-  bokad: 0.75,
-  pagaende: 0.9,
+  saljpanel: 0.15,
+  kontaktad: 0.25,
+  mote_bokat: 0.35,
+  mote_genomfort: 0.45,
+  offererad: 0.5,
+  offert_skickad: 0.6,
+  uppfoljning: 0.65,
+  forhandling: 0.8,
+  bokad: 0.95,
+  pagaende: 0.98,
   slutford: 1,
+  forlorad: 0,
 };
 
 export function statsFor(leads: Lead[], seller: Saljare | null | undefined, range: Range): SellerStats {

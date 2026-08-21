@@ -1854,6 +1854,13 @@ export type Database = {
         | "bokad"
         | "pagaende"
         | "slutford"
+        | "kontaktad"
+        | "mote_genomfort"
+        | "offert_skickad"
+        | "uppfoljning"
+        | "forhandling"
+        | "forlorad"
+        | "mote_bokat"
       price_category: "material" | "arbete" | "plat" | "tillagg"
       price_unit: "kvm" | "meter" | "st" | "timme" | "paket"
       salary_adjustment_type: "tillagg" | "avdrag"
@@ -2031,6 +2038,13 @@ export const Constants = {
         "bokad",
         "pagaende",
         "slutford",
+        "kontaktad",
+        "mote_genomfort",
+        "offert_skickad",
+        "uppfoljning",
+        "forhandling",
+        "forlorad",
+        "mote_bokat",
       ],
       price_category: ["material", "arbete", "plat", "tillagg"],
       price_unit: ["kvm", "meter", "st", "timme", "paket"],
