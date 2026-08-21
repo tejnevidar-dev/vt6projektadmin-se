@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Coins } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { kr } from "@/lib/commission";
-import { readSourceCosts, sourceRoi, writeSourceCosts, type SourceCosts } from "@/lib/source-roi";
+import { adCostsBySource, fetchAdSpend } from "@/lib/ads-api";
+import { AdConnectionsCard } from "@/components/sales/AdConnectionsCard";
+import { mergeSourceCosts, readSourceCosts, sourceRoi, writeSourceCosts, type SourceCosts } from "@/lib/source-roi";
 import type { Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +27,10 @@ interface Props {
 
 export function SourceRoiTab({ leads, isAdmin }: Props) {
   const [costs, setCosts] = useState<SourceCosts>(() => readSourceCosts());
-  const rows = useMemo(() => sourceRoi(leads, costs), [leads, costs]);
+  const adSpend = useQuery({ queryKey: ["ad-spend"], queryFn: () => fetchAdSpend() });
+  const autoCosts = useMemo(() => adCostsBySource(adSpend.data ?? []), [adSpend.data]);
+  const effectiveCosts = useMemo(() => mergeSourceCosts(costs, autoCosts), [costs, autoCosts]);
+  const rows = useMemo(() => sourceRoi(leads, effectiveCosts), [leads, effectiveCosts]);
 
   const update = (source: string, value: number) => {
     const next = { ...costs, [source]: value };
@@ -103,7 +109,12 @@ export function SourceRoiTab({ leads, isAdmin }: Props) {
                     {r.avgCycleDays != null ? `${r.avgCycleDays} d` : "–"}
                   </TableCell>
                   <TableCell className="text-right">
-                    {isAdmin ? (
+                    {autoCosts[r.source] ? (
+                      <span className="inline-flex items-center gap-1 tabular-nums">
+                        {kr(r.cost)}
+                        <span className="rounded bg-primary/10 px-1 text-[10px] text-primary">auto</span>
+                      </span>
+                    ) : isAdmin ? (
                       <Input
                         type="number"
                         className="ml-auto h-8 w-28 text-right"
@@ -143,13 +154,16 @@ export function SourceRoiTab({ leads, isAdmin }: Props) {
         </CardContent>
       </Card>
 
+      <AdConnectionsCard isAdmin={isAdmin} />
+
       <Card className="border-dashed">
         <CardContent className="p-4 text-sm text-muted-foreground">
-          <strong className="text-foreground">Automatisk annonskostnad – kan ej visas, behöver komplettering.</strong>{" "}
-          Kostnaderna matas in manuellt här. För att hämta spend automatiskt krävs koppling mot Google Ads och Meta
-          Ads. Värdena sparas lokalt i din webbläsare tills en integration finns på plats.
+          Annonskostnad från Google Ads och Meta Ads hämtas automatiskt och märks med{" "}
+          <span className="rounded bg-primary/10 px-1 text-[10px] text-primary">auto</span>. Övriga källor
+          (telemarketing, listköp m.m.) fylls i manuellt och sparas lokalt i din webbläsare.
         </CardContent>
       </Card>
+
     </div>
   );
 }
