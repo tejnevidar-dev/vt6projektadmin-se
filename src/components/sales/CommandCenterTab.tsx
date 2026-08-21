@@ -40,6 +40,7 @@ import {
   salesSeries,
   writeMonthlyGoal,
   type CompareMode,
+  type PeriodBucket,
 } from "@/lib/sales-command-center";
 import type { Lead } from "@/lib/types";
 import { cn } from "@/lib/utils";
