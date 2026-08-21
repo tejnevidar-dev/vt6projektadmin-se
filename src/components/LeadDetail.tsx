@@ -21,6 +21,7 @@ import { BookingDateDialog } from "@/components/BookingDateDialog";
 import { InvoiceRotPanel } from "@/components/InvoiceRotPanel";
 import { EconomyNoteCard } from "@/components/EconomyNoteCard";
 import { OfferAcceptedCard } from "@/components/OfferAcceptedCard";
+import { OfferValuesDialog } from "@/components/OfferValuesDialog";
 import { SellerCard } from "@/components/SellerCard";
 import { LostDealCard } from "@/components/LostDealCard";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
@@ -57,6 +58,8 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
   const [deleting, setDeleting] = useState(false);
   const [bookingFor, setBookingFor] = useState<null | { from: Lead["pipelineStage"] }>(null);
   const [showAllInfo, setShowAllInfo] = useState(false);
+  const [offerValuesOpen, setOfferValuesOpen] = useState(false);
+  const [savingOfferValues, setSavingOfferValues] = useState(false);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -438,8 +441,12 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                 : ""
             )}
             onClick={async () => {
+              if (!lead.needsOffer) {
+                setOfferValuesOpen(true);
+                return;
+              }
               try {
-                await setLeadNeedsOffer(lead.id, !lead.needsOffer);
+                await setLeadNeedsOffer(lead.id, false);
                 onUpdated?.();
               } catch (err) {
                 console.error("Failed to toggle needs offer:", err);
@@ -449,6 +456,29 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
             <FileSignature className="mr-2 h-4 w-4" />
             {lead.needsOffer ? "Avmarkera Att offertera" : "Markera som Att offertera"}
           </Button>
+
+          {offerValuesOpen && (
+            <OfferValuesDialog
+              open={offerValuesOpen}
+              onOpenChange={setOfferValuesOpen}
+              initialPrice={lead.price}
+              initialMaterialCost={lead.materialCost}
+              saving={savingOfferValues}
+              onConfirm={async ({ price, materialCost }) => {
+                setSavingOfferValues(true);
+                try {
+                  await setLeadNeedsOffer(lead.id, true, { price, materialCost });
+                  toast.success("Markerad som Att offertera");
+                  setOfferValuesOpen(false);
+                  onUpdated?.();
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Kunde inte spara");
+                } finally {
+                  setSavingOfferValues(false);
+                }
+              }}
+            />
+          )}
           <Button
             variant="outline"
             className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
