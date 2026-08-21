@@ -337,7 +337,7 @@ function ProvisionRatesCard({ sellers, rows }: { sellers: Saljare[]; rows: Row[]
               </div>
               {(
                 [
-                  ["provision_rate", "Egen kund"],
+                  ["provision_rate", "Egen lead"],
                   ["provision_rate_inbound", "Inkommande lead"],
                 ] as [RateField, string][]
               ).map(([field, label]) => (
