@@ -122,7 +122,7 @@ export function CommandCenterTab({ leads, current, previous, periodLabel }: Prop
                 <div className="min-w-0">
                   <p className="truncate font-medium">{l.name || "Namnlös kund"}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {[l.address, l.city].filter(Boolean).join(", ") || "–"}
+                    {[l.address, l.postalArea ?? ""].filter(Boolean).join(", ") || "–"}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     Godkänd: {saleDate(l)?.toLocaleDateString("sv-SE") ?? "–"}
