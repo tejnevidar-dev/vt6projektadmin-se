@@ -374,6 +374,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                   setBookingFor({ from: lead.pipelineStage });
                   return;
                 }
+                if (target === "offererad" && !offerValuesSaved) {
+                  setOfferValuesOpen(true);
+                  return;
+                }
                 setSaving(true);
                 const toastId = toast.loading(
                   target === "pagaende" ? "Flyttar till Pågående…" : `Flyttar till ${PIPELINE_STAGE_LABELS[target]}…`
