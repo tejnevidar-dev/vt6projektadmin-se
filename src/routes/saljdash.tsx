@@ -129,7 +129,7 @@ function SaljDashPage() {
       .map((s) => {
         const own = leadsOf(leads as Lead[], s.id);
         const stats = statsFor(own, s, current);
-        const prev = statsFor(own, s, previous ?? ({ start: null, end: new Date(0) } as Range));
+        const prev = statsFor(own, s, previous ?? ({ start: new Date(0), end: new Date(0) } as Range));
         return { seller: s, ...stats, prev, leadsList: own };
       })
       .sort((a, b) => b.commission - a.commission || b.revenueNet - a.revenueNet);
