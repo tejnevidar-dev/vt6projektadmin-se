@@ -86,7 +86,7 @@ export function OfferValuesDialog({
             Avbryt
           </Button>
           <Button disabled={!valid || saving} onClick={() => onConfirm({ price: p, materialCost: m })}>
-            Spara och markera
+            Spara och flytta
           </Button>
         </DialogFooter>
       </DialogContent>
