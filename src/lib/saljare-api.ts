@@ -68,7 +68,7 @@ export async function fetchSaljare(): Promise<Saljare[]> {
 
 
 export interface ProvisionRates {
-  /** Egen kund (säljaren har skaffat leaden själv). */
+  /** Egen lead (säljaren har skaffat leaden själv). */
   provision_rate?: number | null;
   /** Inkommande lead (webb/import). */
   provision_rate_inbound?: number | null;
