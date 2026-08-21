@@ -232,7 +232,10 @@ function OverviewPage() {
                         <div className="font-medium">{r.seller.display_name}</div>
                         <div className="text-xs text-muted-foreground">{r.seller.email}</div>
                       </TableCell>
-                      <TableCell className="text-right">{r.seller.provision_rate ?? 0} %</TableCell>
+                      <TableCell className="text-right">
+                        {r.seller.provision_rate ?? 0} % / {r.seller.provision_rate_inbound ?? r.seller.provision_rate ?? 0} %
+                      </TableCell>
+
                       <TableCell className="text-right">{r.deals}</TableCell>
                       <TableCell className="text-right">{kr(r.revenueNet)}</TableCell>
                       <TableCell className="text-right text-muted-foreground">{kr(r.pipelineCommission)}</TableCell>
