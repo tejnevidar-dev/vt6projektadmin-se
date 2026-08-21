@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useAuth } from "@/hooks/use-auth";
+import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
-import { fetchSaljare, type Saljare } from "@/lib/saljare-api";
+import { fetchSaljare, setSellerProvisionRate, type Saljare } from "@/lib/saljare-api";
 import {
   PERIOD_LABELS,
   commissionFor,
@@ -17,10 +18,14 @@ import {
 import type { Lead } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Crown, Flame, Loader2, Medal, Target, TrendingUp, Trophy } from "lucide-react";
+import { toast } from "sonner";
+import { Crown, Flame, Loader2, Medal, Percent, Target, TrendingUp, Trophy } from "lucide-react";
+
 
 export const Route = createFileRoute("/saljdash")({
   component: () => (
