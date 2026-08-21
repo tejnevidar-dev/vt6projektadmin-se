@@ -21,6 +21,10 @@ import { CommandCenterTab } from "@/components/sales/CommandCenterTab";
 import { TodayTab } from "@/components/sales/TodayTab";
 import { GoalsTab } from "@/components/sales/GoalsTab";
 import { LostDealsTab } from "@/components/sales/LostDealsTab";
+import { OfferIntelTab } from "@/components/sales/OfferIntelTab";
+import { GeographyTab } from "@/components/sales/GeographyTab";
+import { SourceRoiTab } from "@/components/sales/SourceRoiTab";
+import { InsightsTab } from "@/components/sales/InsightsTab";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
@@ -270,6 +274,10 @@ function SaljDashPage() {
             <TabsTrigger value="oversikt">Command Center</TabsTrigger>
             <TabsTrigger value="idag">Idag</TabsTrigger>
             <TabsTrigger value="mal">Mål</TabsTrigger>
+            <TabsTrigger value="offerter">Offerter</TabsTrigger>
+            <TabsTrigger value="geografi">Geografi</TabsTrigger>
+            <TabsTrigger value="roi">ROI</TabsTrigger>
+            <TabsTrigger value="insikter">Insikter</TabsTrigger>
             <TabsTrigger value="forlorade">Förlorade</TabsTrigger>
             <TabsTrigger value="topplista">Topplista</TabsTrigger>
             <TabsTrigger value="analys">Analys</TabsTrigger>
@@ -292,6 +300,22 @@ function SaljDashPage() {
 
           <TabsContent value="mal" className="mt-4">
             <GoalsTab leads={leads as Lead[]} sellers={sellers} isAdmin={isAdmin} />
+          </TabsContent>
+
+          <TabsContent value="offerter" className="mt-4">
+            <OfferIntelTab leads={leads as Lead[]} />
+          </TabsContent>
+
+          <TabsContent value="geografi" className="mt-4">
+            <GeographyTab leads={leads as Lead[]} />
+          </TabsContent>
+
+          <TabsContent value="roi" className="mt-4">
+            <SourceRoiTab leads={leads as Lead[]} isAdmin={isAdmin} />
+          </TabsContent>
+
+          <TabsContent value="insikter" className="mt-4">
+            <InsightsTab leads={leads as Lead[]} />
           </TabsContent>
 
           <TabsContent value="forlorade" className="mt-4">
