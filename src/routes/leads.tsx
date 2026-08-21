@@ -62,7 +62,7 @@ function LeadsContent() {
   const [showChoiceDialog, setShowChoiceDialog] = useState(false);
   const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
   const [view, setView] = useState<"kanban" | "pipeline" | "table">("kanban");
-  const [activePipeline, setActivePipeline] = useState<"inkommande_webb" | "saljpanel">("inkommande_webb");
+  const [activePipeline, setActivePipeline] = useState<PipelineStage>("inkommande_webb");
 
   const loadLeads = useCallback(async () => {
     try {
