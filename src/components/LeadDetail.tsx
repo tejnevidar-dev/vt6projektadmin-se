@@ -26,8 +26,8 @@ import { SellerCard } from "@/components/SellerCard";
 import { LostDealCard } from "@/components/LostDealCard";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
-import type { Lead, LeadStatus, JobType } from "@/lib/types";
-import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PREVIOUS_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_BACK_LABELS, PIPELINE_STAGE_LABELS } from "@/lib/types";
+import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
+import { REGIONS, MUNICIPALITIES, JOB_TYPES, JOB_TYPE_LABELS, NEXT_PIPELINE_STAGE, PREVIOUS_PIPELINE_STAGE, PIPELINE_ACTION_LABELS, PIPELINE_BACK_LABELS, PIPELINE_STAGE_LABELS, PIPELINE_STAGES } from "@/lib/types";
 
 interface LeadDetailProps {
   lead: Lead;
@@ -368,7 +368,7 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               const next = NEXT_PIPELINE_STAGE[lead.pipelineStage];
               const prev = PREVIOUS_PIPELINE_STAGE[lead.pipelineStage];
               const isDone = lead.pipelineStage === "slutford";
-              const move = async (target: typeof next) => {
+              const move = async (target: PipelineStage | null | undefined) => {
                 if (!target) return;
                 if (target === "bokad") {
                   setBookingFor({ from: lead.pipelineStage });
@@ -426,7 +426,29 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                       {PIPELINE_BACK_LABELS[lead.pipelineStage]}
                     </Button>
                   )}
+                  <div className="pt-1">
+                    <span className="mb-1 block text-[11px] font-medium text-muted-foreground">Flytta direkt till</span>
+                    <Select
+                      value={lead.pipelineStage}
+                      disabled={saving}
+                      onValueChange={(v) => {
+                        if (v !== lead.pipelineStage) move(v as PipelineStage);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PIPELINE_STAGES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {PIPELINE_STAGE_LABELS[s]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+
               );
             })()}
           </div>
