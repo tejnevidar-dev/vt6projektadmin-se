@@ -81,3 +81,12 @@ export function sourceRoi(leads: Lead[], costs: SourceCosts): SourceRoi[] {
     })
     .sort((a, b) => b.revenue - a.revenue || b.leads - a.leads);
 }
+
+/** Slår ihop manuellt inlagda kostnader med automatiskt hämtad annonskostnad (annons vinner). */
+export function mergeSourceCosts(manual: SourceCosts, auto: Record<string, number>): SourceCosts {
+  const out: SourceCosts = { ...manual };
+  for (const [source, cost] of Object.entries(auto)) {
+    if (cost > 0) out[source] = cost;
+  }
+  return out;
+}

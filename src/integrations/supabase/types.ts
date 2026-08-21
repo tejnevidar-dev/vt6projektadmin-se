@@ -14,6 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_source_map: {
+        Row: {
+          campaign_pattern: string | null
+          created_at: string
+          id: string
+          lead_source: string
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_pattern?: string | null
+          created_at?: string
+          id?: string
+          lead_source: string
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_pattern?: string | null
+          created_at?: string
+          id?: string
+          lead_source?: string
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ad_spend: {
+        Row: {
+          account_id: string
+          campaign_id: string
+          campaign_name: string
+          clicks: number
+          cost: number
+          created_at: string
+          id: string
+          impressions: number
+          lead_source: string | null
+          provider: string
+          spend_date: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          campaign_id?: string
+          campaign_name?: string
+          clicks?: number
+          cost?: number
+          created_at?: string
+          id?: string
+          impressions?: number
+          lead_source?: string | null
+          provider: string
+          spend_date: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          campaign_id?: string
+          campaign_name?: string
+          clicks?: number
+          cost?: number
+          created_at?: string
+          id?: string
+          impressions?: number
+          lead_source?: string | null
+          provider?: string
+          spend_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ad_sync_runs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          period_end: string | null
+          period_start: string | null
+          provider: string
+          rows_upserted: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          provider: string
+          rows_upserted?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          provider?: string
+          rows_upserted?: number
+          status?: string
+        }
+        Relationships: []
+      }
       booking_reminders: {
         Row: {
           attempts: number
