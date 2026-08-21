@@ -19,6 +19,8 @@ import {
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { CommandCenterTab } from "@/components/sales/CommandCenterTab";
 import { TodayTab } from "@/components/sales/TodayTab";
+import { GoalsTab } from "@/components/sales/GoalsTab";
+import { LostDealsTab } from "@/components/sales/LostDealsTab";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
@@ -267,6 +269,8 @@ function SaljDashPage() {
           <TabsList className="flex-wrap">
             <TabsTrigger value="oversikt">Command Center</TabsTrigger>
             <TabsTrigger value="idag">Idag</TabsTrigger>
+            <TabsTrigger value="mal">Mål</TabsTrigger>
+            <TabsTrigger value="forlorade">Förlorade</TabsTrigger>
             <TabsTrigger value="topplista">Topplista</TabsTrigger>
             <TabsTrigger value="analys">Analys</TabsTrigger>
             <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
@@ -284,6 +288,14 @@ function SaljDashPage() {
 
           <TabsContent value="idag" className="mt-4">
             <TodayTab leads={leads as Lead[]} userId={user?.id ?? null} />
+          </TabsContent>
+
+          <TabsContent value="mal" className="mt-4">
+            <GoalsTab leads={leads as Lead[]} sellers={sellers} isAdmin={isAdmin} />
+          </TabsContent>
+
+          <TabsContent value="forlorade" className="mt-4">
+            <LostDealsTab leads={leads as Lead[]} />
           </TabsContent>
 
           {/* TOPPLISTA */}

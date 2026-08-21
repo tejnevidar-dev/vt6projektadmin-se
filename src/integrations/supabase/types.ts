@@ -722,6 +722,10 @@ export type Database = {
           invoiced_at: string | null
           job_type: Database["public"]["Enums"]["job_type"]
           last_contact: string | null
+          lost_at: string | null
+          lost_competitor: string | null
+          lost_note: string | null
+          lost_reason: Database["public"]["Enums"]["lost_reason"] | null
           name: string
           needs_offer: boolean
           notes: string | null
@@ -763,6 +767,10 @@ export type Database = {
           invoiced_at?: string | null
           job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
+          lost_at?: string | null
+          lost_competitor?: string | null
+          lost_note?: string | null
+          lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           name: string
           needs_offer?: boolean
           notes?: string | null
@@ -804,6 +812,10 @@ export type Database = {
           invoiced_at?: string | null
           job_type?: Database["public"]["Enums"]["job_type"]
           last_contact?: string | null
+          lost_at?: string | null
+          lost_competitor?: string | null
+          lost_note?: string | null
+          lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           name?: string
           needs_offer?: boolean
           notes?: string | null
@@ -1111,6 +1123,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sales_goals: {
+        Row: {
+          avg_order_goal: number
+          created_at: string
+          created_by: string | null
+          deals_goal: number
+          id: string
+          meetings_goal: number
+          offers_goal: number
+          period_month: string
+          revenue_goal: number
+          seller_id: string | null
+          updated_at: string
+          win_rate_goal: number
+        }
+        Insert: {
+          avg_order_goal?: number
+          created_at?: string
+          created_by?: string | null
+          deals_goal?: number
+          id?: string
+          meetings_goal?: number
+          offers_goal?: number
+          period_month: string
+          revenue_goal?: number
+          seller_id?: string | null
+          updated_at?: string
+          win_rate_goal?: number
+        }
+        Update: {
+          avg_order_goal?: number
+          created_at?: string
+          created_by?: string | null
+          deals_goal?: number
+          id?: string
+          meetings_goal?: number
+          offers_goal?: number
+          period_month?: string
+          revenue_goal?: number
+          seller_id?: string | null
+          updated_at?: string
+          win_rate_goal?: number
+        }
+        Relationships: []
       }
       self_check_deliveries: {
         Row: {
@@ -1846,6 +1903,16 @@ export type Database = {
         | "csv_import"
         | "roslagstak"
       lead_status: "cold" | "warm" | "hot" | "customer" | "lost"
+      lost_reason:
+        | "for_dyrt"
+        | "konkurrent"
+        | "kunden_avvaktar"
+        | "ingen_finansiering"
+        | "svarar_inte"
+        | "projektet_installt"
+        | "annan_losning"
+        | "dalig_timing"
+        | "annat"
       offer_status: "draft" | "skickad" | "accepterad" | "avvisad"
       pipeline_stage:
         | "inkommande_webb"
@@ -2030,6 +2097,17 @@ export const Constants = {
         "roslagstak",
       ],
       lead_status: ["cold", "warm", "hot", "customer", "lost"],
+      lost_reason: [
+        "for_dyrt",
+        "konkurrent",
+        "kunden_avvaktar",
+        "ingen_finansiering",
+        "svarar_inte",
+        "projektet_installt",
+        "annan_losning",
+        "dalig_timing",
+        "annat",
+      ],
       offer_status: ["draft", "skickad", "accepterad", "avvisad"],
       pipeline_stage: [
         "inkommande_webb",

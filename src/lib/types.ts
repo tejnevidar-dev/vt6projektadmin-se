@@ -7,6 +7,31 @@ export type LeadStatus = Database["public"]["Enums"]["lead_status"];
 export type LeadSource = Database["public"]["Enums"]["lead_source"];
 export type JobType = Database["public"]["Enums"]["job_type"];
 export type PipelineStage = Database["public"]["Enums"]["pipeline_stage"];
+export type LostReason = Database["public"]["Enums"]["lost_reason"];
+
+export const LOST_REASONS: LostReason[] = [
+  "for_dyrt",
+  "konkurrent",
+  "kunden_avvaktar",
+  "ingen_finansiering",
+  "svarar_inte",
+  "projektet_installt",
+  "annan_losning",
+  "dalig_timing",
+  "annat",
+];
+
+export const LOST_REASON_LABELS: Record<LostReason, string> = {
+  for_dyrt: "För dyrt",
+  konkurrent: "Konkurrent",
+  kunden_avvaktar: "Kunden avvaktar",
+  ingen_finansiering: "Ingen finansiering",
+  svarar_inte: "Kunden svarar inte",
+  projektet_installt: "Projektet inställt",
+  annan_losning: "Valde annan lösning",
+  dalig_timing: "Dålig timing",
+  annat: "Annat",
+};
 
 export const PIPELINE_STAGES: PipelineStage[] = [
   "inkommande_webb",
@@ -182,6 +207,10 @@ export interface Lead {
   sellerId: string | null;
   commissionRate: number | null;
   completedAt: string | null;
+  lostReason: LostReason | null;
+  lostCompetitor: string | null;
+  lostNote: string | null;
+  lostAt: string | null;
 }
 
 /** True om en bokad lead saknar pris eller tilldelning (UE / arbetsledare). */
@@ -311,6 +340,10 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     sellerId: (lp as { seller_id?: string | null }).seller_id ?? null,
     commissionRate: (lp as { commission_rate?: number | null }).commission_rate ?? null,
     completedAt: (lp as { completed_at?: string | null }).completed_at ?? null,
+    lostReason: (lp as { lost_reason?: LostReason | null }).lost_reason ?? null,
+    lostCompetitor: (lp as { lost_competitor?: string | null }).lost_competitor ?? null,
+    lostNote: (lp as { lost_note?: string | null }).lost_note ?? null,
+    lostAt: (lp as { lost_at?: string | null }).lost_at ?? null,
   };
 }
 
