@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { CommandCenterTab } from "@/components/sales/CommandCenterTab";
+import { TodayTab } from "@/components/sales/TodayTab";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
@@ -265,6 +266,7 @@ function SaljDashPage() {
         <Tabs defaultValue="oversikt">
           <TabsList className="flex-wrap">
             <TabsTrigger value="oversikt">Command Center</TabsTrigger>
+            <TabsTrigger value="idag">Idag</TabsTrigger>
             <TabsTrigger value="topplista">Topplista</TabsTrigger>
             <TabsTrigger value="analys">Analys</TabsTrigger>
             <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
@@ -278,6 +280,10 @@ function SaljDashPage() {
               previous={previous}
               periodLabel={PERIOD_LABELS[period]}
             />
+          </TabsContent>
+
+          <TabsContent value="idag" className="mt-4">
+            <TodayTab leads={leads as Lead[]} userId={user?.id ?? null} />
           </TabsContent>
 
           {/* TOPPLISTA */}
