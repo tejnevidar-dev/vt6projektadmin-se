@@ -76,17 +76,64 @@ export function CommandCenterTab({ leads, current, previous, periodLabel }: Prop
       {/* Försäljning per tidsfönster */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {buckets.map((b) => (
-          <Card key={b.label}>
+          <Card
+            key={b.label}
+            role="button"
+            tabIndex={0}
+            onClick={() => b.deals > 0 && setDrill(b)}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" || e.key === " ") && b.deals > 0) {
+                e.preventDefault();
+                setDrill(b);
+              }
+            }}
+            className={cn(
+              "transition-colors",
+              b.deals > 0 ? "cursor-pointer hover:border-primary/50 hover:bg-accent/40" : "opacity-80",
+            )}
+          >
             <CardContent className="p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">{b.label}</p>
               <p className="mt-1 text-xl font-semibold">{kr(b.net)}</p>
               <p className="text-xs text-muted-foreground">
                 {kr(b.gross)} ink. moms · {b.deals} affärer
               </p>
+              {b.deals > 0 && (
+                <p className="mt-1 text-[11px] font-medium text-primary">Visa affärer</p>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <Dialog open={!!drill} onOpenChange={(o) => !o && setDrill(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {drill?.label} – {drill?.deals} affärer · {kr(drill?.net ?? 0)} exkl. moms
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+            {drill?.rows.map((l) => (
+              <div key={l.id} className="flex items-start justify-between gap-3 rounded-lg border p-3 text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{l.name || "Namnlös kund"}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {[l.address, l.city].filter(Boolean).join(", ") || "–"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Godkänd: {saleDate(l)?.toLocaleDateString("sv-SE") ?? "–"}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-semibold">{kr(netValue(l))}</p>
+                  <p className="text-xs text-muted-foreground">{kr(l.price ?? 0)} ink. moms</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Mål */}
       <Card>
