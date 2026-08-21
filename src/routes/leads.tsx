@@ -14,15 +14,23 @@ import { AiGenerateLeadsDialog } from "@/components/AiGenerateLeadsDialog";
 import { NewLeadChoiceDialog } from "@/components/NewLeadChoiceDialog";
 import { LeadKanban } from "@/components/LeadKanban";
 import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
-import type { Lead, LeadStatus, JobType } from "@/lib/types";
-import { JOB_TYPE_LABELS, SALES_PIPELINE_STAGES, leadMissingRotUnderlag } from "@/lib/types";
+import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
+import { JOB_TYPE_LABELS, PIPELINE_STAGE_LABELS, SALES_PIPELINE_STAGES, leadMissingRotUnderlag } from "@/lib/types";
 import { toast } from "sonner";
+
+/** Alla stadier som ska gå att se och filtrera på i leadvyn. */
+const LEAD_VIEW_STAGES: PipelineStage[] = ["inkommande_webb", ...SALES_PIPELINE_STAGES];
+
+const STAGE_TAB_LABELS: Partial<Record<PipelineStage, string>> = {
+  saljpanel: "admin.vt6 leads",
+};
 
 const JOB_TAB_ICONS: Record<JobType, typeof Hammer> = {
   roof_replacement: Hammer,
   roof_cleaning: Droplets,
   light_roof_work: Wrench,
 };
+
 
 export const Route = createFileRoute("/leads")({
   component: LeadsPage,
