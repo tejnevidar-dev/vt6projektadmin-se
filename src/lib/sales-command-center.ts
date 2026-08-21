@@ -29,6 +29,8 @@ export interface PeriodBucket {
   net: number;
   gross: number;
   deals: number;
+  /** Affärerna som ingår i perioden (för drill-down). */
+  rows: Lead[];
 }
 
 /** Försäljning idag / vecka / månad / kvartal / år (baserat på slutförandedatum). */
@@ -56,7 +58,8 @@ export function salesBuckets(leads: Lead[], now = new Date()): PeriodBucket[] {
       return !!d && d >= start && d <= now;
     });
     const net = rows.reduce((s, l) => s + netValue(l), 0);
-    return { label, net: Math.round(net), gross: Math.round(net * (1 + VAT_RATE)), deals: rows.length };
+    const sorted = [...rows].sort((a, b) => (saleDate(b)?.getTime() ?? 0) - (saleDate(a)?.getTime() ?? 0));
+    return { label, net: Math.round(net), gross: Math.round(net * (1 + VAT_RATE)), deals: rows.length, rows: sorted };
   });
 }
 
