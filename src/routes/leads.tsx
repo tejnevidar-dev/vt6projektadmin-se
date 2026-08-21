@@ -61,8 +61,10 @@ function LeadsContent() {
   const [showAiDialog, setShowAiDialog] = useState(false);
   const [showChoiceDialog, setShowChoiceDialog] = useState(false);
   const [activeJobType, setActiveJobType] = useState<JobType | "all">("all");
-  const [view, setView] = useState<"kanban" | "pipeline" | "table">("kanban");
-  const [activePipeline, setActivePipeline] = useState<PipelineStage>("inkommande_webb");
+  const [view, setView] = useState<"kanban" | "table">("kanban");
+  const [stageFilter, setStageFilter] = useState<PipelineStage | "all">("all");
+  const [showFilters, setShowFilters] = useState(false);
+
 
   const loadLeads = useCallback(async () => {
     try {
