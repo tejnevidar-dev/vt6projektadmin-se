@@ -10,7 +10,6 @@ export const Route = createFileRoute("/forhandling")({
       { property: "og:title", content: "Förhandling – admin.vt6" },
       { property: "og:description", content: "Överblick över affärer i förhandling om pris och villkor." },
       { property: "og:type", content: "website" },
-      { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),

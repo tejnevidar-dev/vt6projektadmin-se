@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
 import { Route as ValjPanelRouteImport } from './routes/valj-panel'
+import { Route as UppfoljningRouteImport } from './routes/uppfoljning'
 import { Route as UppdateraKontoRouteImport } from './routes/uppdatera-konto'
 import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -22,9 +23,11 @@ import { Route as PrislistaRouteImport } from './routes/prislista'
 import { Route as PersonalRouteImport } from './routes/personal'
 import { Route as PagaendeRouteImport } from './routes/pagaende'
 import { Route as OfferteradeRouteImport } from './routes/offerterade'
+import { Route as OffertSkickadRouteImport } from './routes/offert-skickad'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeadsRouteImport } from './routes/leads'
 import { Route as KalenderRouteImport } from './routes/kalender'
+import { Route as ForhandlingRouteImport } from './routes/forhandling'
 import { Route as EgenkontrollerRouteImport } from './routes/egenkontroller'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BokadeRouteImport } from './routes/bokade'
@@ -63,6 +66,11 @@ const WebhookLogsRoute = WebhookLogsRouteImport.update({
 const ValjPanelRoute = ValjPanelRouteImport.update({
   id: '/valj-panel',
   path: '/valj-panel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UppfoljningRoute = UppfoljningRouteImport.update({
+  id: '/uppfoljning',
+  path: '/uppfoljning',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UppdateraKontoRoute = UppdateraKontoRouteImport.update({
@@ -120,6 +128,11 @@ const OfferteradeRoute = OfferteradeRouteImport.update({
   path: '/offerterade',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OffertSkickadRoute = OffertSkickadRouteImport.update({
+  id: '/offert-skickad',
+  path: '/offert-skickad',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -133,6 +146,11 @@ const LeadsRoute = LeadsRouteImport.update({
 const KalenderRoute = KalenderRouteImport.update({
   id: '/kalender',
   path: '/kalender',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForhandlingRoute = ForhandlingRouteImport.update({
+  id: '/forhandling',
+  path: '/forhandling',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EgenkontrollerRoute = EgenkontrollerRouteImport.update({
@@ -295,9 +313,11 @@ export interface FileRoutesByFullPath {
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
   '/egenkontroller': typeof EgenkontrollerRouteWithChildren
+  '/forhandling': typeof ForhandlingRoute
   '/kalender': typeof KalenderRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
+  '/offert-skickad': typeof OffertSkickadRoute
   '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
@@ -309,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
+  '/uppfoljning': typeof UppfoljningRoute
   '/valj-panel': typeof ValjPanelRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
@@ -341,9 +362,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
+  '/forhandling': typeof ForhandlingRoute
   '/kalender': typeof KalenderRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
+  '/offert-skickad': typeof OffertSkickadRoute
   '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
@@ -355,6 +378,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
+  '/uppfoljning': typeof UppfoljningRoute
   '/valj-panel': typeof ValjPanelRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
@@ -389,9 +413,11 @@ export interface FileRoutesById {
   '/bokade': typeof BokadeRoute
   '/dashboard': typeof DashboardRoute
   '/egenkontroller': typeof EgenkontrollerRouteWithChildren
+  '/forhandling': typeof ForhandlingRoute
   '/kalender': typeof KalenderRoute
   '/leads': typeof LeadsRoute
   '/login': typeof LoginRoute
+  '/offert-skickad': typeof OffertSkickadRoute
   '/offerterade': typeof OfferteradeRoute
   '/pagaende': typeof PagaendeRoute
   '/personal': typeof PersonalRoute
@@ -403,6 +429,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
+  '/uppfoljning': typeof UppfoljningRoute
   '/valj-panel': typeof ValjPanelRoute
   '/webhook-logs': typeof WebhookLogsRoute
   '/api/ai-pitch': typeof ApiAiPitchRoute
@@ -438,9 +465,11 @@ export interface FileRouteTypes {
     | '/bokade'
     | '/dashboard'
     | '/egenkontroller'
+    | '/forhandling'
     | '/kalender'
     | '/leads'
     | '/login'
+    | '/offert-skickad'
     | '/offerterade'
     | '/pagaende'
     | '/personal'
@@ -452,6 +481,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
+    | '/uppfoljning'
     | '/valj-panel'
     | '/webhook-logs'
     | '/api/ai-pitch'
@@ -484,9 +514,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bokade'
     | '/dashboard'
+    | '/forhandling'
     | '/kalender'
     | '/leads'
     | '/login'
+    | '/offert-skickad'
     | '/offerterade'
     | '/pagaende'
     | '/personal'
@@ -498,6 +530,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
+    | '/uppfoljning'
     | '/valj-panel'
     | '/webhook-logs'
     | '/api/ai-pitch'
@@ -531,9 +564,11 @@ export interface FileRouteTypes {
     | '/bokade'
     | '/dashboard'
     | '/egenkontroller'
+    | '/forhandling'
     | '/kalender'
     | '/leads'
     | '/login'
+    | '/offert-skickad'
     | '/offerterade'
     | '/pagaende'
     | '/personal'
@@ -545,6 +580,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/slutforda'
     | '/uppdatera-konto'
+    | '/uppfoljning'
     | '/valj-panel'
     | '/webhook-logs'
     | '/api/ai-pitch'
@@ -579,9 +615,11 @@ export interface RootRouteChildren {
   BokadeRoute: typeof BokadeRoute
   DashboardRoute: typeof DashboardRoute
   EgenkontrollerRoute: typeof EgenkontrollerRouteWithChildren
+  ForhandlingRoute: typeof ForhandlingRoute
   KalenderRoute: typeof KalenderRoute
   LeadsRoute: typeof LeadsRoute
   LoginRoute: typeof LoginRoute
+  OffertSkickadRoute: typeof OffertSkickadRoute
   OfferteradeRoute: typeof OfferteradeRoute
   PagaendeRoute: typeof PagaendeRoute
   PersonalRoute: typeof PersonalRoute
@@ -593,6 +631,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
   UppdateraKontoRoute: typeof UppdateraKontoRoute
+  UppfoljningRoute: typeof UppfoljningRoute
   ValjPanelRoute: typeof ValjPanelRoute
   WebhookLogsRoute: typeof WebhookLogsRoute
   ApiAiPitchRoute: typeof ApiAiPitchRoute
@@ -632,6 +671,13 @@ declare module '@tanstack/react-router' {
       path: '/valj-panel'
       fullPath: '/valj-panel'
       preLoaderRoute: typeof ValjPanelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/uppfoljning': {
+      id: '/uppfoljning'
+      path: '/uppfoljning'
+      fullPath: '/uppfoljning'
+      preLoaderRoute: typeof UppfoljningRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/uppdatera-konto': {
@@ -711,6 +757,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OfferteradeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/offert-skickad': {
+      id: '/offert-skickad'
+      path: '/offert-skickad'
+      fullPath: '/offert-skickad'
+      preLoaderRoute: typeof OffertSkickadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -730,6 +783,13 @@ declare module '@tanstack/react-router' {
       path: '/kalender'
       fullPath: '/kalender'
       preLoaderRoute: typeof KalenderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forhandling': {
+      id: '/forhandling'
+      path: '/forhandling'
+      fullPath: '/forhandling'
+      preLoaderRoute: typeof ForhandlingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/egenkontroller': {
@@ -959,9 +1019,11 @@ const rootRouteChildren: RootRouteChildren = {
   BokadeRoute: BokadeRoute,
   DashboardRoute: DashboardRoute,
   EgenkontrollerRoute: EgenkontrollerRouteWithChildren,
+  ForhandlingRoute: ForhandlingRoute,
   KalenderRoute: KalenderRoute,
   LeadsRoute: LeadsRoute,
   LoginRoute: LoginRoute,
+  OffertSkickadRoute: OffertSkickadRoute,
   OfferteradeRoute: OfferteradeRoute,
   PagaendeRoute: PagaendeRoute,
   PersonalRoute: PersonalRoute,
@@ -973,6 +1035,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,
   UppdateraKontoRoute: UppdateraKontoRoute,
+  UppfoljningRoute: UppfoljningRoute,
   ValjPanelRoute: ValjPanelRoute,
   WebhookLogsRoute: WebhookLogsRoute,
   ApiAiPitchRoute: ApiAiPitchRoute,
