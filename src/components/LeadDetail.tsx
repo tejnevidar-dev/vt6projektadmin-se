@@ -23,6 +23,7 @@ import { EconomyNoteCard } from "@/components/EconomyNoteCard";
 import { OfferAcceptedCard } from "@/components/OfferAcceptedCard";
 import { OfferValuesDialog } from "@/components/OfferValuesDialog";
 import { SellerCard } from "@/components/SellerCard";
+import { NextActionCard } from "@/components/NextActionCard";
 import { LostDealCard } from "@/components/LostDealCard";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
