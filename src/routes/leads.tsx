@@ -276,7 +276,36 @@ function LeadsContent() {
       tabs={tabs}
     >
       <div className="space-y-6">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+            Vyer
+          </span>
+          {SAVED_VIEWS.map((v) => {
+            const active = activeView === v.key;
+            return (
+              <button
+                key={v.key}
+                type="button"
+                title={v.hint}
+                onClick={() => {
+                  setActiveView(v.key);
+                  setNeedsOfferFilter(v.key === "offer" ? "yes" : "all");
+                }}
+                className={`rounded-full border px-3 py-1 text-[12px] font-medium transition-colors ${
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card/60 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {v.label}
+              </button>
+            );
+          })}
+        </div>
+
         <KpiCards leads={jobTypeLeads} />
+
+
 
         <section className="rounded-xl border border-border/70 bg-card/40">
           <button
