@@ -34,8 +34,12 @@ const JOB_TAB_ICONS: Record<JobType, typeof Hammer> = {
 
 export const Route = createFileRoute("/leads")({
   component: LeadsPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    lead: typeof search.lead === "string" ? search.lead : undefined,
+  }),
   head: () => ({ meta: [{ title: "Leads" }] }),
 });
+
 
 function LeadsPage() {
   return (
