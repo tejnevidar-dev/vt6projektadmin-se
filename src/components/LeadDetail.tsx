@@ -23,6 +23,7 @@ import { EconomyNoteCard } from "@/components/EconomyNoteCard";
 import { OfferAcceptedCard } from "@/components/OfferAcceptedCard";
 import { OfferValuesDialog } from "@/components/OfferValuesDialog";
 import { SellerCard } from "@/components/SellerCard";
+import { NextActionCard } from "@/components/NextActionCard";
 import { LostDealCard } from "@/components/LostDealCard";
 import { OfferPdfCard } from "@/components/OfferPdfCard";
 import { LeadDocumentsCard } from "@/components/LeadDocumentsCard";
@@ -318,6 +319,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
                   <p className="text-xs text-muted-foreground">Senast kontaktad: {lead.lastContact}</p>
                 )}
               </div>
+            )}
+
+            {lead.pipelineStage !== "slutford" && lead.pipelineStage !== "forlorad" && (
+              <NextActionCard lead={lead} onUpdated={() => onUpdated?.()} />
             )}
 
             <SellerCard lead={lead} onUpdated={() => onUpdated?.()} />

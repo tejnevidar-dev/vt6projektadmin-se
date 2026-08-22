@@ -10,10 +10,11 @@ import {
   DragOverlay,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { Phone, MapPin, Calendar, Clock, Hammer, Droplets, Wrench, Flame, AlertTriangle, FileSignature, Receipt, Landmark } from "lucide-react";
+import { Phone, MapPin, Calendar, Clock, Hammer, Droplets, Wrench, Flame, AlertTriangle, FileSignature, Receipt, Landmark, AlarmClock } from "lucide-react";
 import type { Lead, PipelineStage, JobType, LeadStatus } from "@/lib/types";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, hasIncompleteBooking, isUninvoiced, isRotApplicationDue } from "@/lib/types";
 import { scoreLabel } from "@/lib/lead-scoring";
+import { nextActionState } from "@/lib/next-action";
 import { cn } from "@/lib/utils";
 
 const STAGE_ACCENT: Record<PipelineStage, string> = {
@@ -154,6 +155,7 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
   const score = scoreLabel(lead.score);
   const isBooked = lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford";
   const incomplete = hasIncompleteBooking(lead);
+  const nextAction = isBooked ? null : nextActionState(lead);
   return (
     <div
       className={cn(
@@ -213,6 +215,21 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
           {Math.max(0, Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / 86400000))} d
         </span>
       </div>
+      {nextAction && (
+        <div
+          className={cn(
+            "mt-2 flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold",
+            nextAction.className,
+          )}
+          title={lead.nextActionNote ?? "Nästa åtgärd"}
+        >
+          <AlarmClock className="h-3 w-3 shrink-0" />
+          <span className="shrink-0">{nextAction.label}</span>
+          {lead.nextActionNote && (
+            <span className="truncate font-normal opacity-80">· {lead.nextActionNote}</span>
+          )}
+        </div>
+      )}
       {!isBooked && (
         <div className="mt-2 flex items-center justify-between gap-2">
           <span

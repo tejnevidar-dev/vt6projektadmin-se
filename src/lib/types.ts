@@ -180,6 +180,9 @@ export interface Lead {
   notes: string;
   hasRoofPermit: boolean;
   lastContact: string | null;
+  /** Planerad nästa åtgärd (ISO) och vad som ska göras. */
+  nextActionAt: string | null;
+  nextActionNote: string | null;
   createdAt: string;
   propertyId: string | null;
   assignedTo: string | null;
@@ -317,6 +320,8 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     notes: lp.notes ?? "",
     hasRoofPermit: lp.property?.has_roof_permit ?? false,
     lastContact: lp.last_contact,
+    nextActionAt: (lp as { next_action_at?: string | null }).next_action_at ?? null,
+    nextActionNote: (lp as { next_action_note?: string | null }).next_action_note ?? null,
     createdAt: lp.created_at,
     propertyId: lp.property_id,
     assignedTo: (lp as { assigned_to?: string | null }).assigned_to ?? null,

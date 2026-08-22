@@ -15,6 +15,7 @@ import { NewLeadChoiceDialog } from "@/components/NewLeadChoiceDialog";
 import { LeadKanban } from "@/components/LeadKanban";
 import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
 import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
+import { isNextActionDue } from "@/lib/next-action";
 import { JOB_TYPE_LABELS, PIPELINE_STAGE_LABELS, SALES_PIPELINE_STAGES, leadMissingRotUnderlag } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -22,10 +23,11 @@ import { toast } from "sonner";
 const LEAD_VIEW_STAGES: PipelineStage[] = ["inkommande_webb", ...SALES_PIPELINE_STAGES];
 
 /** Sparade vyer – snabbfilter för det man oftast jobbar med. */
-type SavedViewKey = "all" | "hot" | "offer" | "waiting" | "rot";
+type SavedViewKey = "all" | "today" | "hot" | "offer" | "waiting" | "rot";
 
 const SAVED_VIEWS: { key: SavedViewKey; label: string; hint: string }[] = [
   { key: "all", label: "Alla", hint: "Alla aktiva leads" },
+  { key: "today", label: "Nästa åtgärd", hint: "Åtgärd planerad idag eller försenad" },
   { key: "hot", label: "Mina heta", hint: "Status: het" },
   { key: "offer", label: "Att offertera", hint: "Behöver offert" },
   { key: "waiting", label: "Väntar svar >5 dgr", hint: "Offert skickad / uppföljning utan kontakt" },
@@ -142,6 +144,7 @@ function LeadsContent() {
       }
       if (needsOfferFilter === "yes" && !lead.needsOffer) return false;
       if (needsOfferFilter === "no" && lead.needsOffer) return false;
+      if (activeView === "today" && !isNextActionDue(lead)) return false;
       if (activeView === "hot" && lead.status !== "hot") return false;
       if (activeView === "waiting") {
         if (lead.pipelineStage !== "offert_skickad" && lead.pipelineStage !== "uppfoljning") return false;
