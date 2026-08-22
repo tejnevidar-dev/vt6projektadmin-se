@@ -10,10 +10,11 @@ import {
   DragOverlay,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { Phone, MapPin, Calendar, Clock, Hammer, Droplets, Wrench, Flame, AlertTriangle, FileSignature, Receipt, Landmark } from "lucide-react";
+import { Phone, MapPin, Calendar, Clock, Hammer, Droplets, Wrench, Flame, AlertTriangle, FileSignature, Receipt, Landmark, AlarmClock } from "lucide-react";
 import type { Lead, PipelineStage, JobType, LeadStatus } from "@/lib/types";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, hasIncompleteBooking, isUninvoiced, isRotApplicationDue } from "@/lib/types";
 import { scoreLabel } from "@/lib/lead-scoring";
+import { nextActionState } from "@/lib/next-action";
 import { cn } from "@/lib/utils";
 
 const STAGE_ACCENT: Record<PipelineStage, string> = {
@@ -154,6 +155,7 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
   const score = scoreLabel(lead.score);
   const isBooked = lead.pipelineStage === "bokad" || lead.pipelineStage === "pagaende" || lead.pipelineStage === "slutford";
   const incomplete = hasIncompleteBooking(lead);
+  const nextAction = isBooked ? null : nextActionState(lead);
   return (
     <div
       className={cn(
