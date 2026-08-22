@@ -68,6 +68,7 @@ function LeadsContent() {
   const [view, setView] = useState<"kanban" | "table">("kanban");
   const [stageFilter, setStageFilter] = useState<PipelineStage | "all">("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [activeView, setActiveView] = useState<SavedViewKey>("all");
 
 
   const loadLeads = useCallback(async () => {
