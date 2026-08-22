@@ -85,6 +85,15 @@ function LeadsContent() {
     loadLeads();
   }, [loadLeads]);
 
+  // Öppna lead direkt via ?lead=<id> (t.ex. från global sökning)
+  const { lead: leadParam } = Route.useSearch();
+  useEffect(() => {
+    if (!leadParam) return;
+    const found = leads.find((l) => l.id === leadParam);
+    if (found) setSelectedLead(found);
+  }, [leadParam, leads]);
+
+
   const activeLeads = useMemo(
     () => leads.filter((l) => LEAD_VIEW_STAGES.includes(l.pipelineStage)),
     [leads]
