@@ -155,6 +155,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
 
   return (
     <div className="relative flex min-h-screen w-full bg-background text-foreground">
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} navItems={quickNav} />
       {/* Mobil-overlay */}
       {mobileOpen && (
         <div
