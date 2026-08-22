@@ -134,6 +134,13 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
     (i.children ?? []).some((c) => pathname === c.to || pathname.startsWith(c.to + "/"))
   );
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
+  const [searchOpen, setSearchOpen] = useState(false);
+  useCommandK(setSearchOpen);
+  const quickNav: QuickNavItem[] = visibleNav.flatMap((i) => [
+    { to: i.to, label: i.label, group: i.group },
+    ...(i.children ?? []).map((c) => ({ to: c.to, label: c.label, group: i.label })),
+  ]);
+
 
   const sideLabel = side === "intern" ? "Intern" : "Extern";
   const SideIcon = side === "intern" ? HardHat : Briefcase;
