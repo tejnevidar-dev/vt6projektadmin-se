@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { GlobalSearch, useCommandK, type QuickNavItem } from "@/components/GlobalSearch";
 
 type NavChild = { to: string; label: string };
 
