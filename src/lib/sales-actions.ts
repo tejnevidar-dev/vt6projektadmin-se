@@ -90,6 +90,23 @@ export function todaysActions(leads: Lead[], now = new Date()): SalesAction[] {
 
     if (!isOpen(l)) continue;
 
+    // Manuellt planerad nästa åtgärd – går före allt annat när den förfallit
+    const na = dateOf(l.nextActionAt);
+    if (na && na < endOfDay) {
+      const overdueDays = Math.max(0, Math.floor((startOfDay.getTime() - new Date(na).setHours(0, 0, 0, 0)) / DAY));
+      out.push({
+        id: `${l.id}-nextaction`,
+        lead: l,
+        priority: "hog",
+        kind: "uppfoljning",
+        title: l.nextActionNote ? `${l.nextActionNote} – ${l.name}` : `Planerad åtgärd: ${l.name}`,
+        reason: overdueDays > 0 ? `Försenad ${overdueDays} dagar · ${stageLabel}` : `Planerad idag · ${stageLabel}`,
+        value,
+        weight: 9_000_000 + overdueDays * 1000,
+      });
+      continue;
+    }
+
     // Offert väntar på att skickas
     if (l.needsOffer || l.pipelineStage === "offererad") {
       out.push({
