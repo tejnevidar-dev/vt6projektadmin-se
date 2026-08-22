@@ -213,6 +213,21 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
           {Math.max(0, Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / 86400000))} d
         </span>
       </div>
+      {nextAction && (
+        <div
+          className={cn(
+            "mt-2 flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold",
+            nextAction.className,
+          )}
+          title={lead.nextActionNote ?? "Nästa åtgärd"}
+        >
+          <AlarmClock className="h-3 w-3 shrink-0" />
+          <span className="shrink-0">{nextAction.label}</span>
+          {lead.nextActionNote && (
+            <span className="truncate font-normal opacity-80">· {lead.nextActionNote}</span>
+          )}
+        </div>
+      )}
       {!isBooked && (
         <div className="mt-2 flex items-center justify-between gap-2">
           <span
