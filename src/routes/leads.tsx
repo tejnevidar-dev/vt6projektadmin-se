@@ -130,9 +130,17 @@ function LeadsContent() {
       }
       if (needsOfferFilter === "yes" && !lead.needsOffer) return false;
       if (needsOfferFilter === "no" && lead.needsOffer) return false;
+      if (activeView === "hot" && lead.status !== "hot") return false;
+      if (activeView === "waiting") {
+        if (lead.pipelineStage !== "offert_skickad" && lead.pipelineStage !== "uppfoljning") return false;
+        const ref = lead.lastContact ?? lead.createdAt;
+        if (Date.now() - new Date(ref).getTime() < 5 * 864e5) return false;
+      }
+      if (activeView === "rot" && leadMissingRotUnderlag(lead).length === 0) return false;
       return true;
     });
-  }, [jobTypeLeads, search, region, municipality, statusFilter, assignedFilter, createdByFilter, needsOfferFilter]);
+  }, [jobTypeLeads, search, region, municipality, statusFilter, assignedFilter, createdByFilter, needsOfferFilter, activeView]);
+
 
   const stageLeads = useMemo(
     () => (stageFilter === "all" ? filteredLeads : filteredLeads.filter((l) => l.pipelineStage === stageFilter)),
