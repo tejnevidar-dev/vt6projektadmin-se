@@ -126,6 +126,26 @@ export async function updateLeadBooking(id: string, booking: BookingPatch): Prom
   await logActivity(id, "updated", `Bokning uppdaterad (${parts.join(", ")})`, booking as Record<string, unknown>);
 }
 
+/** Sätter (eller rensar) leadets planerade nästa åtgärd. */
+export async function setLeadNextAction(
+  id: string,
+  nextActionAt: string | null,
+  note: string | null,
+): Promise<void> {
+  const { error } = await (supabase.from("leads") as any)
+    .update({ next_action_at: nextActionAt, next_action_note: note })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "updated",
+    nextActionAt
+      ? `Nästa åtgärd ${new Date(nextActionAt).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}${note ? ` – ${note}` : ""}`
+      : "Nästa åtgärd rensad",
+    { next_action_at: nextActionAt, next_action_note: note },
+  );
+}
+
 export async function setLeadNeedsOffer(id: string, needsOffer: boolean): Promise<void> {
   const { error } = await (supabase.from("leads") as any)
     .update({ needs_offer: needsOffer })
