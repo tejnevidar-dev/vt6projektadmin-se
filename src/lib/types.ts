@@ -180,6 +180,9 @@ export interface Lead {
   notes: string;
   hasRoofPermit: boolean;
   lastContact: string | null;
+  /** Planerad nästa åtgärd (ISO) och vad som ska göras. */
+  nextActionAt: string | null;
+  nextActionNote: string | null;
   createdAt: string;
   propertyId: string | null;
   assignedTo: string | null;
