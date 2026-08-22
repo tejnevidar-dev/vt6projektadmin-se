@@ -21,6 +21,17 @@ import { toast } from "sonner";
 /** Alla stadier som ska gå att se och filtrera på i leadvyn. */
 const LEAD_VIEW_STAGES: PipelineStage[] = ["inkommande_webb", ...SALES_PIPELINE_STAGES];
 
+/** Sparade vyer – snabbfilter för det man oftast jobbar med. */
+type SavedViewKey = "all" | "hot" | "offer" | "waiting" | "rot";
+
+const SAVED_VIEWS: { key: SavedViewKey; label: string; hint: string }[] = [
+  { key: "all", label: "Alla", hint: "Alla aktiva leads" },
+  { key: "hot", label: "Mina heta", hint: "Status: het" },
+  { key: "offer", label: "Att offertera", hint: "Behöver offert" },
+  { key: "waiting", label: "Väntar svar >5 dgr", hint: "Offert skickad / uppföljning utan kontakt" },
+  { key: "rot", label: "Saknar ROT-underlag", hint: "Ofullständigt underlag" },
+];
+
 const STAGE_TAB_LABELS: Partial<Record<PipelineStage, string>> = {
   saljpanel: "admin.vt6 leads",
 };
