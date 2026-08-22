@@ -21,6 +21,17 @@ import { toast } from "sonner";
 /** Alla stadier som ska gå att se och filtrera på i leadvyn. */
 const LEAD_VIEW_STAGES: PipelineStage[] = ["inkommande_webb", ...SALES_PIPELINE_STAGES];
 
+/** Sparade vyer – snabbfilter för det man oftast jobbar med. */
+type SavedViewKey = "all" | "hot" | "offer" | "waiting" | "rot";
+
+const SAVED_VIEWS: { key: SavedViewKey; label: string; hint: string }[] = [
+  { key: "all", label: "Alla", hint: "Alla aktiva leads" },
+  { key: "hot", label: "Mina heta", hint: "Status: het" },
+  { key: "offer", label: "Att offertera", hint: "Behöver offert" },
+  { key: "waiting", label: "Väntar svar >5 dgr", hint: "Offert skickad / uppföljning utan kontakt" },
+  { key: "rot", label: "Saknar ROT-underlag", hint: "Ofullständigt underlag" },
+];
+
 const STAGE_TAB_LABELS: Partial<Record<PipelineStage, string>> = {
   saljpanel: "admin.vt6 leads",
 };
@@ -34,8 +45,12 @@ const JOB_TAB_ICONS: Record<JobType, typeof Hammer> = {
 
 export const Route = createFileRoute("/leads")({
   component: LeadsPage,
+  validateSearch: (search: Record<string, unknown>): { lead?: string } =>
+    typeof search.lead === "string" ? { lead: search.lead } : {},
+
   head: () => ({ meta: [{ title: "Leads" }] }),
 });
+
 
 function LeadsPage() {
   return (
@@ -64,6 +79,7 @@ function LeadsContent() {
   const [view, setView] = useState<"kanban" | "table">("kanban");
   const [stageFilter, setStageFilter] = useState<PipelineStage | "all">("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [activeView, setActiveView] = useState<SavedViewKey>("all");
 
 
   const loadLeads = useCallback(async () => {
@@ -80,6 +96,15 @@ function LeadsContent() {
   useEffect(() => {
     loadLeads();
   }, [loadLeads]);
+
+  // Öppna lead direkt via ?lead=<id> (t.ex. från global sökning)
+  const { lead: leadParam } = Route.useSearch();
+  useEffect(() => {
+    if (!leadParam) return;
+    const found = leads.find((l) => l.id === leadParam);
+    if (found) setSelectedLead(found);
+  }, [leadParam, leads]);
+
 
   const activeLeads = useMemo(
     () => leads.filter((l) => LEAD_VIEW_STAGES.includes(l.pipelineStage)),
@@ -117,9 +142,17 @@ function LeadsContent() {
       }
       if (needsOfferFilter === "yes" && !lead.needsOffer) return false;
       if (needsOfferFilter === "no" && lead.needsOffer) return false;
+      if (activeView === "hot" && lead.status !== "hot") return false;
+      if (activeView === "waiting") {
+        if (lead.pipelineStage !== "offert_skickad" && lead.pipelineStage !== "uppfoljning") return false;
+        const ref = lead.lastContact ?? lead.createdAt;
+        if (Date.now() - new Date(ref).getTime() < 5 * 864e5) return false;
+      }
+      if (activeView === "rot" && leadMissingRotUnderlag(lead).length === 0) return false;
       return true;
     });
-  }, [jobTypeLeads, search, region, municipality, statusFilter, assignedFilter, createdByFilter, needsOfferFilter]);
+  }, [jobTypeLeads, search, region, municipality, statusFilter, assignedFilter, createdByFilter, needsOfferFilter, activeView]);
+
 
   const stageLeads = useMemo(
     () => (stageFilter === "all" ? filteredLeads : filteredLeads.filter((l) => l.pipelineStage === stageFilter)),
@@ -243,7 +276,36 @@ function LeadsContent() {
       tabs={tabs}
     >
       <div className="space-y-6">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+            Vyer
+          </span>
+          {SAVED_VIEWS.map((v) => {
+            const active = activeView === v.key;
+            return (
+              <button
+                key={v.key}
+                type="button"
+                title={v.hint}
+                onClick={() => {
+                  setActiveView(v.key);
+                  setNeedsOfferFilter(v.key === "offer" ? "yes" : "all");
+                }}
+                className={`rounded-full border px-3 py-1 text-[12px] font-medium transition-colors ${
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card/60 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {v.label}
+              </button>
+            );
+          })}
+        </div>
+
         <KpiCards leads={jobTypeLeads} />
+
+
 
         <section className="rounded-xl border border-border/70 bg-card/40">
           <button

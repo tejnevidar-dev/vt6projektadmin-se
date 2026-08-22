@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { GlobalSearch, useCommandK, type QuickNavItem } from "@/components/GlobalSearch";
 
 type NavChild = { to: string; label: string };
 
@@ -134,6 +135,13 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
     (i.children ?? []).some((c) => pathname === c.to || pathname.startsWith(c.to + "/"))
   );
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
+  const [searchOpen, setSearchOpen] = useState(false);
+  useCommandK(setSearchOpen);
+  const quickNav: QuickNavItem[] = visibleNav.flatMap((i) => [
+    { to: i.to, label: i.label, group: i.group },
+    ...(i.children ?? []).map((c) => ({ to: c.to, label: c.label, group: i.label })),
+  ]);
+
 
   const sideLabel = side === "intern" ? "Intern" : "Extern";
   const SideIcon = side === "intern" ? HardHat : Briefcase;
@@ -147,6 +155,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
 
   return (
     <div className="relative flex min-h-screen w-full bg-background text-foreground">
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} navItems={quickNav} />
       {/* Mobil-overlay */}
       {mobileOpen && (
         <div
@@ -352,11 +361,24 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
             <span className="truncate font-semibold text-foreground">{activeNav?.label ?? title}</span>
           </div>
           <div className="flex items-center gap-2.5">
-            <div className="hidden md:flex h-8 w-72 items-center gap-2 rounded-lg border border-border bg-card/80 px-3 text-[12.5px] text-muted-foreground shadow-sm transition-colors hover:border-border focus-within:border-ring">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="hidden md:flex h-8 w-72 items-center gap-2 rounded-lg border border-border bg-card/80 px-3 text-[12.5px] text-muted-foreground shadow-sm transition-colors hover:border-ring hover:text-foreground"
+            >
               <Search className="h-3.5 w-3.5" />
-              <span className="flex-1 truncate">Sök leads, adresser…</span>
+              <span className="flex-1 truncate text-left">Sök kund, adress, telefon…</span>
               <kbd className="rounded border border-border bg-muted/70 px-1.5 font-mono text-[10px] text-muted-foreground">⌘K</kbd>
-            </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="rounded-lg border border-border bg-card/80 p-2 text-muted-foreground shadow-sm transition-colors hover:text-foreground md:hidden"
+              title="Sök"
+            >
+              <Search className="h-3.5 w-3.5" />
+            </button>
+
             {topbarActions}
             <button className="relative rounded-lg border border-border bg-card/80 p-2 text-muted-foreground shadow-sm transition-colors hover:text-foreground" title="Notiser">
               <Bell className="h-3.5 w-3.5" />
