@@ -320,6 +320,10 @@ export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {
               </div>
             )}
 
+            {lead.pipelineStage !== "slutford" && lead.pipelineStage !== "forlorad" && (
+              <NextActionCard lead={lead} onUpdated={() => onUpdated?.()} />
+            )}
+
             <SellerCard lead={lead} onUpdated={() => onUpdated?.()} />
 
             {lead.pipelineStage !== "forlorad" && lead.status !== "lost" && (
