@@ -834,6 +834,8 @@ export type Database = {
           material_cost: number | null
           name: string
           needs_offer: boolean
+          next_action_at: string | null
+          next_action_note: string | null
           notes: string | null
           offer_accepted_at: string | null
           offer_pdf_path: string | null
@@ -881,6 +883,8 @@ export type Database = {
           material_cost?: number | null
           name: string
           needs_offer?: boolean
+          next_action_at?: string | null
+          next_action_note?: string | null
           notes?: string | null
           offer_accepted_at?: string | null
           offer_pdf_path?: string | null
@@ -928,6 +932,8 @@ export type Database = {
           material_cost?: number | null
           name?: string
           needs_offer?: boolean
+          next_action_at?: string | null
+          next_action_note?: string | null
           notes?: string | null
           offer_accepted_at?: string | null
           offer_pdf_path?: string | null
