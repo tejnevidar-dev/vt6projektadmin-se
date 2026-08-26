@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { prepareImageForPdf, PdfImageError } from "@/lib/pdf-image";
 import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
+import { sendAndLogEmail } from "@/lib/email-send-log.server";
 
 interface SelfCheckImageRef { path: string; name?: string }
 
