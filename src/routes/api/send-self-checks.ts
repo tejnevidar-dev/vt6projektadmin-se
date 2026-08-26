@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { prepareImageForPdf, PdfImageError } from "@/lib/pdf-image";
 import { SELF_CHECK_TEMPLATES } from "@/lib/self-check-templates";
+import { sendAndLogEmail } from "@/lib/email-send-log.server";
 
 interface SelfCheckImageRef { path: string; name?: string }
 
@@ -638,29 +639,19 @@ export const Route = createFileRoute("/api/send-self-checks")({
 
         const greetName = job.client_company || job.client_contact_name || "";
 
-        // Send via Lovable Emails (transactional) on notify.vt6projektadmin.se
-        const sendResp = await fetch(`${origin}/lovable/email/transactional/send`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+        // Send through Lovable's managed email delivery
+        const sendResult = await sendAndLogEmail(admin, {
+          templateName: "self-checks-client",
+          recipientEmail: job.client_email,
+          idempotencyKey: `self-checks-${jobId}-${Date.now()}`,
+          templateData: {
+            greetName,
+            address: job.address,
+            links,
           },
-          body: JSON.stringify({
-            templateName: "self-checks-client",
-            recipientEmail: job.client_email,
-            idempotencyKey: `self-checks-${jobId}-${Date.now()}`,
-            templateData: {
-              greetName,
-              address: job.address,
-              links,
-            },
-          }),
         });
-        const sendBody = await sendResp.json().catch(() => ({}));
-        if (!sendResp.ok) {
-          const reason = `E-postutskick misslyckades: ${
-            (sendBody as { error?: string }).error ?? sendResp.status
-          }`;
+        if (!sendResult.ok) {
+          const reason = `E-postutskick misslyckades: ${sendResult.error ?? "okänt fel"}`;
           await logDeliveries(reason);
           return jsonResponse({ error: reason }, 502);
         }

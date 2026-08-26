@@ -1,12 +1,6 @@
-import * as React from 'react'
-import { render } from 'react-email'
 import { createClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
-import { TEMPLATES } from '@/lib/email-templates/registry'
-
-const SITE_NAME = 'vt6projektadmin-se'
-const SENDER_DOMAIN = 'notify.vt6projektadmin.se'
-const FROM_DOMAIN = 'vt6projektadmin.se'
+import { sendAndLogEmail } from '@/lib/email-send-log.server'
 
 const TWILIO_GATEWAY = 'https://connector-gateway.lovable.dev/twilio'
 
@@ -37,78 +31,15 @@ function normalizePhone(raw: string): string | null {
   return '+' + trimmed
 }
 
-async function generateUnsubscribeToken(): Promise<string> {
-  const bytes = new Uint8Array(32)
-  crypto.getRandomValues(bytes)
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
 async function sendEmail(supabase: any, params: {
   templateName: string
   recipientEmail: string
   templateData: Record<string, any>
   idempotencyKey: string
-}): Promise<{ ok: true; messageId: string } | { ok: false; error: string }> {
-  const tpl = TEMPLATES[params.templateName]
-  if (!tpl) return { ok: false, error: 'template_not_found' }
-  const messageId = crypto.randomUUID()
-  const normalized = params.recipientEmail.toLowerCase()
-
-  const { data: suppressed } = await supabase
-    .from('suppressed_emails').select('id').eq('email', normalized).maybeSingle()
-  if (suppressed) return { ok: false, error: 'suppressed' }
-
-  // Unsubscribe token
-  const { data: existingToken } = await supabase
-    .from('email_unsubscribe_tokens').select('token, used_at').eq('email', normalized).maybeSingle()
-  let unsubscribeToken: string
-  if (existingToken?.token && !existingToken.used_at) {
-    unsubscribeToken = existingToken.token
-  } else if (!existingToken) {
-    unsubscribeToken = await generateUnsubscribeToken()
-    await supabase.from('email_unsubscribe_tokens').upsert(
-      { token: unsubscribeToken, email: normalized },
-      { onConflict: 'email', ignoreDuplicates: true },
-    )
-    const { data: stored } = await supabase
-      .from('email_unsubscribe_tokens').select('token').eq('email', normalized).maybeSingle()
-    if (!stored?.token) return { ok: false, error: 'token_store_failed' }
-    unsubscribeToken = stored.token
-  } else {
-    return { ok: false, error: 'unsubscribed' }
-  }
-
-  const element = React.createElement(tpl.component, params.templateData)
-  const html = await render(element)
-  const text = await render(element, { plainText: true })
-  const subject = typeof tpl.subject === 'function' ? tpl.subject(params.templateData) : tpl.subject
-
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: params.templateName,
-    recipient_email: params.recipientEmail,
-    status: 'pending',
-  })
-
-  const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-    queue_name: 'transactional_emails',
-    payload: {
-      message_id: messageId,
-      to: params.recipientEmail,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject,
-      html,
-      text,
-      purpose: 'transactional',
-      label: params.templateName,
-      idempotency_key: params.idempotencyKey,
-      unsubscribe_token: unsubscribeToken,
-      queued_at: new Date().toISOString(),
-    },
-  })
-  if (enqueueError) return { ok: false, error: 'enqueue_failed:' + enqueueError.message }
-  return { ok: true, messageId }
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const result = await sendAndLogEmail(supabase, params)
+  if (!result.ok) return { ok: false, error: result.error ?? 'send_failed' }
+  return { ok: true }
 }
 
 async function sendSms(params: { to: string; body: string }): Promise<{ ok: boolean; error?: string; sid?: string }> {
@@ -197,7 +128,7 @@ export const Route = createFileRoute('/api/public/hooks/send-booking-reminders')
             })
             if (result.ok) {
               await supabase.from('booking_reminders').update({
-                status: 'sent', sent_at: new Date().toISOString(), message_id: result.messageId, attempts: (r.attempts ?? 0) + 1,
+                status: 'sent', sent_at: new Date().toISOString(), attempts: (r.attempts ?? 0) + 1,
               }).eq('id', r.id)
               sent++
             } else if (result.error === 'suppressed' || result.error === 'unsubscribed') {

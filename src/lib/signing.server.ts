@@ -1,12 +1,6 @@
-import * as React from 'react'
-import { render } from 'react-email'
-import { TEMPLATES } from '@/lib/email-templates/registry'
+import { sendAndLogEmail } from '@/lib/email-send-log.server'
 export { buildSignedPdf } from './signing-pdf.server'
 export type { SignatureParty, SignedPdfMeta } from './signing-pdf.server'
-
-const SITE_NAME = 'vt6projektadmin-se'
-const SENDER_DOMAIN = 'notify.vt6projektadmin.se'
-const FROM_DOMAIN = 'vt6projektadmin.se'
 
 export const PUBLIC_SITE_URL =
   process.env.PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://vt6projektadmin.se'
@@ -61,7 +55,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary)
 }
 
-/** Queues a transactional email using the project's email queue. */
+/** Sends a transactional email through Lovable's managed email delivery. */
 export async function queueEmail(
   supabase: any,
   params: {
@@ -71,71 +65,5 @@ export async function queueEmail(
     idempotencyKey: string
   },
 ): Promise<{ ok: boolean; error?: string }> {
-  const tpl = TEMPLATES[params.templateName]
-  if (!tpl) return { ok: false, error: 'template_not_found' }
-  const messageId = crypto.randomUUID()
-  const normalized = params.recipientEmail.toLowerCase()
-
-  const { data: suppressed } = await supabase
-    .from('suppressed_emails')
-    .select('id')
-    .eq('email', normalized)
-    .maybeSingle()
-  if (suppressed) return { ok: false, error: 'suppressed' }
-
-  const { data: existingToken } = await supabase
-    .from('email_unsubscribe_tokens')
-    .select('token, used_at')
-    .eq('email', normalized)
-    .maybeSingle()
-  let unsubscribeToken: string
-  if (existingToken?.token && !existingToken.used_at) {
-    unsubscribeToken = existingToken.token
-  } else if (!existingToken) {
-    unsubscribeToken = randomToken()
-    await supabase
-      .from('email_unsubscribe_tokens')
-      .upsert({ token: unsubscribeToken, email: normalized }, { onConflict: 'email', ignoreDuplicates: true })
-    const { data: stored } = await supabase
-      .from('email_unsubscribe_tokens')
-      .select('token')
-      .eq('email', normalized)
-      .maybeSingle()
-    if (!stored?.token) return { ok: false, error: 'token_store_failed' }
-    unsubscribeToken = stored.token
-  } else {
-    return { ok: false, error: 'unsubscribed' }
-  }
-
-  const element = React.createElement(tpl.component, params.templateData)
-  const html = await render(element)
-  const text = await render(element, { plainText: true })
-  const subject = typeof tpl.subject === 'function' ? tpl.subject(params.templateData) : tpl.subject
-
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: params.templateName,
-    recipient_email: params.recipientEmail,
-    status: 'pending',
-  })
-
-  const { error } = await supabase.rpc('enqueue_email', {
-    queue_name: 'transactional_emails',
-    payload: {
-      message_id: messageId,
-      to: params.recipientEmail,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject,
-      html,
-      text,
-      purpose: 'transactional',
-      label: params.templateName,
-      idempotency_key: params.idempotencyKey,
-      unsubscribe_token: unsubscribeToken,
-      queued_at: new Date().toISOString(),
-    },
-  })
-  if (error) return { ok: false, error: 'enqueue_failed:' + error.message }
-  return { ok: true }
+  return sendAndLogEmail(supabase, params)
 }
