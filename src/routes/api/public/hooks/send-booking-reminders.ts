@@ -128,7 +128,7 @@ export const Route = createFileRoute('/api/public/hooks/send-booking-reminders')
             })
             if (result.ok) {
               await supabase.from('booking_reminders').update({
-                status: 'sent', sent_at: new Date().toISOString(), message_id: result.messageId, attempts: (r.attempts ?? 0) + 1,
+                status: 'sent', sent_at: new Date().toISOString(), attempts: (r.attempts ?? 0) + 1,
               }).eq('id', r.id)
               sent++
             } else if (result.error === 'suppressed' || result.error === 'unsubscribed') {
