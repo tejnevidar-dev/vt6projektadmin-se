@@ -184,6 +184,13 @@ function LeadsContent() {
         return;
       }
     }
+    if (stage === "offererad") {
+      const lead = leads.find((l) => l.id === leadId);
+      if (lead) {
+        setOfferValuesFor(lead);
+        return;
+      }
+    }
     setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, pipelineStage: stage } : l)));
     try {
       await updateLeadPipelineStage(leadId, stage);
