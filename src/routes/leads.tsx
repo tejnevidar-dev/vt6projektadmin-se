@@ -13,7 +13,8 @@ import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { AiGenerateLeadsDialog } from "@/components/AiGenerateLeadsDialog";
 import { NewLeadChoiceDialog } from "@/components/NewLeadChoiceDialog";
 import { LeadKanban } from "@/components/LeadKanban";
-import { fetchLeads, updateLeadPipelineStage } from "@/lib/leads-api";
+import { fetchLeads, updateLeadPipelineStage, setLeadOfferValues } from "@/lib/leads-api";
+import { OfferValuesDialog } from "@/components/OfferValuesDialog";
 import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
 import { isNextActionDue } from "@/lib/next-action";
 import { JOB_TYPE_LABELS, PIPELINE_STAGE_LABELS, SALES_PIPELINE_STAGES, leadMissingRotUnderlag } from "@/lib/types";
@@ -82,6 +83,8 @@ function LeadsContent() {
   const [stageFilter, setStageFilter] = useState<PipelineStage | "all">("all");
   const [showFilters, setShowFilters] = useState(false);
   const [activeView, setActiveView] = useState<SavedViewKey>("all");
+  const [offerValuesFor, setOfferValuesFor] = useState<Lead | null>(null);
+  const [savingOfferValues, setSavingOfferValues] = useState(false);
 
 
   const loadLeads = useCallback(async () => {
