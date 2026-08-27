@@ -38,7 +38,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             invite: {
-              subject: "You've been invited",
+              subject: 'Du har blivit inbjuden till admin.vt6',
               render: (data) =>
                 React.createElement(InviteEmail, {
                   siteName: SITE_NAME,
