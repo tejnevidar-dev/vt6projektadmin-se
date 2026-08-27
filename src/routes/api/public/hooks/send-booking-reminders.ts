@@ -102,8 +102,8 @@ export const Route = createFileRoute('/api/public/hooks/send-booking-reminders')
           let address: string | undefined
           if (lead.property_id) {
             const { data: prop } = await supabase
-              .from('properties').select('address, city, postal_code').eq('id', lead.property_id).maybeSingle()
-            if (prop) address = [prop.address, prop.postal_code, prop.city].filter(Boolean).join(', ')
+              .from('properties').select('address, municipality').eq('id', lead.property_id).maybeSingle()
+            if (prop) address = [prop.address, prop.municipality].filter(Boolean).join(', ')
           }
 
           const bookingDate = fmtDate(lead.booking_date)
