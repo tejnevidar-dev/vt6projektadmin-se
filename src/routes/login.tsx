@@ -106,7 +106,7 @@ function LoginPage() {
     ({
       admin: "Administratör",
       saljare: "Säljare",
-      ekonomi: "Ekonomi",
+      ekonomi: "Ekonomi / redovisning",
       viewer: "Viewer",
       arbetsledare: "Arbetsledare",
       hantverkare: "Hantverkare",
