@@ -2,6 +2,7 @@ import type { Lead } from "@/lib/types";
 import { PIPELINE_STAGE_LABELS } from "@/lib/types";
 import { netValue } from "@/lib/commission";
 import { isLost, isOpen, isWon } from "@/lib/sales-command-center";
+import { kr as kr0 } from "@/lib/format";
 
 const DAY = 86400000;
 
@@ -59,7 +60,7 @@ export function missedFollowUp(daysSinceContactVal: number, stage: Lead["pipelin
   return false;
 }
 
-const kr0 = (n: number) => `${Math.round(n).toLocaleString("sv-SE")} kr`;
+
 
 /** Dagens prioriterade att-göra-lista, sorterad efter angelägenhet × värde. */
 export function todaysActions(leads: Lead[], now = new Date()): SalesAction[] {

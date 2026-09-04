@@ -139,4 +139,4 @@ export function byMonth(
     .slice(0, 12);
 }
 
-export const kr = (n: number) => `${Math.round(n).toLocaleString("sv-SE")} kr`;
+export { kr } from "./format";

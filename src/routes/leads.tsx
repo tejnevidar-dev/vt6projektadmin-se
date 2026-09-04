@@ -13,7 +13,8 @@ import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { AiGenerateLeadsDialog } from "@/components/AiGenerateLeadsDialog";
 import { NewLeadChoiceDialog } from "@/components/NewLeadChoiceDialog";
 import { LeadKanban } from "@/components/LeadKanban";
-import { fetchLeads, updateLeadPipelineStage, setLeadOfferValues } from "@/lib/leads-api";
+import { updateLeadPipelineStage, setLeadOfferValues } from "@/lib/leads-api";
+import { useLeads } from "@/hooks/use-leads";
 import { OfferValuesDialog } from "@/components/OfferValuesDialog";
 import type { Lead, LeadStatus, JobType, PipelineStage } from "@/lib/types";
 import { isNextActionDue } from "@/lib/next-action";
@@ -64,8 +65,6 @@ function LeadsPage() {
 }
 
 function LeadsContent() {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [region, setRegion] = useState("");
   const [municipality, setMunicipality] = useState("");
@@ -87,20 +86,7 @@ function LeadsContent() {
   const [savingOfferValues, setSavingOfferValues] = useState(false);
 
 
-  const loadLeads = useCallback(async () => {
-    try {
-      const data = await fetchLeads();
-      setLeads(data);
-    } catch (err) {
-      console.error("Failed to fetch leads:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadLeads();
-  }, [loadLeads]);
+  const { leads, loading, reload: loadLeads, setLeads } = useLeads();
 
   // Öppna lead direkt via ?lead=<id> (t.ex. från global sökning)
   const { lead: leadParam } = Route.useSearch();

@@ -15,7 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fetchLeads, updateLeadPipelineStage, setLeadOfferValues } from "@/lib/leads-api";
+import { updateLeadPipelineStage, setLeadOfferValues } from "@/lib/leads-api";
+import { useLeads } from "@/hooks/use-leads";
 import { OfferValuesDialog } from "@/components/OfferValuesDialog";
 import { waitForJobByLead, type JobWithLead } from "@/lib/jobs-api";
 import { listJobs } from "@/lib/jobs.functions";
@@ -38,8 +39,6 @@ export function StagePage({ stage, description }: Props) {
 }
 
 function StageContent({ stage, description }: Props) {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [offerValuesFor, setOfferValuesFor] = useState<Lead | null>(null);
   const [savingOfferValues, setSavingOfferValues] = useState(false);
@@ -67,20 +66,7 @@ function StageContent({ stage, description }: Props) {
       .finally(() => setJobsLoading(false));
   }, [stage]);
 
-  const load = useCallback(async () => {
-    try {
-      const data = await fetchLeads();
-      setLeads(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { leads, loading, reload: load, setLeads } = useLeads();
 
   const stageLeads = useMemo(() => leads.filter((l) => l.pipelineStage === stage), [leads, stage]);
 

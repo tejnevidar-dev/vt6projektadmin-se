@@ -443,12 +443,14 @@ export interface CsvRow {
   age: string;
 }
 
+/** Importerar CSV-rader i parallella omgångar istället för en rad i taget. */
 export async function importCsv(rows: CsvRow[], jobType: JobType = "roof_replacement"): Promise<number> {
   let imported = 0;
   const { data: userData } = await supabase.auth.getUser();
   const currentUserId = userData?.user?.id ?? null;
+  const CHUNK = 20;
 
-  for (const row of rows) {
+  const importRow = async (row: CsvRow): Promise<boolean> => {
     const buildYear = parseInt(row.build_year) || null;
 
     const { data: prop, error: propError } = await supabase
@@ -464,7 +466,7 @@ export async function importCsv(rows: CsvRow[], jobType: JobType = "roof_replace
       .select()
       .single();
 
-    if (propError) continue;
+    if (propError || !prop) return false;
 
     const { data: lead, error: leadError } = await supabase
       .from("leads")
@@ -481,12 +483,16 @@ export async function importCsv(rows: CsvRow[], jobType: JobType = "roof_replace
       .select("*, property:properties(*)")
       .single();
 
-    if (!leadError && lead) {
-      imported++;
-      const flat = toFlatLead(lead as LeadWithProperty);
-      const score = calculateLeadScore(flat);
-      await computeAndPersistScore(flat.id, score);
-    }
+    if (leadError || !lead) return false;
+
+    const flat = toFlatLead(lead as LeadWithProperty);
+    await computeAndPersistScore(flat.id, calculateLeadScore(flat));
+    return true;
+  };
+
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const results = await Promise.all(rows.slice(i, i + CHUNK).map(importRow));
+    imported += results.filter(Boolean).length;
   }
 
   return imported;
