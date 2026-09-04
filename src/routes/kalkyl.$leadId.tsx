@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   FileText,
@@ -139,7 +139,7 @@ function KalkylPage() {
   const fileInput = useRef<HTMLInputElement>(null);
 
   // När en tidigare kalkyl finns – förifyll formuläret en gång
-  useMemo(() => {
+  useEffect(() => {
     if (existing && !hydratedFromExisting) {
       setMaterialKey(existing.material_key ?? "");
       setAnalysis({
@@ -151,8 +151,7 @@ function KalkylPage() {
       setNotes(existing.notes ?? "");
       setHydratedFromExisting(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existing]);
+  }, [existing, hydratedFromExisting]);
 
   const calcInput: CalcInput | null = useMemo(() => {
     if (!materialKey) return null;

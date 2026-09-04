@@ -262,6 +262,4 @@ export function computeQuickPrice(
   };
 }
 
-export function formatKr(v: number): string {
-  return `${Math.round(v).toLocaleString("sv-SE")} kr`;
-}
+export { kr as formatKr } from "./format";

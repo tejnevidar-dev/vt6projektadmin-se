@@ -31,6 +31,7 @@ import {
   Save,
 } from "lucide-react";
 import { toast } from "sonner";
+import { kr, dateSv as dt, dateTimeSv as dtTime } from "@/lib/format";
 
 export const Route = createFileRoute("/ekonomi/$leadId")({
   component: () => (
@@ -56,10 +57,7 @@ export const Route = createFileRoute("/ekonomi/$leadId")({
   }),
 });
 
-const kr = (n: number | null | undefined) => `${Math.round(n ?? 0).toLocaleString("sv-SE")} kr`;
-const dt = (d: string | null | undefined) =>
-  d ? new Date(d.length === 10 ? `${d}T00:00:00` : d).toLocaleDateString("sv-SE") : "–";
-const dtTime = (d: string) => new Date(d).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" });
+
 
 function StatusBadges({ lead }: { lead: Lead }) {
   return (

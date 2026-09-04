@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CheckCircle, ExternalLink, Landmark, Loader2, Receipt } from "lucide-react";
 import { toast } from "sonner";
+import { kr, dateSv as dateStr } from "@/lib/format";
 
 export const Route = createFileRoute("/ekonomi/rot")({
   component: () => (
@@ -32,8 +33,7 @@ export const Route = createFileRoute("/ekonomi/rot")({
   }),
 });
 
-const kr = (n: number | null | undefined) => `${(n ?? 0).toLocaleString("sv-SE")} kr`;
-const dateStr = (d: string | null) => (d ? new Date(`${d}T00:00:00`).toLocaleDateString("sv-SE") : "–");
+
 
 function EkonomiRotPage() {
   const { isEkonomi, loading } = useUserRoles();

@@ -15,6 +15,7 @@ import type { Lead, PipelineStage, JobType, LeadStatus } from "@/lib/types";
 import { PIPELINE_STAGES, PIPELINE_STAGE_LABELS, hasIncompleteBooking, isUninvoiced, isRotApplicationDue } from "@/lib/types";
 import { scoreLabel } from "@/lib/lead-scoring";
 import { nextActionState } from "@/lib/next-action";
+import { netValue } from "@/lib/commission";
 import { cn } from "@/lib/utils";
 
 const STAGE_ACCENT: Record<PipelineStage, string> = {
@@ -198,7 +199,7 @@ function KanbanCardInner({ lead, dragging }: { lead: Lead; dragging?: boolean })
       </div>
       {(lead.price ?? 0) > 0 && (
         <div className="mt-1.5 text-sm font-semibold tabular-nums">
-          {Math.round((lead.price ?? 0) / 1.25).toLocaleString("sv-SE")} kr
+          {Math.round(netValue(lead)).toLocaleString("sv-SE")} kr
           <span className="ml-1 text-[10px] font-normal text-muted-foreground">exkl. moms</span>
         </div>
       )}

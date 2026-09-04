@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BadgePercent, CheckCircle2, Loader2, TrendingUp, Wallet } from "lucide-react";
+import { dateSv as dateStr } from "@/lib/format";
 
 export const Route = createFileRoute("/provision")({
   component: () => (
@@ -43,7 +44,7 @@ export const Route = createFileRoute("/provision")({
   }),
 });
 
-const dateStr = (d: string | null) => (d ? new Date(d).toLocaleDateString("sv-SE") : "–");
+
 
 function ProvisionPage() {
   const { user } = useAuth();

@@ -46,6 +46,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
+import { kr, tkr, dateSv as dateStr } from "@/lib/format";
 
 export const Route = createFileRoute("/ekonomi/")({
   component: () => (
@@ -72,10 +73,7 @@ export const Route = createFileRoute("/ekonomi/")({
   }),
 });
 
-const kr = (n: number | null | undefined) => `${Math.round(n ?? 0).toLocaleString("sv-SE")} kr`;
-const tkr = (n: number) => `${Math.round(n / 1000).toLocaleString("sv-SE")} tkr`;
-const dateStr = (d: string | null) =>
-  d ? new Date(d.length === 10 ? `${d}T00:00:00` : d).toLocaleDateString("sv-SE") : "–";
+
 
 function Kpi({
   icon: Icon,

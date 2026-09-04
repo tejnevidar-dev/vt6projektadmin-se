@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BadgePercent, Download, Loader2, TrendingUp, Users, Wallet } from "lucide-react";
+import { dateSv as dateStr } from "@/lib/format";
 
 export const Route = createFileRoute("/provisionsoversikt")({
   component: () => (
@@ -36,7 +37,7 @@ export const Route = createFileRoute("/provisionsoversikt")({
   }),
 });
 
-const dateStr = (d: string | null | undefined) => (d ? new Date(d).toLocaleDateString("sv-SE") : "–");
+
 
 function Guard() {
   const { isAdmin, loading } = useUserRoles();

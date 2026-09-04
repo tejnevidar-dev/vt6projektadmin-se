@@ -4,6 +4,7 @@ import { netValue } from "@/lib/commission";
 import { areaStats } from "@/lib/geo-analytics";
 import { sourceRoi, type SourceCosts } from "@/lib/source-roi";
 import { staleDeals, todaysActions } from "@/lib/sales-actions";
+import { kr } from "@/lib/format";
 
 export type InsightTone = "positive" | "warning" | "critical" | "neutral";
 
@@ -16,7 +17,7 @@ export interface Insight {
 }
 
 const pct = (n: number) => `${n.toFixed(0)} %`;
-const kr = (n: number) => `${Math.round(n).toLocaleString("sv-SE")} kr`;
+
 
 /**
  * Regelbaserad insiktsmotor – hittar mönster i pipeline, källor, geografi
