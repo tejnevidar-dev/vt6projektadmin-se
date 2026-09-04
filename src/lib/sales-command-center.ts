@@ -1,5 +1,5 @@
 import type { Lead, PipelineStage } from "@/lib/types";
-import { PIPELINE_STAGES, WON_STAGES } from "@/lib/types";
+import { PIPELINE_STAGES } from "@/lib/types";
 import { VAT_RATE, isSold, netValue, saleDate } from "@/lib/commission";
 import { STAGE_PROBABILITY, type Range } from "@/lib/sales-analytics";
 
@@ -7,7 +7,11 @@ const dateOf = (v: string | null | undefined) => (v ? new Date(v) : null);
 
 const stageIndex = (s: PipelineStage) => PIPELINE_STAGES.indexOf(s);
 
-export const isWon = (l: Lead) => isSold(l) || WON_STAGES.includes(l.pipelineStage);
+/**
+ * Vunnen affär = kunden har godkänt offerten (eller historiskt slutförd).
+ * Samma definition som provisionsvyerna (isSold) → statistiken är säljdriven.
+ */
+export const isWon = (l: Lead) => isSold(l);
 export const isLost = (l: Lead) => l.pipelineStage === "forlorad" || l.status === "lost";
 export const isOpen = (l: Lead) => !isWon(l) && !isLost(l);
 

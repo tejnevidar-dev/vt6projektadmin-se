@@ -1,5 +1,6 @@
 // Pure calculation engine — used by both the live UI (client) and the
-// PDF generator (server). Keep this file free of imports so it can be shared.
+// PDF generator (server). Håll beroenden minimala (endast rena hjälpmoduler).
+import { computeRot } from "@/lib/rot";
 
 export type PriceCategory = "material" | "arbete" | "plat" | "tillagg";
 export type PriceUnit = "kvm" | "meter" | "st" | "timme" | "paket";
@@ -36,6 +37,8 @@ export interface CalcInput {
   arbeteTimpris: number;
   marginalProcent: number;
   rotAvdrag: boolean;
+  /** Antal ägare som kan nyttja ROT (styr taket). Standard 1. */
+  antalAgare?: number;
 }
 
 export interface CalcLineItem {
@@ -58,12 +61,11 @@ export interface CalcResult {
   subtotal: number;            // exkl. moms efter marginal
   moms: number;                // 25 %
   total: number;               // inkl. moms
-  rotBelopp: number;           // ROT-avdrag (30 % av arbete inkl. moms om aktiverat)
+  rotBelopp: number;           // ROT-avdrag (gemensam formel, se lib/rot.ts)
   attBetala: number;           // total - rot
 }
 
 const MOMS = 0.25;
-const ROT_ANDEL = 0.30;
 
 export function computeCalc(input: CalcInput, priceRows: PriceRow[]): CalcResult {
   const byKey = new Map(priceRows.map((r) => [r.key, r]));
@@ -163,7 +165,7 @@ export function computeCalc(input: CalcInput, priceRows: PriceRow[]): CalcResult
     const marginalRatio = subtotalPreMargin > 0 ? arbeteSum / subtotalPreMargin : 0;
     const arbeteInklMarginal = arbeteSum + marginalAmount * marginalRatio;
     const arbeteInklMoms = arbeteInklMarginal * (1 + MOMS);
-    rotBelopp = arbeteInklMoms * ROT_ANDEL;
+    rotBelopp = computeRot({ laborInclVat: arbeteInklMoms, owners: input.antalAgare ?? 1 });
   }
   const attBetala = total - rotBelopp;
 
