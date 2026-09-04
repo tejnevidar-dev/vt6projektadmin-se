@@ -20,6 +20,8 @@ import {
 } from "@/lib/price-list-api";
 import type { PriceRow, PriceCategory, PriceUnit } from "@/lib/calc-engine";
 import { formatSek } from "@/lib/calc-engine";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QuickPriceAdmin } from "@/components/QuickPriceAdmin";
 
 export const Route = createFileRoute("/prislista")({
   component: () => (
@@ -73,11 +75,22 @@ function PrislistaPage() {
   return (
     <AppShell
       title="Kalkyl"
-      description="Redigera enhetspriser som används i kalkyler och offerter."
-      actions={
-        <Button size="sm" onClick={() => setAdding(true)}><Plus className="mr-1 h-3.5 w-3.5" /> Ny rad</Button>
-      }
+      description="Redigera enhetspriser som används i kalkyler, snabbpris och offerter."
     >
+      <Tabs defaultValue="snabbpris" className="w-full">
+        <TabsList>
+          <TabsTrigger value="snabbpris">Snabbpris (takbyte & taktvätt)</TabsTrigger>
+          <TabsTrigger value="detalj">Detaljprislista</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="snabbpris" className="mt-4">
+          <QuickPriceAdmin />
+        </TabsContent>
+
+        <TabsContent value="detalj" className="mt-4 space-y-4">
+      <div className="flex justify-end">
+        <Button size="sm" onClick={() => setAdding(true)}><Plus className="mr-1 h-3.5 w-3.5" /> Ny rad</Button>
+      </div>
       {adding && (
         <div className="mb-6 rounded-lg border border-border bg-card p-5">
           <h3 className="mb-4 text-sm font-semibold">Ny prisrad</h3>
@@ -136,6 +149,8 @@ function PrislistaPage() {
           ))}
         </div>
       )}
+        </TabsContent>
+      </Tabs>
     </AppShell>
   );
 }
