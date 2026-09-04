@@ -755,7 +755,29 @@ function OffertNyPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <Label>Klistra in arbetstexten (löpande text)</Label>
-                  <Button size="sm" onClick={handleTolka} disabled={parsing}>
+                  <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          <FileDown className="mr-1 h-4 w-4" />
+                          Infoga mall
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {ARBETSTEXT_MALLAR.map((m) => (
+                          <DropdownMenuItem
+                            key={m.key}
+                            onClick={() => {
+                              set("arbetstext", m.text);
+                              toast.success(`Mall "${m.label}" infogad`);
+                            }}
+                          >
+                            {m.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button size="sm" onClick={handleTolka} disabled={parsing}>
                     {parsing ? (
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                     ) : (
