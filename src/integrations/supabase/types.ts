@@ -658,6 +658,7 @@ export type Database = {
           self_checks_emailed_at: string | null
           self_checks_emailed_to: string | null
           status: Database["public"]["Enums"]["job_status"]
+          subcontractor_id: string | null
           updated_at: string
           work_order_pdf_path: string | null
           work_order_processed_at: string | null
@@ -685,6 +686,7 @@ export type Database = {
           self_checks_emailed_at?: string | null
           self_checks_emailed_to?: string | null
           status?: Database["public"]["Enums"]["job_status"]
+          subcontractor_id?: string | null
           updated_at?: string
           work_order_pdf_path?: string | null
           work_order_processed_at?: string | null
@@ -712,6 +714,7 @@ export type Database = {
           self_checks_emailed_at?: string | null
           self_checks_emailed_to?: string | null
           status?: Database["public"]["Enums"]["job_status"]
+          subcontractor_id?: string | null
           updated_at?: string
           work_order_pdf_path?: string | null
           work_order_processed_at?: string | null
@@ -723,6 +726,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: true
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
             referencedColumns: ["id"]
           },
         ]
@@ -1871,6 +1881,191 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subcontractor_documents: {
+        Row: {
+          created_at: string
+          doc_type: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          subcontractor_id: string
+          uploaded_by: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_type?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          subcontractor_id: string
+          uploaded_by?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          subcontractor_id?: string
+          uploaded_by?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_documents_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractor_invoices: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          due_date: string | null
+          file_name: string | null
+          file_path: string | null
+          id: string
+          invoice_date: string | null
+          invoice_number: string | null
+          job_id: string
+          notes: string | null
+          paid_at: string | null
+          status: string
+          subcontractor_id: string | null
+          submitted_by: string | null
+          updated_at: string
+          vat_amount: number | null
+        }
+        Insert: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          due_date?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          job_id: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: string
+          subcontractor_id?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          vat_amount?: number | null
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          due_date?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          job_id?: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: string
+          subcontractor_id?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          vat_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontractor_invoices_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractors: {
+        Row: {
+          active: boolean
+          address: string | null
+          agreement_signed_at: string | null
+          company_name: string
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          f_skatt: boolean
+          hourly_rate: number | null
+          id: string
+          insurance_company: string | null
+          insurance_expires_at: string | null
+          notes: string | null
+          org_number: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          agreement_signed_at?: string | null
+          company_name: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          f_skatt?: boolean
+          hourly_rate?: number | null
+          id?: string
+          insurance_company?: string | null
+          insurance_expires_at?: string | null
+          notes?: string | null
+          org_number?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          agreement_signed_at?: string | null
+          company_name?: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          f_skatt?: boolean
+          hourly_rate?: number | null
+          id?: string
+          insurance_company?: string | null
+          insurance_expires_at?: string | null
+          notes?: string | null
+          org_number?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       suppressed_emails: {
         Row: {
