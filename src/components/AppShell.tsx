@@ -128,6 +128,15 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
     setMobileOpen(false);
   }, [pathname]);
 
+  // Redovisningskonsult har bara tillgång till ekonomi + inställningar
+  useEffect(() => {
+    if (!isEkonomiOnly) return;
+    if (pathname.startsWith("/ekonomi") || pathname.startsWith("/settings")) return;
+    navigate({ to: "/ekonomi", replace: true });
+  }, [isEkonomiOnly, pathname, navigate]);
+
+
+
   const handleSignOut = async () => {
     await signOut();
     navigate({ to: "/login", search: {} });
