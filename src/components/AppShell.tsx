@@ -116,7 +116,7 @@ interface AppShellProps extends PageHeaderProps {
 
 export function AppShell({ children, title, description, meta, actions, tabs, topbarActions }: AppShellProps) {
   const { signOut, user } = useAuth();
-  const { isAdmin, isEkonomi } = useUserRoles();
+  const { isAdmin, isEkonomi, isEkonomiOnly } = useUserRoles();
   const { side, setSide, canSwitch } = useWorkspace();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
