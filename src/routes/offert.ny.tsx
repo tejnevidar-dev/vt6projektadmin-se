@@ -72,18 +72,36 @@ const ARBETSTEXT_MALLAR: { key: string; label: string; text: string }[] = [
   {
     key: "takbyte",
     label: "Takbyte",
-    text: `Komplett takbyte enligt nedan:
-Rivning av befintligt taktäckningsmaterial samt bortforsling och deponering av rivningsavfall.
-Kontroll av undertak och råspont, eventuellt byte av skadade delar enligt överenskommelse.
-Montering av nytt undertak (underlagspapp/undertakspanel) med överlapp enligt tillverkarens anvisningar.
-Montering av läkt och strölekt enligt gällande standard.
-Läggning av nytt taktäckningsmaterial inklusive nock, gavlar och takfotsbeslag.
-Montering av ränndalar i plåt där det förekommer.
-Inkapsling/inklädnad av skorsten och genomföringar med plåtbeslag.
-Montering av komplett plåtbeslagsdetaljer: nockplåt, gavelplåt, takfotsplåt och droppbleck.
-Montering av hängrännor och stuprör i plåt.
-Montering av snörasskydd enligt gällande krav.
-Slutbesiktning och städning av arbetsplatsen.`,
+    text: `Etablering och avetablering av arbetsplats.
+Leverans och hantering av material.
+Montering av byggställning
+Rivning av befintligt takmaterial
+rivning av befintlig läkt
+rivning av befintlig takavvattning
+rivning av befintlig fotbräda
+rivning av plåtdetaljer
+rivning av vindskivor
+Montering av trekantslist
+Montering av ny underlagspapp (mataki haloten pro, mataki haloten steel)
+montering av ny fotbärda (kulör: enligt kunds val)
+montering av ny komplett takavvattning LINDAB (kulör: enligt kunds val)
+montering av fotplåtsremsa mataki
+montering av nya fotplåtar (kulör: enligt kunds val)
+montering av ströläkt: 25x48
+montering av bärläkt : 25x48(pannor)/28x70(plåtprofil)
+montering av nockbräda (för takpannor endast, gäller ej plåtprofil)
+montering av fågelband
+montering av vindskivor dubbla/enkla (kulör: enligt kunds val)
+montering av: betongpannor Benders Palema / plåtprofil plegel / plåtprofl TP20 / Lertegelpannor
+montering av vindskiveplåtar: (kulör: enligt kunds val)
+montering av underbeslag skorsten
+montering av skorstensinklädnad halv / skorstensinklädnad hel
+montering av nockpannor / nockplåt
+montering av takstege / taksteg (kulör: enligt kunds val)
+Montering av snöraskydd X lpm (kulör: enligt kunds val)
+Grovstädning av arbetsområdet efter slutfört arbete.
+Slutkontroll av utfört arbete.
+Fotodokumentation/egenkontroll av relevanta arbetsmoment`,
   },
   {
     key: "taktvatt",
