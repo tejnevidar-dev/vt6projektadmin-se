@@ -156,10 +156,9 @@ function initialForm(): FormState {
 }
 
 function OffertNyPage() {
-  const navigate = useNavigate();
   const call = useServerFn(generateManualOffer);
   const callParse = useServerFn(parseArbeteText);
-  const callAnalyze = useServerFn(analyzeRoofImages);
+
 
   const [form, setForm] = useState<FormState>(() => initialForm());
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
