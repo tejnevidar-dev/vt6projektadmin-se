@@ -20,6 +20,8 @@ import {
 } from "@/lib/price-list-api";
 import type { PriceRow, PriceCategory, PriceUnit } from "@/lib/calc-engine";
 import { formatSek } from "@/lib/calc-engine";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QuickPriceAdmin } from "@/components/QuickPriceAdmin";
 
 export const Route = createFileRoute("/prislista")({
   component: () => (
