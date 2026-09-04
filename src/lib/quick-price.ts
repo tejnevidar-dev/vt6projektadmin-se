@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { computeRot } from "@/lib/rot";
 
 export type QuickService = "takbyte" | "taktvatt";
 export type QuickKind = "material" | "arbete" | "tillval" | "svarighet" | "lutning";
@@ -237,10 +238,12 @@ export function computeQuickPrice(
     const preScale = materialSum + laborSum + lutningAmount + tillaggSum;
     const laborShare = preScale > 0 ? (laborSum + lutningAmount + tillaggSum * 0.5) / preScale : 0;
     const laborInclVat = exMoms * laborShare * (1 + settings.moms_procent / 100);
-    rotBelopp = Math.min(
-      laborInclVat * (settings.rot_procent / 100),
-      settings.rot_tak_per_agare * Math.max(1, input.antalAgare),
-    );
+    rotBelopp = computeRot({
+      laborInclVat,
+      rotPercent: settings.rot_procent,
+      capPerOwner: settings.rot_tak_per_agare,
+      owners: input.antalAgare,
+    });
   }
 
   return {
