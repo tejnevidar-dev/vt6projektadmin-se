@@ -116,7 +116,7 @@ interface AppShellProps extends PageHeaderProps {
 
 export function AppShell({ children, title, description, meta, actions, tabs, topbarActions }: AppShellProps) {
   const { signOut, user } = useAuth();
-  const { isAdmin, isEkonomi } = useUserRoles();
+  const { isAdmin, isEkonomi, isEkonomiOnly } = useUserRoles();
   const { side, setSide, canSwitch } = useWorkspace();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -128,6 +128,15 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
     setMobileOpen(false);
   }, [pathname]);
 
+  // Redovisningskonsult har bara tillgång till ekonomi + inställningar
+  useEffect(() => {
+    if (!isEkonomiOnly) return;
+    if (pathname.startsWith("/ekonomi") || pathname.startsWith("/settings")) return;
+    navigate({ to: "/ekonomi", replace: true });
+  }, [isEkonomiOnly, pathname, navigate]);
+
+
+
   const handleSignOut = async () => {
     await signOut();
     navigate({ to: "/login", search: {} });
@@ -135,10 +144,13 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
 
   const navItems = buildNavItems(isAdmin);
   const visibleNav = navItems.filter((i) => {
+    // Redovisningskonsult ser bara Ekonomi + Inställningar
+    if (isEkonomiOnly) return i.to === "/ekonomi" || i.to === "/settings";
     if (i.adminOnly && !isAdmin) return false;
     if (i.ekonomiOnly && !isEkonomi) return false;
     return i.side === "both" || i.side === side;
   });
+
   const groups = Array.from(new Set(visibleNav.map((i) => i.group)));
   const activeNav = visibleNav.find((i) =>
     pathname === i.to ||

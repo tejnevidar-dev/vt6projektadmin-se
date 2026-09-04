@@ -96,7 +96,7 @@ interface Invitation {
 const ROLE_LABELS: Record<AppRole, string> = {
   admin: "Administratör",
   saljare: "Säljare",
-  ekonomi: "Ekonomi",
+  ekonomi: "Ekonomi / redovisning",
   arbetsledare: "Arbetsledare",
   hantverkare: "Hantverkare",
   underentreprenor: "Underentreprenör",

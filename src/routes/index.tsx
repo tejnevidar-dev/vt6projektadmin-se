@@ -18,13 +18,17 @@ export const Route = createFileRoute("/")({
 function HomeRedirect() {
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { isAdmin, isEkonomi, isInternal, isExternal, loading } = useUserRoles();
+  const { isAdmin, isEkonomi, isEkonomiOnly, isInternal, isExternal, loading } = useUserRoles();
   const { side } = useWorkspace();
 
   useEffect(() => {
     if (authLoading || loading) return;
     if (!isAuthenticated) {
       navigate({ to: "/login", search: {} });
+      return;
+    }
+    if (isEkonomiOnly) {
+      navigate({ to: "/ekonomi" });
       return;
     }
     if (side === "intern") {
@@ -35,12 +39,13 @@ function HomeRedirect() {
       navigate({ to: "/ekonomi/rot" });
       return;
     }
+
     if (!isExternal && isInternal) {
       navigate({ to: "/jobb" });
       return;
     }
     navigate({ to: "/dashboard" });
-  }, [authLoading, loading, isAuthenticated, isAdmin, isEkonomi, isInternal, isExternal, side, navigate]);
+  }, [authLoading, loading, isAuthenticated, isAdmin, isEkonomi, isEkonomiOnly, isInternal, isExternal, side, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">

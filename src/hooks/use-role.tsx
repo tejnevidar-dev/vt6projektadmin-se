@@ -48,17 +48,22 @@ export function useUserRoles() {
   const isSaljare = roles.includes("saljare") || isAdmin;
   const isInternal = isAdmin || roles.some((r) => INTERNAL_ROLES.includes(r));
   const isExternal = isAdmin || roles.some((r) => EXTERNAL_ROLES.includes(r));
+  /** Redovisningskonsult: har bara ekonomirollen och inget annat. */
+  const isEkonomiOnly =
+    !isAdmin && roles.includes("ekonomi") && !isInternal && !isExternal;
 
   return {
     roles,
     loading,
     isAdmin,
     isEkonomi,
+    isEkonomiOnly,
     isSaljare,
     isInternal,
     isExternal,
     canEdit: isAdmin || roles.includes("saljare"),
   };
+
 }
 
 /** Check whether a set of roles allows access to the given side (intern/extern). */
