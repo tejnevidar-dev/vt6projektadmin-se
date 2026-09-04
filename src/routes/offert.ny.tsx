@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,13 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Plus,
@@ -31,8 +24,6 @@ import {
   Save,
   FolderOpen,
   X,
-  Upload,
-  Wand2,
 } from "lucide-react";
 import {
   generateManualOffer,
@@ -41,7 +32,7 @@ import {
   type OfferVillkorSektion,
 } from "@/lib/offer-manual.functions";
 import { parseArbeteText } from "@/lib/offer-parse.functions";
-import { analyzeRoofImages } from "@/lib/roof-analysis.functions";
+import { QuickPriceCalculator } from "@/components/QuickPriceCalculator";
 import {
   listMyDrafts,
   createDraft,
@@ -105,15 +96,6 @@ function plusDaysISO(days: number): string {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(String(r.result));
-    r.onerror = () => rej(new Error("Kunde inte läsa fil"));
-    r.readAsDataURL(file);
-  });
-}
-
 interface FormState {
   offertnr: string;
   offertdatum: string;
@@ -167,10 +149,9 @@ function initialForm(): FormState {
 }
 
 function OffertNyPage() {
-  const navigate = useNavigate();
   const call = useServerFn(generateManualOffer);
   const callParse = useServerFn(parseArbeteText);
-  const callAnalyze = useServerFn(analyzeRoofImages);
+
 
   const [form, setForm] = useState<FormState>(() => initialForm());
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
@@ -407,71 +388,6 @@ function OffertNyPage() {
     } catch (e: any) {
       toast.error(e?.message ?? "Kunde inte uppdatera status");
     }
-  };
-
-  // ---------- Kalkyl-tab ----------
-  const [images, setImages] = useState<{ id: string; name: string; dataUrl: string }[]>([]);
-  const [roofType, setRoofType] = useState<string>("betongpannor");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [kalk, setKalk] = useState({
-    roofAreaKvm: 0,
-    ranndalarMeter: 0,
-    prisPerKvm: 1400,
-    prisPerMeterRanndal: 350,
-    marginalProcent: 15,
-    materialkostnadKvm: 400,
-  });
-  const fileInput = useRef<HTMLInputElement>(null);
-
-  const kalkResult = useMemo(() => {
-    const arbete =
-      kalk.roofAreaKvm * kalk.prisPerKvm + kalk.ranndalarMeter * kalk.prisPerMeterRanndal;
-    const material = kalk.roofAreaKvm * kalk.materialkostnadKvm;
-    const subtotal = arbete + material;
-    const total = Math.round(subtotal * (1 + kalk.marginalProcent / 100));
-    return { arbete, material, subtotal, total };
-  }, [kalk]);
-
-  const handleUpload = async (files: FileList | null) => {
-    if (!files) return;
-    const arr: typeof images = [];
-    for (const f of Array.from(files).slice(0, 10)) {
-      if (!f.type.startsWith("image/")) continue;
-      arr.push({ id: crypto.randomUUID(), name: f.name, dataUrl: await readFileAsDataUrl(f) });
-    }
-    setImages((prev) => [...prev, ...arr].slice(0, 10));
-  };
-
-  const handleAnalyze = async () => {
-    if (images.length === 0) {
-      toast.error("Ladda upp minst en bild");
-      return;
-    }
-    setAnalyzing(true);
-    try {
-      const res = await callAnalyze({
-        data: { materialKey: roofType, images: images.map((i) => ({ dataUrl: i.dataUrl })) },
-      });
-      setKalk((k) => ({
-        ...k,
-        roofAreaKvm: Number(res.roofAreaKvm) || 0,
-        ranndalarMeter: Number(res.ranndalarMeter) || 0,
-      }));
-      toast.success("AI tolkade måtten");
-    } catch (e: any) {
-      toast.error(e?.message ?? "Analys misslyckades");
-    } finally {
-      setAnalyzing(false);
-    }
-  };
-
-  const handleUseInOffer = () => {
-    setForm((f) => ({
-      ...f,
-      entreprenadpris: kalkResult.total,
-      materialkostnad: Math.round(kalkResult.material * (1 + kalk.marginalProcent / 100)),
-    }));
-    toast.success("Kalkylen kopierad till offerten");
   };
 
   // ---------- Generera ----------
@@ -1041,159 +957,8 @@ function OffertNyPage() {
         </TabsContent>
 
         {/* ============= KALKYL ============= */}
-        <TabsContent value="kalkyl" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bildanalys</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <Label>Taktyp</Label>
-                  <Select value={roofType} onValueChange={setRoofType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="betongpannor">Betongpannor</SelectItem>
-                      <SelectItem value="tegelpannor">Tegelpannor</SelectItem>
-                      <SelectItem value="plattak">Plåttak (falsat)</SelectItem>
-                      <SelectItem value="pannplat">Pannplåt</SelectItem>
-                      <SelectItem value="papptak">Papptak</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => fileInput.current?.click()}
-                    className="flex-1"
-                  >
-                    <Upload className="mr-1 h-4 w-4" />
-                    Ladda upp bilder ({images.length}/10)
-                  </Button>
-                  <input
-                    ref={fileInput}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => handleUpload(e.target.files)}
-                  />
-                  <Button onClick={handleAnalyze} disabled={analyzing || images.length === 0}>
-                    {analyzing ? (
-                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Wand2 className="mr-1 h-4 w-4" />
-                    )}
-                    Analysera
-                  </Button>
-                </div>
-              </div>
-              {images.length > 0 && (
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                  {images.map((img) => (
-                    <div key={img.id} className="relative">
-                      <img
-                        src={img.dataUrl}
-                        alt={img.name}
-                        className="h-24 w-full rounded border object-cover"
-                      />
-                      <button
-                        onClick={() => setImages((prev) => prev.filter((i) => i.id !== img.id))}
-                        className="absolute -top-1 -right-1 rounded-full bg-background p-0.5 shadow"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Mått och priser</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label>Takyta (kvm)</Label>
-                <Input
-                  type="number"
-                  value={kalk.roofAreaKvm}
-                  onChange={(e) => setKalk({ ...kalk, roofAreaKvm: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <Label>Ränndalar (m)</Label>
-                <Input
-                  type="number"
-                  value={kalk.ranndalarMeter}
-                  onChange={(e) => setKalk({ ...kalk, ranndalarMeter: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <Label>Arbetspris/kvm (kr)</Label>
-                <Input
-                  type="number"
-                  value={kalk.prisPerKvm}
-                  onChange={(e) => setKalk({ ...kalk, prisPerKvm: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <Label>Pris/m ränndal (kr)</Label>
-                <Input
-                  type="number"
-                  value={kalk.prisPerMeterRanndal}
-                  onChange={(e) =>
-                    setKalk({ ...kalk, prisPerMeterRanndal: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Materialkostnad/kvm (kr)</Label>
-                <Input
-                  type="number"
-                  value={kalk.materialkostnadKvm}
-                  onChange={(e) =>
-                    setKalk({ ...kalk, materialkostnadKvm: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Marginal %</Label>
-                <Input
-                  type="number"
-                  value={kalk.marginalProcent}
-                  onChange={(e) => setKalk({ ...kalk, marginalProcent: Number(e.target.value) })}
-                />
-              </div>
-              <div className="sm:col-span-2 rounded-md border p-3 text-sm bg-muted/30 space-y-1">
-                <div className="flex justify-between">
-                  <span>Arbete</span>
-                  <span>{Math.round(kalkResult.arbete).toLocaleString("sv-SE")} kr</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Material</span>
-                  <span>{Math.round(kalkResult.material).toLocaleString("sv-SE")} kr</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Delsumma</span>
-                  <span>{Math.round(kalkResult.subtotal).toLocaleString("sv-SE")} kr</span>
-                </div>
-                <div className="flex justify-between font-semibold border-t pt-1">
-                  <span>Totalt exkl. moms (med marginal)</span>
-                  <span>{kalkResult.total.toLocaleString("sv-SE")} kr</span>
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <Button onClick={handleUseInOffer} className="w-full">
-                  Använd i offert
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="kalkyl" className="mt-4">
+          <QuickPriceCalculator onSaved={() => void loadDrafts()} />
         </TabsContent>
       </Tabs>
 

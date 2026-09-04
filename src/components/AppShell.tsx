@@ -47,7 +47,6 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
       ],
     },
     { to: "/offert/ny", label: "Offert & Kalkyl", icon: FileDown, group: "Arbeta", side: "extern" },
-    { to: "/snabbpris", label: "Kalkyl", icon: Calculator, group: "Arbeta", side: "extern" },
     { to: "/bokade", label: "Bokade", icon: CalendarCheck, group: "Arbeta", side: "extern" },
     { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", side: "extern" },
     { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", side: "extern" },

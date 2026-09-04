@@ -1,8 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Home, Droplets, User, FileDown, RotateCcw, Check } from "lucide-react";
-import { AppShell, RequireAuth } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,32 +23,12 @@ import {
   type QuickService,
 } from "@/lib/quick-price";
 
-export const Route = createFileRoute("/snabbpris")({
-  component: () => (
-    <RequireAuth>
-      <SnabbprisPage />
-    </RequireAuth>
-  ),
-  head: () => ({
-    meta: [
-      { title: "Kalkyl – takbyte & taktvätt | admin.vt6" },
-      {
-        name: "description",
-        content:
-          "Räkna fram pris för takbyte och taktvätt direkt på plats – ange takyta, våningar och tillval så får du pris med ROT.",
-      },
-      { property: "og:title", content: "Kalkyl – takbyte & taktvätt" },
-      {
-        property: "og:description",
-        content: "Generera pris på plats utan kalkylkompetens: takyta, tillval och ROT.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-});
+interface Props {
+  /** Körs när ett utkast sparats (t.ex. för att ladda om utkastlistan på Offert & Kalkyl). */
+  onSaved?: () => void;
+}
 
-function SnabbprisPage() {
+export function QuickPriceCalculator({ onSaved }: Props) {
   const navigate = useNavigate();
   const [input, setInput] = useState<QuickPriceInput>(() => emptyQuickInput("takbyte"));
   const [customer, setCustomer] = useState<CustomerPick | null>(null);
@@ -116,7 +95,7 @@ function SnabbprisPage() {
   const toggleTillval = (key: string, on: boolean, unit: string) => {
     setInput((f) => {
       const next = { ...f.tillval };
-      if (on) next[key] = unit === "st" ? 1 : 1;
+      if (on) next[key] = 1;
       else delete next[key];
       return { ...f, tillval: next };
     });
@@ -146,7 +125,6 @@ function SnabbprisPage() {
     setSaving(true);
     try {
       const serviceLabel = input.service === "takbyte" ? "Takbyte" : "Taktvätt";
-      // 1. Spara ordervärde/materialkostnad på kunden om en kund är vald
       if (customer) {
         const { error } = await supabase
           .from("leads")
@@ -159,7 +137,6 @@ function SnabbprisPage() {
         if (error) throw error;
       }
 
-      // 2. Skapa offertutkast som kan öppnas på Offert & Kalkyl
       const payload = {
         kundNamn: customer?.name ?? "",
         objektadress: customer?.address ?? "",
@@ -183,8 +160,9 @@ function SnabbprisPage() {
         leadId: customer?.leadId ?? null,
         kind: "offer",
       });
-      toast.success("Sparat – utkastet finns på Offert & Kalkyl");
-      navigate({ to: "/offert/ny" });
+      toast.success("Sparat – utkastet finns i fliken Offert");
+      if (onSaved) onSaved();
+      else navigate({ to: "/offert/ny" });
     } catch (e: any) {
       toast.error(e?.message ?? "Kunde inte spara");
     } finally {
@@ -193,10 +171,11 @@ function SnabbprisPage() {
   };
 
   return (
-    <AppShell
-      title="Kalkyl"
-      description="Räkna fram pris för takbyte och taktvätt direkt hos kunden – ingen kalkylvana behövs."
-      actions={
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          Räkna fram pris för takbyte och taktvätt direkt hos kunden – ingen kalkylvana behövs.
+        </p>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => { setInput(emptyQuickInput(input.service)); setCustomer(null); }}>
             <RotateCcw className="mr-1 h-4 w-4" /> Börja om
@@ -205,8 +184,8 @@ function SnabbprisPage() {
             <User className="mr-1 h-4 w-4" /> {customer ? "Byt kund" : "Välj kund"}
           </Button>
         </div>
-      }
-    >
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <div className="space-y-4">
           {/* Tjänst */}
@@ -513,6 +492,6 @@ function SnabbprisPage() {
           setPickerOpen(false);
         }}
       />
-    </AppShell>
+    </div>
   );
 }
