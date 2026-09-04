@@ -373,9 +373,9 @@ function EkonomiDashboard() {
                     <YAxis tickFormatter={(v: number) => tkr(v)} tick={{ fontSize: 11 }} width={60} />
                     <Tooltip formatter={(v: number) => kr(v)} />
                     <Legend />
-                    <Line type="monotone" dataKey="revenueNet" name="Netto" stroke="hsl(var(--primary))" strokeWidth={2} />
-                    <Line type="monotone" dataKey="margin" name="TB" stroke="hsl(var(--chart-2))" strokeWidth={2} />
-                    <Line type="monotone" dataKey="material" name="Material" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} />
+                    <Line type="monotone" dataKey="revenueNet" name="Netto" stroke="var(--primary)" strokeWidth={2} />
+                    <Line type="monotone" dataKey="margin" name="TB" stroke="var(--chart-2)" strokeWidth={2} />
+                    <Line type="monotone" dataKey="material" name="Material" stroke="var(--muted-foreground)" strokeWidth={1.5} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -392,7 +392,7 @@ function EkonomiDashboard() {
                     <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={0} angle={-20} textAnchor="end" height={60} />
                     <YAxis tickFormatter={(v: number) => tkr(v)} tick={{ fontSize: 11 }} width={60} />
                     <Tooltip formatter={(v: number) => kr(v)} />
-                    <Bar dataKey="amount" name="Belopp" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="amount" name="Belopp" fill="var(--primary)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
