@@ -211,7 +211,7 @@ function EkonomiDashboard() {
   const leadRow = (l: Lead, action: "invoice" | "rot" | "none") => (
     <TableRow key={l.id}>
       <TableCell className="font-medium">
-        <Link to="/leads" className="hover:underline">
+        <Link to="/ekonomi/$leadId" params={{ leadId: l.id }} className="hover:underline">
           {l.name}
         </Link>
         <div className="text-xs text-muted-foreground">{l.address}</div>
