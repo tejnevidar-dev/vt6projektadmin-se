@@ -785,6 +785,7 @@ function OffertNyPage() {
                     )}
                     Tolka med AI
                   </Button>
+                  </div>
                 </div>
                 <Textarea
                   rows={8}
