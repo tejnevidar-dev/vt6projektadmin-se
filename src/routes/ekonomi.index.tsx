@@ -252,33 +252,43 @@ function EkonomiDashboard() {
     </TableRow>
   );
 
+  const emptyText = (base: string) =>
+    search.trim() ? `Ingen träff på "${search.trim()}" i den här listan.` : base;
+
   const table = (rows: Lead[], action: "invoice" | "rot" | "none", empty: string) => (
-    <div className="overflow-x-auto rounded-lg border border-border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Kund</TableHead>
-            <TableHead className="text-right">Pris</TableHead>
-            <TableHead className="text-right">Netto</TableHead>
-            <TableHead className="text-right">TB</TableHead>
-            <TableHead className="text-right">ROT</TableHead>
-            <TableHead>Förfaller</TableHead>
-            <TableHead>Underlag</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.length === 0 ? (
+    <div className="space-y-2">
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
-                {empty}
-              </TableCell>
+              <TableHead>Kund</TableHead>
+              <TableHead className="text-right">Pris inkl. moms</TableHead>
+              <TableHead className="text-right">Netto exkl. moms</TableHead>
+              <TableHead className="text-right">TB</TableHead>
+              <TableHead className="text-right">ROT</TableHead>
+              <TableHead>Förfaller</TableHead>
+              <TableHead>ROT-underlag</TableHead>
+              <TableHead />
             </TableRow>
-          ) : (
-            rows.map((l) => leadRow(l, action))
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {rows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
+                  {empty}
+                </TableCell>
+              </TableRow>
+            ) : (
+              rows.map((l) => leadRow(l, action))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Netto = pris ÷ 1,25 (25 % moms). TB = netto − materialkostnad − eventuell UE-kostnad. ROT är den del
+        som begärs från Skatteverket; resterande belopp faktureras kunden. Klicka på kundnamnet för fullt
+        underlag.
+      </p>
     </div>
   );
 
@@ -317,7 +327,11 @@ function EkonomiDashboard() {
               label="Täckningsbidrag"
               value={kr(kpis.margin)}
               tone="good"
-              hint={`${kpis.marginPct.toFixed(1)} % marginal · material ${kr(kpis.materialCost)}`}
+              hint={
+                kpis.costMissingCount
+                  ? `${kpis.marginPct.toFixed(1)} % marginal · OBS: material/UE saknas på ${kpis.costMissingCount} jobb`
+                  : `${kpis.marginPct.toFixed(1)} % marginal · material och UE ${kr(kpis.materialCost)}`
+              }
             />
             <Kpi
               icon={Receipt}
@@ -356,7 +370,7 @@ function EkonomiDashboard() {
               icon={Receipt}
               label="Fakturerat"
               value={kr(kpis.invoicedAmount)}
-              hint="Totalt fakturerat inkl. moms"
+              hint={`Inkl. moms · varav kundens andel ${kr(kpis.customerShareInvoiced)} (resten ROT)`}
             />
           </div>
 
@@ -415,19 +429,19 @@ function EkonomiDashboard() {
               <TabsTrigger value="all">Alla slutförda ({done.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="uninvoiced" className="mt-4">
-              {table(uninvoiced, "invoice", "Allt är fakturerat.")}
+              {table(uninvoiced, "invoice", emptyText("Allt är fakturerat."))}
             </TabsContent>
             <TabsContent value="overdue" className="mt-4">
-              {table(overdue, "none", "Inga förfallna fakturor.")}
+              {table(overdue, "none", emptyText("Inga förfallna fakturor."))}
             </TabsContent>
             <TabsContent value="rot" className="mt-4">
-              {table(rotDue, "rot", "Inga ROT-ansökningar att göra just nu.")}
+              {table(rotDue, "rot", emptyText("Inga ROT-ansökningar att göra just nu."))}
             </TabsContent>
             <TabsContent value="missing" className="mt-4">
-              {table(missing, "none", "Alla underlag är kompletta.")}
+              {table(missing, "none", emptyText("Alla underlag är kompletta."))}
             </TabsContent>
             <TabsContent value="all" className="mt-4">
-              {table(done, "none", "Inga slutförda jobb ännu.")}
+              {table(done, "none", emptyText("Inga slutförda jobb ännu."))}
             </TabsContent>
           </Tabs>
         </div>

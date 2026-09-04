@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useUserRoles } from "@/hooks/use-role";
@@ -145,7 +145,9 @@ function EkonomiRotPage() {
           {rows.map((l) => (
             <TableRow key={l.id}>
               <TableCell className="font-medium">
-                {l.name}
+                <Link to="/ekonomi/$leadId" params={{ leadId: l.id }} className="hover:underline">
+                  {l.name}
+                </Link>
                 <div className="text-xs text-muted-foreground">{l.phone}</div>
               </TableCell>
               <TableCell className="text-sm">{l.personalNumber || <span className="text-destructive">Saknas</span>}</TableCell>

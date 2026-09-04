@@ -61,6 +61,10 @@ export interface EconomyKpis {
   rotDueCount: number;
   rotAppliedAmount: number;
   missingDataCount: number;
+  /** Jobb där varken material- eller UE-kostnad är ifylld → TB är inte tillförlitligt. */
+  costMissingCount: number;
+  /** Fakturerat belopp som kunden själv ska betala (pris − ROT). */
+  customerShareInvoiced: number;
 }
 
 export function economyKpis(leads: Lead[], now = new Date()): EconomyKpis {
@@ -97,6 +101,11 @@ export function economyKpis(leads: Lead[], now = new Date()): EconomyKpis {
       rows.filter((l) => l.rotPaid).reduce((s, l) => s + (l.rotAmount ?? 0), 0),
     ),
     missingDataCount: rows.filter((l) => missingRotData(l).length > 0).length,
+    costMissingCount: rows.filter((l) => (l.materialCost ?? 0) <= 0 && (l.subcontractorPrice ?? 0) <= 0)
+      .length,
+    customerShareInvoiced: Math.round(
+      rows.filter((l) => l.invoiced).reduce((s, l) => s + (l.price ?? 0) - (l.rotAmount ?? 0), 0),
+    ),
   };
 }
 
@@ -178,36 +187,45 @@ export function economyCsv(leads: Lead[]): string {
     "Personnummer",
     "Fastighetsbeteckning",
     "Adress",
+    "Bokföringsmånad",
     "Slutfört",
     "Pris inkl moms",
-    "Netto",
-    "Moms",
+    "Netto exkl moms",
+    "Moms 25%",
     "Materialkostnad",
-    "TB",
+    "UE-kostnad",
+    "TB (netto - material - UE)",
     "ROT-belopp",
+    "Kundens andel (pris - ROT)",
     "Fakturerad",
     "Fakturadatum",
     "Förfallodatum",
     "ROT ansökt",
     "Kommentar",
   ];
-  const rows = completedLeads(leads).map((l) => [
-    l.name,
-    l.personalNumber ?? "",
-    l.propertyDesignation ?? "",
-    l.address ?? "",
-    l.completedAt ? new Date(l.completedAt).toLocaleDateString("sv-SE") : "",
-    Math.round(l.price ?? 0),
-    Math.round(net(l)),
-    Math.round((l.price ?? 0) - net(l)),
-    Math.round(l.materialCost ?? 0),
-    Math.round(margin(l)),
-    Math.round(l.rotAmount ?? 0),
-    l.invoiced ? "Ja" : "Nej",
-    l.invoicedAt ? new Date(l.invoicedAt).toLocaleDateString("sv-SE") : "",
-    l.invoiceDueDate ?? "",
-    l.rotPaid ? "Ja" : "Nej",
-    (l.economyNote ?? "").replace(/\n/g, " "),
-  ]);
+  const rows = completedLeads(leads).map((l) => {
+    const ed = economyDate(l);
+    return [
+      l.name,
+      l.personalNumber ?? "",
+      l.propertyDesignation ?? "",
+      l.address ?? "",
+      ed ? `${ed.getFullYear()}-${String(ed.getMonth() + 1).padStart(2, "0")}` : "",
+      l.completedAt ? new Date(l.completedAt).toLocaleDateString("sv-SE") : "",
+      Math.round(l.price ?? 0),
+      Math.round(net(l)),
+      Math.round((l.price ?? 0) - net(l)),
+      Math.round(l.materialCost ?? 0),
+      Math.round(l.subcontractorPrice ?? 0),
+      Math.round(margin(l)),
+      Math.round(l.rotAmount ?? 0),
+      Math.round((l.price ?? 0) - (l.rotAmount ?? 0)),
+      l.invoiced ? "Ja" : "Nej",
+      l.invoicedAt ? new Date(l.invoicedAt).toLocaleDateString("sv-SE") : "",
+      l.invoiceDueDate ?? "",
+      l.rotPaid ? "Ja" : "Nej",
+      (l.economyNote ?? "").replace(/\n/g, " "),
+    ];
+  });
   return "\uFEFF" + [header, ...rows].map((r) => r.map(csvCell).join(";")).join("\n");
 }
