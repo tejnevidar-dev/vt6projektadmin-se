@@ -44,6 +44,7 @@ import { SelfCheckStatusPanel } from "@/components/SelfCheckStatusPanel";
 import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel, getApplicableTemplates } from "@/lib/self-check-templates";
 
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
+import { SubcontractorInvoicesCard } from "@/components/SubcontractorInvoicesCard";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";
@@ -162,9 +163,7 @@ function JobDetailPage() {
   const isUE = job?.assignment_type === "underentreprenor";
   // Hantverkare/arbetsledare logs time. UE doesn't (fixed price).
   const canLogTime =
-    !!job &&
-    !isUE &&
-    (isOwner || members.some((m) => m.user_id === user?.id));
+    !!job && (isOwner || members.some((m) => m.user_id === user?.id));
 
   async function handleStatus(next: JobStatus) {
     if (!job) return;
@@ -470,7 +469,8 @@ function JobDetailPage() {
             <FileText className="mr-1.5 h-4 w-4" /> Arbetsorder
           </TabsTrigger>
           <TabsTrigger value="members">Hantverkare ({members.length})</TabsTrigger>
-          {!isUE && <TabsTrigger value="time">Timmar ({times.length})</TabsTrigger>}
+          <TabsTrigger value="time">Timmar ({times.length})</TabsTrigger>
+          {isUE && <TabsTrigger value="ue">UE & faktura</TabsTrigger>}
           <TabsTrigger value="checks">Egenkontroller ({checks.length})</TabsTrigger>
         </TabsList>
 
@@ -530,7 +530,7 @@ function JobDetailPage() {
           </div>
         </TabsContent>
 
-        {!isUE && (
+        {(
           <TabsContent value="time" className="mt-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm text-muted-foreground">
@@ -563,6 +563,19 @@ function JobDetailPage() {
                 </div>
               ))}
             </div>
+          </TabsContent>
+        )}
+
+        {isUE && (
+          <TabsContent value="ue" className="mt-4">
+            <SubcontractorInvoicesCard
+              jobId={job.id}
+              subcontractorId={(job as any).subcontractor_id ?? null}
+              agreedPrice={job.fixed_price ?? null}
+              isAdmin={isAdmin}
+              canSubmit={isAdmin || isOwner}
+              userId={user?.id ?? null}
+            />
           </TabsContent>
         )}
 

@@ -13,6 +13,7 @@ import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
 import { Route as ValjPanelRouteImport } from './routes/valj-panel'
 import { Route as UppfoljningRouteImport } from './routes/uppfoljning'
 import { Route as UppdateraKontoRouteImport } from './routes/uppdatera-konto'
+import { Route as UnderentreprenorerRouteImport } from './routes/underentreprenorer'
 import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SeoRouteImport } from './routes/seo'
@@ -75,6 +76,11 @@ const UppfoljningRoute = UppfoljningRouteImport.update({
 const UppdateraKontoRoute = UppdateraKontoRouteImport.update({
   id: '/uppdatera-konto',
   path: '/uppdatera-konto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnderentreprenorerRoute = UnderentreprenorerRouteImport.update({
+  id: '/underentreprenorer',
+  path: '/underentreprenorer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlutfordaRoute = SlutfordaRouteImport.update({
@@ -320,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
+  '/underentreprenorer': typeof UnderentreprenorerRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
   '/uppfoljning': typeof UppfoljningRoute
   '/valj-panel': typeof ValjPanelRoute
@@ -368,6 +375,7 @@ export interface FileRoutesByTo {
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
+  '/underentreprenorer': typeof UnderentreprenorerRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
   '/uppfoljning': typeof UppfoljningRoute
   '/valj-panel': typeof ValjPanelRoute
@@ -418,6 +426,7 @@ export interface FileRoutesById {
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
+  '/underentreprenorer': typeof UnderentreprenorerRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
   '/uppfoljning': typeof UppfoljningRoute
   '/valj-panel': typeof ValjPanelRoute
@@ -469,6 +478,7 @@ export interface FileRouteTypes {
     | '/seo'
     | '/settings'
     | '/slutforda'
+    | '/underentreprenorer'
     | '/uppdatera-konto'
     | '/uppfoljning'
     | '/valj-panel'
@@ -517,6 +527,7 @@ export interface FileRouteTypes {
     | '/seo'
     | '/settings'
     | '/slutforda'
+    | '/underentreprenorer'
     | '/uppdatera-konto'
     | '/uppfoljning'
     | '/valj-panel'
@@ -566,6 +577,7 @@ export interface FileRouteTypes {
     | '/seo'
     | '/settings'
     | '/slutforda'
+    | '/underentreprenorer'
     | '/uppdatera-konto'
     | '/uppfoljning'
     | '/valj-panel'
@@ -616,6 +628,7 @@ export interface RootRouteChildren {
   SeoRoute: typeof SeoRoute
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
+  UnderentreprenorerRoute: typeof UnderentreprenorerRoute
   UppdateraKontoRoute: typeof UppdateraKontoRoute
   UppfoljningRoute: typeof UppfoljningRoute
   ValjPanelRoute: typeof ValjPanelRoute
@@ -670,6 +683,13 @@ declare module '@tanstack/react-router' {
       path: '/uppdatera-konto'
       fullPath: '/uppdatera-konto'
       preLoaderRoute: typeof UppdateraKontoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/underentreprenorer': {
+      id: '/underentreprenorer'
+      path: '/underentreprenorer'
+      fullPath: '/underentreprenorer'
+      preLoaderRoute: typeof UnderentreprenorerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/slutforda': {
@@ -1012,6 +1032,7 @@ const rootRouteChildren: RootRouteChildren = {
   SeoRoute: SeoRoute,
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,
+  UnderentreprenorerRoute: UnderentreprenorerRoute,
   UppdateraKontoRoute: UppdateraKontoRoute,
   UppfoljningRoute: UppfoljningRoute,
   ValjPanelRoute: ValjPanelRoute,

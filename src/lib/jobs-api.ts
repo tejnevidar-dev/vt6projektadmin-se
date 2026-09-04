@@ -11,6 +11,7 @@ export interface Job {
   lead_id: string | null;
   assigned_to: string | null;
   assignment_type: JobAssignmentType | null;
+  subcontractor_id?: string | null;
   status: JobStatus;
   job_type: string | null;
   fixed_price: number | null;
@@ -30,6 +31,17 @@ export interface Job {
   work_order_processed_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export async function updateJobSubcontractor(
+  jobId: string,
+  subcontractorId: string | null,
+  fixedPrice?: number | null,
+): Promise<void> {
+  const patch: Record<string, unknown> = { subcontractor_id: subcontractorId };
+  if (fixedPrice !== undefined) patch.fixed_price = fixedPrice;
+  const { error } = await supabase.from("jobs").update(patch as never).eq("id", jobId);
+  if (error) throw error;
 }
 
 export async function updateJobType(jobId: string, jobType: string | null): Promise<void> {

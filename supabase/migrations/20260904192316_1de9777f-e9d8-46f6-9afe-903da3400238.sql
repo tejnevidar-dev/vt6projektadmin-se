@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.owns_subcontractor(uuid) FROM PUBLIC, anon, authenticated;

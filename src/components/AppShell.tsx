@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X, Calculator, CalendarDays, FileDown, TrendingUp, Landmark, Trophy } from "lucide-react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X, Calculator, CalendarDays, FileDown, TrendingUp, Landmark, Trophy, Truck } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type Side } from "@/hooks/use-role";
@@ -28,7 +28,7 @@ type NavItem = {
   children?: NavChild[];
 };
 
-function buildNavItems(isAdmin: boolean): NavItem[] {
+function buildNavItems(isAdmin: boolean, isUE = false): NavItem[] {
   return [
     // Extern (sälj)
     { to: "/dashboard", label: "Översikt", icon: LayoutDashboard, group: "Arbeta", side: "extern" },
@@ -91,6 +91,17 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
       ],
     },
     { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "both", adminOnly: true },
+    ...(isAdmin || isUE
+      ? [
+          {
+            to: "/underentreprenorer",
+            label: isAdmin ? "Underentreprenörer" : "Min firma",
+            icon: Truck,
+            group: "Hantera",
+            side: "both",
+          } as NavItem,
+        ]
+      : []),
 
     // Gemensamt (Hantera)
     { to: "/prislista", label: "Priser", icon: Calculator, group: "Hantera", side: "extern", adminOnly: true },
@@ -116,7 +127,7 @@ interface AppShellProps extends PageHeaderProps {
 
 export function AppShell({ children, title, description, meta, actions, tabs, topbarActions }: AppShellProps) {
   const { signOut, user } = useAuth();
-  const { isAdmin, isEkonomi, isEkonomiOnly } = useUserRoles();
+  const { isAdmin, isEkonomi, isEkonomiOnly, roles } = useUserRoles();
   const { side, setSide, canSwitch } = useWorkspace();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -142,7 +153,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
     navigate({ to: "/login", search: {} });
   };
 
-  const navItems = buildNavItems(isAdmin);
+  const navItems = buildNavItems(isAdmin, roles.includes("underentreprenor"));
   const visibleNav = navItems.filter((i) => {
     // Redovisningskonsult ser bara Ekonomi + Inställningar
     if (isEkonomiOnly) return i.to === "/ekonomi" || i.to === "/settings";
