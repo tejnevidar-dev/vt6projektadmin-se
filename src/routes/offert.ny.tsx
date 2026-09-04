@@ -26,6 +26,12 @@ import {
   X,
 } from "lucide-react";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   generateManualOffer,
   type OfferInput,
   type OfferRow as OfferRowLine,
@@ -61,6 +67,38 @@ export const Route = createFileRoute("/offert/ny")({
 });
 
 const STANDARD_INTRO = "Vi tackar för er förfrågan och offererar enligt följande:";
+
+const ARBETSTEXT_MALLAR: { key: string; label: string; text: string }[] = [
+  {
+    key: "takbyte",
+    label: "Takbyte",
+    text: `Komplett takbyte enligt nedan:
+Rivning av befintligt taktäckningsmaterial samt bortforsling och deponering av rivningsavfall.
+Kontroll av undertak och råspont, eventuellt byte av skadade delar enligt överenskommelse.
+Montering av nytt undertak (underlagspapp/undertakspanel) med överlapp enligt tillverkarens anvisningar.
+Montering av läkt och strölekt enligt gällande standard.
+Läggning av nytt taktäckningsmaterial inklusive nock, gavlar och takfotsbeslag.
+Montering av ränndalar i plåt där det förekommer.
+Inkapsling/inklädnad av skorsten och genomföringar med plåtbeslag.
+Montering av komplett plåtbeslagsdetaljer: nockplåt, gavelplåt, takfotsplåt och droppbleck.
+Montering av hängrännor och stuprör i plåt.
+Montering av snörasskydd enligt gällande krav.
+Slutbesiktning och städning av arbetsplatsen.`,
+  },
+  {
+    key: "taktvatt",
+    label: "Taktvätt",
+    text: `Taktvätt och behandling enligt nedan:
+Förberedelse av arbetsplatsen med skydd av fasad, rabatter och markytor.
+Skurning av hängrännor och röjning av löv och skräp.
+Högtryckstvätt av hela takytan med anpassat tryck för befintlig taktyp.
+Bortsköljning av mossa, alger och smuts från takpannor samt hängrännor.
+Alg- och mossbehandling med långtidsverkande medel på hela takytan.
+Kontroll och återställning av förskjutna takpannor.
+Slutkontroll av hängrännor och stuprör samt spolning av nedfall.
+Städning av arbetsplatsen.`,
+  },
+];
 
 const STANDARD_VILLKOR: OfferVillkorSektion[] = [
   { rubrik: "1.1 Offertens giltighet", brodtext: "Offerten gäller i 30 dagar från offertdatum." },
@@ -717,7 +755,29 @@ function OffertNyPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <Label>Klistra in arbetstexten (löpande text)</Label>
-                  <Button size="sm" onClick={handleTolka} disabled={parsing}>
+                  <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          <FileDown className="mr-1 h-4 w-4" />
+                          Infoga mall
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {ARBETSTEXT_MALLAR.map((m) => (
+                          <DropdownMenuItem
+                            key={m.key}
+                            onClick={() => {
+                              set("arbetstext", m.text);
+                              toast.success(`Mall "${m.label}" infogad`);
+                            }}
+                          >
+                            {m.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button size="sm" onClick={handleTolka} disabled={parsing}>
                     {parsing ? (
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                     ) : (
@@ -725,6 +785,7 @@ function OffertNyPage() {
                     )}
                     Tolka med AI
                   </Button>
+                  </div>
                 </div>
                 <Textarea
                   rows={8}
