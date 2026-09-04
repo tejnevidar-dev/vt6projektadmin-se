@@ -135,10 +135,13 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
 
   const navItems = buildNavItems(isAdmin);
   const visibleNav = navItems.filter((i) => {
+    // Redovisningskonsult ser bara Ekonomi + Inställningar
+    if (isEkonomiOnly) return i.to === "/ekonomi" || i.to === "/settings";
     if (i.adminOnly && !isAdmin) return false;
     if (i.ekonomiOnly && !isEkonomi) return false;
     return i.side === "both" || i.side === side;
   });
+
   const groups = Array.from(new Set(visibleNav.map((i) => i.group)));
   const activeNav = visibleNav.find((i) =>
     pathname === i.to ||
