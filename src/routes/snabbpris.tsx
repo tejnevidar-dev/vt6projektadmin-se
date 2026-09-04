@@ -32,13 +32,13 @@ export const Route = createFileRoute("/snabbpris")({
   ),
   head: () => ({
     meta: [
-      { title: "Snabbpris – takbyte & taktvätt | admin.vt6" },
+      { title: "Kalkyl – takbyte & taktvätt | admin.vt6" },
       {
         name: "description",
         content:
           "Räkna fram pris för takbyte och taktvätt direkt på plats – ange takyta, våningar och tillval så får du pris med ROT.",
       },
-      { property: "og:title", content: "Snabbpris – takbyte & taktvätt" },
+      { property: "og:title", content: "Kalkyl – takbyte & taktvätt" },
       {
         property: "og:description",
         content: "Generera pris på plats utan kalkylkompetens: takyta, tillval och ROT.",
@@ -185,7 +185,7 @@ function SnabbprisPage() {
 
   return (
     <AppShell
-      title="Snabbpris"
+      title="Kalkyl"
       description="Räkna fram pris för takbyte och taktvätt direkt hos kunden – ingen kalkylvana behövs."
       actions={
         <div className="flex flex-wrap gap-2">

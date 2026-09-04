@@ -47,7 +47,7 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
       ],
     },
     { to: "/offert/ny", label: "Offert & Kalkyl", icon: FileDown, group: "Arbeta", side: "extern" },
-    { to: "/snabbpris", label: "Snabbpris", icon: Calculator, group: "Arbeta", side: "extern" },
+    { to: "/snabbpris", label: "Kalkyl", icon: Calculator, group: "Arbeta", side: "extern" },
     { to: "/bokade", label: "Bokade", icon: CalendarCheck, group: "Arbeta", side: "extern" },
     { to: "/pagaende", label: "Pågående", icon: Loader2, group: "Arbeta", side: "extern" },
     { to: "/slutforda", label: "Slutförda", icon: CheckCircle2, group: "Arbeta", side: "extern" },
@@ -83,7 +83,7 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
     { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "both", adminOnly: true },
 
     // Gemensamt (Hantera)
-    { to: "/prislista", label: "Kalkyl", icon: Calculator, group: "Hantera", side: "extern", adminOnly: true },
+    { to: "/prislista", label: "Priser", icon: Calculator, group: "Hantera", side: "extern", adminOnly: true },
     { to: "/seo", label: "SEO", icon: TrendingUp, group: "Hantera", side: "extern", adminOnly: true },
     { to: "/admin", label: "Roller & inbjudningar", icon: Shield, group: "Hantera", side: "both", adminOnly: true },
     { to: "/webhook-logs", label: "Webhook-loggar", icon: Webhook, group: "Hantera", side: "extern", adminOnly: true },
