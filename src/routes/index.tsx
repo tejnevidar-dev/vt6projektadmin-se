@@ -45,7 +45,7 @@ function HomeRedirect() {
       return;
     }
     navigate({ to: "/dashboard" });
-  }, [authLoading, loading, isAuthenticated, isAdmin, isEkonomi, isInternal, isExternal, side, navigate]);
+  }, [authLoading, loading, isAuthenticated, isAdmin, isEkonomi, isEkonomiOnly, isInternal, isExternal, side, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
