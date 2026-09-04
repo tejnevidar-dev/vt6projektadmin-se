@@ -8,7 +8,6 @@ import { fetchActivities, type LeadActivity } from "@/lib/activities-api";
 import { fetchLeadDocuments, getLeadDocumentUrl, isInvoiceDocument, type LeadDocument } from "@/lib/lead-documents-api";
 import { fetchOffersForLead, type OfferRow } from "@/lib/calculations-api";
 import { InvoiceRotPanel } from "@/components/InvoiceRotPanel";
-import { InvoiceUploadCard } from "@/components/InvoiceUploadCard";
 import { EconomyNoteCard } from "@/components/EconomyNoteCard";
 import { isRotApplicationDue, type Lead } from "@/lib/types";
 import { daysToDue, isOverdue, margin, missingRotData, net, VAT } from "@/lib/economy-analytics";
@@ -407,7 +406,6 @@ function EkonomiDetail() {
                   ))
                 )}
               </div>
-              <InvoiceUploadCard leadId={lead.id} />
             </CardContent>
           </Card>
 
