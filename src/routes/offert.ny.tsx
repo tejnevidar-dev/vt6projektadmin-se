@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,8 +31,6 @@ import {
   Save,
   FolderOpen,
   X,
-  Upload,
-  Wand2,
 } from "lucide-react";
 import {
   generateManualOffer,
@@ -41,7 +39,7 @@ import {
   type OfferVillkorSektion,
 } from "@/lib/offer-manual.functions";
 import { parseArbeteText } from "@/lib/offer-parse.functions";
-import { analyzeRoofImages } from "@/lib/roof-analysis.functions";
+import { QuickPriceCalculator } from "@/components/QuickPriceCalculator";
 import {
   listMyDrafts,
   createDraft,
@@ -105,15 +103,6 @@ function plusDaysISO(days: number): string {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(String(r.result));
-    r.onerror = () => rej(new Error("Kunde inte läsa fil"));
-    r.readAsDataURL(file);
-  });
-}
-
 interface FormState {
   offertnr: string;
   offertdatum: string;
