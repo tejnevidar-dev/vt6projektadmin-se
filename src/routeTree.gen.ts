@@ -42,6 +42,7 @@ import { Route as OffertNyRouteImport } from './routes/offert.ny'
 import { Route as KalkylLeadIdRouteImport } from './routes/kalkyl.$leadId'
 import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
 import { Route as EkonomiRotRouteImport } from './routes/ekonomi.rot'
+import { Route as EkonomiLeadIdRouteImport } from './routes/ekonomi.$leadId'
 import { Route as EgenkontrollerInstruktionerRouteImport } from './routes/egenkontroller.instruktioner'
 import { Route as ApiSendSelfChecksRouteImport } from './routes/api/send-self-checks'
 import { Route as ApiProcessWorkOrderRouteImport } from './routes/api/process-work-order'
@@ -221,6 +222,11 @@ const EkonomiRotRoute = EkonomiRotRouteImport.update({
   path: '/ekonomi/rot',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EkonomiLeadIdRoute = EkonomiLeadIdRouteImport.update({
+  id: '/ekonomi/$leadId',
+  path: '/ekonomi/$leadId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EgenkontrollerInstruktionerRoute =
   EgenkontrollerInstruktionerRouteImport.update({
     id: '/instruktioner',
@@ -322,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
+  '/ekonomi/$leadId': typeof EkonomiLeadIdRoute
   '/ekonomi/rot': typeof EkonomiRotRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
@@ -369,6 +376,7 @@ export interface FileRoutesByTo {
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
+  '/ekonomi/$leadId': typeof EkonomiLeadIdRoute
   '/ekonomi/rot': typeof EkonomiRotRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
@@ -418,6 +426,7 @@ export interface FileRoutesById {
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
+  '/ekonomi/$leadId': typeof EkonomiLeadIdRoute
   '/ekonomi/rot': typeof EkonomiRotRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
@@ -468,6 +477,7 @@ export interface FileRouteTypes {
     | '/api/process-work-order'
     | '/api/send-self-checks'
     | '/egenkontroller/instruktioner'
+    | '/ekonomi/$leadId'
     | '/ekonomi/rot'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
@@ -515,6 +525,7 @@ export interface FileRouteTypes {
     | '/api/process-work-order'
     | '/api/send-self-checks'
     | '/egenkontroller/instruktioner'
+    | '/ekonomi/$leadId'
     | '/ekonomi/rot'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
@@ -563,6 +574,7 @@ export interface FileRouteTypes {
     | '/api/process-work-order'
     | '/api/send-self-checks'
     | '/egenkontroller/instruktioner'
+    | '/ekonomi/$leadId'
     | '/ekonomi/rot'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
@@ -611,6 +623,7 @@ export interface RootRouteChildren {
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
   ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
+  EkonomiLeadIdRoute: typeof EkonomiLeadIdRoute
   EkonomiRotRoute: typeof EkonomiRotRoute
   JobbJobIdRoute: typeof JobbJobIdRoute
   KalkylLeadIdRoute: typeof KalkylLeadIdRoute
@@ -862,6 +875,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EkonomiRotRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ekonomi/$leadId': {
+      id: '/ekonomi/$leadId'
+      path: '/ekonomi/$leadId'
+      fullPath: '/ekonomi/$leadId'
+      preLoaderRoute: typeof EkonomiLeadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/egenkontroller/instruktioner': {
       id: '/egenkontroller/instruktioner'
       path: '/instruktioner'
@@ -999,6 +1019,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
   ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
+  EkonomiLeadIdRoute: EkonomiLeadIdRoute,
   EkonomiRotRoute: EkonomiRotRoute,
   JobbJobIdRoute: JobbJobIdRoute,
   KalkylLeadIdRoute: KalkylLeadIdRoute,
