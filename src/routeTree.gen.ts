@@ -13,7 +13,6 @@ import { Route as WebhookLogsRouteImport } from './routes/webhook-logs'
 import { Route as ValjPanelRouteImport } from './routes/valj-panel'
 import { Route as UppfoljningRouteImport } from './routes/uppfoljning'
 import { Route as UppdateraKontoRouteImport } from './routes/uppdatera-konto'
-import { Route as SnabbprisRouteImport } from './routes/snabbpris'
 import { Route as SlutfordaRouteImport } from './routes/slutforda'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SeoRouteImport } from './routes/seo'
@@ -74,11 +73,6 @@ const UppfoljningRoute = UppfoljningRouteImport.update({
 const UppdateraKontoRoute = UppdateraKontoRouteImport.update({
   id: '/uppdatera-konto',
   path: '/uppdatera-konto',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SnabbprisRoute = SnabbprisRouteImport.update({
-  id: '/snabbpris',
-  path: '/snabbpris',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlutfordaRoute = SlutfordaRouteImport.update({
@@ -314,7 +308,6 @@ export interface FileRoutesByFullPath {
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
-  '/snabbpris': typeof SnabbprisRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
   '/uppfoljning': typeof UppfoljningRoute
   '/valj-panel': typeof ValjPanelRoute
@@ -361,7 +354,6 @@ export interface FileRoutesByTo {
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
-  '/snabbpris': typeof SnabbprisRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
   '/uppfoljning': typeof UppfoljningRoute
   '/valj-panel': typeof ValjPanelRoute
@@ -410,7 +402,6 @@ export interface FileRoutesById {
   '/seo': typeof SeoRoute
   '/settings': typeof SettingsRoute
   '/slutforda': typeof SlutfordaRoute
-  '/snabbpris': typeof SnabbprisRoute
   '/uppdatera-konto': typeof UppdateraKontoRoute
   '/uppfoljning': typeof UppfoljningRoute
   '/valj-panel': typeof ValjPanelRoute
@@ -460,7 +451,6 @@ export interface FileRouteTypes {
     | '/seo'
     | '/settings'
     | '/slutforda'
-    | '/snabbpris'
     | '/uppdatera-konto'
     | '/uppfoljning'
     | '/valj-panel'
@@ -507,7 +497,6 @@ export interface FileRouteTypes {
     | '/seo'
     | '/settings'
     | '/slutforda'
-    | '/snabbpris'
     | '/uppdatera-konto'
     | '/uppfoljning'
     | '/valj-panel'
@@ -555,7 +544,6 @@ export interface FileRouteTypes {
     | '/seo'
     | '/settings'
     | '/slutforda'
-    | '/snabbpris'
     | '/uppdatera-konto'
     | '/uppfoljning'
     | '/valj-panel'
@@ -604,7 +592,6 @@ export interface RootRouteChildren {
   SeoRoute: typeof SeoRoute
   SettingsRoute: typeof SettingsRoute
   SlutfordaRoute: typeof SlutfordaRoute
-  SnabbprisRoute: typeof SnabbprisRoute
   UppdateraKontoRoute: typeof UppdateraKontoRoute
   UppfoljningRoute: typeof UppfoljningRoute
   ValjPanelRoute: typeof ValjPanelRoute
@@ -657,13 +644,6 @@ declare module '@tanstack/react-router' {
       path: '/uppdatera-konto'
       fullPath: '/uppdatera-konto'
       preLoaderRoute: typeof UppdateraKontoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/snabbpris': {
-      id: '/snabbpris'
-      path: '/snabbpris'
-      fullPath: '/snabbpris'
-      preLoaderRoute: typeof SnabbprisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/slutforda': {
@@ -992,7 +972,6 @@ const rootRouteChildren: RootRouteChildren = {
   SeoRoute: SeoRoute,
   SettingsRoute: SettingsRoute,
   SlutfordaRoute: SlutfordaRoute,
-  SnabbprisRoute: SnabbprisRoute,
   UppdateraKontoRoute: UppdateraKontoRoute,
   UppfoljningRoute: UppfoljningRoute,
   ValjPanelRoute: ValjPanelRoute,
