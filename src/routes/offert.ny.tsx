@@ -348,6 +348,29 @@ function OffertNyPage() {
 
   // ---------- Kund ----------
   const applyCustomer = (c: CustomerPick) => {
+    // Om det finns en sparad kalkyl för kunden – fyll i hela offerten direkt
+    const existing = drafts.find((d) => d.lead_id === c.leadId);
+    if (existing) {
+      try {
+        const p = existing.payload as Partial<FormState>;
+        setForm({
+          ...initialForm(),
+          ...p,
+          leadId: c.leadId,
+          kundNamn: p.kundNamn || c.name,
+          telefon: p.telefon || c.phone,
+          mail: p.mail || c.email,
+          objektadress: p.objektadress || c.address,
+          fastighetsbeteckning: p.fastighetsbeteckning || c.propertyDesignation,
+        } as FormState);
+        setActiveDraftId(existing.id);
+        peekNextOfferNr();
+        toast.success(`Kalkyl hämtad för ${c.name} – priset är redan ifyllt`);
+        return;
+      } catch {
+        /* falla tillbaka på vanligt kundval */
+      }
+    }
     setForm((f) => ({
       ...f,
       leadId: c.leadId,
