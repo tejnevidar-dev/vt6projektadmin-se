@@ -113,7 +113,7 @@ const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).pad
 
 /** Datum som styr vilken månad affären bokförs på. */
 export const economyDate = (l: Lead): Date | null => {
-  const raw = l.invoicedAt ?? l.completedAt ?? l.offerAcceptedAt ?? l.updatedAt ?? l.createdAt ?? null;
+  const raw = l.invoicedAt ?? l.completedAt ?? l.offerAcceptedAt ?? l.createdAt ?? null;
   return raw ? new Date(raw) : null;
 };
 
