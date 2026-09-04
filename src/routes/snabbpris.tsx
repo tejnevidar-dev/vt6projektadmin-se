@@ -74,6 +74,7 @@ function SnabbprisPage() {
   const materials = forService("material");
   const arbeten = forService("arbete");
   const svarigheter = forService("svarighet");
+  const lutningar = forService("lutning");
   const tillvalItems = forService("tillval");
 
   // Sätt förval när prislistan laddats / tjänst byts
@@ -93,6 +94,10 @@ function SnabbprisPage() {
         f.svarighetKey && svarigheter.some((m) => m.key === f.svarighetKey)
           ? f.svarighetKey
           : (svarigheter[0]?.key ?? null),
+      lutningKey:
+        f.lutningKey && lutningar.some((m) => m.key === f.lutningKey)
+          ? f.lutningKey
+          : (lutningar[0]?.key ?? null),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, input.service, items.length]);
@@ -122,6 +127,10 @@ function SnabbprisPage() {
 
   const arbetstext = () => {
     const rows = result.lines.map((l) => `${l.label} (${l.detail})`);
+    if (result.lutningProcent > 0) {
+      const lu = lutningar.find((x) => x.key === input.lutningKey);
+      rows.push(`Lutningstillägg: ${lu?.label ?? ""} (+${result.lutningProcent} % på arbete)`);
+    }
     if (result.svarighetProcent > 0) {
       const s = svarigheter.find((x) => x.key === input.svarighetKey);
       rows.push(`Tillägg åtkomst/höjd: ${s?.label ?? ""} (+${result.svarighetProcent} %)`);
@@ -246,7 +255,7 @@ function SnabbprisPage() {
               </div>
 
               <div className="space-y-1">
-                <Label>Antal våningar / åtkomst</Label>
+                <Label>{input.service === "taktvatt" ? "Lutning / åtkomst" : "Antal våningar / åtkomst"}</Label>
                 <div className="flex flex-wrap gap-2">
                   {svarigheter.map((s) => (
                     <Button
@@ -264,6 +273,28 @@ function SnabbprisPage() {
                   ))}
                 </div>
               </div>
+
+              {lutningar.length > 0 && (
+                <div className="space-y-1">
+                  <Label>Taklutning</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {lutningar.map((s) => (
+                      <Button
+                        key={s.key}
+                        type="button"
+                        size="sm"
+                        variant={input.lutningKey === s.key ? "default" : "outline"}
+                        onClick={() => set("lutningKey", s.key)}
+                      >
+                        {s.label}
+                        {s.unit_price > 0 && (
+                          <span className="ml-1 text-xs opacity-70">+{s.unit_price}%</span>
+                        )}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {materials.length > 0 && (
                 <div className="space-y-1 sm:col-span-2">
@@ -331,7 +362,7 @@ function SnabbprisPage() {
                         {t.unit_price} kr/{t.unit}
                       </span>
                     </Label>
-                    {on && t.unit === "st" && (
+                    {on && (t.unit === "st" || t.unit === "lpm") && (
                       <Input
                         className="h-8 w-16"
                         inputMode="numeric"
@@ -402,6 +433,14 @@ function SnabbprisPage() {
                     <span>{formatKr(l.amount)}</span>
                   </div>
                 ))}
+                {result.lutningAmount > 0 && (
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">
+                      Lutning +{result.lutningProcent}% på arbete
+                    </span>
+                    <span>{formatKr(result.lutningAmount)}</span>
+                  </div>
+                )}
                 {result.svarighetAmount > 0 && (
                   <div className="flex justify-between gap-2">
                     <span className="text-muted-foreground">

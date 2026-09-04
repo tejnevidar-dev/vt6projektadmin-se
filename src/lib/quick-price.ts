@@ -1,8 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type QuickService = "takbyte" | "taktvatt";
-export type QuickKind = "material" | "arbete" | "tillval" | "svarighet";
-export type QuickUnit = "kvm" | "st" | "procent" | "fast";
+export type QuickKind = "material" | "arbete" | "tillval" | "svarighet" | "lutning";
+export type QuickUnit = "kvm" | "st" | "procent" | "fast" | "lpm";
 
 export interface QuickPriceItem {
   id: string;
@@ -96,7 +96,8 @@ export interface QuickPriceInput {
   materialKey: string | null;
   arbeteKey: string | null;
   svarighetKey: string | null;
-  /** valda tillval: key -> antal (st) eller 1 (kvm-baserade) */
+  lutningKey: string | null;
+  /** valda tillval: key -> antal (st/lpm) eller 1 (kvm-baserade) */
   tillval: Record<string, number>;
   rot: boolean;
   antalAgare: number;
@@ -119,6 +120,8 @@ export interface QuickPriceResult {
   tillaggSum: number;
   svarighetProcent: number;
   svarighetAmount: number;
+  lutningProcent: number;
+  lutningAmount: number;
   minimumApplied: boolean;
   rabatt: number;
   exMoms: number;
@@ -135,6 +138,7 @@ export function emptyQuickInput(service: QuickService = "takbyte"): QuickPriceIn
     materialKey: null,
     arbeteKey: null,
     svarighetKey: null,
+    lutningKey: null,
     tillval: {},
     rot: true,
     antalAgare: 1,
@@ -197,17 +201,22 @@ export function computeQuickPrice(
       detail:
         item.unit === "kvm"
           ? `${area} kvm × ${item.unit_price} kr`
-          : `${qty} st × ${item.unit_price} kr`,
+          : `${qty} ${item.unit} × ${item.unit_price} kr`,
       amount,
       // tillval räknas till hälften som arbete (schablon) för ROT
       isLabor: false,
     });
   }
 
+  // Lutning 35+ – påslag på arbete
+  const lutningItem = input.lutningKey ? byKey.get(input.lutningKey) : null;
+  const lutningProcent = lutningItem ? lutningItem.unit_price : 0;
+  const lutningAmount = laborSum * (lutningProcent / 100);
+
   const svarighetItem = input.svarighetKey ? byKey.get(input.svarighetKey) : null;
   const svarighetProcent = svarighetItem ? svarighetItem.unit_price : 0;
 
-  let base = materialSum + laborSum + tillaggSum;
+  let base = materialSum + laborSum + lutningAmount + tillaggSum;
   const svarighetAmount = base * (svarighetProcent / 100);
   base += svarighetAmount;
 
@@ -225,8 +234,8 @@ export function computeQuickPrice(
   // ROT: 30 % av arbetskostnaden inkl. moms, tak per ägare
   let rotBelopp = 0;
   if (input.rot && exMoms > 0) {
-    const preScale = materialSum + laborSum + tillaggSum;
-    const laborShare = preScale > 0 ? (laborSum + tillaggSum * 0.5) / preScale : 0;
+    const preScale = materialSum + laborSum + lutningAmount + tillaggSum;
+    const laborShare = preScale > 0 ? (laborSum + lutningAmount + tillaggSum * 0.5) / preScale : 0;
     const laborInclVat = exMoms * laborShare * (1 + settings.moms_procent / 100);
     rotBelopp = Math.min(
       laborInclVat * (settings.rot_procent / 100),
@@ -241,6 +250,8 @@ export function computeQuickPrice(
     tillaggSum,
     svarighetProcent,
     svarighetAmount,
+    lutningProcent,
+    lutningAmount,
     minimumApplied,
     rabatt,
     exMoms: Math.round(exMoms),
