@@ -1200,6 +1200,78 @@ export type Database = {
         }
         Relationships: []
       }
+      quick_price_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key: string
+          kind: string
+          label: string
+          service: string
+          sort_order: number
+          unit: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          kind: string
+          label: string
+          service: string
+          sort_order?: number
+          unit: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          kind?: string
+          label?: string
+          service?: string
+          sort_order?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quick_price_settings: {
+        Row: {
+          created_at: string
+          id: number
+          moms_procent: number
+          rot_procent: number
+          rot_tak_per_agare: number
+          taktvatt_min_pris: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          moms_procent?: number
+          rot_procent?: number
+          rot_tak_per_agare?: number
+          taktvatt_min_pris?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          moms_procent?: number
+          rot_procent?: number
+          rot_tak_per_agare?: number
+          taktvatt_min_pris?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       salary_adjustments: {
         Row: {
           amount: number
