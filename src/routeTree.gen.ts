@@ -35,6 +35,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JobbIndexRouteImport } from './routes/jobb.index'
+import { Route as EkonomiIndexRouteImport } from './routes/ekonomi.index'
 import { Route as EgenkontrollerIndexRouteImport } from './routes/egenkontroller.index'
 import { Route as SigneraTokenRouteImport } from './routes/signera.$token'
 import { Route as OffertNyRouteImport } from './routes/offert.ny'
@@ -185,6 +186,11 @@ const JobbIndexRoute = JobbIndexRouteImport.update({
   path: '/jobb/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EkonomiIndexRoute = EkonomiIndexRouteImport.update({
+  id: '/ekonomi/',
+  path: '/ekonomi/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EgenkontrollerIndexRoute = EgenkontrollerIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -322,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/offert/ny': typeof OffertNyRoute
   '/signera/$token': typeof SigneraTokenRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
+  '/ekonomi/': typeof EkonomiIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
@@ -368,6 +375,7 @@ export interface FileRoutesByTo {
   '/offert/ny': typeof OffertNyRoute
   '/signera/$token': typeof SigneraTokenRoute
   '/egenkontroller': typeof EgenkontrollerIndexRoute
+  '/ekonomi': typeof EkonomiIndexRoute
   '/jobb': typeof JobbIndexRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
@@ -416,6 +424,7 @@ export interface FileRoutesById {
   '/offert/ny': typeof OffertNyRoute
   '/signera/$token': typeof SigneraTokenRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
+  '/ekonomi/': typeof EkonomiIndexRoute
   '/jobb/': typeof JobbIndexRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
@@ -465,6 +474,7 @@ export interface FileRouteTypes {
     | '/offert/ny'
     | '/signera/$token'
     | '/egenkontroller/'
+    | '/ekonomi/'
     | '/jobb/'
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
@@ -511,6 +521,7 @@ export interface FileRouteTypes {
     | '/offert/ny'
     | '/signera/$token'
     | '/egenkontroller'
+    | '/ekonomi'
     | '/jobb'
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
@@ -558,6 +569,7 @@ export interface FileRouteTypes {
     | '/offert/ny'
     | '/signera/$token'
     | '/egenkontroller/'
+    | '/ekonomi/'
     | '/jobb/'
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
@@ -604,6 +616,7 @@ export interface RootRouteChildren {
   KalkylLeadIdRoute: typeof KalkylLeadIdRoute
   OffertNyRoute: typeof OffertNyRoute
   SigneraTokenRoute: typeof SigneraTokenRoute
+  EkonomiIndexRoute: typeof EkonomiIndexRoute
   JobbIndexRoute: typeof JobbIndexRoute
   ApiPublicLookupInviteRoute: typeof ApiPublicLookupInviteRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
@@ -800,6 +813,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobbIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ekonomi/': {
+      id: '/ekonomi/'
+      path: '/ekonomi'
+      fullPath: '/ekonomi/'
+      preLoaderRoute: typeof EkonomiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/egenkontroller/': {
       id: '/egenkontroller/'
       path: '/'
@@ -984,6 +1004,7 @@ const rootRouteChildren: RootRouteChildren = {
   KalkylLeadIdRoute: KalkylLeadIdRoute,
   OffertNyRoute: OffertNyRoute,
   SigneraTokenRoute: SigneraTokenRoute,
+  EkonomiIndexRoute: EkonomiIndexRoute,
   JobbIndexRoute: JobbIndexRoute,
   ApiPublicLookupInviteRoute: ApiPublicLookupInviteRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
