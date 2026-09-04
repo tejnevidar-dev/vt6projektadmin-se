@@ -29,7 +29,7 @@ export const Route = createFileRoute("/prislista")({
       <PrislistaPage />
     </RequireAuth>
   ),
-  head: () => ({ meta: [{ title: "Kalkyl – admin.vt6" }] }),
+  head: () => ({ meta: [{ title: "Priser – admin.vt6" }] }),
 });
 
 const CATEGORY_LABEL: Record<PriceCategory, string> = {
@@ -67,19 +67,19 @@ function PrislistaPage() {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Fel"),
   });
 
-  if (loading) return <AppShell title="Kalkyl"><Loader2 className="h-4 w-4 animate-spin" /></AppShell>;
-  if (!isAdmin) return <AppShell title="Kalkyl"><p className="text-sm text-muted-foreground">Endast administratörer kan hantera prislistan.</p></AppShell>;
+  if (loading) return <AppShell title="Priser"><Loader2 className="h-4 w-4 animate-spin" /></AppShell>;
+  if (!isAdmin) return <AppShell title="Priser"><p className="text-sm text-muted-foreground">Endast administratörer kan hantera prislistan.</p></AppShell>;
 
   const grouped = CATEGORIES.map((cat) => ({ cat, items: rows.filter((r) => r.category === cat) })).filter((g) => g.items.length > 0);
 
   return (
     <AppShell
-      title="Kalkyl"
-      description="Redigera enhetspriser som används i kalkyler, snabbpris och offerter."
+      title="Priser"
+      description="Redigera enhetspriser som används i kalkyler och offerter."
     >
       <Tabs defaultValue="snabbpris" className="w-full">
         <TabsList>
-          <TabsTrigger value="snabbpris">Snabbpris (takbyte & taktvätt)</TabsTrigger>
+          <TabsTrigger value="snabbpris">Kalkylpriser (takbyte & taktvätt)</TabsTrigger>
           <TabsTrigger value="detalj">Detaljprislista</TabsTrigger>
         </TabsList>
 
