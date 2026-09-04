@@ -141,8 +141,11 @@ function EkonomiDetail() {
         rotEligible,
         rotAmount: rotAmount.trim() ? Number(rotAmount) : null,
       });
-      if ((designation.trim() || null) !== (lead.propertyDesignation ?? null)) {
-        await saveBookingPropertyDesignation({ id: lead.id, propertyDesignation: designation.trim() || null });
+      if (lead.propertyId && (designation.trim() || null) !== (lead.propertyDesignation ?? null)) {
+        await saveBookingPropertyDesignation({
+          propertyId: lead.propertyId,
+          propertyDesignation: designation.trim() || null,
+        });
       }
       toast.success("ROT-underlag sparat");
       refresh();
