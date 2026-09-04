@@ -78,7 +78,18 @@ function buildNavItems(isAdmin: boolean): NavItem[] {
       ],
     },
     { to: "/kalender", label: "Kalender", icon: CalendarDays, group: "Arbeta", side: "intern" },
-    { to: "/ekonomi/rot", label: "ROT-ansökningar", icon: Landmark, group: "Ekonomi", side: "both", ekonomiOnly: true },
+    {
+      to: "/ekonomi",
+      label: "Ekonomi",
+      icon: Landmark,
+      group: "Ekonomi",
+      side: "both",
+      ekonomiOnly: true,
+      children: [
+        { to: "/ekonomi", label: "Översikt" },
+        { to: "/ekonomi/rot", label: "ROT-ansökningar" },
+      ],
+    },
     { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "both", adminOnly: true },
 
     // Gemensamt (Hantera)
