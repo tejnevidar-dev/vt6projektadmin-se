@@ -36,9 +36,10 @@ const KIND_LABEL: Record<QuickKind, string> = {
   arbete: "Arbete",
   tillval: "Tillval",
   svarighet: "Våningar / åtkomst (påslag %)",
+  lutning: "Lutning (påslag % på arbete)",
 };
-const KINDS: QuickKind[] = ["material", "arbete", "tillval", "svarighet"];
-const UNITS: QuickUnit[] = ["kvm", "st", "procent", "fast"];
+const KINDS: QuickKind[] = ["material", "arbete", "tillval", "svarighet", "lutning"];
+const UNITS: QuickUnit[] = ["kvm", "st", "procent", "fast", "lpm"];
 
 export function QuickPriceAdmin() {
   const qc = useQueryClient();
