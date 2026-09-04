@@ -248,8 +248,7 @@ export function computeQuickPrice(
     total: Math.round(total),
     rotBelopp: Math.round(rotBelopp),
     attBetala: Math.round(total - rotBelopp),
-    materialSumRounded: undefined as never,
-  } as QuickPriceResult;
+  };
 }
 
 export function formatKr(v: number): string {
