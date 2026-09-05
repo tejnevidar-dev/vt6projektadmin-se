@@ -291,19 +291,10 @@ export function invoiceSummary(agreedPrice: number | null, invoices: Subcontract
   };
 }
 
-/** Dokument/försäkring som gått ut eller går ut inom 30 dagar. */
+/** Varningar för saknade uppgifter (F-skatt, avtal). */
 export function expiryWarnings(sc: Subcontractor): string[] {
   const out: string[] = [];
-  const soon = new Date();
-  soon.setDate(soon.getDate() + 30);
   if (!sc.f_skatt) out.push("F-skatt saknas");
   if (!sc.agreement_signed_at) out.push("Avtal saknas");
-  if (!sc.insurance_expires_at) {
-    out.push("Försäkring saknas");
-  } else {
-    const d = new Date(sc.insurance_expires_at);
-    if (d < new Date()) out.push("Försäkring har gått ut");
-    else if (d < soon) out.push("Försäkring går snart ut");
-  }
   return out;
 }

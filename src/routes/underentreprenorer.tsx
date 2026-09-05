@@ -85,10 +85,7 @@ const EMPTY: Partial<Subcontractor> = {
   phone: "",
   address: "",
   f_skatt: false,
-  insurance_company: "",
-  insurance_expires_at: "",
   agreement_signed_at: "",
-  hourly_rate: null,
   active: true,
   notes: "",
 };
@@ -140,10 +137,7 @@ function SubcontractorsPage() {
       phone: editing.phone || null,
       address: editing.address || null,
       f_skatt: !!editing.f_skatt,
-      insurance_company: editing.insurance_company || null,
-      insurance_expires_at: editing.insurance_expires_at || null,
       agreement_signed_at: editing.agreement_signed_at || null,
-      hourly_rate: editing.hourly_rate ?? null,
       active: editing.active !== false,
       notes: editing.notes || null,
     };
@@ -173,7 +167,7 @@ function SubcontractorsPage() {
       title="Underentreprenörer"
       description={
         isAdmin
-          ? "Register över UE-företag med avtal, F-skatt, försäkring och fakturor."
+          ? "Register över UE-företag med avtal, F-skatt och fakturor."
           : "Din företagsinformation och dina dokument."
       }
       meta={<span>Totalt: <strong className="text-foreground">{rows.length}</strong></span>}
@@ -360,49 +354,15 @@ function SubcontractorsPage() {
                   onChange={(e) => setEditing({ ...editing, address: e.target.value })}
                 />
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="grid gap-1.5">
-                  <Label>Försäkringsbolag</Label>
-                  <Input
-                    value={editing.insurance_company ?? ""}
-                    onChange={(e) =>
-                      setEditing({ ...editing, insurance_company: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Försäkring giltig t.o.m.</Label>
-                  <Input
-                    type="date"
-                    value={editing.insurance_expires_at ?? ""}
-                    onChange={(e) =>
-                      setEditing({ ...editing, insurance_expires_at: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Avtal tecknat</Label>
-                  <Input
-                    type="date"
-                    value={editing.agreement_signed_at ?? ""}
-                    onChange={(e) =>
-                      setEditing({ ...editing, agreement_signed_at: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Timpris (kr)</Label>
-                  <Input
-                    type="number"
-                    value={editing.hourly_rate ?? ""}
-                    onChange={(e) =>
-                      setEditing({
-                        ...editing,
-                        hourly_rate: e.target.value ? Number(e.target.value) : null,
-                      })
-                    }
-                  />
-                </div>
+              <div className="grid gap-1.5 sm:max-w-[50%]">
+                <Label>Avtal tecknat</Label>
+                <Input
+                  type="date"
+                  value={editing.agreement_signed_at ?? ""}
+                  onChange={(e) =>
+                    setEditing({ ...editing, agreement_signed_at: e.target.value })
+                  }
+                />
               </div>
               <div className="flex items-center gap-6">
                 <label className="flex items-center gap-2 text-sm">
