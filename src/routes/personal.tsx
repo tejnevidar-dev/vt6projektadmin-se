@@ -202,7 +202,7 @@ function PersonalInner() {
       meta={
         <>
           <span>Intern: <strong className="text-foreground">{counts.intern}</strong></span>
-          <span>Extern: <strong className="text-foreground">{counts.extern}</strong></span>
+          <span>CRM: <strong className="text-foreground">{counts.extern}</strong></span>
           <span>Aktiva (intern): <strong className="text-foreground">{counts.active}</strong></span>
         </>
       }
@@ -213,7 +213,7 @@ function PersonalInner() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="extern">Extern (säljare)</SelectItem>
+              <SelectItem value="extern">CRM (säljare)</SelectItem>
               <SelectItem value="intern">Intern (hantverkare)</SelectItem>
               <SelectItem value="alla">Alla</SelectItem>
             </SelectContent>

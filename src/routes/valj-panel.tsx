@@ -55,7 +55,7 @@ function ChooseWorkspacePage() {
           <CardHeader>
             <CardTitle className="text-xl">Ingen panel tilldelad</CardTitle>
             <CardDescription>
-              Ditt konto saknar roll för både intern och extern panel. Kontakta en administratör.
+              Ditt konto saknar roll för både intern panel och CRM. Kontakta en administratör.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -82,7 +82,7 @@ function ChooseWorkspacePage() {
             className="flex flex-col items-center gap-2 rounded-lg border border-border bg-muted/30 p-6 transition-colors hover:border-primary hover:bg-muted"
           >
             <Briefcase className="h-7 w-7 text-primary" />
-            <span className="font-medium">Extern</span>
+            <span className="font-medium">CRM</span>
             <span className="text-xs text-muted-foreground">Sälj, leads och offerter</span>
           </button>
           <button
