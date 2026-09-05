@@ -29,6 +29,10 @@ export interface Subcontractor {
   email: string | null;
   phone: string | null;
   address: string | null;
+  bankgiro: string | null;
+  plusgiro: string | null;
+  payment_terms_days: number | null;
+  payment_reference: string | null;
   f_skatt: boolean;
   insurance_company: string | null;
   insurance_expires_at: string | null;
