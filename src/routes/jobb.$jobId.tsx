@@ -27,6 +27,8 @@ import {
   listJobEstimateAudit,
   updateJobType,
   approveSelfCheckField,
+  markSelfCheckReviewed,
+  assignJobSubcontractor,
   getSelfCheckImageUrl,
   getProfileNames,
   type JobWithLead,
@@ -45,6 +47,7 @@ import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel, getApplicableTemplates
 
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
 import { SubcontractorInvoicesCard } from "@/components/SubcontractorInvoicesCard";
+import { listSubcontractors, type Subcontractor } from "@/lib/subcontractors-api";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
 import { Button } from "@/components/ui/button";
@@ -114,6 +117,7 @@ function JobDetailPage() {
   const [nameMap, setNameMap] = useState<Record<string, string>>({});
   const [inviteOpen, setInviteOpen] = useState(false);
   const [foremanOpen, setForemanOpen] = useState(false);
+  const [subOpen, setSubOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
@@ -171,11 +175,21 @@ function JobDetailPage() {
       const submittedKeys = new Set(
         checks.filter((c) => c.completed_at).map((c) => c.template_key),
       );
-      const applicable = getApplicableTemplates(job.lead?.job_type);
+      const approvedKeys = new Set(
+        checks.filter((c) => c.completed_at && c.reviewed_at).map((c) => c.template_key),
+      );
+      const applicable = getApplicableTemplates(job.job_type ?? job.lead?.job_type);
       const missing = applicable.filter((t) => !submittedKeys.has(t.key));
       if (missing.length > 0) {
         toast.error(
-          `Kan inte avsluta: egenkontroll saknas för ${missing.map((m) => m.name).join(", ")}. Alla egenkontroller måste vara inlämnade innan projektet kan markeras som klart och timmar registreras.`,
+          `Kan inte avsluta: egenkontroll saknas för ${missing.map((m) => m.name).join(", ")}. Alla egenkontroller måste vara inlämnade och godkända innan projektet kan markeras som klart.`,
+        );
+        return;
+      }
+      const notApproved = applicable.filter((t) => !approvedKeys.has(t.key));
+      if (notApproved.length > 0) {
+        toast.error(
+          `Kan inte avsluta: egenkontroll väntar på godkännande för ${notApproved.map((m) => m.name).join(", ")}. Godkänn dem under fliken Egenkontroller först.`,
         );
         return;
       }
@@ -339,6 +353,11 @@ function JobDetailPage() {
           {isAdmin && (
             <Button size="sm" variant="outline" onClick={() => setForemanOpen(true)}>
               <UserPlus className="mr-1.5 h-4 w-4" /> Tilldela arbetsledare
+            </Button>
+          )}
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={() => setSubOpen(true)}>
+              <UserPlus className="mr-1.5 h-4 w-4" /> Tilldela underentreprenör
             </Button>
           )}
           {isAdmin && job.status === "ej_paborjad" && (
@@ -617,6 +636,27 @@ function JobDetailPage() {
             await assignJobForeman(job.id, userId);
             toast.success("Arbetsledare tilldelad");
             setForemanOpen(false);
+            void reload();
+          } catch (e: any) {
+            toast.error(e.message);
+          }
+        }}
+      />
+      <SubcontractorDialog
+        open={subOpen}
+        onOpenChange={setSubOpen}
+        currentId={job.subcontractor_id ?? null}
+        onPick={async (id) => {
+          try {
+            const res = await assignJobSubcontractor(job.id, id);
+            setSubOpen(false);
+            if (!id) toast.success("Underentreprenör borttagen");
+            else if (res.hasUser)
+              toast.success("Underentreprenör tilldelad – har nu åtkomst till projektet");
+            else
+              toast.warning(
+                `${res.companyName ?? "Företaget"} saknar användarkonto och kan inte lämna egenkontroller. Bjud in kontaktpersonen under Personal.`,
+              );
             void reload();
           } catch (e: any) {
             toast.error(e.message);
@@ -1114,6 +1154,12 @@ function ChecksTab({
 
   const submittedKeys = new Set(checks.filter((c) => c.completed_at).map((c) => c.template_key));
   const missingCount = applicableTemplates.filter((t) => !submittedKeys.has(t.key)).length;
+  const approvedKeys = new Set(
+    checks.filter((c) => c.completed_at && c.reviewed_at).map((c) => c.template_key),
+  );
+  const pendingReviewCount = applicableTemplates.filter(
+    (t) => submittedKeys.has(t.key) && !approvedKeys.has(t.key),
+  ).length;
 
   return (
     <>
@@ -1149,12 +1195,17 @@ function ChecksTab({
           </div>
         )}
         <p className="text-sm text-muted-foreground">
-          Varje moment har en egen flik. Alla moment måste vara inlämnade innan projektet kan
-          markeras som klart och timmar registreras.
+          Varje moment har en egen flik. Alla moment måste vara inlämnade och godkända av admin
+          innan projektet kan markeras som klart.
         </p>
         {missingCount > 0 && (
           <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
             {missingCount} moment saknar inlämnad egenkontroll.
+          </div>
+        )}
+        {missingCount === 0 && pendingReviewCount > 0 && (
+          <div className="rounded-md border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-xs text-sky-700 dark:text-sky-300">
+            {pendingReviewCount} moment väntar på godkännande av admin.
           </div>
         )}
       </div>
@@ -1328,6 +1379,23 @@ function ChecksTab({
                               <Badge variant="secondary">Inlämnad</Badge>
                             ) : (
                               <Badge variant="outline">Utkast</Badge>
+                            )}
+                            {isAdmin && c.completed_at && !c.reviewed_at && (
+                              <Button
+                                size="sm"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await markSelfCheckReviewed(c.id);
+                                    toast.success("Egenkontroll godkänd");
+                                    onChanged();
+                                  } catch (err: any) {
+                                    toast.error(err.message);
+                                  }
+                                }}
+                              >
+                                Godkänn
+                              </Button>
                             )}
                             {canDelete && (
                               <Button
@@ -1688,6 +1756,85 @@ function ForemanDialog({
             );
           })}
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SubcontractorDialog({
+  open,
+  onOpenChange,
+  currentId,
+  onPick,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  currentId: string | null;
+  onPick: (id: string | null) => void;
+}) {
+  const [companies, setCompanies] = useState<Subcontractor[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    listSubcontractors()
+      .then((list) => setCompanies(list.filter((c) => c.active)))
+      .catch((e: any) => toast.error(e.message))
+      .finally(() => setLoading(false));
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Tilldela underentreprenör</DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-muted-foreground">
+          UE med användarkonto får direkt åtkomst till projektet och kan lämna egenkontroller.
+        </p>
+        <div className="max-h-[50vh] space-y-1 overflow-y-auto">
+          {loading && <p className="text-sm text-muted-foreground">Hämtar...</p>}
+          {!loading && companies.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Inga aktiva underentreprenörer. Lägg till dem under Underentreprenörer.
+            </p>
+          )}
+          {companies.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => onPick(c.id)}
+              className={`flex w-full items-center justify-between gap-3 rounded-md border p-2 text-left text-sm transition hover:bg-muted/40 ${
+                c.id === currentId ? "border-primary bg-primary/5" : "border-border"
+              }`}
+            >
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{c.company_name}</span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {c.contact_name ?? c.email ?? "–"}
+                </span>
+              </span>
+              {c.user_id ? (
+                <Badge variant="secondary">Har konto</Badge>
+              ) : (
+                <Badge variant="outline" className="text-amber-600 dark:text-amber-400">
+                  Saknar konto
+                </Badge>
+              )}
+            </button>
+          ))}
+        </div>
+        <DialogFooter>
+          {currentId && (
+            <Button variant="ghost" onClick={() => onPick(null)}>
+              Ta bort koppling
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Stäng
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

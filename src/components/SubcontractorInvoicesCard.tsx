@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { listSubcontractors, type Subcontractor } from "@/lib/subcontractors-api";
-import { updateJobSubcontractor } from "@/lib/jobs-api";
+import { assignJobSubcontractor } from "@/lib/jobs-api";
 import { toast } from "sonner";
 
 interface Props {
@@ -148,9 +148,17 @@ export function SubcontractorInvoicesCard({
             onValueChange={async (v) => {
               const next = v === "none" ? null : v;
               try {
-                await updateJobSubcontractor(jobId, next);
+                const res = await assignJobSubcontractor(jobId, next);
                 setLinked(next);
-                toast.success("Underentreprenör kopplad");
+                if (!next) {
+                  toast.success("Underentreprenör borttagen");
+                } else if (res.hasUser) {
+                  toast.success("Underentreprenör kopplad – har nu åtkomst till projektet");
+                } else {
+                  toast.warning(
+                    `${res.companyName ?? "Företaget"} saknar användarkonto och kan inte lämna egenkontroller. Bjud in kontaktpersonen under Personal.`,
+                  );
+                }
                 onLinked?.();
               } catch (e: any) {
                 toast.error(e.message);
