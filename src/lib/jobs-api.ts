@@ -44,6 +44,43 @@ export async function updateJobSubcontractor(
   if (error) throw error;
 }
 
+/**
+ * Kopplar ett UE-företag till projektet OCH ger företagets användarkonto
+ * åtkomst (assigned_to), så att UE kan lämna egenkontroller.
+ * Returnerar om företaget saknar användarkonto.
+ */
+export async function assignJobSubcontractor(
+  jobId: string,
+  subcontractorId: string | null,
+  fixedPrice?: number | null,
+): Promise<{ hasUser: boolean; companyName: string | null }> {
+  const patch: Record<string, unknown> = { subcontractor_id: subcontractorId };
+  if (fixedPrice !== undefined) patch.fixed_price = fixedPrice;
+
+  let hasUser = false;
+  let companyName: string | null = null;
+
+  if (subcontractorId) {
+    const { data: sub, error: subErr } = await supabase
+      .from("subcontractors")
+      .select("id, user_id, company_name")
+      .eq("id", subcontractorId)
+      .maybeSingle();
+    if (subErr) throw subErr;
+    companyName = (sub as { company_name?: string } | null)?.company_name ?? null;
+    const userId = (sub as { user_id?: string | null } | null)?.user_id ?? null;
+    patch.assignment_type = "underentreprenor";
+    if (userId) {
+      patch.assigned_to = userId;
+      hasUser = true;
+    }
+  }
+
+  const { error } = await supabase.from("jobs").update(patch as never).eq("id", jobId);
+  if (error) throw error;
+  return { hasUser, companyName };
+}
+
 export async function updateJobType(jobId: string, jobType: string | null): Promise<void> {
   const { error } = await supabase
     .from("jobs")
