@@ -2022,6 +2022,8 @@ export type Database = {
           id: string
           insurance_company: string | null
           insurance_expires_at: string | null
+          invoice_address: string | null
+          invoice_email: string | null
           notes: string | null
           org_number: string | null
           payment_reference: string | null
@@ -2045,6 +2047,8 @@ export type Database = {
           id?: string
           insurance_company?: string | null
           insurance_expires_at?: string | null
+          invoice_address?: string | null
+          invoice_email?: string | null
           notes?: string | null
           org_number?: string | null
           payment_reference?: string | null
@@ -2068,6 +2072,8 @@ export type Database = {
           id?: string
           insurance_company?: string | null
           insurance_expires_at?: string | null
+          invoice_address?: string | null
+          invoice_email?: string | null
           notes?: string | null
           org_number?: string | null
           payment_reference?: string | null

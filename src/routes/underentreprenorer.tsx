@@ -88,6 +88,8 @@ const EMPTY: Partial<Subcontractor> = {
   plusgiro: "",
   payment_terms_days: 30,
   payment_reference: "",
+  invoice_email: "",
+  invoice_address: "",
   f_skatt: false,
   agreement_signed_at: "",
   active: true,
@@ -144,6 +146,8 @@ function SubcontractorsPage() {
       plusgiro: editing.plusgiro || null,
       payment_terms_days: editing.payment_terms_days ?? null,
       payment_reference: editing.payment_reference || null,
+      invoice_email: editing.invoice_email || null,
+      invoice_address: editing.invoice_address || null,
       f_skatt: !!editing.f_skatt,
       agreement_signed_at: editing.agreement_signed_at || null,
       active: editing.active !== false,
@@ -366,11 +370,32 @@ function SubcontractorsPage() {
                 <div className="text-sm font-medium">Fakturauppgifter</div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="grid gap-1.5">
+                    <Label>Faktura-e-post</Label>
+                    <Input
+                      type="email"
+                      value={editing.invoice_email ?? ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, invoice_email: e.target.value })
+                      }
+                      placeholder="Om vi ska fakturera UE"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Fakturaadress</Label>
+                    <Input
+                      value={editing.invoice_address ?? ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, invoice_address: e.target.value })
+                      }
+                      placeholder="Om annan än besöksadress"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
                     <Label>Bankgiro</Label>
                     <Input
                       value={editing.bankgiro ?? ""}
                       onChange={(e) => setEditing({ ...editing, bankgiro: e.target.value })}
-                      placeholder="t.ex. 123-4567"
+                      placeholder="När UE fakturerar oss"
                     />
                   </div>
                   <div className="grid gap-1.5">
