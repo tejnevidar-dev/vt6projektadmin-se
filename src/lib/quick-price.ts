@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: QuickPriceSettings = {
   moms_procent: 25,
   rot_procent: 30,
   rot_tak_per_agare: 50000,
-  taktvatt_min_pris: 12000,
+  taktvatt_min_pris: 10000,
 };
 
 export async function fetchQuickPriceItems(): Promise<QuickPriceItem[]> {

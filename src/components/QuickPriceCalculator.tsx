@@ -83,7 +83,7 @@ export function QuickPriceCalculator({ onSaved }: Props) {
 
   const result = useMemo(
     () => computeQuickPrice(input, items, settings ?? {
-      id: 1, moms_procent: 25, rot_procent: 30, rot_tak_per_agare: 50000, taktvatt_min_pris: 12000,
+      id: 1, moms_procent: 25, rot_procent: 30, rot_tak_per_agare: 50000, taktvatt_min_pris: 10000,
     }),
     [input, items, settings],
   );
