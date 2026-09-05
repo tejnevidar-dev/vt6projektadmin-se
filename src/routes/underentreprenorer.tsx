@@ -84,6 +84,10 @@ const EMPTY: Partial<Subcontractor> = {
   email: "",
   phone: "",
   address: "",
+  bankgiro: "",
+  plusgiro: "",
+  payment_terms_days: 30,
+  payment_reference: "",
   f_skatt: false,
   agreement_signed_at: "",
   active: true,
@@ -136,6 +140,10 @@ function SubcontractorsPage() {
       email: editing.email || null,
       phone: editing.phone || null,
       address: editing.address || null,
+      bankgiro: editing.bankgiro || null,
+      plusgiro: editing.plusgiro || null,
+      payment_terms_days: editing.payment_terms_days ?? null,
+      payment_reference: editing.payment_reference || null,
       f_skatt: !!editing.f_skatt,
       agreement_signed_at: editing.agreement_signed_at || null,
       active: editing.active !== false,
@@ -353,6 +361,50 @@ function SubcontractorsPage() {
                   value={editing.address ?? ""}
                   onChange={(e) => setEditing({ ...editing, address: e.target.value })}
                 />
+              </div>
+              <div className="grid gap-3 rounded-lg border border-border p-3">
+                <div className="text-sm font-medium">Fakturauppgifter</div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-1.5">
+                    <Label>Bankgiro</Label>
+                    <Input
+                      value={editing.bankgiro ?? ""}
+                      onChange={(e) => setEditing({ ...editing, bankgiro: e.target.value })}
+                      placeholder="t.ex. 123-4567"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Plusgiro</Label>
+                    <Input
+                      value={editing.plusgiro ?? ""}
+                      onChange={(e) => setEditing({ ...editing, plusgiro: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Betalningsvillkor (dagar)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={editing.payment_terms_days ?? ""}
+                      onChange={(e) =>
+                        setEditing({
+                          ...editing,
+                          payment_terms_days: e.target.value ? Number(e.target.value) : null,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Fakturareferens</Label>
+                    <Input
+                      value={editing.payment_reference ?? ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, payment_reference: e.target.value })
+                      }
+                      placeholder="t.ex. kontaktperson eller märkning"
+                    />
+                  </div>
+                </div>
               </div>
               <div className="grid gap-1.5 sm:max-w-[50%]">
                 <Label>Avtal tecknat</Label>
