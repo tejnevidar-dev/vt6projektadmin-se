@@ -2012,6 +2012,7 @@ export type Database = {
           active: boolean
           address: string | null
           agreement_signed_at: string | null
+          bankgiro: string | null
           company_name: string
           contact_name: string | null
           created_at: string
@@ -2023,7 +2024,10 @@ export type Database = {
           insurance_expires_at: string | null
           notes: string | null
           org_number: string | null
+          payment_reference: string | null
+          payment_terms_days: number | null
           phone: string | null
+          plusgiro: string | null
           updated_at: string
           user_id: string | null
         }
@@ -2031,6 +2035,7 @@ export type Database = {
           active?: boolean
           address?: string | null
           agreement_signed_at?: string | null
+          bankgiro?: string | null
           company_name: string
           contact_name?: string | null
           created_at?: string
@@ -2042,7 +2047,10 @@ export type Database = {
           insurance_expires_at?: string | null
           notes?: string | null
           org_number?: string | null
+          payment_reference?: string | null
+          payment_terms_days?: number | null
           phone?: string | null
+          plusgiro?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -2050,6 +2058,7 @@ export type Database = {
           active?: boolean
           address?: string | null
           agreement_signed_at?: string | null
+          bankgiro?: string | null
           company_name?: string
           contact_name?: string | null
           created_at?: string
@@ -2061,7 +2070,10 @@ export type Database = {
           insurance_expires_at?: string | null
           notes?: string | null
           org_number?: string | null
+          payment_reference?: string | null
+          payment_terms_days?: number | null
           phone?: string | null
+          plusgiro?: string | null
           updated_at?: string
           user_id?: string | null
         }
