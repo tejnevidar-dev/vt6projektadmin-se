@@ -98,7 +98,7 @@ function buildNavItems(isAdmin: boolean, isUE = false): NavItem[] {
             label: isAdmin ? "Underentreprenörer" : "Min firma",
             icon: Truck,
             group: "Hantera",
-            side: "both",
+            side: "intern",
           } as NavItem,
         ]
       : []),
@@ -177,7 +177,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
   ]);
 
 
-  const sideLabel = side === "intern" ? "Intern" : "Extern";
+  const sideLabel = side === "intern" ? "Intern" : "CRM";
   const SideIcon = side === "intern" ? HardHat : Briefcase;
 
   const handleSwitchSide = (next: Side) => {
@@ -250,7 +250,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
                 >
                   <Briefcase className="h-4 w-4 text-muted-foreground" />
                   <div className="flex-1">
-                    <div className="text-sm font-medium">Extern</div>
+                    <div className="text-sm font-medium">CRM</div>
                   </div>
                   {side === "extern" && <Check className="h-4 w-4 text-primary" />}
                 </DropdownMenuItem>
