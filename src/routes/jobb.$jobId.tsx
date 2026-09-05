@@ -27,6 +27,8 @@ import {
   listJobEstimateAudit,
   updateJobType,
   approveSelfCheckField,
+  markSelfCheckReviewed,
+  assignJobSubcontractor,
   getSelfCheckImageUrl,
   getProfileNames,
   type JobWithLead,
@@ -114,6 +116,7 @@ function JobDetailPage() {
   const [nameMap, setNameMap] = useState<Record<string, string>>({});
   const [inviteOpen, setInviteOpen] = useState(false);
   const [foremanOpen, setForemanOpen] = useState(false);
+  const [subOpen, setSubOpen] = useState(false);
   const [timeOpen, setTimeOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
@@ -171,11 +174,21 @@ function JobDetailPage() {
       const submittedKeys = new Set(
         checks.filter((c) => c.completed_at).map((c) => c.template_key),
       );
-      const applicable = getApplicableTemplates(job.lead?.job_type);
+      const approvedKeys = new Set(
+        checks.filter((c) => c.completed_at && c.reviewed_at).map((c) => c.template_key),
+      );
+      const applicable = getApplicableTemplates(job.job_type ?? job.lead?.job_type);
       const missing = applicable.filter((t) => !submittedKeys.has(t.key));
       if (missing.length > 0) {
         toast.error(
-          `Kan inte avsluta: egenkontroll saknas för ${missing.map((m) => m.name).join(", ")}. Alla egenkontroller måste vara inlämnade innan projektet kan markeras som klart och timmar registreras.`,
+          `Kan inte avsluta: egenkontroll saknas för ${missing.map((m) => m.name).join(", ")}. Alla egenkontroller måste vara inlämnade och godkända innan projektet kan markeras som klart.`,
+        );
+        return;
+      }
+      const notApproved = applicable.filter((t) => !approvedKeys.has(t.key));
+      if (notApproved.length > 0) {
+        toast.error(
+          `Kan inte avsluta: egenkontroll väntar på godkännande för ${notApproved.map((m) => m.name).join(", ")}. Godkänn dem under fliken Egenkontroller först.`,
         );
         return;
       }
@@ -339,6 +352,11 @@ function JobDetailPage() {
           {isAdmin && (
             <Button size="sm" variant="outline" onClick={() => setForemanOpen(true)}>
               <UserPlus className="mr-1.5 h-4 w-4" /> Tilldela arbetsledare
+            </Button>
+          )}
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={() => setSubOpen(true)}>
+              <UserPlus className="mr-1.5 h-4 w-4" /> Tilldela underentreprenör
             </Button>
           )}
           {isAdmin && job.status === "ej_paborjad" && (
@@ -617,6 +635,27 @@ function JobDetailPage() {
             await assignJobForeman(job.id, userId);
             toast.success("Arbetsledare tilldelad");
             setForemanOpen(false);
+            void reload();
+          } catch (e: any) {
+            toast.error(e.message);
+          }
+        }}
+      />
+      <SubcontractorDialog
+        open={subOpen}
+        onOpenChange={setSubOpen}
+        currentId={job.subcontractor_id ?? null}
+        onPick={async (id) => {
+          try {
+            const res = await assignJobSubcontractor(job.id, id);
+            setSubOpen(false);
+            if (!id) toast.success("Underentreprenör borttagen");
+            else if (res.hasUser)
+              toast.success("Underentreprenör tilldelad – har nu åtkomst till projektet");
+            else
+              toast.warning(
+                `${res.companyName ?? "Företaget"} saknar användarkonto och kan inte lämna egenkontroller. Bjud in kontaktpersonen under Personal.`,
+              );
             void reload();
           } catch (e: any) {
             toast.error(e.message);
