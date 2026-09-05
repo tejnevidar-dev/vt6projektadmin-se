@@ -55,7 +55,7 @@ function ChooseWorkspacePage() {
           <CardHeader>
             <CardTitle className="text-xl">Ingen panel tilldelad</CardTitle>
             <CardDescription>
-              Ditt konto saknar roll för både intern och extern panel. Kontakta en administratör.
+              Ditt konto saknar roll för både intern panel och CRM. Kontakta en administratör.
             </CardDescription>
           </CardHeader>
           <CardContent>
