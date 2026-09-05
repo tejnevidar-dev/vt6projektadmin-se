@@ -370,11 +370,32 @@ function SubcontractorsPage() {
                 <div className="text-sm font-medium">Fakturauppgifter</div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="grid gap-1.5">
+                    <Label>Faktura-e-post</Label>
+                    <Input
+                      type="email"
+                      value={editing.invoice_email ?? ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, invoice_email: e.target.value })
+                      }
+                      placeholder="Om vi ska fakturera UE"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Fakturaadress</Label>
+                    <Input
+                      value={editing.invoice_address ?? ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, invoice_address: e.target.value })
+                      }
+                      placeholder="Om annan än besöksadress"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
                     <Label>Bankgiro</Label>
                     <Input
                       value={editing.bankgiro ?? ""}
                       onChange={(e) => setEditing({ ...editing, bankgiro: e.target.value })}
-                      placeholder="t.ex. 123-4567"
+                      placeholder="När UE fakturerar oss"
                     />
                   </div>
                   <div className="grid gap-1.5">
