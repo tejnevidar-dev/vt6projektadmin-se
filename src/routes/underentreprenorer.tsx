@@ -64,7 +64,7 @@ export const Route = createFileRoute("/underentreprenorer")({
       { title: "Underentreprenörer – admin.vt6" },
       {
         name: "description",
-        content: "Register över underentreprenörer med avtal, F-skatt, försäkring och fakturor.",
+        content: "Register över underentreprenörer med avtal, F-skatt och fakturor.",
       },
       { property: "og:title", content: "Underentreprenörer – admin.vt6" },
       {
@@ -476,11 +476,13 @@ function DocumentsDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(DOC_TYPE_LABEL).map(([k, label]) => (
-                      <SelectItem key={k} value={k}>
-                        {label}
-                      </SelectItem>
-                    ))}
+                    {Object.entries(DOC_TYPE_LABEL)
+                      .filter(([k]) => k !== "forsakring")
+                      .map(([k, label]) => (
+                        <SelectItem key={k} value={k}>
+                          {label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
