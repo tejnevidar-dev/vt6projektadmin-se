@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { callOpenAIChat } from "@/lib/openai.server";
 import { z } from "zod";
 
 const LeadBrief = z.object({
@@ -55,36 +56,15 @@ export const generateAiInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }): Promise<AiInsightsResult> => {
-    const apiKey = process.env["LOVABLE_API_KEY"];
-    if (!apiKey) throw new Error("AI är inte konfigurerad.");
-
     const userPrompt = `Nyckeltal:\n${data.summary}\n\nLeads (JSON):\n${JSON.stringify(data.leads)}\n\nOfferter (JSON):\n${JSON.stringify(data.offers)}\n\nGe rekommendationerna nu som ren JSON.`;
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Lovable-API-Key": apiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: SYSTEM },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-      }),
+    const json = await callOpenAIChat({
+      messages: [
+        { role: "system", content: SYSTEM },
+        { role: "user", content: userPrompt },
+      ],
+      response_format: { type: "json_object" },
     });
-
-    if (res.status === 429) throw new Error("AI är överbelastad just nu – försök igen om en stund.");
-    if (res.status === 402) throw new Error("AI-krediterna är slut. Fyll på krediter i Lovable.");
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("ai-insights gateway error", res.status, text);
-      throw new Error("AI-tjänsten svarade inte.");
-    }
-
-    const json = await res.json();
     const content: string = json.choices?.[0]?.message?.content ?? "";
     let parsed: Partial<AiInsightsResult> = {};
     try {

@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
+import { extractText, getDocumentProxy } from "unpdf";
+import { callOpenAIChat } from "@/lib/openai.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,15 +19,6 @@ function jsonResponse(body: unknown, status = 200) {
     status,
     headers: { "Content-Type": "application/json", ...corsHeaders },
   });
-}
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)) as number[]);
-  }
-  return btoa(binary);
 }
 
 export const Route = createFileRoute("/api/process-work-order")({
@@ -81,10 +74,18 @@ export const Route = createFileRoute("/api/process-work-order")({
         if (dlErr || !file) return jsonResponse({ error: dlErr?.message ?? "Kunde inte hämta fil" }, 500);
 
         const arrayBuf = await file.arrayBuffer();
-        const base64 = bytesToBase64(new Uint8Array(arrayBuf));
-
-        const apiKey = process.env.LOVABLE_API_KEY;
-        if (!apiKey) return jsonResponse({ error: "AI not configured" }, 500);
+        let workOrderText: string;
+        try {
+          const pdf = await getDocumentProxy(new Uint8Array(arrayBuf));
+          const { text } = await extractText(pdf, { mergePages: true });
+          workOrderText = text.trim();
+        } catch (e) {
+          console.error("PDF text extraction failed", e);
+          return jsonResponse({ error: "Kunde inte läsa text ur PDF:en." }, 500);
+        }
+        if (!workOrderText) {
+          return jsonResponse({ error: "Ingen text hittades i PDF:en (kan vara en inskannad bild utan textlager)." }, 400);
+        }
 
         const systemPrompt = `Du är en assistent som tolkar svenska arbetsordrar för takläggare. Läs hela arbetsordern noggrant och skriv om innehållet i klartext på svenska så att en hantverkare/arbetsledare direkt förstår vad som ska göras på plats.
 
@@ -120,44 +121,21 @@ Allt annat viktigt – men hoppa över priser, uppdragsgivare och sekretessklaus
 
 Hitta inte på något. Om en sektion saknas i arbetsordern, skriv "Ej angivet". Inga emojis.`;
 
-        const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Lovable-API-Key": apiKey,
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+        let summary: string | undefined;
+        try {
+          const aiJson = (await callOpenAIChat({
             messages: [
               { role: "system", content: systemPrompt },
               {
                 role: "user",
-                content: [
-                  { type: "text", text: "Tolka denna arbetsorder och skriv om den enligt instruktionerna." },
-                  {
-                    type: "file",
-                    file: {
-                      filename: "arbetsorder.pdf",
-                      file_data: `data:application/pdf;base64,${base64}`,
-                    },
-                  },
-                ],
+                content: `Tolka denna arbetsorder och skriv om den enligt instruktionerna.\n\n--- ARBETSORDER (extraherad text) ---\n${workOrderText}`,
               },
             ],
-          }),
-        });
-
-        if (!aiResp.ok) {
-          const text = await aiResp.text();
-          if (aiResp.status === 429) return jsonResponse({ error: "AI-tjänsten är överbelastad, försök igen om en stund." }, 429);
-          if (aiResp.status === 402) return jsonResponse({ error: "AI-krediter slut. Lägg till krediter under Workspace > Usage." }, 402);
-          return jsonResponse({ error: `AI-fel: ${text.slice(0, 300)}` }, 500);
+          })) as { choices?: Array<{ message?: { content?: string } }> };
+          summary = aiJson.choices?.[0]?.message?.content?.trim();
+        } catch (e) {
+          return jsonResponse({ error: e instanceof Error ? e.message : "AI-fel" }, 500);
         }
-
-        const aiJson = (await aiResp.json()) as {
-          choices?: Array<{ message?: { content?: string } }>;
-        };
-        const summary = aiJson.choices?.[0]?.message?.content?.trim();
         if (!summary) return jsonResponse({ error: "Tomt svar från AI" }, 500);
 
         const { error: updErr } = await admin

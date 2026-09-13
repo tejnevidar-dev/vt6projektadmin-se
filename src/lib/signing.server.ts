@@ -55,7 +55,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary)
 }
 
-/** Sends a transactional email through Lovable's managed email delivery. */
+/** Sends a transactional email through Resend. */
 export async function queueEmail(
   supabase: any,
   params: {

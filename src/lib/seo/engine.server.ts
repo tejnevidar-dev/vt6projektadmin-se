@@ -71,19 +71,11 @@ export async function requireSite(): Promise<string> {
 /* ----------------- datakällor ----------------- */
 
 export async function dataSources(): Promise<DataSource[]> {
-  const gscKeys = Boolean(process.env["LOVABLE_API_KEY"] && process.env["GOOGLE_SEARCH_CONSOLE_API_KEY"]);
-  let gscDetail = "Ansluten";
-  let gscOk = gscKeys;
-  if (gscKeys) {
-    try {
-      gscDetail = `Ansluten – egenskap ${await requireSite()}`;
-    } catch (e) {
-      gscOk = false;
-      gscDetail = (e as Error).message;
-    }
-  } else {
-    gscDetail = "Search Console-anslutningen saknas.";
-  }
+  // GSC is paused pending a real Google OAuth2 setup (see src/lib/gsc.server.ts) --
+  // gsc.server.ts throws unconditionally regardless of env vars, so there's no
+  // config state that would make this "connected" right now.
+  let gscDetail = "Search Console är pausad i väntan på en riktig Google OAuth2-uppsättning.";
+  let gscOk = false;
   const ga4 = ga4Status();
   return [
     { id: "gsc", name: "Google Search Console", connected: gscOk, detail: gscDetail, required: ["Google Search Console-anslutning"] },

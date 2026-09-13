@@ -10,7 +10,7 @@ export type Ga4Status = { connected: false; reason: string } | { connected: true
 export function ga4Status(): Ga4Status {
   const propertyId = process.env["GA4_PROPERTY_ID"];
   const token = process.env["GA4_ACCESS_TOKEN"];
-  const measurementId = process.env["VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY"];
+  const measurementId = process.env["VITE_GA4_MEASUREMENT_ID"];
   if (!propertyId || !token) {
     return {
       connected: false,

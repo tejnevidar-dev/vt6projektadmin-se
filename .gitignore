@@ -41,3 +41,6 @@ dist-ssr
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Supabase CLI's own local cache (e.g. cli-latest version-check file) — never source
+supabase/.temp/

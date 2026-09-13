@@ -1,9 +1,8 @@
 import { sendTemplateEmail } from '@/lib/email-templates/send-email'
 
 /**
- * Sends a registered template through Lovable's managed email API and mirrors
- * the outcome into the app's own email_send_log table (app history only —
- * suppression and retries are enforced by Lovable server-side).
+ * Sends a registered template via Resend and mirrors the outcome into the
+ * app's own email_send_log table.
  */
 export async function sendAndLogEmail(
   supabase: any,
@@ -31,7 +30,7 @@ export async function sendAndLogEmail(
   }
 
   try {
-    const result = await sendTemplateEmail(params.templateName, params.recipientEmail, {
+    const result = await sendTemplateEmail(supabase, params.templateName, params.recipientEmail, {
       templateData: params.templateData ?? {},
       idempotencyKey: params.idempotencyKey,
     })

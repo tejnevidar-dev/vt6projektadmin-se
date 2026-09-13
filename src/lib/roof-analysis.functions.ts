@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { callOpenAIChat } from "@/lib/openai.server";
 import { z } from "zod";
 
 const ImageInput = z.object({
@@ -36,9 +37,6 @@ export const analyzeRoofImages = createServerFn({ method: "POST" })
     const materialRow = (rows ?? []).find((r) => r.key === data.materialKey);
     const materialLabel = materialRow?.label ?? data.materialKey;
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("Saknar LOVABLE_API_KEY på servern");
-
     const platList = platKeys
       .map((p) => `- key="${p.key}" (${p.label}, enhet: ${p.unit})`)
       .join("\n");
@@ -69,39 +67,22 @@ Returnera EXAKT denna JSON-form:
   "notes": "<sträng>"
 }`;
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Lovable-API-Key": apiKey,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: userText },
-              ...data.images.map((img) => ({
-                type: "image_url",
-                image_url: { url: img.dataUrl },
-              })),
-            ],
-          },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!resp.ok) {
-      const bodyText = await resp.text().catch(() => "");
-      if (resp.status === 429) throw new Error("För många förfrågningar just nu, försök igen om en stund.");
-      if (resp.status === 402) throw new Error("AI-krediter slut – ladda på i arbetsyteinställningar.");
-      throw new Error(`AI-analys misslyckades (${resp.status}): ${bodyText.slice(0, 200)}`);
-    }
-
-    const j = (await resp.json()) as {
+    const j = (await callOpenAIChat({
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: userText },
+            ...data.images.map((img) => ({
+              type: "image_url",
+              image_url: { url: img.dataUrl },
+            })),
+          ],
+        },
+      ],
+      response_format: { type: "json_object" },
+    })) as {
       choices?: { message?: { content?: string } }[];
     };
     const content = j.choices?.[0]?.message?.content;

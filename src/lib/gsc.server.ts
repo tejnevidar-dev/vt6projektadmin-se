@@ -1,17 +1,20 @@
-const GATEWAY = "https://connector-gateway.lovable.dev/google_search_console";
+// PAUSED as of the Lovable exit (2026-09-08): this previously worked through Lovable's
+// connector gateway, which handled the Google OAuth2 flow (token refresh etc.) behind
+// the scenes. A direct integration needs a real Google Cloud project with OAuth
+// client id/secret and a stored refresh token — not just an API key — so this is left
+// non-functional (throws below) until that's set up, same pattern as ga4.server.ts's
+// "not connected" state. Real endpoints for when this gets built: Google's own
+// `https://www.googleapis.com/webmasters/v3/...` and
+// `https://searchconsole.googleapis.com/v1/urlInspection/index:inspect` — Lovable's
+// gateway paths matched these exactly, so the URL-building code below doesn't need to
+// change, only the auth (needs a real OAuth2 access token instead of the headers below).
+
+const GATEWAY = "https://www.googleapis.com";
 
 export const TARGET_SITE = "https://roslagstak.se/";
 
-function headers() {
-  const lovableKey = process.env["LOVABLE_API_KEY"];
-  const connectionKey = process.env["GOOGLE_SEARCH_CONSOLE_API_KEY"];
-  if (!lovableKey || !connectionKey) {
-    throw new Error("Search Console-anslutningen saknas");
-  }
-  return {
-    Authorization: `Bearer ${lovableKey}`,
-    "X-Connection-Api-Key": connectionKey,
-  };
+function headers(): Record<string, string> {
+  throw new Error("Search Console är pausad i väntan på en riktig Google OAuth2-uppsättning (se kommentar i gsc.server.ts).");
 }
 
 type SiteEntry = { siteUrl: string; permissionLevel?: string };
@@ -79,7 +82,7 @@ export async function searchAnalytics(siteUrl: string, query: Record<string, unk
 }
 
 export async function inspectUrl(siteUrl: string, inspectionUrl: string) {
-  const res = await fetch(`${GATEWAY}/v1/urlInspection/index:inspect`, {
+  const res = await fetch(`https://searchconsole.googleapis.com/v1/urlInspection/index:inspect`, {
     method: "POST",
     headers: { ...headers(), "Content-Type": "application/json" },
     body: JSON.stringify({ inspectionUrl, siteUrl }),

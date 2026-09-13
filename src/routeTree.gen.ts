@@ -48,12 +48,10 @@ import { Route as EgenkontrollerInstruktionerRouteImport } from './routes/egenko
 import { Route as ApiSendSelfChecksRouteImport } from './routes/api/send-self-checks'
 import { Route as ApiProcessWorkOrderRouteImport } from './routes/api/process-work-order'
 import { Route as ApiAiPitchRouteImport } from './routes/api/ai-pitch'
-import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
 import { Route as ApiPublicLookupInviteRouteImport } from './routes/api/public/lookup-invite'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiHooksSupabaseAuthEmailRouteImport } from './routes/api/hooks/supabase-auth-email'
+import { Route as ApiHooksResendEventsRouteImport } from './routes/api/hooks/resend-events'
 import { Route as ApiPublicSignTokenRouteImport } from './routes/api/public/sign.$token'
 import { Route as ApiPublicSelfCheckPdfSplatRouteImport } from './routes/api/public/self-check-pdf.$'
 import { Route as ApiPublicHooksSendBookingRemindersRouteImport } from './routes/api/public/hooks/send-booking-reminders'
@@ -254,11 +252,6 @@ const ApiAiPitchRoute = ApiAiPitchRouteImport.update({
   path: '/api/ai-pitch',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
-  id: '/lovable/email/events',
-  path: '/lovable/email/events',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicRoslagstakWebhookRoute =
   ApiPublicRoslagstakWebhookRouteImport.update({
     id: '/api/public/roslagstak-webhook',
@@ -270,20 +263,15 @@ const ApiPublicLookupInviteRoute = ApiPublicLookupInviteRouteImport.update({
   path: '/api/public/lookup-invite',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
+const ApiHooksSupabaseAuthEmailRoute =
+  ApiHooksSupabaseAuthEmailRouteImport.update({
+    id: '/api/hooks/supabase-auth-email',
+    path: '/api/hooks/supabase-auth-email',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
+const ApiHooksResendEventsRoute = ApiHooksResendEventsRouteImport.update({
+  id: '/api/hooks/resend-events',
+  path: '/api/hooks/resend-events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSignTokenRoute = ApiPublicSignTokenRouteImport.update({
@@ -344,15 +332,13 @@ export interface FileRoutesByFullPath {
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/ekonomi/': typeof EkonomiIndexRoute
   '/jobb/': typeof JobbIndexRoute
+  '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
+  '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
-  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -393,15 +379,13 @@ export interface FileRoutesByTo {
   '/egenkontroller': typeof EgenkontrollerIndexRoute
   '/ekonomi': typeof EkonomiIndexRoute
   '/jobb': typeof JobbIndexRoute
+  '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
+  '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
-  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -444,15 +428,13 @@ export interface FileRoutesById {
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/ekonomi/': typeof EkonomiIndexRoute
   '/jobb/': typeof JobbIndexRoute
+  '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
+  '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
-  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -496,15 +478,13 @@ export interface FileRouteTypes {
     | '/egenkontroller/'
     | '/ekonomi/'
     | '/jobb/'
+    | '/api/hooks/resend-events'
+    | '/api/hooks/supabase-auth-email'
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
-    | '/lovable/email/events'
     | '/api/public/hooks/send-booking-reminders'
     | '/api/public/self-check-pdf/$'
     | '/api/public/sign/$token'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -545,15 +525,13 @@ export interface FileRouteTypes {
     | '/egenkontroller'
     | '/ekonomi'
     | '/jobb'
+    | '/api/hooks/resend-events'
+    | '/api/hooks/supabase-auth-email'
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
-    | '/lovable/email/events'
     | '/api/public/hooks/send-booking-reminders'
     | '/api/public/self-check-pdf/$'
     | '/api/public/sign/$token'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/transactional/preview'
   id:
     | '__root__'
     | '/'
@@ -595,15 +573,13 @@ export interface FileRouteTypes {
     | '/egenkontroller/'
     | '/ekonomi/'
     | '/jobb/'
+    | '/api/hooks/resend-events'
+    | '/api/hooks/supabase-auth-email'
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
-    | '/lovable/email/events'
     | '/api/public/hooks/send-booking-reminders'
     | '/api/public/self-check-pdf/$'
     | '/api/public/sign/$token'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -644,15 +620,13 @@ export interface RootRouteChildren {
   SigneraTokenRoute: typeof SigneraTokenRoute
   EkonomiIndexRoute: typeof EkonomiIndexRoute
   JobbIndexRoute: typeof JobbIndexRoute
+  ApiHooksResendEventsRoute: typeof ApiHooksResendEventsRoute
+  ApiHooksSupabaseAuthEmailRoute: typeof ApiHooksSupabaseAuthEmailRoute
   ApiPublicLookupInviteRoute: typeof ApiPublicLookupInviteRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
-  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicHooksSendBookingRemindersRoute: typeof ApiPublicHooksSendBookingRemindersRoute
   ApiPublicSelfCheckPdfSplatRoute: typeof ApiPublicSelfCheckPdfSplatRoute
   ApiPublicSignTokenRoute: typeof ApiPublicSignTokenRoute
-  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
-  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
-  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -930,13 +904,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiPitchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/events': {
-      id: '/lovable/email/events'
-      path: '/lovable/email/events'
-      fullPath: '/lovable/email/events'
-      preLoaderRoute: typeof LovableEmailEventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/roslagstak-webhook': {
       id: '/api/public/roslagstak-webhook'
       path: '/api/public/roslagstak-webhook'
@@ -951,25 +918,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLookupInviteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+    '/api/hooks/supabase-auth-email': {
+      id: '/api/hooks/supabase-auth-email'
+      path: '/api/hooks/supabase-auth-email'
+      fullPath: '/api/hooks/supabase-auth-email'
+      preLoaderRoute: typeof ApiHooksSupabaseAuthEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+    '/api/hooks/resend-events': {
+      id: '/api/hooks/resend-events'
+      path: '/api/hooks/resend-events'
+      fullPath: '/api/hooks/resend-events'
+      preLoaderRoute: typeof ApiHooksResendEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/sign/$token': {
@@ -1048,16 +1008,14 @@ const rootRouteChildren: RootRouteChildren = {
   SigneraTokenRoute: SigneraTokenRoute,
   EkonomiIndexRoute: EkonomiIndexRoute,
   JobbIndexRoute: JobbIndexRoute,
+  ApiHooksResendEventsRoute: ApiHooksResendEventsRoute,
+  ApiHooksSupabaseAuthEmailRoute: ApiHooksSupabaseAuthEmailRoute,
   ApiPublicLookupInviteRoute: ApiPublicLookupInviteRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
-  LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicHooksSendBookingRemindersRoute:
     ApiPublicHooksSendBookingRemindersRoute,
   ApiPublicSelfCheckPdfSplatRoute: ApiPublicSelfCheckPdfSplatRoute,
   ApiPublicSignTokenRoute: ApiPublicSignTokenRoute,
-  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
-  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
-  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,4 +1,9 @@
 {
+  // Base config for local `wrangler` usage. At build time, Nitro's cloudflare-module
+  // preset (configured in vite.config.ts) generates the real deploy config at
+  // .output/server/wrangler.json, reusing name/compatibility_date/compatibility_flags
+  // from here but overriding "main" with the actual generated entry point (and adding
+  // "assets"/"triggers" etc.) -- the "main" value below is never actually used.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "admin-vt6",
   "compatibility_date": "2025-09-24",

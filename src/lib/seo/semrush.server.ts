@@ -1,26 +1,26 @@
 /**
- * Semrush (server-only) via Lovable connector gateway.
+ * Semrush (server-only), called directly against Semrush's own API.
  * Ger sökvolym/difficulty per keyword, backlinkprofil och konkurrentdata.
+ *
+ * NOTE: previously proxied through Lovable's connector gateway, which exposed these
+ * as friendly REST-style paths (e.g. "/keywords/phrase_these"). Semrush's real API is
+ * flat/query-param based (?type=phrase_these&key=...). Mapped 1:1 by "type" below —
+ * verify each call still returns the expected shape after the Lovable exit, since this
+ * mapping wasn't guaranteed identical to Lovable's internal translation.
  */
 
-const GATEWAY = "https://connector-gateway.lovable.dev/semrush";
+const GATEWAY = "https://api.semrush.com";
 
 export function semrushConfigured(): boolean {
-  return Boolean(process.env["LOVABLE_API_KEY"] && process.env["SEMRUSH_API_KEY"]);
+  return Boolean(process.env["SEMRUSH_API_KEY"]);
 }
 
 type Table = Record<string, string>[];
 
-async function call(path: string, params: Record<string, string>): Promise<Table> {
+async function call(type: string, params: Record<string, string>): Promise<Table> {
   if (!semrushConfigured()) throw new Error("Semrush är inte anslutet.");
-  const qs = new URLSearchParams(params).toString();
-  const res = await fetch(`${GATEWAY}${path}?${qs}`, {
-    headers: {
-      Authorization: `Bearer ${process.env["LOVABLE_API_KEY"]}`,
-      "X-Connection-Api-Key": process.env["SEMRUSH_API_KEY"]!,
-      "Allow-Limit-Offset": "true",
-    },
-  });
+  const qs = new URLSearchParams({ ...params, type, key: process.env["SEMRUSH_API_KEY"]! }).toString();
+  const res = await fetch(`${GATEWAY}/?${qs}`);
   const text = await res.text();
   if (!res.ok) {
     if (/LIMIT EXCEEDED/i.test(text)) throw new Error("Semrush-kvoten är slut – uppgradera planen eller vänta tills kvoten återställs.");
@@ -66,7 +66,7 @@ export type SemrushKeyword = { phrase: string; volume: number; cpc: number; comp
 export async function keywordMetrics(phrases: string[], database = "se"): Promise<SemrushKeyword[]> {
   const unique = [...new Set(phrases.map((p) => p.trim().toLowerCase()).filter(Boolean))].slice(0, 100);
   if (!unique.length) return [];
-  const rows = await call("/keywords/phrase_these", {
+  const rows = await call("phrase_these", {
     phrase: unique.join(";"),
     database,
     export_columns: "Ph,Nq,Cp,Co,Kd",
@@ -92,13 +92,17 @@ export type SemrushBacklinks = {
 };
 
 export async function backlinkProfile(domain: string): Promise<SemrushBacklinks> {
+  // NOTE: Semrush's Backlinks Analytics API has historically lived on a separate
+  // endpoint from the main Domain/Keyword API. If these two calls fail while
+  // keywordMetrics/domainOverview work fine, that's the likely cause — check
+  // Semrush's current API docs for the right backlinks base URL.
   const [overview, refdomains] = await Promise.all([
-    call("/backlinks/backlinks_overview", {
+    call("backlinks_overview", {
       target: domain,
       target_type: "root_domain",
       export_columns: "ascore,total,domains_num,urls_num,ips_num,follows_num,nofollows_num",
     }),
-    call("/backlinks/backlinks_refdomains", {
+    call("backlinks_refdomains", {
       target: domain,
       target_type: "root_domain",
       export_columns: "domain_ascore,domain,backlinks_num",
@@ -124,7 +128,7 @@ export async function backlinkProfile(domain: string): Promise<SemrushBacklinks>
 export type SemrushDomain = { domain: string; organicKeywords: number; organicTraffic: number; organicCost: number; adsKeywords: number };
 
 export async function domainOverview(domain: string, database = "se"): Promise<SemrushDomain> {
-  const rows = await call("/domains/domain_ranks", {
+  const rows = await call("domain_ranks", {
     domain,
     database,
     export_columns: "Db,Dn,Or,Ot,Oc,Ad",
@@ -141,7 +145,7 @@ export async function domainOverview(domain: string, database = "se"): Promise<S
 
 /** Organiska konkurrenter för domänen. */
 export async function organicCompetitors(domain: string, database = "se", limit = 10) {
-  const rows = await call("/domains/domain_domains", {
+  const rows = await call("domain_domains", {
     domains: `*|or|${domain}`,
     database,
     export_columns: "Dn,Cr,Np,Or,Ot,Oc",

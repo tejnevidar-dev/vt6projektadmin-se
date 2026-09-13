@@ -639,7 +639,7 @@ export const Route = createFileRoute("/api/send-self-checks")({
 
         const greetName = job.client_company || job.client_contact_name || "";
 
-        // Send through Lovable's managed email delivery
+        // Send through Resend
         const sendResult = await sendAndLogEmail(admin, {
           templateName: "self-checks-client",
           recipientEmail: job.client_email,
