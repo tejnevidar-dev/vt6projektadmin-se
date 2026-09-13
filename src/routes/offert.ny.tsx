@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { AppShell } from "@/components/AppShell";
+import { AppShell, RequireAuth } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -204,7 +204,19 @@ function initialForm(): FormState {
   };
 }
 
+// This route previously rendered with no auth check at all (AppShell itself doesn't
+// gate — see RequireAuth in AppShell.tsx). Wrapping it closes that gap and, as a side
+// effect, brings it under the training gate too, which matters here specifically since
+// this is the offer-creation page.
 function OffertNyPage() {
+  return (
+    <RequireAuth>
+      <OffertNyContent />
+    </RequireAuth>
+  );
+}
+
+function OffertNyContent() {
   const call = useServerFn(generateManualOffer);
   const callParse = useServerFn(parseArbeteText);
 

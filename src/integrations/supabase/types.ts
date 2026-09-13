@@ -14,6 +14,58 @@ export type Database = {
   }
   public: {
     Tables: {
+      // Hand-added (not CLI-generated like the rest of this file) — only the two
+      // tables src/hooks/use-training-gate.ts actually reads. These live in the
+      // Akademin (../utbildning) app's schema, same shared Supabase project. See
+      // memory project-roslagstak-utbildningsportal-plan for the full schema if more
+      // of it is ever needed here.
+      training_levels: {
+        Row: {
+          id: string
+          level_number: number
+          title: string
+        }
+        Insert: {
+          id?: string
+          level_number: number
+          title: string
+        }
+        Update: {
+          id?: string
+          level_number?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      training_user_level_progress: {
+        Row: {
+          id: string
+          user_id: string
+          level_id: string
+          status: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          level_id: string
+          status?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          level_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_user_level_progress_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "training_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_source_map: {
         Row: {
           campaign_pattern: string | null

@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type Side } from "@/hooks/use-role";
 import { useWorkspace } from "@/hooks/use-workspace";
+import { useTrainingGate, TRAINING_PORTAL_URL } from "@/hooks/use-training-gate";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Briefcase, HardHat } from "lucide-react";
@@ -22,8 +23,17 @@ function ChooseWorkspacePage() {
   const { isAuthenticated, loading: authLoading, signOut } = useAuth();
   const { isInternal, isExternal, loading } = useUserRoles();
   const { setSide } = useWorkspace();
+  // A saljare who hasn't passed level 14 in Akademin gets sent to the training portal
+  // instead of the CRM panel — see src/hooks/use-training-gate.ts. This is a UX
+  // shortcut (skip the flash of navigating in before RequireAuth would bounce them
+  // right back out); RequireAuth is what actually enforces this, not this check.
+  const gate = useTrainingGate();
 
   const choose = (s: Side) => {
+    if (s === "extern" && gate.blocked) {
+      window.location.href = TRAINING_PORTAL_URL;
+      return;
+    }
     setSide(s);
     navigate({ to: "/" });
   };
@@ -33,14 +43,14 @@ function ChooseWorkspacePage() {
       navigate({ to: "/login", search: {} });
       return;
     }
-    if (loading) return;
+    if (loading || gate.loading) return;
     // Endast en panel tilldelad → gå direkt in i den.
     if (isInternal && !isExternal) choose("intern");
     else if (isExternal && !isInternal) choose("extern");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, isAuthenticated, loading, isInternal, isExternal]);
+  }, [authLoading, isAuthenticated, loading, isInternal, isExternal, gate.loading, gate.blocked]);
 
-  if (authLoading || loading) {
+  if (authLoading || loading || gate.loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-sm text-muted-foreground">Laddar...</p>

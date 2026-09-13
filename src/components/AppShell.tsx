@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type Side } from "@/hooks/use-role";
 import { useWorkspace } from "@/hooks/use-workspace";
+import { useTrainingGate, TRAINING_PORTAL_URL } from "@/hooks/use-training-gate";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -466,11 +467,17 @@ export function MetaItem({ label, value }: { label: string; value: ReactNode }) 
   );
 }
 
+// The one real chokepoint essentially every extern (and most intern) route renders
+// through, directly or via StagePage (see src/components/StageView.tsx) — so the
+// training gate lives here, not scattered per-route. A saljare who hasn't passed
+// level 14 in Akademin gets sent to the training portal instead of ever seeing CRM
+// content, regardless of which URL they typed. See src/hooks/use-training-gate.ts.
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const gate = useTrainingGate();
 
-  if (loading) {
+  if (authLoading || gate.loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-sm text-muted-foreground">Laddar...</p>
@@ -479,6 +486,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   }
   if (!isAuthenticated) {
     navigate({ to: "/login", search: {} });
+    return null;
+  }
+  if (gate.blocked) {
+    window.location.href = TRAINING_PORTAL_URL;
     return null;
   }
   return <>{children}</>;
