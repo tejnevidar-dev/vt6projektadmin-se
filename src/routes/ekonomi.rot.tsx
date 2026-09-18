@@ -5,15 +5,47 @@ import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads, setLeadRotPaid, setLeadInvoiced } from "@/lib/leads-api";
 import { isRotApplicationDue, type Lead } from "@/lib/types";
+import { economyDate, rotCsv } from "@/lib/economy-analytics";
+import { buildRotPdf } from "@/lib/rot-pdf";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle, ExternalLink, Landmark, Loader2, Receipt } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CheckCircle, Download, ExternalLink, FileDown, Landmark, Loader2, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { kr, dateSv as dateStr } from "@/lib/format";
+
+type RotPeriod = "month" | "quarter" | "year" | "all";
+
+const PERIOD_LABELS: Record<RotPeriod, string> = {
+  month: "Denna månad",
+  quarter: "Detta kvartal",
+  year: "I år",
+  all: "Allt",
+};
+
+function inPeriod(l: Lead, period: RotPeriod, now = new Date()): boolean {
+  if (period === "all") return true;
+  const d = economyDate(l);
+  if (!d) return false;
+  if (period === "year") return d.getFullYear() === now.getFullYear();
+  if (period === "quarter") {
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      Math.floor(d.getMonth() / 3) === Math.floor(now.getMonth() / 3)
+    );
+  }
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+}
 
 export const Route = createFileRoute("/ekonomi/rot")({
   component: () => (
@@ -40,6 +72,8 @@ function EkonomiRotPage() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [period, setPeriod] = useState<RotPeriod>("all");
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["leads"],
@@ -47,7 +81,40 @@ function EkonomiRotPage() {
     enabled: isEkonomi,
   });
 
-  const done = useMemo(() => leads.filter((l) => l.pipelineStage === "slutford"), [leads]);
+  const done = useMemo(
+    () => leads.filter((l) => l.pipelineStage === "slutford" && inPeriod(l, period)),
+    [leads, period],
+  );
+
+  const exportCsv = () => {
+    const blob = new Blob([rotCsv(done)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rot-underlag-${period}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("ROT-underlag exporterat");
+  };
+
+  const exportPdf = async () => {
+    setExportingPdf(true);
+    try {
+      const bytes = await buildRotPdf(done, PERIOD_LABELS[period]);
+      const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `rot-underlag-${period}-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("ROT-underlag exporterat (PDF)");
+    } catch (e) {
+      toast.error("Kunde inte skapa PDF");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   const match = (l: Lead) => {
     const q = search.trim().toLowerCase();
@@ -233,12 +300,34 @@ function EkonomiRotPage() {
           </Card>
         </div>
 
-        <Input
-          placeholder="Sök på namn, adress, personnummer eller fastighetsbeteckning…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-md"
-        />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Input
+            placeholder="Sök på namn, adress, personnummer eller fastighetsbeteckning…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-md"
+          />
+          <div className="flex items-center gap-2">
+            <Select value={period} onValueChange={(v) => setPeriod(v as RotPeriod)}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(PERIOD_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={exportCsv}>
+              <Download className="mr-1.5 h-3.5 w-3.5" /> CSV
+            </Button>
+            <Button size="sm" variant="outline" disabled={exportingPdf} onClick={exportPdf}>
+              <FileDown className="mr-1.5 h-3.5 w-3.5" /> {exportingPdf ? "Skapar…" : "PDF"}
+            </Button>
+          </div>
+        </div>
 
         {isLoading ? (
           <div className="flex h-40 items-center justify-center">

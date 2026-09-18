@@ -71,11 +71,13 @@ export async function requireSite(): Promise<string> {
 /* ----------------- datakällor ----------------- */
 
 export async function dataSources(): Promise<DataSource[]> {
-  // GSC is paused pending a real Google OAuth2 setup (see src/lib/gsc.server.ts) --
-  // gsc.server.ts throws unconditionally regardless of env vars, so there's no
-  // config state that would make this "connected" right now.
-  let gscDetail = "Search Console är pausad i väntan på en riktig Google OAuth2-uppsättning.";
-  let gscOk = false;
+  // GSC auth is a Google Cloud service account (see src/lib/gsc.server.ts) added
+  // directly as a Search Console user -- no OAuth2 consent flow needed.
+  const gscConfigured = Boolean(process.env.GSC_SERVICE_ACCOUNT_EMAIL && process.env.GSC_SERVICE_ACCOUNT_PRIVATE_KEY);
+  const gscOk = gscConfigured;
+  const gscDetail = gscConfigured
+    ? "Ansluten via service account."
+    : "GSC_SERVICE_ACCOUNT_EMAIL/GSC_SERVICE_ACCOUNT_PRIVATE_KEY saknas.";
   const ga4 = ga4Status();
   return [
     { id: "gsc", name: "Google Search Console", connected: gscOk, detail: gscDetail, required: ["Google Search Console-anslutning"] },

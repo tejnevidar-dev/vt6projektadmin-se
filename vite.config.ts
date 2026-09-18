@@ -63,6 +63,9 @@ export default defineConfig(async ({ mode, command }) => {
       // On cloudflare-module this becomes an actual Cloudflare Cron Trigger automatically.
       scheduledTasks: {
         "*/5 * * * *": "send-booking-reminders",
+        // Once/day: flags leads stuck in forhandling/uppfoljning without recent
+        // activity, notifies the assigned seller in-app (see notifications system).
+        "0 6 * * *": "stale-lead-reminders",
       },
     });
   }

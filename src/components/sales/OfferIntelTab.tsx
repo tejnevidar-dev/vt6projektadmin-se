@@ -6,19 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { kr } from "@/lib/commission";
-import { fetchOffers, leadOfferFallback, offerIntel, priceBuckets } from "@/lib/offer-intelligence";
+import { fetchOffers, leadOfferFallback, offerIntel, offerIntelBySeller, priceBuckets } from "@/lib/offer-intelligence";
 import type { Lead } from "@/lib/types";
+import type { Saljare } from "@/lib/saljare-api";
 
 interface Props {
   leads: Lead[];
+  sellers: Saljare[];
 }
 
-export function OfferIntelTab({ leads }: Props) {
+export function OfferIntelTab({ leads, sellers }: Props) {
   const { data: offers = [], isLoading } = useQuery({ queryKey: ["offers"], queryFn: fetchOffers });
 
   const intel = useMemo(() => offerIntel(offers), [offers]);
   const buckets = useMemo(() => priceBuckets(offers), [offers]);
   const fallback = useMemo(() => leadOfferFallback(leads), [leads]);
+  const bySeller = useMemo(() => offerIntelBySeller(offers, leads, sellers), [offers, leads, sellers]);
 
   const leadName = (id: string | null) => leads.find((l) => l.id === id)?.name ?? "Okänd kund";
 
@@ -79,6 +82,46 @@ export function OfferIntelTab({ leads }: Props) {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Vinstgrad per säljare</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {bySeller.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Ingen offert är kopplad till en säljare ännu.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Säljare</TableHead>
+                  <TableHead className="text-right">Offerter</TableHead>
+                  <TableHead className="text-right">Accepterade</TableHead>
+                  <TableHead className="text-right">Avvisade</TableHead>
+                  <TableHead className="text-right">Vinstgrad</TableHead>
+                  <TableHead className="text-right">Snittbelopp</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bySeller.map((s) => (
+                  <TableRow key={s.sellerId}>
+                    <TableCell className="font-medium">{s.label}</TableCell>
+                    <TableCell className="text-right tabular-nums">{s.total}</TableCell>
+                    <TableCell className="text-right tabular-nums">{s.accepted}</TableCell>
+                    <TableCell className="text-right tabular-nums">{s.rejected}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={s.winRate >= 50 ? "default" : "outline"}>{s.winRate.toFixed(0)} %</Badge>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{kr(s.avgAmount)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 

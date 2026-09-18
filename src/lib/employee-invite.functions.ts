@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type InviteRole = "admin" | "saljare" | "arbetsledare" | "hantverkare" | "underentreprenor" | "viewer";
+export type InviteRole = "admin" | "saljare" | "ekonomi" | "arbetsledare" | "hantverkare" | "underentreprenor" | "viewer";
 
 export const sendEmployeeInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -9,7 +9,7 @@ export const sendEmployeeInvite = createServerFn({ method: "POST" })
     if (!input?.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
       throw new Error("Ogiltig e-postadress");
     }
-    const roles: InviteRole[] = ["admin", "saljare", "arbetsledare", "hantverkare", "underentreprenor", "viewer"];
+    const roles: InviteRole[] = ["admin", "saljare", "ekonomi", "arbetsledare", "hantverkare", "underentreprenor", "viewer"];
     if (!roles.includes(input.role)) throw new Error("Ogiltig roll");
     return input;
   })

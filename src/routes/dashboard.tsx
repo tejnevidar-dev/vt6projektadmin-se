@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useUserRoles } from "@/hooks/use-role";
 import { useLeads } from "@/hooks/use-leads";
@@ -21,6 +21,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LeadTable } from "@/components/LeadTable";
 import { LeadDetail } from "@/components/LeadDetail";
+import { approveAta, listPendingAtas, rejectAta, type AtaWithContext } from "@/lib/atas-api";
+import { kr } from "@/lib/format";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -145,6 +148,8 @@ function DashboardContent() {
           </div>
         ))}
       </div>
+
+      {isAdmin && <PendingAtasCard />}
 
       <div>
         <div className="mb-3 flex items-end justify-between">
@@ -278,6 +283,84 @@ function DashboardContent() {
             setSelectedLead(null);
           }}
         />
+      )}
+    </div>
+  );
+}
+
+function PendingAtasCard() {
+  const [atas, setAtas] = useState<AtaWithContext[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    try {
+      setAtas(await listPendingAtas());
+    } catch (e: any) {
+      toast.error(e.message ?? "Kunde inte ladda ÄTA:er");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (!loading && atas.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-5">
+      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        Väntande ÄTA-godkännanden
+      </h3>
+      {loading ? (
+        <div className="text-sm text-muted-foreground">Laddar…</div>
+      ) : (
+        <div className="divide-y divide-border">
+          {atas.map((ata) => (
+            <div key={ata.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+              <div className="min-w-0">
+                <Link to="/jobb/$jobId" params={{ jobId: ata.job_id }} className="font-medium hover:underline">
+                  {ata.ata_number ?? "ÄTA"} — {kr(ata.total_amount)}
+                  {ata.job?.customer_name ? ` · ${ata.job.customer_name}` : ""}
+                </Link>
+                {ata.description && <div className="text-xs text-muted-foreground">{ata.description}</div>}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await approveAta(ata.id);
+                      toast.success("ÄTA godkänd");
+                      void load();
+                    } catch (e: any) {
+                      toast.error(e.message ?? "Kunde inte godkänna");
+                    }
+                  }}
+                >
+                  Godkänn
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={async () => {
+                    try {
+                      await rejectAta(ata.id);
+                      toast.success("ÄTA avslagen");
+                      void load();
+                    } catch (e: any) {
+                      toast.error(e.message ?? "Kunde inte avslå");
+                    }
+                  }}
+                >
+                  Avslå
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

@@ -365,9 +365,9 @@ function JobChecklistCard({ summary }: { summary: JobChecksSummary }) {
 
   return (
     <div className="rounded-lg border border-border bg-card p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-semibold">{address}</h3>
             {allDone ? (
               <Badge tone="success">
@@ -383,7 +383,7 @@ function JobChecklistCard({ summary }: { summary: JobChecksSummary }) {
             <p className="mt-0.5 text-xs text-muted-foreground">{job.customer_name}</p>
           )}
         </div>
-        <Button asChild size="sm" variant="outline">
+        <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
           <Link to="/jobb/$jobId" params={{ jobId: job.id }}>
             Öppna projekt <ExternalLink className="ml-1 h-3.5 w-3.5" />
           </Link>
@@ -477,8 +477,8 @@ function ChecksTable({
   onReopen?: (id: string) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-lg border border-border bg-card">
+      <table className="w-full min-w-[720px] text-sm">
         <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
             <th className="px-3 py-2">Adress</th>

@@ -1,20 +1,58 @@
-// PAUSED as of the Lovable exit (2026-09-08): this previously worked through Lovable's
-// connector gateway, which handled the Google OAuth2 flow (token refresh etc.) behind
-// the scenes. A direct integration needs a real Google Cloud project with OAuth
-// client id/secret and a stored refresh token — not just an API key — so this is left
-// non-functional (throws below) until that's set up, same pattern as ga4.server.ts's
-// "not connected" state. Real endpoints for when this gets built: Google's own
-// `https://www.googleapis.com/webmasters/v3/...` and
-// `https://searchconsole.googleapis.com/v1/urlInspection/index:inspect` — Lovable's
-// gateway paths matched these exactly, so the URL-building code below doesn't need to
-// change, only the auth (needs a real OAuth2 access token instead of the headers below).
+// Auth: a Google Cloud service account (project "roslagstak-crm") added as a "Full"
+// user directly in Search Console (Settings -> Users and permissions) for the
+// sc-domain:roslagstak.se property. No OAuth2 consent flow / refresh token needed --
+// we sign a JWT with the service account's private key and exchange it for an access
+// token via Google's token endpoint, same as any server-to-server Google API call.
+
+import { SignJWT, importPKCS8 } from "jose";
 
 const GATEWAY = "https://www.googleapis.com";
 
 export const TARGET_SITE = "https://roslagstak.se/";
 
-function headers(): Record<string, string> {
-  throw new Error("Search Console är pausad i väntan på en riktig Google OAuth2-uppsättning (se kommentar i gsc.server.ts).");
+let cachedToken: { accessToken: string; expiresAt: number } | null = null;
+
+async function getAccessToken(): Promise<string> {
+  if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000) {
+    return cachedToken.accessToken;
+  }
+  const email = process.env.GSC_SERVICE_ACCOUNT_EMAIL;
+  const rawKey = process.env.GSC_SERVICE_ACCOUNT_PRIVATE_KEY;
+  if (!email || !rawKey) {
+    throw new Error("GSC_SERVICE_ACCOUNT_EMAIL/GSC_SERVICE_ACCOUNT_PRIVATE_KEY är inte konfigurerade.");
+  }
+  const privateKey = await importPKCS8(rawKey.replace(/\\n/g, "\n"), "RS256");
+  const now = Math.floor(Date.now() / 1000);
+  const assertion = await new SignJWT({
+    scope: "https://www.googleapis.com/auth/webmasters.readonly",
+  })
+    .setProtectedHeader({ alg: "RS256" })
+    .setIssuer(email)
+    .setSubject(email)
+    .setAudience("https://oauth2.googleapis.com/token")
+    .setIssuedAt(now)
+    .setExpirationTime(now + 3600)
+    .sign(privateKey);
+
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Kunde inte hämta Google-åtkomsttoken [${res.status}]: ${body}`);
+  }
+  const { access_token, expires_in } = (await res.json()) as { access_token: string; expires_in: number };
+  cachedToken = { accessToken: access_token, expiresAt: Date.now() + expires_in * 1000 };
+  return access_token;
+}
+
+async function headers(): Promise<Record<string, string>> {
+  return { Authorization: `Bearer ${await getAccessToken()}` };
 }
 
 type SiteEntry = { siteUrl: string; permissionLevel?: string };
@@ -40,7 +78,7 @@ export async function resolveSiteUrl(
   targetUrl: string,
   selectedSiteUrl?: string,
 ): Promise<SiteResolution> {
-  const res = await fetch(`${GATEWAY}/webmasters/v3/sites`, { headers: headers() });
+  const res = await fetch(`${GATEWAY}/webmasters/v3/sites`, { headers: await headers() });
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Kunde inte hämta Search Console-egenskaper [${res.status}]: ${body}`);
@@ -65,7 +103,7 @@ export async function searchAnalytics(siteUrl: string, query: Record<string, unk
     `${GATEWAY}/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
     {
       method: "POST",
-      headers: { ...headers(), "Content-Type": "application/json" },
+      headers: { ...(await headers()), "Content-Type": "application/json" },
       body: JSON.stringify(query),
     },
   );
@@ -84,7 +122,7 @@ export async function searchAnalytics(siteUrl: string, query: Record<string, unk
 export async function inspectUrl(siteUrl: string, inspectionUrl: string) {
   const res = await fetch(`https://searchconsole.googleapis.com/v1/urlInspection/index:inspect`, {
     method: "POST",
-    headers: { ...headers(), "Content-Type": "application/json" },
+    headers: { ...(await headers()), "Content-Type": "application/json" },
     body: JSON.stringify({ inspectionUrl, siteUrl }),
   });
   if (!res.ok) {

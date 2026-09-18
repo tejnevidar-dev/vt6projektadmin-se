@@ -229,3 +229,32 @@ export function economyCsv(leads: Lead[]): string {
   });
   return "\uFEFF" + [header, ...rows].map((r) => r.map(csvCell).join(";")).join("\n");
 }
+
+/** ROT-underlag som CSV, periodfiltrerat -- underlag till Skatteverket/redovisning. */
+export function rotCsv(leads: Lead[]): string {
+  const header = [
+    "Kund",
+    "Personnummer",
+    "Fastighetsbeteckning",
+    "Adress",
+    "Pris inkl moms",
+    "ROT-belopp",
+    "Kundens andel (pris - ROT)",
+    "Fakturadatum",
+    "ROT ans\u00F6kt",
+  ];
+  const rows = completedLeads(leads)
+    .filter((l) => l.rotEligible && (l.rotAmount ?? 0) > 0)
+    .map((l) => [
+      l.name,
+      l.personalNumber ?? "",
+      l.propertyDesignation ?? "",
+      l.address ?? "",
+      Math.round(l.price ?? 0),
+      Math.round(l.rotAmount ?? 0),
+      Math.round((l.price ?? 0) - (l.rotAmount ?? 0)),
+      l.invoicedAt ? new Date(l.invoicedAt).toLocaleDateString("sv-SE") : "",
+      l.rotPaid ? "Ja" : "Nej",
+    ]);
+  return "\uFEFF" + [header, ...rows].map((r) => r.map(csvCell).join(";")).join("\n");
+}

@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { CommandCenterTab } from "@/components/sales/CommandCenterTab";
+import { AssignmentsTab } from "@/components/sales/AssignmentsTab";
 import { TodayTab } from "@/components/sales/TodayTab";
 import { GoalsTab } from "@/components/sales/GoalsTab";
 import { LostDealsTab } from "@/components/sales/LostDealsTab";
@@ -25,9 +26,11 @@ import { OfferIntelTab } from "@/components/sales/OfferIntelTab";
 import { GeographyTab } from "@/components/sales/GeographyTab";
 import { SourceRoiTab } from "@/components/sales/SourceRoiTab";
 import { InsightsTab } from "@/components/sales/InsightsTab";
+import { LeadDetail } from "@/components/LeadDetail";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
 import { fetchLeads } from "@/lib/leads-api";
+import { fetchLeadStageHistory, avgTimeInStage } from "@/lib/lead-stage-history-api";
 import { fetchSaljare, setSellerProvisionRate, type Saljare } from "@/lib/saljare-api";
 import { PERIOD_LABELS, commissionFor, isSold, kr, netValue, saleDate, type PeriodKey } from "@/lib/commission";
 import {
@@ -126,9 +129,13 @@ function SaljDashPage() {
   const { user } = useAuth();
   const { isAdmin } = useUserRoles();
   const [period, setPeriod] = useState<PeriodKey>("month");
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const qc = useQueryClient();
 
   const { data: leads = [], isLoading } = useQuery({ queryKey: ["leads"], queryFn: fetchLeads });
   const { data: sellers = [] } = useQuery({ queryKey: ["saljare"], queryFn: fetchSaljare });
+  const { data: stageHistory = [] } = useQuery({ queryKey: ["lead-stage-history"], queryFn: fetchLeadStageHistory });
+  const stageDurations = useMemo(() => avgTimeInStage(stageHistory), [stageHistory]);
 
   const { current, previous } = useMemo(() => periodRanges(period), [period]);
 
@@ -279,6 +286,7 @@ function SaljDashPage() {
             <TabsTrigger value="roi">ROI</TabsTrigger>
             <TabsTrigger value="insikter">Insikter</TabsTrigger>
             <TabsTrigger value="forlorade">Förlorade</TabsTrigger>
+            <TabsTrigger value="tilldelningar">Tilldelningar</TabsTrigger>
             <TabsTrigger value="topplista">Topplista</TabsTrigger>
             <TabsTrigger value="analys">Analys</TabsTrigger>
             <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
@@ -303,7 +311,7 @@ function SaljDashPage() {
           </TabsContent>
 
           <TabsContent value="offerter" className="mt-4">
-            <OfferIntelTab leads={leads as Lead[]} />
+            <OfferIntelTab leads={leads as Lead[]} sellers={sellers} />
           </TabsContent>
 
           <TabsContent value="geografi" className="mt-4">
@@ -320,6 +328,16 @@ function SaljDashPage() {
 
           <TabsContent value="forlorade" className="mt-4">
             <LostDealsTab leads={leads as Lead[]} />
+          </TabsContent>
+
+          <TabsContent value="tilldelningar" className="mt-4">
+            <AssignmentsTab
+              leads={leads as Lead[]}
+              sellers={sellers}
+              currentUserId={user?.id ?? null}
+              isAdmin={isAdmin}
+              onSelect={setSelectedLead}
+            />
           </TabsContent>
 
           {/* TOPPLISTA */}
@@ -510,6 +528,30 @@ function SaljDashPage() {
           <TabsContent value="pipeline" className="mt-4 space-y-4">
             <Card>
               <CardHeader className="pb-3">
+                <CardTitle className="text-base">Snitt tid per pipeline-steg</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stageDurations.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-muted-foreground">
+                    Ingen historik ännu — fylls på när leads byter steg (spårning startade 2026-09-17).
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {stageDurations.map((d) => (
+                      <div key={d.stage} className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{PIPELINE_STAGE_LABELS[d.stage]}</span>
+                        <span className="text-muted-foreground">
+                          {d.avgDays.toFixed(1)} dagar i snitt · {d.samples} avslutade
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base">Säljtratt – hela teamet</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -610,6 +652,14 @@ function SaljDashPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {selectedLead && (
+        <LeadDetail
+          lead={selectedLead}
+          onClose={() => setSelectedLead(null)}
+          onUpdated={() => qc.invalidateQueries({ queryKey: ["leads"] })}
+        />
+      )}
     </AppShell>
   );
 }

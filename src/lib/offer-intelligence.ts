@@ -130,6 +130,55 @@ export function priceBuckets(offers: OfferRow[]): PriceBucket[] {
   });
 }
 
+export interface SellerOfferIntel {
+  sellerId: string;
+  label: string;
+  total: number;
+  accepted: number;
+  rejected: number;
+  winRate: number;
+  avgAmount: number;
+}
+
+/** Vinstgrad per säljare -- attribueras via leads.seller_id (samma fält som provision). */
+export function offerIntelBySeller(
+  offers: OfferRow[],
+  leads: { id: string; sellerId: string | null }[],
+  sellers: { id: string; display_name: string; email: string }[],
+): SellerOfferIntel[] {
+  const sellerByLead = new Map(leads.map((l) => [l.id, l.sellerId]));
+  const bySeller = new Map<string, OfferRow[]>();
+  for (const o of offers) {
+    if (!o.leadId) continue;
+    const sellerId = sellerByLead.get(o.leadId);
+    if (!sellerId) continue;
+    if (!bySeller.has(sellerId)) bySeller.set(sellerId, []);
+    bySeller.get(sellerId)!.push(o);
+  }
+
+  const avg = (rows: OfferRow[]) =>
+    rows.length ? Math.round(rows.reduce((s, o) => s + o.totalAmount, 0) / rows.length) : 0;
+
+  return sellers
+    .map((s) => {
+      const rows = bySeller.get(s.id) ?? [];
+      const accepted = rows.filter((o) => o.status === "accepterad");
+      const rejected = rows.filter((o) => o.status === "avvisad");
+      const decided = accepted.length + rejected.length;
+      return {
+        sellerId: s.id,
+        label: s.display_name || s.email,
+        total: rows.length,
+        accepted: accepted.length,
+        rejected: rejected.length,
+        winRate: decided ? (accepted.length / decided) * 100 : 0,
+        avgAmount: avg(rows),
+      };
+    })
+    .filter((r) => r.total > 0)
+    .sort((a, b) => b.winRate - a.winRate);
+}
+
 /** Fallback när offertdata saknas: räkna på leads i offertsteg. */
 export function leadOfferFallback(leads: Lead[]) {
   const offered = leads.filter((l) =>

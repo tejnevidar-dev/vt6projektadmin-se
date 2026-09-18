@@ -42,6 +42,7 @@ import { Route as SigneraTokenRouteImport } from './routes/signera.$token'
 import { Route as OffertNyRouteImport } from './routes/offert.ny'
 import { Route as KalkylLeadIdRouteImport } from './routes/kalkyl.$leadId'
 import { Route as JobbJobIdRouteImport } from './routes/jobb.$jobId'
+import { Route as FotoTokenRouteImport } from './routes/foto.$token'
 import { Route as EkonomiRotRouteImport } from './routes/ekonomi.rot'
 import { Route as EkonomiLeadIdRouteImport } from './routes/ekonomi.$leadId'
 import { Route as EgenkontrollerInstruktionerRouteImport } from './routes/egenkontroller.instruktioner'
@@ -54,6 +55,7 @@ import { Route as ApiHooksSupabaseAuthEmailRouteImport } from './routes/api/hook
 import { Route as ApiHooksResendEventsRouteImport } from './routes/api/hooks/resend-events'
 import { Route as ApiPublicSignTokenRouteImport } from './routes/api/public/sign.$token'
 import { Route as ApiPublicSelfCheckPdfSplatRouteImport } from './routes/api/public/self-check-pdf.$'
+import { Route as ApiPublicPhotosTokenRouteImport } from './routes/api/public/photos.$token'
 import { Route as ApiPublicHooksSendBookingRemindersRouteImport } from './routes/api/public/hooks/send-booking-reminders'
 
 const WebhookLogsRoute = WebhookLogsRouteImport.update({
@@ -221,6 +223,11 @@ const JobbJobIdRoute = JobbJobIdRouteImport.update({
   path: '/jobb/$jobId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FotoTokenRoute = FotoTokenRouteImport.update({
+  id: '/foto/$token',
+  path: '/foto/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EkonomiRotRoute = EkonomiRotRouteImport.update({
   id: '/ekonomi/rot',
   path: '/ekonomi/rot',
@@ -285,6 +292,11 @@ const ApiPublicSelfCheckPdfSplatRoute =
     path: '/api/public/self-check-pdf/$',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPhotosTokenRoute = ApiPublicPhotosTokenRouteImport.update({
+  id: '/api/public/photos/$token',
+  path: '/api/public/photos/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksSendBookingRemindersRoute =
   ApiPublicHooksSendBookingRemindersRouteImport.update({
     id: '/api/public/hooks/send-booking-reminders',
@@ -325,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/ekonomi/$leadId': typeof EkonomiLeadIdRoute
   '/ekonomi/rot': typeof EkonomiRotRoute
+  '/foto/$token': typeof FotoTokenRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/offert/ny': typeof OffertNyRoute
@@ -337,6 +350,7 @@ export interface FileRoutesByFullPath {
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
+  '/api/public/photos/$token': typeof ApiPublicPhotosTokenRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
 }
@@ -372,6 +386,7 @@ export interface FileRoutesByTo {
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/ekonomi/$leadId': typeof EkonomiLeadIdRoute
   '/ekonomi/rot': typeof EkonomiRotRoute
+  '/foto/$token': typeof FotoTokenRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/offert/ny': typeof OffertNyRoute
@@ -384,6 +399,7 @@ export interface FileRoutesByTo {
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
+  '/api/public/photos/$token': typeof ApiPublicPhotosTokenRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
 }
@@ -421,6 +437,7 @@ export interface FileRoutesById {
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/ekonomi/$leadId': typeof EkonomiLeadIdRoute
   '/ekonomi/rot': typeof EkonomiRotRoute
+  '/foto/$token': typeof FotoTokenRoute
   '/jobb/$jobId': typeof JobbJobIdRoute
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/offert/ny': typeof OffertNyRoute
@@ -433,6 +450,7 @@ export interface FileRoutesById {
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
+  '/api/public/photos/$token': typeof ApiPublicPhotosTokenRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
 }
@@ -471,6 +489,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/instruktioner'
     | '/ekonomi/$leadId'
     | '/ekonomi/rot'
+    | '/foto/$token'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
     | '/offert/ny'
@@ -483,6 +502,7 @@ export interface FileRouteTypes {
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
     | '/api/public/hooks/send-booking-reminders'
+    | '/api/public/photos/$token'
     | '/api/public/self-check-pdf/$'
     | '/api/public/sign/$token'
   fileRoutesByTo: FileRoutesByTo
@@ -518,6 +538,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/instruktioner'
     | '/ekonomi/$leadId'
     | '/ekonomi/rot'
+    | '/foto/$token'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
     | '/offert/ny'
@@ -530,6 +551,7 @@ export interface FileRouteTypes {
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
     | '/api/public/hooks/send-booking-reminders'
+    | '/api/public/photos/$token'
     | '/api/public/self-check-pdf/$'
     | '/api/public/sign/$token'
   id:
@@ -566,6 +588,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/instruktioner'
     | '/ekonomi/$leadId'
     | '/ekonomi/rot'
+    | '/foto/$token'
     | '/jobb/$jobId'
     | '/kalkyl/$leadId'
     | '/offert/ny'
@@ -578,6 +601,7 @@ export interface FileRouteTypes {
     | '/api/public/lookup-invite'
     | '/api/public/roslagstak-webhook'
     | '/api/public/hooks/send-booking-reminders'
+    | '/api/public/photos/$token'
     | '/api/public/self-check-pdf/$'
     | '/api/public/sign/$token'
   fileRoutesById: FileRoutesById
@@ -614,6 +638,7 @@ export interface RootRouteChildren {
   ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
   EkonomiLeadIdRoute: typeof EkonomiLeadIdRoute
   EkonomiRotRoute: typeof EkonomiRotRoute
+  FotoTokenRoute: typeof FotoTokenRoute
   JobbJobIdRoute: typeof JobbJobIdRoute
   KalkylLeadIdRoute: typeof KalkylLeadIdRoute
   OffertNyRoute: typeof OffertNyRoute
@@ -625,6 +650,7 @@ export interface RootRouteChildren {
   ApiPublicLookupInviteRoute: typeof ApiPublicLookupInviteRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
   ApiPublicHooksSendBookingRemindersRoute: typeof ApiPublicHooksSendBookingRemindersRoute
+  ApiPublicPhotosTokenRoute: typeof ApiPublicPhotosTokenRoute
   ApiPublicSelfCheckPdfSplatRoute: typeof ApiPublicSelfCheckPdfSplatRoute
   ApiPublicSignTokenRoute: typeof ApiPublicSignTokenRoute
 }
@@ -862,6 +888,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobbJobIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/foto/$token': {
+      id: '/foto/$token'
+      path: '/foto/$token'
+      fullPath: '/foto/$token'
+      preLoaderRoute: typeof FotoTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ekonomi/rot': {
       id: '/ekonomi/rot'
       path: '/ekonomi/rot'
@@ -946,6 +979,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSelfCheckPdfSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/photos/$token': {
+      id: '/api/public/photos/$token'
+      path: '/api/public/photos/$token'
+      fullPath: '/api/public/photos/$token'
+      preLoaderRoute: typeof ApiPublicPhotosTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/send-booking-reminders': {
       id: '/api/public/hooks/send-booking-reminders'
       path: '/api/public/hooks/send-booking-reminders'
@@ -1002,6 +1042,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
   EkonomiLeadIdRoute: EkonomiLeadIdRoute,
   EkonomiRotRoute: EkonomiRotRoute,
+  FotoTokenRoute: FotoTokenRoute,
   JobbJobIdRoute: JobbJobIdRoute,
   KalkylLeadIdRoute: KalkylLeadIdRoute,
   OffertNyRoute: OffertNyRoute,
@@ -1014,6 +1055,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
   ApiPublicHooksSendBookingRemindersRoute:
     ApiPublicHooksSendBookingRemindersRoute,
+  ApiPublicPhotosTokenRoute: ApiPublicPhotosTokenRoute,
   ApiPublicSelfCheckPdfSplatRoute: ApiPublicSelfCheckPdfSplatRoute,
   ApiPublicSignTokenRoute: ApiPublicSignTokenRoute,
 }

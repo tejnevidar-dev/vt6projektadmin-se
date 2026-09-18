@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, Bell, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X, Calculator, CalendarDays, FileDown, TrendingUp, Landmark, Trophy, Truck } from "lucide-react";
+import { LayoutDashboard, Users, Webhook, Settings, LogOut, ChevronLeft, ChevronRight, Search, ChevronRight as Caret, Shield, CalendarCheck, Loader2, CheckCircle2, ClipboardList, HardHat, Briefcase, ChevronDown, Check, Hammer, Menu, X, Calculator, CalendarDays, FileDown, TrendingUp, Landmark, Trophy, Truck } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles, type Side } from "@/hooks/use-role";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { GlobalSearch, useCommandK, type QuickNavItem } from "@/components/GlobalSearch";
+import { NotificationBell } from "@/components/NotificationBell";
 
 type NavChild = { to: string; label: string };
 
@@ -415,10 +416,7 @@ export function AppShell({ children, title, description, meta, actions, tabs, to
             </button>
 
             {topbarActions}
-            <button className="relative rounded-lg border border-border bg-card/80 p-2 text-muted-foreground shadow-sm transition-colors hover:text-foreground" title="Notiser">
-              <Bell className="h-3.5 w-3.5" />
-              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
-            </button>
+            <NotificationBell />
           </div>
         </header>
 

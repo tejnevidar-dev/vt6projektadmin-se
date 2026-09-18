@@ -47,6 +47,8 @@ import { SELF_CHECK_TEMPLATES, getSelfCheckTemplateLabel, getApplicableTemplates
 
 import { WorkOrderPanel } from "@/components/WorkOrderPanel";
 import { SubcontractorInvoicesCard } from "@/components/SubcontractorInvoicesCard";
+import { AtaCard } from "@/components/AtaCard";
+import { PhotoGalleryCard } from "@/components/PhotoGalleryCard";
 import { listSubcontractors, type Subcontractor } from "@/lib/subcontractors-api";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
@@ -165,6 +167,7 @@ function JobDetailPage() {
   const isOwner = !!job && user?.id === job.assigned_to;
   const canInvite = isAdmin || isOwner;
   const isUE = job?.assignment_type === "underentreprenor";
+  const canCreateAta = isAdmin || roles.includes("saljare") || (roles.includes("arbetsledare") && isOwner);
   // Hantverkare/arbetsledare logs time. UE doesn't (fixed price).
   const canLogTime =
     !!job && (isOwner || members.some((m) => m.user_id === user?.id));
@@ -327,7 +330,7 @@ function JobDetailPage() {
             <span className="inline-flex items-center gap-1">
               Uppdragsgivare: <strong className="text-foreground">{job.client_company ?? "—"}</strong>
               {job.client_email && <span className="text-muted-foreground">({job.client_email})</span>}
-              <Button size="icon" variant="ghost" className="h-5 w-5 ml-1" onClick={() => setClientOpen(true)}>
+              <Button size="icon" variant="ghost" className="h-7 w-7 ml-1" onClick={() => setClientOpen(true)}>
                 <Pencil className="h-3 w-3" />
               </Button>
             </span>
@@ -335,7 +338,7 @@ function JobDetailPage() {
           {isAdmin && (
             <span className="inline-flex items-center gap-1">
               Pris: <strong className="text-foreground">{projectPrice != null ? `${Number(projectPrice).toLocaleString("sv-SE")} kr` : "—"}</strong>
-              <Button size="icon" variant="ghost" className="h-5 w-5 ml-1" onClick={() => setPriceOpen(true)}>
+              <Button size="icon" variant="ghost" className="h-7 w-7 ml-1" onClick={() => setPriceOpen(true)}>
                 <Pencil className="h-3 w-3" />
               </Button>
             </span>
@@ -414,7 +417,7 @@ function JobDetailPage() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-5 w-5"
+                  className="h-7 w-7"
                   title={job.hide_time_estimate ? "Visa tidsuppskattning" : "Dölj tidsuppskattning"}
                   onClick={async () => {
                     try {
@@ -428,10 +431,10 @@ function JobDetailPage() {
                 >
                   {job.hide_time_estimate ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
                 </Button>
-                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEstimateOpen(true)} title="Redigera tidsuppskattning">
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEstimateOpen(true)} title="Redigera tidsuppskattning">
                   <Pencil className="h-3 w-3" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEstimateHistoryOpen(true)} title="Historik">
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEstimateHistoryOpen(true)} title="Historik">
                   <History className="h-3 w-3" />
                 </Button>
               </div>
@@ -491,6 +494,8 @@ function JobDetailPage() {
           <TabsTrigger value="time">Timmar ({times.length})</TabsTrigger>
           {isUE && <TabsTrigger value="ue">UE & faktura</TabsTrigger>}
           <TabsTrigger value="checks">Egenkontroller ({checks.length})</TabsTrigger>
+          <TabsTrigger value="ata">ÄTA</TabsTrigger>
+          <TabsTrigger value="foton">Foton</TabsTrigger>
         </TabsList>
 
         <TabsContent value="workorder" className="mt-4">
@@ -609,6 +614,14 @@ function JobDetailPage() {
             nameMap={nameMap}
             onChanged={reload}
           />
+        </TabsContent>
+
+        <TabsContent value="ata" className="mt-4">
+          <AtaCard jobId={job.id} isAdmin={isAdmin} canCreate={canCreateAta} />
+        </TabsContent>
+
+        <TabsContent value="foton" className="mt-4">
+          <PhotoGalleryCard jobId={job.id} canManage={isAdmin || isOwner} />
         </TabsContent>
       </Tabs>
 
