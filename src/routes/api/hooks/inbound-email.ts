@@ -69,9 +69,11 @@ export const Route = createFileRoute("/api/hooks/inbound-email")({
     handlers: {
       POST: async ({ request }) => {
         const secret = process.env.RESEND_INBOUND_WEBHOOK_SECRET;
-        const apiKey = process.env.RESEND_API_KEY;
+        // Egen nyckel för inkommande mail: mottagningsadressen kan ligga i ett annat
+        // Resend-konto än det vi skickar utgående mail från.
+        const apiKey = process.env.RESEND_INBOUND_API_KEY || process.env.RESEND_API_KEY;
         if (!secret || !apiKey) {
-          console.error("RESEND_INBOUND_WEBHOOK_SECRET or RESEND_API_KEY is not configured");
+          console.error("RESEND_INBOUND_WEBHOOK_SECRET or RESEND_INBOUND_API_KEY is not configured");
           return Response.json({ error: "Server configuration error" }, { status: 500 });
         }
 
