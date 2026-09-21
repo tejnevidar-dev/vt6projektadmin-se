@@ -108,6 +108,7 @@ const SOURCE_LABELS: Record<string, string> = {
   referral: "Referens",
   csv_import: "CSV-import",
   roslagstak: "Webb (roslagstak)",
+  email: "Mail (info@)",
 };
 
 const PIE_COLORS = [

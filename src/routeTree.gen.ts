@@ -53,6 +53,7 @@ import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/pub
 import { Route as ApiPublicLookupInviteRouteImport } from './routes/api/public/lookup-invite'
 import { Route as ApiHooksSupabaseAuthEmailRouteImport } from './routes/api/hooks/supabase-auth-email'
 import { Route as ApiHooksResendEventsRouteImport } from './routes/api/hooks/resend-events'
+import { Route as ApiHooksInboundEmailRouteImport } from './routes/api/hooks/inbound-email'
 import { Route as ApiPublicSignTokenRouteImport } from './routes/api/public/sign.$token'
 import { Route as ApiPublicSelfCheckPdfSplatRouteImport } from './routes/api/public/self-check-pdf.$'
 import { Route as ApiPublicPhotosTokenRouteImport } from './routes/api/public/photos.$token'
@@ -281,6 +282,11 @@ const ApiHooksResendEventsRoute = ApiHooksResendEventsRouteImport.update({
   path: '/api/hooks/resend-events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHooksInboundEmailRoute = ApiHooksInboundEmailRouteImport.update({
+  id: '/api/hooks/inbound-email',
+  path: '/api/hooks/inbound-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSignTokenRoute = ApiPublicSignTokenRouteImport.update({
   id: '/api/public/sign/$token',
   path: '/api/public/sign/$token',
@@ -345,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/ekonomi/': typeof EkonomiIndexRoute
   '/jobb/': typeof JobbIndexRoute
+  '/api/hooks/inbound-email': typeof ApiHooksInboundEmailRoute
   '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
@@ -394,6 +401,7 @@ export interface FileRoutesByTo {
   '/egenkontroller': typeof EgenkontrollerIndexRoute
   '/ekonomi': typeof EkonomiIndexRoute
   '/jobb': typeof JobbIndexRoute
+  '/api/hooks/inbound-email': typeof ApiHooksInboundEmailRoute
   '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
@@ -445,6 +453,7 @@ export interface FileRoutesById {
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/ekonomi/': typeof EkonomiIndexRoute
   '/jobb/': typeof JobbIndexRoute
+  '/api/hooks/inbound-email': typeof ApiHooksInboundEmailRoute
   '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
@@ -497,6 +506,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/'
     | '/ekonomi/'
     | '/jobb/'
+    | '/api/hooks/inbound-email'
     | '/api/hooks/resend-events'
     | '/api/hooks/supabase-auth-email'
     | '/api/public/lookup-invite'
@@ -546,6 +556,7 @@ export interface FileRouteTypes {
     | '/egenkontroller'
     | '/ekonomi'
     | '/jobb'
+    | '/api/hooks/inbound-email'
     | '/api/hooks/resend-events'
     | '/api/hooks/supabase-auth-email'
     | '/api/public/lookup-invite'
@@ -596,6 +607,7 @@ export interface FileRouteTypes {
     | '/egenkontroller/'
     | '/ekonomi/'
     | '/jobb/'
+    | '/api/hooks/inbound-email'
     | '/api/hooks/resend-events'
     | '/api/hooks/supabase-auth-email'
     | '/api/public/lookup-invite'
@@ -645,6 +657,7 @@ export interface RootRouteChildren {
   SigneraTokenRoute: typeof SigneraTokenRoute
   EkonomiIndexRoute: typeof EkonomiIndexRoute
   JobbIndexRoute: typeof JobbIndexRoute
+  ApiHooksInboundEmailRoute: typeof ApiHooksInboundEmailRoute
   ApiHooksResendEventsRoute: typeof ApiHooksResendEventsRoute
   ApiHooksSupabaseAuthEmailRoute: typeof ApiHooksSupabaseAuthEmailRoute
   ApiPublicLookupInviteRoute: typeof ApiPublicLookupInviteRoute
@@ -965,6 +978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHooksResendEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/hooks/inbound-email': {
+      id: '/api/hooks/inbound-email'
+      path: '/api/hooks/inbound-email'
+      fullPath: '/api/hooks/inbound-email'
+      preLoaderRoute: typeof ApiHooksInboundEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sign/$token': {
       id: '/api/public/sign/$token'
       path: '/api/public/sign/$token'
@@ -1049,6 +1069,7 @@ const rootRouteChildren: RootRouteChildren = {
   SigneraTokenRoute: SigneraTokenRoute,
   EkonomiIndexRoute: EkonomiIndexRoute,
   JobbIndexRoute: JobbIndexRoute,
+  ApiHooksInboundEmailRoute: ApiHooksInboundEmailRoute,
   ApiHooksResendEventsRoute: ApiHooksResendEventsRoute,
   ApiHooksSupabaseAuthEmailRoute: ApiHooksSupabaseAuthEmailRoute,
   ApiPublicLookupInviteRoute: ApiPublicLookupInviteRoute,

@@ -50,6 +50,8 @@ const sourceLabels: Record<string, string> = {
   scan: "Byggnadsscanning",
   referral: "Referens",
   csv_import: "CSV-import",
+  roslagstak: "Webb (roslagstak)",
+  email: "Mail (info@)",
 };
 
 export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {

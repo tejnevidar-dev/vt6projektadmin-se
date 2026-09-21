@@ -10,7 +10,7 @@ export function netValue(lead: Lead): number {
 
 /** Inkommande lead: kommer från webb/import — säljaren har inte skaffat kunden själv. */
 export function isInboundLead(lead: Lead): boolean {
-  if (lead.source === "roslagstak" || lead.source === "csv_import") return true;
+  if (lead.source === "roslagstak" || lead.source === "csv_import" || lead.source === "email") return true;
   if (!lead.createdBy) return true;
   if (lead.sellerId && lead.createdBy !== lead.sellerId) return true;
   return false;
