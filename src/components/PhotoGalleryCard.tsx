@@ -10,6 +10,16 @@ import {
   type PhotoPhase,
 } from "@/lib/job-photos-api";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Trash2, Upload, Link as LinkIcon, Copy } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,6 +33,7 @@ export function PhotoGalleryCard({ jobId, canManage }: Props) {
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<PhotoPhase | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [photoToDelete, setPhotoToDelete] = useState<JobPhoto | null>(null);
   const foreInput = useRef<HTMLInputElement>(null);
   const efterInput = useRef<HTMLInputElement>(null);
 
@@ -59,8 +70,10 @@ export function PhotoGalleryCard({ jobId, canManage }: Props) {
     }
   }
 
-  async function handleDelete(photo: JobPhoto) {
-    if (!confirm("Ta bort bilden?")) return;
+  async function confirmDelete() {
+    const photo = photoToDelete;
+    setPhotoToDelete(null);
+    if (!photo) return;
     try {
       await deleteJobPhoto(photo);
       void load();
@@ -120,7 +133,7 @@ export function PhotoGalleryCard({ jobId, canManage }: Props) {
         canManage={canManage}
         uploading={uploading === "fore"}
         onUploadClick={() => foreInput.current?.click()}
-        onDelete={handleDelete}
+        onDelete={setPhotoToDelete}
       />
       <input
         ref={foreInput}
@@ -138,7 +151,7 @@ export function PhotoGalleryCard({ jobId, canManage }: Props) {
         canManage={canManage}
         uploading={uploading === "efter"}
         onUploadClick={() => efterInput.current?.click()}
-        onDelete={handleDelete}
+        onDelete={setPhotoToDelete}
       />
       <input
         ref={efterInput}
@@ -148,6 +161,19 @@ export function PhotoGalleryCard({ jobId, canManage }: Props) {
         className="hidden"
         onChange={(e) => handleUpload(e.target.files, "efter")}
       />
+
+      <AlertDialog open={!!photoToDelete} onOpenChange={(o) => !o && setPhotoToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ta bort bilden?</AlertDialogTitle>
+            <AlertDialogDescription>Bilden tas bort permanent och försvinner även från kundens delade länk.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Ta bort</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -3,7 +3,7 @@ export { buildSignedPdf } from './signing-pdf.server'
 export type { SignatureParty, SignedPdfMeta } from './signing-pdf.server'
 
 export const PUBLIC_SITE_URL =
-  process.env.PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://vt6projektadmin.se'
+  process.env.PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://admin-vt6.tejnevidar.workers.dev'
 
 export function signingUrl(token: string): string {
   return `${PUBLIC_SITE_URL}/signera/${token}`
