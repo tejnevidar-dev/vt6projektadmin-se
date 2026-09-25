@@ -62,12 +62,13 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-const EXTERN_ROLES: AppRole[] = ["saljare", "admin"];
+const EXTERN_ROLES: AppRole[] = ["saljare", "saljare_extern", "admin"];
 const INTERN_ROLES: AppRole[] = ["arbetsledare", "hantverkare", "underentreprenor", "admin"];
 
 const ROLE_LABELS: Record<AppRole, string> = {
   admin: "Admin",
   saljare: "Säljare",
+  saljare_extern: "Extern säljare",
   viewer: "Viewer",
   arbetsledare: "Arbetsledare",
   hantverkare: "Hantverkare",

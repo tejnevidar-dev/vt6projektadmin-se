@@ -9,11 +9,12 @@ export type AppRole =
   | "arbetsledare"
   | "hantverkare"
   | "underentreprenor"
-  | "ekonomi";
+  | "ekonomi"
+  | "saljare_extern";
 
 export type Side = "intern" | "extern";
 
-const EXTERNAL_ROLES: AppRole[] = ["saljare"];
+const EXTERNAL_ROLES: AppRole[] = ["saljare", "saljare_extern"];
 const INTERNAL_ROLES: AppRole[] = ["arbetsledare", "hantverkare", "underentreprenor"];
 
 export function useUserRoles() {
@@ -61,7 +62,7 @@ export function useUserRoles() {
     isSaljare,
     isInternal,
     isExternal,
-    canEdit: isAdmin || roles.includes("saljare"),
+    canEdit: isAdmin || roles.includes("saljare") || roles.includes("saljare_extern"),
   };
 
 }

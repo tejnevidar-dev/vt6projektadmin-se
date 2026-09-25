@@ -1213,6 +1213,7 @@ export type Database = {
           address: string
           build_year: number | null
           created_at: string
+          created_by: string | null
           has_roof_permit: boolean
           id: string
           latitude: number | null
@@ -1230,6 +1231,7 @@ export type Database = {
           address: string
           build_year?: number | null
           created_at?: string
+          created_by?: string | null
           has_roof_permit?: boolean
           id?: string
           latitude?: number | null
@@ -1247,6 +1249,7 @@ export type Database = {
           address?: string
           build_year?: number | null
           created_at?: string
+          created_by?: string | null
           has_roof_permit?: boolean
           id?: string
           latitude?: number | null
@@ -2314,6 +2317,7 @@ export type Database = {
         | "hantverkare"
         | "underentreprenor"
         | "ekonomi"
+        | "saljare_extern"
       employment_type:
         | "timanstalld"
         | "fast"
@@ -2507,6 +2511,7 @@ export const Constants = {
         "hantverkare",
         "underentreprenor",
         "ekonomi",
+        "saljare_extern",
       ],
       employment_type: [
         "timanstalld",

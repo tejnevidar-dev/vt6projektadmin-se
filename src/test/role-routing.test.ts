@@ -7,6 +7,8 @@ describe("rolesAllowSide", () => {
     [["admin"], "extern", true],
     [["saljare"], "extern", true],
     [["saljare"], "intern", false],
+    [["saljare_extern"], "extern", true],
+    [["saljare_extern"], "intern", false],
     [["hantverkare"], "intern", true],
     [["hantverkare"], "extern", false],
     [["arbetsledare"], "intern", true],

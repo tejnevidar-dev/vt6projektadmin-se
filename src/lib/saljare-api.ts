@@ -18,7 +18,7 @@ export async function fetchSaljare(): Promise<Saljare[]> {
   const { data: roles, error: rolesErr } = await supabase
     .from("user_roles")
     .select("user_id, role")
-    .in("role", ["saljare", "admin"]);
+    .in("role", ["saljare", "saljare_extern", "admin"]);
   if (rolesErr) throw rolesErr;
 
   const ids = Array.from(new Set((roles ?? []).map((r) => r.user_id)));

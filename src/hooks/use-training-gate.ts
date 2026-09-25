@@ -18,7 +18,7 @@ export function useTrainingGate() {
   // Only a plain saljare (not admin — admins bypass every role gate in this app, same
   // as elsewhere) is subject to this at all. Anyone without the saljare role (e.g. a
   // hantverkare-only account) is never gated, regardless of which route they're on.
-  const needsGate = !isAdmin && roles.includes("saljare");
+  const needsGate = !isAdmin && (roles.includes("saljare") || roles.includes("saljare_extern"));
 
   useEffect(() => {
     let cancelled = false;

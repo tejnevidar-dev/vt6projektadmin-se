@@ -96,6 +96,7 @@ interface Invitation {
 const ROLE_LABELS: Record<AppRole, string> = {
   admin: "Administratör",
   saljare: "Säljare",
+  saljare_extern: "Extern säljare",
   ekonomi: "Ekonomi / redovisning",
   arbetsledare: "Arbetsledare",
   hantverkare: "Hantverkare",
@@ -104,7 +105,7 @@ const ROLE_LABELS: Record<AppRole, string> = {
 };
 
 /** Roller grupperade per arbetsyta så admin ser vilken sida rollen ger tillgång till. */
-const EXTERN_ROLES: AppRole[] = ["saljare"];
+const EXTERN_ROLES: AppRole[] = ["saljare", "saljare_extern"];
 const INTERN_ROLES: AppRole[] = ["arbetsledare", "hantverkare", "underentreprenor"];
 const OTHER_ROLES: AppRole[] = ["admin", "ekonomi", "viewer"];
 const ALL_ROLES: AppRole[] = [...OTHER_ROLES, ...EXTERN_ROLES, ...INTERN_ROLES];
@@ -112,7 +113,7 @@ const ALL_ROLES: AppRole[] = [...OTHER_ROLES, ...EXTERN_ROLES, ...INTERN_ROLES];
 const roleLabel = (r: AppRole) => ROLE_LABELS[r] ?? r;
 
 const roleVariant = (r: AppRole): "default" | "secondary" | "outline" =>
-  r === "admin" ? "default" : r === "saljare" || r === "ekonomi" ? "secondary" : "outline";
+  r === "admin" ? "default" : r === "saljare" || r === "saljare_extern" || r === "ekonomi" ? "secondary" : "outline";
 
 function AdminPage() {
   const { user } = useAuth();
@@ -596,6 +597,7 @@ function AdminPage() {
                   <SelectContent>
                     <SelectItem value="admin">Administratör – full åtkomst</SelectItem>
                     <SelectItem value="saljare">Säljare – kan redigera leads</SelectItem>
+                    <SelectItem value="saljare_extern">Extern säljare – ser bara egna leads</SelectItem>
                     <SelectItem value="ekonomi">Ekonomi – löner, fakturor & ROT</SelectItem>
                     <SelectItem value="viewer">Viewer – endast läsa</SelectItem>
                   </SelectContent>
