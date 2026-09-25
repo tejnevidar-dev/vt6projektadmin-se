@@ -19,6 +19,7 @@ const SOURCE_LABELS: Record<string, string> = {
   csv_import: "CSV-import",
   roslagstak: "Webb (roslagstak)",
   email: "Mail (info@)",
+  inbox: "Övriga kanaler",
 };
 
 interface Props {

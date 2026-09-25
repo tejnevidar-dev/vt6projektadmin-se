@@ -52,6 +52,7 @@ const sourceLabels: Record<string, string> = {
   csv_import: "CSV-import",
   roslagstak: "Webb (roslagstak)",
   email: "Mail (info@)",
+  inbox: "Övriga kanaler",
 };
 
 export function LeadDetail({ lead, onClose, onUpdated }: LeadDetailProps) {

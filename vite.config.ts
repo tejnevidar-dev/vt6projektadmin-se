@@ -66,6 +66,8 @@ export default defineConfig(async ({ mode, command }) => {
         // Once/day: flags leads stuck in forhandling/uppfoljning without recent
         // activity, notifies the assigned seller in-app (see notifications system).
         "0 6 * * *": "stale-lead-reminders",
+        // Every 10 min: SLA reminders for unanswered leads, silence + intake-failure alerts.
+        "*/10 * * * *": "lead-alerts",
       },
     });
   }

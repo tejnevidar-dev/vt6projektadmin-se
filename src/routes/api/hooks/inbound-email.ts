@@ -6,19 +6,19 @@ import {
   buildActivityDescription,
   buildLeadNotes,
   displayNameFor,
-  escapeLike,
   extractPhone,
   normalizeHeaders,
   parseAddress,
   shouldSkipEmail,
 } from "@/lib/inbound-email";
+import { ingestLead, loadConfig } from "@/lib/lead-intake.server";
 
 // Tar emot mail som skickats till info@roslagstak.se och vidarebefordrats till Resends
 // inkommande adress. Resend skickar en `email.received`-webhook (signerad med Svix) som
 // bara innehåller metadata -- själva innehållet hämtas via Receiving API.
 //
 //  - Ny avsändare      -> ny lead i steget "inkommande_webb" (källa "email")
-//  - Känd avsändare    -> anteckning på befintlig lead (ingen dublett)
+//  - Känd avsändare    -> anteckning på befintlig öppen lead (dubblettskydd i ingestLead)
 //  - Automatmail/egna  -> loggas som "skipped", skapar inget
 // Alla utfall loggas i webhook_logs (source = "email").
 
@@ -44,24 +44,6 @@ async function log(args: {
   } catch (e) {
     console.error("Failed to write webhook_logs:", e);
   }
-}
-
-async function notify(userIds: string[], title: string, body: string, leadId: string) {
-  if (userIds.length === 0) return;
-  const rows = userIds.map((user_id) => ({
-    user_id,
-    type: "lead_email",
-    title,
-    body,
-    link: `/leads?lead=${leadId}`,
-  }));
-  const { error } = await db.from("notifications").insert(rows);
-  if (error) console.error("Failed to insert notifications:", error.message);
-}
-
-async function adminIds(): Promise<string[]> {
-  const { data } = await db.from("user_roles").select("user_id").eq("role", "admin");
-  return ((data ?? []) as { user_id: string }[]).map((r) => r.user_id);
 }
 
 export const Route = createFileRoute("/api/hooks/inbound-email")({
@@ -123,87 +105,31 @@ export const Route = createFileRoute("/api/hooks/inbound-email")({
           return Response.json({ ok: true, status: "skipped", reason: skip });
         }
 
-        const externalId = `email:${mail.message_id ?? resendId}`;
-        const { data: dup } = await db.from("leads").select("id").eq("external_id", externalId).maybeSingle();
-        if (dup) {
-          await log({ status_code: 200, status: "duplicate", payload: logPayload, lead_id: dup.id });
-          return Response.json({ ok: true, status: "duplicate", lead_id: dup.id });
-        }
-
         const subject = mail.subject?.trim() || null;
         const body = bodyText(mail);
         const attachmentNames = (mail.attachments ?? []).map((a) => a.filename ?? "bilaga");
 
-        // Känd avsändare: lägg mailet som anteckning på den befintliga leaden.
-        const { data: existing } = await db
-          .from("leads")
-          .select("id, name, seller_id")
-          .ilike("email", escapeLike(sender.email))
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (existing) {
-          const { error: actErr } = await db.from("lead_activities").insert({
-            lead_id: existing.id,
-            type: "note",
-            description: buildActivityDescription(subject, body),
-            metadata: { source: "email", email_id: resendId, message_id: mail.message_id ?? null },
-            user_id: null,
-          });
-          if (actErr) {
-            await log({ status_code: 500, status: "activity_insert_failed", error_message: actErr.message, payload: logPayload, lead_id: existing.id });
-            return Response.json({ error: "Failed to record activity" }, { status: 500 });
-          }
-          await notify(
-            existing.seller_id ? [existing.seller_id] : await adminIds(),
-            "Nytt mail från kund",
-            `${existing.name}: ${subject ?? "(inget ämne)"}`,
-            existing.id,
-          );
-          await log({ status_code: 200, status: "activity_added", payload: logPayload, lead_id: existing.id });
-          return Response.json({ ok: true, status: "activity_added", lead_id: existing.id });
+        const cfg = await loadConfig(db);
+        const result = await ingestLead(db, cfg, {
+          source: "email",
+          sourceLabel: "Mail (info@)",
+          externalId: `email:${mail.message_id ?? resendId}`,
+          name: displayNameFor(sender),
+          phone: extractPhone(`${subject ?? ""}\n${body}`),
+          email: sender.email,
+          status: "warm",
+          notes: buildLeadNotes({ fromEmail: sender.email, subject, body, attachmentNames }),
+          summary: subject ?? body,
+          mergeNote: buildActivityDescription(subject, body),
+          meta: { channel: "mail", email_id: resendId, message_id: mail.message_id ?? null, subject },
+        });
+        if (result.status === "error") {
+          await log({ status_code: 500, status: result.stage, error_message: result.message, payload: logPayload });
+          return Response.json({ error: "Failed to record lead" }, { status: 500 });
         }
-
-        // Ny avsändare: skapa fastighet + lead (samma form som hemsidans webhook).
-        const { data: property, error: propErr } = await db
-          .from("properties")
-          .insert({ address: "Adress saknas (mailförfrågan)", municipality: "", region: "Stockholm" })
-          .select("id")
-          .single();
-        if (propErr) {
-          await log({ status_code: 500, status: "property_insert_failed", error_message: propErr.message, payload: logPayload });
-          return Response.json({ error: "Failed to create property" }, { status: 500 });
-        }
-
-        const { data: lead, error: leadErr } = await db
-          .from("leads")
-          .insert({
-            property_id: property.id,
-            name: displayNameFor(sender),
-            phone: extractPhone(`${subject ?? ""}\n${body}`),
-            email: sender.email,
-            status: "warm",
-            source: "email",
-            job_type: "roof_replacement",
-            pipeline_stage: "inkommande_webb",
-            notes: buildLeadNotes({ fromEmail: sender.email, subject, body, attachmentNames }),
-            external_id: externalId,
-          })
-          .select("id")
-          .single();
-        if (leadErr) {
-          await log({ status_code: 500, status: "lead_insert_failed", error_message: leadErr.message, payload: logPayload });
-          return Response.json({ error: "Failed to create lead" }, { status: 500 });
-        }
-
-        await notify(
-          await adminIds(),
-          "Ny lead via mail",
-          `${displayNameFor(sender)}: ${subject ?? "(inget ämne)"}`,
-          lead.id,
-        );
-        await log({ status_code: 201, status: "created", payload: logPayload, lead_id: lead.id });
-        return Response.json({ ok: true, status: "created", lead_id: lead.id }, { status: 201 });
+        const code = result.status === "created" ? 201 : 200;
+        await log({ status_code: code, status: result.status, payload: logPayload, lead_id: result.leadId });
+        return Response.json({ ok: true, status: result.status, lead_id: result.leadId }, { status: code });
       },
     },
   },

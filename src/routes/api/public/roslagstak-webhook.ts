@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { ingestLead, loadConfig } from "@/lib/lead-intake.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -119,59 +120,31 @@ export const Route = createFileRoute("/api/public/roslagstak-webhook")({
           return jsonResponse({ error: "Invalid payload", details: parsed.error.flatten() }, 400);
         }
         const p = parsed.data;
-        const externalId = `roslagstak:${p.id}`;
+        const summary = p.message?.trim() || (p.mode === "configure" ? "Offertkonfigurator" : "Rådgivning");
 
-        // Idempotency check
-        const { data: existing } = await supabaseAdmin
-          .from("leads")
-          .select("id")
-          .eq("external_id", externalId)
-          .maybeSingle();
-        if (existing) {
-          await logWebhook({ status_code: 200, status: "duplicate", payload: body, headers, lead_id: existing.id });
-          return jsonResponse({ ok: true, status: "duplicate", lead_id: existing.id });
-        }
-
-        // Create property
-        const { data: property, error: propErr } = await supabaseAdmin
-          .from("properties")
-          .insert({
-            address: p.address || "Adress saknas (webbförfrågan)",
-            municipality: "",
-            region: "Stockholm",
-            roof_type: p.current_roof ?? null,
-          })
-          .select("id")
-          .single();
-        if (propErr) {
-          await logWebhook({ status_code: 500, status: "property_insert_failed", error_message: propErr.message, payload: body, headers });
-          return jsonResponse({ error: "Failed to create property" }, 500);
-        }
-
-        // Create lead
-        const { data: lead, error: leadErr } = await supabaseAdmin
-          .from("leads")
-          .insert({
-            property_id: property.id,
-            name: p.name,
-            phone: p.phone,
-            email: p.email,
-            status: "hot",
-            source: "roslagstak",
-            job_type: "roof_replacement",
-            pipeline_stage: "inkommande_webb",
-            notes: buildNotes(p),
-            external_id: externalId,
-          })
-          .select("id")
-          .single();
-        if (leadErr) {
-          await logWebhook({ status_code: 500, status: "lead_insert_failed", error_message: leadErr.message, payload: body, headers });
+        const cfg = await loadConfig(supabaseAdmin);
+        const result = await ingestLead(supabaseAdmin, cfg, {
+          source: "roslagstak",
+          sourceLabel: "Hemsidan",
+          externalId: `roslagstak:${p.id}`,
+          name: p.name,
+          phone: p.phone,
+          email: p.email,
+          address: p.address,
+          roofType: p.current_roof ?? null,
+          status: "hot",
+          notes: buildNotes(p),
+          summary,
+          mergeNote: `📥 Ny förfrågan via hemsidan: ${summary.replace(/\s+/g, " ").slice(0, 300)}`,
+          meta: { channel: "hemsidan", mode: p.mode },
+        });
+        if (result.status === "error") {
+          await logWebhook({ status_code: 500, status: result.stage, error_message: result.message, payload: body, headers });
           return jsonResponse({ error: "Failed to create lead" }, 500);
         }
-
-        await logWebhook({ status_code: 201, status: "created", payload: body, headers, lead_id: lead.id });
-        return jsonResponse({ ok: true, status: "created", lead_id: lead.id }, 201);
+        const code = result.status === "created" ? 201 : 200;
+        await logWebhook({ status_code: code, status: result.status, payload: body, headers, lead_id: result.leadId });
+        return jsonResponse({ ok: true, status: result.status, lead_id: result.leadId }, code);
       },
     },
   },

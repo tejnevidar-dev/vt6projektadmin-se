@@ -2331,6 +2331,7 @@ export type Database = {
         | "csv_import"
         | "roslagstak"
         | "email"
+        | "inbox"
       lead_status: "cold" | "warm" | "hot" | "customer" | "lost"
       lost_reason:
         | "for_dyrt"
@@ -2525,6 +2526,7 @@ export const Constants = {
         "csv_import",
         "roslagstak",
         "email",
+        "inbox",
       ],
       lead_status: ["cold", "warm", "hot", "customer", "lost"],
       lost_reason: [
