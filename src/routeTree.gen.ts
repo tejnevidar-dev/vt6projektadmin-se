@@ -50,6 +50,7 @@ import { Route as ApiSendSelfChecksRouteImport } from './routes/api/send-self-ch
 import { Route as ApiProcessWorkOrderRouteImport } from './routes/api/process-work-order'
 import { Route as ApiAiPitchRouteImport } from './routes/api/ai-pitch'
 import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/public/roslagstak-webhook'
+import { Route as ApiPublicMorningStatsRouteImport } from './routes/api/public/morning-stats'
 import { Route as ApiPublicLookupInviteRouteImport } from './routes/api/public/lookup-invite'
 import { Route as ApiPublicLeadInboxRouteImport } from './routes/api/public/lead-inbox'
 import { Route as ApiHooksSupabaseAuthEmailRouteImport } from './routes/api/hooks/supabase-auth-email'
@@ -267,6 +268,11 @@ const ApiPublicRoslagstakWebhookRoute =
     path: '/api/public/roslagstak-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicMorningStatsRoute = ApiPublicMorningStatsRouteImport.update({
+  id: '/api/public/morning-stats',
+  path: '/api/public/morning-stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLookupInviteRoute = ApiPublicLookupInviteRouteImport.update({
   id: '/api/public/lookup-invite',
   path: '/api/public/lookup-invite',
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
   '/api/public/lead-inbox': typeof ApiPublicLeadInboxRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
+  '/api/public/morning-stats': typeof ApiPublicMorningStatsRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/photos/$token': typeof ApiPublicPhotosTokenRoute
@@ -413,6 +420,7 @@ export interface FileRoutesByTo {
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
   '/api/public/lead-inbox': typeof ApiPublicLeadInboxRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
+  '/api/public/morning-stats': typeof ApiPublicMorningStatsRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/photos/$token': typeof ApiPublicPhotosTokenRoute
@@ -466,6 +474,7 @@ export interface FileRoutesById {
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
   '/api/public/lead-inbox': typeof ApiPublicLeadInboxRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
+  '/api/public/morning-stats': typeof ApiPublicMorningStatsRoute
   '/api/public/roslagstak-webhook': typeof ApiPublicRoslagstakWebhookRoute
   '/api/public/hooks/send-booking-reminders': typeof ApiPublicHooksSendBookingRemindersRoute
   '/api/public/photos/$token': typeof ApiPublicPhotosTokenRoute
@@ -520,6 +529,7 @@ export interface FileRouteTypes {
     | '/api/hooks/supabase-auth-email'
     | '/api/public/lead-inbox'
     | '/api/public/lookup-invite'
+    | '/api/public/morning-stats'
     | '/api/public/roslagstak-webhook'
     | '/api/public/hooks/send-booking-reminders'
     | '/api/public/photos/$token'
@@ -571,6 +581,7 @@ export interface FileRouteTypes {
     | '/api/hooks/supabase-auth-email'
     | '/api/public/lead-inbox'
     | '/api/public/lookup-invite'
+    | '/api/public/morning-stats'
     | '/api/public/roslagstak-webhook'
     | '/api/public/hooks/send-booking-reminders'
     | '/api/public/photos/$token'
@@ -623,6 +634,7 @@ export interface FileRouteTypes {
     | '/api/hooks/supabase-auth-email'
     | '/api/public/lead-inbox'
     | '/api/public/lookup-invite'
+    | '/api/public/morning-stats'
     | '/api/public/roslagstak-webhook'
     | '/api/public/hooks/send-booking-reminders'
     | '/api/public/photos/$token'
@@ -674,6 +686,7 @@ export interface RootRouteChildren {
   ApiHooksSupabaseAuthEmailRoute: typeof ApiHooksSupabaseAuthEmailRoute
   ApiPublicLeadInboxRoute: typeof ApiPublicLeadInboxRoute
   ApiPublicLookupInviteRoute: typeof ApiPublicLookupInviteRoute
+  ApiPublicMorningStatsRoute: typeof ApiPublicMorningStatsRoute
   ApiPublicRoslagstakWebhookRoute: typeof ApiPublicRoslagstakWebhookRoute
   ApiPublicHooksSendBookingRemindersRoute: typeof ApiPublicHooksSendBookingRemindersRoute
   ApiPublicPhotosTokenRoute: typeof ApiPublicPhotosTokenRoute
@@ -970,6 +983,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRoslagstakWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/morning-stats': {
+      id: '/api/public/morning-stats'
+      path: '/api/public/morning-stats'
+      fullPath: '/api/public/morning-stats'
+      preLoaderRoute: typeof ApiPublicMorningStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/lookup-invite': {
       id: '/api/public/lookup-invite'
       path: '/api/public/lookup-invite'
@@ -1094,6 +1114,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHooksSupabaseAuthEmailRoute: ApiHooksSupabaseAuthEmailRoute,
   ApiPublicLeadInboxRoute: ApiPublicLeadInboxRoute,
   ApiPublicLookupInviteRoute: ApiPublicLookupInviteRoute,
+  ApiPublicMorningStatsRoute: ApiPublicMorningStatsRoute,
   ApiPublicRoslagstakWebhookRoute: ApiPublicRoslagstakWebhookRoute,
   ApiPublicHooksSendBookingRemindersRoute:
     ApiPublicHooksSendBookingRemindersRoute,
