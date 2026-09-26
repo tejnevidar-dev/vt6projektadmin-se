@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDown, Loader2, Send, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { listSubcontractors, type Subcontractor } from "@/lib/subcontractors-api";
 import {
   cancelWorkOrder,
   dispatchWorkOrderNow,
@@ -60,6 +61,10 @@ function WorkOrdersPage() {
   const ex = (w: WorkOrderRow, k: string, fallback = "") => extra[w.id]?.[k] ?? fallback;
   const setEx = (w: WorkOrderRow, k: string, v: string) => setExtra({ ...extra, [w.id]: { ...(extra[w.id] ?? {}), [k]: v } });
   const [busy, setBusy] = useState<string | null>(null);
+  const [ues, setUes] = useState<Subcontractor[]>([]);
+  useEffect(() => {
+    if (isAdmin) listSubcontractors().then((l) => setUes(l.filter((u) => u.active && (u.pipeline_status === "provjobb" || u.pipeline_status === "aktiv")))).catch(() => setUes([]));
+  }, [isAdmin]);
 
   const load = useCallback(async () => {
     try {
@@ -170,6 +175,21 @@ function WorkOrdersPage() {
                         <Input className="w-32" placeholder="BAS-P" value={ex(w, "basP", w.content.bas_p ?? "")} onChange={(e) => setEx(w, "basP", e.target.value)} />
                         <Input className="w-32" placeholder="BAS-U" value={ex(w, "basU", w.content.bas_u ?? "")} onChange={(e) => setEx(w, "basU", e.target.value)} />
                       </div>
+                      <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                        Skicka till:
+                        <select
+                          className="h-8 rounded-md border bg-background px-2 text-sm text-foreground"
+                          value={ex(w, "preferred", w.preferred_subcontractor_id ?? "")}
+                          onChange={(e) => setEx(w, "preferred", e.target.value)}
+                        >
+                          <option value="">Nästa i turordning (automatiskt)</option>
+                          {ues.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.company_name} ({u.pipeline_status === "provjobb" ? "provjobb" : "aktiv"})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                       <Input placeholder="Instruktioner till UE (kunduppgifter och priser ska inte skrivas här)" value={ex(w, "notes", w.content.notes ?? "")} onChange={(e) => setEx(w, "notes", e.target.value)} />
                       <Button
                         size="sm"
@@ -195,6 +215,7 @@ function WorkOrdersPage() {
                                   skipPickup: ex(w, "skipPick", w.content.skip_scaffold?.pickup ?? ""),
                                   basP: ex(w, "basP", w.content.bas_p ?? ""),
                                   basU: ex(w, "basU", w.content.bas_u ?? ""),
+                                  preferredSubcontractorId: ex(w, "preferred", w.preferred_subcontractor_id ?? "") || null,
                                 },
                               }),
                             "Sparat (skickas när pris, start och slut finns)",

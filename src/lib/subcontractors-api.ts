@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const BUCKET = "subcontractor-docs";
 
-export type SubcontractorDocType = "avtal" | "forsakring" | "f_skatt" | "id" | "lonebevis" | "ovrigt";
+export type SubcontractorDocType = "avtal" | "forsakring" | "f_skatt" | "id" | "lonebevis" | "id06_lista" | "a1_intyg" | "skatteverket_intyg" | "manadsintyg" | "ovrigt";
 export type InvoiceStatus = "mottagen" | "godkand" | "avvisad" | "betald";
 
 export const DOC_TYPE_LABEL: Record<SubcontractorDocType, string> = {
@@ -10,7 +10,11 @@ export const DOC_TYPE_LABEL: Record<SubcontractorDocType, string> = {
   forsakring: "Försäkringsbevis",
   f_skatt: "F-skattebevis",
   id: "ID/legitimation",
-  lonebevis: "Lönebevis",
+  lonebevis: "Lönebevis (kopplat till faktura)",
+  id06_lista: "ID06-lista",
+  a1_intyg: "A1-intyg",
+  skatteverket_intyg: "Skatteverkets intyg (betalda skatter och avgifter)",
+  manadsintyg: "Månadsintyg (lön)",
   ovrigt: "Övrigt",
 };
 

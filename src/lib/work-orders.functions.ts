@@ -21,6 +21,7 @@ export interface WorkOrderRow {
   ue_price: number | null;
   start_date: string | null;
   end_date: string | null;
+  preferred_subcontractor_id: string | null;
   order_number: string | null;
   accepted_by: string | null;
   accepted_at: string | null;
@@ -75,6 +76,8 @@ export interface WorkOrderDetailsInput {
   skipPickup?: string | null;
   basP?: string | null;
   basU?: string | null;
+  /** Skicka till just denna UE först (riktat utskick). null = vanlig turordning. */
+  preferredSubcontractorId?: string | null;
 }
 
 /** Sätter pris, datum och villkorsfält och skickar arbetsordern vidare när allt krävt finns. */
@@ -107,7 +110,13 @@ export const setWorkOrderDetails = createServerFn({ method: "POST" })
     };
     const { error } = await sb
       .from("work_orders")
-      .update({ ue_price: data.price, start_date: data.startDate || null, end_date: data.endDate || null, content })
+      .update({
+        ue_price: data.price,
+        start_date: data.startDate || null,
+        end_date: data.endDate || null,
+        preferred_subcontractor_id: data.preferredSubcontractorId || null,
+        content,
+      })
       .eq("id", data.id)
       .in("status", ["draft", "unassigned", "offered"]);
     if (error) throw new Error(error.message);

@@ -203,8 +203,27 @@ export async function dispatchWorkOrder(sb: any, workOrderId: string): Promise<"
     const { data: missing } = await sb.rpc("ue_missing_requirements", { _sub: s.id });
     cands.push({ id: s.id, priority: s.priority ?? 100, created_at: s.created_at, missing: (missing ?? []) as string[] });
   }
-  const nextId = pickNextSubcontractor(cands, tried);
   const content = wo.content as WorkOrderContent;
+  // Riktat utskick: vald UE först. Uppfyller den inte kraven larmas admin och inget skickas till andra
+  // (annars skulle fel lag få just det här jobbet). Efter avböjt/uteblivet svar gäller vanlig turordning.
+  let nextId: string | null = null;
+  const preferred = wo.preferred_subcontractor_id as string | null;
+  if (preferred && !tried.has(preferred)) {
+    const cand = cands.find((c) => c.id === preferred);
+    if (cand && cand.missing.length === 0) nextId = preferred;
+    else {
+      await notifyAdmin(sb, {
+        type: "work_order_preferred_blocked",
+        title: "Vald UE kan inte få arbetsordern",
+        body: `Den UE du valde för ${content.address} uppfyller inte kraven: ${(cand?.missing ?? ["okänd UE"]).map((m) => REQUIREMENT_LABELS[m] ?? m).join(", ")}. Åtgärda, välj en annan UE eller ta bort valet.`,
+        leadId: wo.lead_id,
+        suffix: `${wo.id}:pref:${(cand?.missing ?? []).join("+")}`,
+      });
+      return "skipped";
+    }
+  } else {
+    nextId = pickNextSubcontractor(cands, tried);
+  }
 
   if (!nextId) {
     await sb.from("work_orders").update({ status: "unassigned" }).eq("id", wo.id);
