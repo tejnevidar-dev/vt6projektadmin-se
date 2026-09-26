@@ -40,6 +40,10 @@ export interface Subcontractor {
   insurance_expires_at: string | null;
   agreement_signed_at: string | null;
   hourly_rate: number | null;
+  posting_notified_at: string | null;
+  f_skatt_checked_at: string | null;
+  kronofogden_debt: number | null;
+  pipeline_status: "hittad" | "kontaktad" | "samtal" | "kvalificerad" | "provjobb" | "aktiv";
   id06_number: string | null;
   id06_valid_until: string | null;
   is_posted_worker: boolean;
@@ -302,16 +306,29 @@ export function invoiceSummary(agreedPrice: number | null, invoices: Subcontract
   };
 }
 
+export const PIPELINE_LABELS: Record<Subcontractor["pipeline_status"], string> = {
+  hittad: "Hittad",
+  kontaktad: "Kontaktad",
+  samtal: "Samtal",
+  kvalificerad: "Kvalificerad",
+  provjobb: "Provjobb",
+  aktiv: "Aktiv",
+};
+
 /** Saknade eller utgångna krav som blockerar tilldelning (speglar public.ue_missing_requirements). */
 export function expiryWarnings(sc: Subcontractor): string[] {
   const out: string[] = [];
   const today = new Date().toISOString().slice(0, 10);
   const bad = (d: string | null) => !d || d < today;
+  const ageDays = sc.f_skatt_checked_at ? (Date.parse(today) - Date.parse(sc.f_skatt_checked_at)) / 86400000 : Infinity;
+  if (sc.pipeline_status !== "aktiv") out.push(`Status: ${PIPELINE_LABELS[sc.pipeline_status]} (måste vara Aktiv)`);
   if (!sc.user_id) out.push("Inloggning saknas");
-  if (!sc.f_skatt) out.push("F-skatt saknas");
+  if (!sc.f_skatt || ageDays > 30) out.push("F-skatt saknas/kontroll äldre än 30 dagar");
   if (bad(sc.insurance_expires_at)) out.push("Försäkring saknas/utgången");
   if (!sc.agreement_signed_at) out.push("Avtal saknas");
   if (bad(sc.id06_valid_until)) out.push("ID06 saknas/utgånget");
   if (sc.is_posted_worker && bad(sc.a1_valid_until)) out.push("A1-intyg saknas/utgånget");
+  if (sc.is_posted_worker && !sc.posting_notified_at) out.push("Anmälan om utstationering saknas");
+  if ((sc.kronofogden_debt ?? 0) > 10000) out.push("Skuld hos Kronofogden över gränsen");
   return out;
 }

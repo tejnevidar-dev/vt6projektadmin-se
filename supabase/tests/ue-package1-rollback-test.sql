@@ -22,13 +22,16 @@ BEGIN
     o := o || E'\ntilldelning utan krav nekad (ok): ' || left(SQLERRM, 80);
   END;
 
-  UPDATE subcontractors SET f_skatt = true, insurance_expires_at = current_date + 90,
+  UPDATE subcontractors SET f_skatt = true, f_skatt_checked_at = current_date, insurance_expires_at = current_date + 90,
     agreement_signed_at = current_date, id06_valid_until = current_date + 90 WHERE id = S;
+  o := o || E'
+saknas trots krav men status hittad: ' || array_to_string(public.ue_missing_requirements(S), ',');
+  UPDATE subcontractors SET pipeline_status = 'aktiv' WHERE id = S;
   o := o || E'\nsaknas efter komplettering (tom): [' || array_to_string(public.ue_missing_requirements(S), ',') || ']';
 
   UPDATE subcontractors SET is_posted_worker = true WHERE id = S;
   o := o || E'\nutstationerad utan A1: ' || array_to_string(public.ue_missing_requirements(S), ',');
-  UPDATE subcontractors SET a1_valid_until = current_date + 90 WHERE id = S;
+  UPDATE subcontractors SET a1_valid_until = current_date + 90, posting_notified_at = current_date WHERE id = S;
 
   INSERT INTO jobs (lead_id, assigned_to, assignment_type, subcontractor_id, status)
     VALUES (L, U, 'underentreprenor', S, 'pagaende') RETURNING id INTO J;

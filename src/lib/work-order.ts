@@ -160,8 +160,11 @@ export function offerExpiry(now: Date, hours: number): Date {
 export const REQUIREMENT_LABELS: Record<string, string> = {
   registerpost: "saknar registerpost",
   aktiv: "är inte aktiv",
+  status: "pipelinestatus är inte Aktiv",
+  utstationering_anmalan: "anmälan om utstationering till Arbetsmiljöverket",
+  kronofogden: "skuld hos Kronofogden över gränsen",
   inloggning: "saknar inloggning",
-  f_skatt: "F-skatt",
+  f_skatt: "F-skatt (kontroll max 30 dagar gammal)",
   forsakring: "giltig ansvarsförsäkring",
   avtal: "signerat UE-avtal",
   id06: "giltigt ID06",

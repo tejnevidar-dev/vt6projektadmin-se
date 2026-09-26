@@ -9,6 +9,7 @@ import {
   deleteSubcontractor,
   deleteSubcontractorDocument,
   expiryWarnings,
+  PIPELINE_LABELS,
   getDocumentUrl,
   getMySubcontractor,
   listAllInvoices,
@@ -145,6 +146,10 @@ function SubcontractorsPage() {
       is_posted_worker: !!editing.is_posted_worker,
       a1_valid_until: editing.a1_valid_until || null,
       priority: Number(editing.priority) > 0 ? Number(editing.priority) : 100,
+      pipeline_status: editing.pipeline_status ?? "hittad",
+      f_skatt_checked_at: editing.f_skatt_checked_at || null,
+      posting_notified_at: editing.posting_notified_at || null,
+      kronofogden_debt: editing.kronofogden_debt === null || editing.kronofogden_debt === undefined || (editing.kronofogden_debt as unknown) === "" ? null : Number(editing.kronofogden_debt),
       active: editing.active !== false,
       notes: editing.notes || null,
     };
@@ -416,6 +421,46 @@ function SubcontractorsPage() {
                     type="number"
                     value={editing.priority ?? 100}
                     onChange={(e) => setEditing({ ...editing, priority: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label>Pipelinestatus (bara Aktiv får arbetsorder)</Label>
+                  <select
+                    className="h-9 rounded-md border bg-background px-2 text-sm"
+                    value={editing.pipeline_status ?? "hittad"}
+                    onChange={(e) => setEditing({ ...editing, pipeline_status: e.target.value as Subcontractor["pipeline_status"] })}
+                  >
+                    {(Object.keys(PIPELINE_LABELS) as Subcontractor["pipeline_status"][]).map((k) => (
+                      <option key={k} value={k}>
+                        {PIPELINE_LABELS[k]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>F-skatt kontrollerad (datum, max 30 dagar gammal)</Label>
+                  <Input
+                    type="date"
+                    value={editing.f_skatt_checked_at ?? ""}
+                    onChange={(e) => setEditing({ ...editing, f_skatt_checked_at: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Skuld hos Kronofogden (kr, senaste kontroll)</Label>
+                  <Input
+                    type="number"
+                    value={editing.kronofogden_debt ?? ""}
+                    onChange={(e) => setEditing({ ...editing, kronofogden_debt: e.target.value === "" ? null : Number(e.target.value) })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Anmälan om utstationering inskickad (datum)</Label>
+                  <Input
+                    type="date"
+                    value={editing.posting_notified_at ?? ""}
+                    onChange={(e) => setEditing({ ...editing, posting_notified_at: e.target.value })}
                   />
                 </div>
               </div>
