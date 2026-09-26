@@ -12,7 +12,7 @@ const setSide = vi.fn();
 const signOut = vi.fn();
 
 let authState = { isAuthenticated: false, loading: false, signOut, user: null as any };
-let roleState = { isInternal: false, isExternal: false, loading: false };
+let roleState = { isInternal: false, isExternal: false, loading: false, isAdmin: false, roles: [] as string[] };
 
 vi.mock("@tanstack/react-router", async () => {
   const React = await import("react");
@@ -48,7 +48,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.resetModules();
   authState = { isAuthenticated: true, loading: false, signOut, user: { id: "u1" } };
-  roleState = { isInternal: false, isExternal: false, loading: false };
+  roleState = { isInternal: false, isExternal: false, loading: false, isAdmin: false, roles: [] };
 });
 
 describe("panelväljaren", () => {
@@ -59,28 +59,28 @@ describe("panelväljaren", () => {
   });
 
   it("visar laddningsläge medan roller hämtas", async () => {
-    roleState = { isInternal: false, isExternal: false, loading: true };
+    roleState = { ...roleState, isInternal: false, isExternal: false, loading: true };
     await renderPanelPicker();
     expect(screen.getByText(/Laddar/i)).toBeInTheDocument();
     expect(setSide).not.toHaveBeenCalled();
   });
 
   it("går direkt till intern när endast interna roller finns", async () => {
-    roleState = { isInternal: true, isExternal: false, loading: false };
+    roleState = { ...roleState, isInternal: true, isExternal: false, loading: false };
     await renderPanelPicker();
     await waitFor(() => expect(setSide).toHaveBeenCalledWith("intern"));
     expect(navigate).toHaveBeenCalledWith({ to: "/" });
   });
 
   it("går direkt till extern när endast externa roller finns", async () => {
-    roleState = { isInternal: false, isExternal: true, loading: false };
+    roleState = { ...roleState, isInternal: false, isExternal: true, loading: false };
     await renderPanelPicker();
     await waitFor(() => expect(setSide).toHaveBeenCalledWith("extern"));
     expect(navigate).toHaveBeenCalledWith({ to: "/" });
   });
 
   it("visar båda valen när användaren har roller på båda sidor", async () => {
-    roleState = { isInternal: true, isExternal: true, loading: false };
+    roleState = { ...roleState, isInternal: true, isExternal: true, loading: false };
     await renderPanelPicker();
     expect(screen.getByText("Välj panel")).toBeInTheDocument();
     expect(setSide).not.toHaveBeenCalled();
@@ -90,15 +90,15 @@ describe("panelväljaren", () => {
     expect(navigate).toHaveBeenCalledWith({ to: "/" });
   });
 
-  it("låter användaren välja extern panel", async () => {
-    roleState = { isInternal: true, isExternal: true, loading: false };
+  it("låter användaren välja CRM-panelen (extern)", async () => {
+    roleState = { ...roleState, isInternal: true, isExternal: true, loading: false };
     await renderPanelPicker();
-    await userEvent.click(screen.getByText("Extern"));
+    await userEvent.click(screen.getByText("CRM"));
     expect(setSide).toHaveBeenCalledWith("extern");
   });
 
   it("visar tydligt fel när kontot saknar roller", async () => {
-    roleState = { isInternal: false, isExternal: false, loading: false };
+    roleState = { isInternal: false, isExternal: false, loading: false, isAdmin: false, roles: [] };
     await renderPanelPicker();
     expect(screen.getByText(/Ingen panel tilldelad/i)).toBeInTheDocument();
     expect(navigate).not.toHaveBeenCalledWith({ to: "/" });
