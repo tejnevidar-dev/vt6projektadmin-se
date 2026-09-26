@@ -176,7 +176,7 @@ CREATE POLICY "UE reads work orders offered to them" ON public.work_orders
   FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.work_order_offers o
-    WHERE o.work_order_id = work_orders.id AND public.owns_subcontractor(o.subcontractor_id)
+    WHERE o.work_order_id = work_orders.id AND private.owns_subcontractor(o.subcontractor_id)
   ));
 
 CREATE POLICY "Seller reads work orders for own leads" ON public.work_orders
@@ -193,7 +193,7 @@ CREATE POLICY "Admin manages work order offers" ON public.work_order_offers
 
 CREATE POLICY "UE reads own work order offers" ON public.work_order_offers
   FOR SELECT TO authenticated
-  USING (public.owns_subcontractor(subcontractor_id));
+  USING (private.owns_subcontractor(subcontractor_id));
 
 CREATE TRIGGER trg_work_orders_updated_at
   BEFORE UPDATE ON public.work_orders
