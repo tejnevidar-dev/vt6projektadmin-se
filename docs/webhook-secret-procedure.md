@@ -1,43 +1,55 @@
-# Sätt ROSLAGSTAK_WEBHOOK_SECRET (steg för steg)
+# Sätt ROSLAGSTAK_WEBHOOK_SECRET och peka om sajtens vidarebefordran (steg för steg)
 
-Bakgrund: sajtens formulär anropar `POST https://admin-vt6.tejnevidar.workers.dev/api/public/roslagstak-webhook`
-med headern `X-Webhook-Secret`. Workern jämför den med Worker-secreten `ROSLAGSTAK_WEBHOOK_SECRET`. Saknas
-secreten svarar webhooken 500 "misconfigured". Samma värde måste finnas på båda sidor.
+Bakgrund: när någon skickar formuläret på sajten sparas det i `quote_requests` i sajtens Supabase-projekt
+(`yrxvkslqfertydvrfymb`). En databastrigger, `trg_notify_saljtak_on_new_quote`, skickar sedan förfrågan vidare med
+pg_net till CRM:et. URL och hemlighet läses från tabellen `public.webhook_config` (nycklarna `saljtak_url` och
+`saljtak_secret`) och skickas i headern `X-Webhook-Secret`. CRM-webhooken (`/api/public/roslagstak-webhook`) läser
+headern `x-webhook-secret` (HTTP-headers är skiftlägesokänsliga) och jämför med Worker-secreten
+`ROSLAGSTAK_WEBHOOK_SECRET`. Saknas secreten svarar webhooken 500 "misconfigured". `saljtak_url` pekar troligen
+fortfarande på den gamla Lovable-hosten, vilket förklarar att inga anrop kommit fram sedan 2026-09-04.
 
-## 1. Generera ett starkt värde (lokalt, visa det inte i chatten)
-I PowerShell (skriver värdet till urklipp utan att visa det):
+Samma värde måste stå på båda sidor. Vidar klistrar in värdet själv, det ska aldrig skrivas i chatten.
+
+## 1. Generera ett starkt värde (lokalt)
+PowerShell, skriver värdet till urklipp utan att visa det:
 
     $b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); ($b | ForEach-Object { $_.ToString("x2") }) -join "" | Set-Clipboard
 
-Värdet är 64 hex-tecken och ligger nu i urklipp. Kör inget annat som skriver över urklipp förrän steg 2 och 3 är klara.
+Värdet är 64 hex-tecken och ligger nu i urklipp. Kopiera inget annat förrän steg 2 och 3 är klara.
 
-## 2. Sätt den på CRM-Workern
+## 2. Sätt hemligheten på CRM-Workern
     cd C:\Users\tejne\Documents\Projects\RoslagsTak\crm
     bunx wrangler secret put ROSLAGSTAK_WEBHOOK_SECRET
 
-Klistra in värdet när det efterfrågas (Ctrl+V, Enter). Ingen ny deploy behövs, secrets gäller direkt.
-Kontroll: `bunx wrangler secret list` ska visa namnet ROSLAGSTAK_WEBHOOK_SECRET.
+Klistra in värdet när det efterfrågas (Ctrl+V, Enter). Ingen ny deploy behövs. Kontroll: `bunx wrangler secret list`
+ska visa namnet ROSLAGSTAK_WEBHOOK_SECRET.
 
-## 3. Sätt samma värde på sajtsidan
-Sajten (Hemsideagentens område, mapp `webbsida/`) måste skicka samma värde i headern `X-Webhook-Secret`
-till URL:en ovan. Hemsideagenten anger exakt var: Worker-secret eller miljövariabel för sajtens
-formulär-funktion. Klistra in samma värde där (med `wrangler secret put <NAMN>` i sajtens Worker) och deploya sajten
-om det krävs för att den ska läsa värdet. Kontrollera också att sajtens webhook-URL är exakt den ovan
-(det gamla Lovable-domänet fungerar inte längre).
+## 3. Peka om sajtens vidarebefordran (samma värde)
+Öppna sajtens Supabase (projekt `yrxvkslqfertydvrfymb`) > SQL Editor. Byt ut VÄRDET_HÄR mot värdet från urklipp
+(Ctrl+V) och kör:
 
-## 4. Testa (utan att skapa riktig lead-data som blir kvar)
-Claude kör efter att du sagt till (secreten hämtas ur urklipp eller anges av dig i terminalen):
+    insert into public.webhook_config (key, value) values
+      ('saljtak_url', 'https://admin-vt6.tejnevidar.workers.dev/api/public/roslagstak-webhook'),
+      ('saljtak_secret', 'VÄRDET_HÄR')
+    on conflict (key) do update set value = excluded.value;
 
-    curl -s -X POST https://admin-vt6.tejnevidar.workers.dev/api/public/roslagstak-webhook ^
-      -H "Content-Type: application/json" -H "X-Webhook-Secret: %SECRET%" ^
-      -d "{\"id\":\"ZZTEST-1\",\"mode\":\"consultation\",\"name\":\"ZZ Test\",\"phone\":\"070 000 00 99\",\"email\":\"\"}"
+Om tabellen har andra kolumnnamn än `key` och `value`: kör först `select * from public.webhook_config limit 0;`
+och anpassa (visa inte befintliga värden). Kontrollera att URL:en är exakt ovan, utan avslutande snedstreck.
 
-Förväntat: 201 och `status: created` (tom e-post fungerar). Kör samma anrop igen: 200 `duplicate`. Fel secret: 401.
-Testleaden raderas efteråt.
+## 4. Testa
+1. Skicka en riktig förfrågan via formuläret på sajten (namn, telefon, adress; en gång med e-post och en gång utan).
+2. I CRM > Webhook-loggar (eller Supabase SQL i CRM-projektet):
+   `select created_at, status_code, status from webhook_logs where source = 'roslagstak' order by created_at desc limit 5;`
+   Förväntat: 201 `created`. Fel secret ger 401, saknad secret på Workern 500 `misconfigured`.
+3. Om inget dyker upp: i sajtens Supabase, `select * from net._http_response order by created desc limit 5;` visar
+   pg_nets svar (statuskod och fel, t.ex. gammal URL eller timeout).
+4. Radera testleaden i CRM efteråt.
 
-## 5. Efter test
-- Sajtens riktiga formulär: skicka ett formulär (med och utan e-post) och kontrollera att leaden dyker upp i CRM.
-- Rescue av missade förfrågningar 09-04..09-27: se `scripts/rescue-missed-quotes.ts` (körs först efter besked från projektledaren).
+## 5. Rescue av missade förfrågningar 2026-09-04..09-27
+Hemsideagenten exporterar raderna från `quote_requests` (skapade efter 2026-09-04 00:10 UTC) till en JSON-fil. Därefter:
+torrkörning med `bun run scripts/rescue-missed-quotes.ts <fil>.json`, sedan `--send` med `WEBHOOK_SECRET` satt. Körs först
+efter besked från projektledaren. Skriptet är idempotent (external_id `roslagstak:<id>`).
 
 ## Tillbaka
-`bunx wrangler secret delete ROSLAGSTAK_WEBHOOK_SECRET` tar bort den (webhooken svarar då 500 igen).
+- CRM-sidan: `bunx wrangler secret delete ROSLAGSTAK_WEBHOOK_SECRET` (webhooken svarar då 500 igen).
+- Sajtsidan: sätt `saljtak_url` och `saljtak_secret` till de tidigare värdena (spara dem innan steg 3 om de behövs).
