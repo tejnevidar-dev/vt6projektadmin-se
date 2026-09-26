@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUserRoles } from "@/hooks/use-role";
+import { computeMargin, parseMarginConfig, DEFAULT_MARGIN_CONFIG, type MarginConfig } from "@/lib/margin";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -86,6 +88,23 @@ export function QuickPriceCalculator({ onSaved }: Props) {
       id: 1, moms_procent: 25, rot_procent: 30, rot_tak_per_agare: 50000, taktvatt_min_pris: 10000,
     }),
     [input, items, settings],
+  );
+
+  // Marginalen (täckningsbidrag) visas bara för admin, före offerten skickas.
+  const { isAdmin } = useUserRoles();
+  const [marginCfg, setMarginCfg] = useState<MarginConfig>(DEFAULT_MARGIN_CONFIG);
+  useEffect(() => {
+    if (!isAdmin) return;
+    (supabase.from("app_settings" as any) as any)
+      .select("value")
+      .eq("key", "margin_config")
+      .maybeSingle()
+      .then(({ data }: any) => setMarginCfg(parseMarginConfig(data?.value)))
+      .catch(() => setMarginCfg(DEFAULT_MARGIN_CONFIG));
+  }, [isAdmin]);
+  const margin = useMemo(
+    () => (input.service === "takbyte" ? computeMargin({ exVat: result.exMoms, materialSum: result.materialSum, areaKvm: input.areaKvm }, marginCfg) : null),
+    [input.service, input.areaKvm, result.exMoms, result.materialSum, marginCfg],
   );
 
   const switchService = (service: QuickService) => {
@@ -465,6 +484,24 @@ export function QuickPriceCalculator({ onSaved }: Props) {
                 <div className="text-xs text-muted-foreground">Kunden betalar</div>
                 <div className="text-2xl font-bold">{formatKr(result.attBetala)}</div>
               </div>
+
+              {isAdmin && margin && result.exMoms > 0 && (
+                <div className="rounded-lg border border-dashed border-border p-3 text-xs">
+                  <div className="mb-1 font-medium">Marginal (bara admin)</div>
+                  <div className="space-y-0.5">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Kundpris exkl. moms</span><span>{formatKr(margin.revenueExVat)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Material ({marginCfg.material_cost_pct} % av kundpris)</span><span>-{formatKr(margin.material)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">UE-arbete ({marginCfg.ue_price_per_kvm} kr/m²)</span><span>-{formatKr(margin.ueLabour)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Container</span><span>-{formatKr(margin.container)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Ställning</span><span>-{formatKr(margin.scaffold)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Provision ({marginCfg.provision_pct} %)</span><span>-{formatKr(margin.provision)}</span></div>
+                    <div className={"mt-1 flex justify-between border-t border-border pt-1 font-semibold " + (margin.tb < 0 ? "text-destructive" : "")}>
+                      <span>TB</span>
+                      <span>{formatKr(margin.tb)} ({margin.tbPct.toFixed(1)} %)</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <Button className="w-full" onClick={handleSaveAndOffer} disabled={saving}>
                 {saving ? (
