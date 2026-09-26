@@ -4,6 +4,8 @@ Förutsättning: Vidar har kört de fyra migrationerna i Supabase (SQL-editorn),
 `20260927090000_extern_seller_base_rls.sql`, `20260927090100_offer_flow_and_approval.sql`,
 `20260927090200_customer_paid.sql`, `20260927100000_ue_package1.sql`. Pusha och deploya inte före det.
 
+## Snabbväg: kör `cd crm && bun run scripts/live-test.ts` (med WEBHOOK_SECRET satt för webbformuläret). Skriptet kör alla publika kontroller och städar. Resten nedan är det som måste göras manuellt.
+
 ## 0. Verifiera migrationerna (skrivskyddat)
 - [ ] `select column_name from information_schema.columns where table_name='leads' and column_name in ('customer_paid_at','customer_paid_amount')` ger 2 rader.
 - [ ] Tabellerna `company_signature`, `work_orders`, `work_order_offers` finns; `subcontractors.pipeline_status` finns.
