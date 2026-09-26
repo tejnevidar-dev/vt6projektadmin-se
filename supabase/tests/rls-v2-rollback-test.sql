@@ -24,7 +24,7 @@ END $f$;
 
 DO $$
 DECLARE
-  E uuid; H uuid; A uuid; L1 uuid; L2 uuid; S1 uuid; S2 uuid; o text := '';
+  E uuid; H uuid; A uuid; L1 uuid; L2 uuid; S1 uuid; S2 uuid; o text := ''; r text;
 BEGIN
   SELECT id INTO E FROM profiles WHERE email = 'jannebostrand@gmail.com';
   SELECT id INTO H FROM profiles WHERE email = 'hermanbarth97@gmail.com';
@@ -86,6 +86,15 @@ BEGIN
   o := o || E'\nA godkann extern sig (ok:1): ' || pg_temp.t(format($q$update signature_requests set status = 'pending', company_signer_name = 'Vidar' where id = %L$q$, S1));
   o := o || E'\nA customer_paid_at (ok:1): ' || pg_temp.t(format($q$update leads set customer_paid_at = now(), customer_paid_amount = 1000 where id = %L$q$, L2));
   o := o || E'\nA ser alla sigs (>=2): ' || pg_temp.c($q$select 1 from signature_requests$q$);
+  RESET ROLE;
+
+  -- Servern (service_role) måste kunna skriva: fångar felet "permission denied for schema private".
+  SET LOCAL ROLE service_role;
+  BEGIN
+    INSERT INTO leads (name) VALUES ('ZZ service_role'); UPDATE leads SET notes = 'x' WHERE name = 'ZZ service_role'; r := 'ok';
+  EXCEPTION WHEN others THEN r := 'FEL: ' || left(SQLERRM, 80); END;
+  o := o || E'
+service_role skriver leads (ok): ' || r;
   RESET ROLE;
 
   RAISE EXCEPTION E'RLS-RESULTAT (rullas tillbaka):%', o;
