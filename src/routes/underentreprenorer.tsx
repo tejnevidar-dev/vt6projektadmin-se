@@ -138,6 +138,13 @@ function SubcontractorsPage() {
       address: editing.address || null,
       f_skatt: !!editing.f_skatt,
       agreement_signed_at: editing.agreement_signed_at || null,
+      insurance_company: editing.insurance_company || null,
+      insurance_expires_at: editing.insurance_expires_at || null,
+      id06_number: editing.id06_number || null,
+      id06_valid_until: editing.id06_valid_until || null,
+      is_posted_worker: !!editing.is_posted_worker,
+      a1_valid_until: editing.a1_valid_until || null,
+      priority: Number(editing.priority) > 0 ? Number(editing.priority) : 100,
       active: editing.active !== false,
       notes: editing.notes || null,
     };
@@ -364,6 +371,61 @@ function SubcontractorsPage() {
                   }
                 />
               </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label>Försäkringsbolag</Label>
+                  <Input
+                    value={editing.insurance_company ?? ""}
+                    onChange={(e) => setEditing({ ...editing, insurance_company: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Försäkring giltig t.o.m.</Label>
+                  <Input
+                    type="date"
+                    value={editing.insurance_expires_at ?? ""}
+                    onChange={(e) => setEditing({ ...editing, insurance_expires_at: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>ID06-nummer</Label>
+                  <Input
+                    value={editing.id06_number ?? ""}
+                    onChange={(e) => setEditing({ ...editing, id06_number: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>ID06 giltigt t.o.m.</Label>
+                  <Input
+                    type="date"
+                    value={editing.id06_valid_until ?? ""}
+                    onChange={(e) => setEditing({ ...editing, id06_valid_until: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>A1-intyg giltigt t.o.m. (utstationering)</Label>
+                  <Input
+                    type="date"
+                    value={editing.a1_valid_until ?? ""}
+                    onChange={(e) => setEditing({ ...editing, a1_valid_until: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Turordning (lägre först)</Label>
+                  <Input
+                    type="number"
+                    value={editing.priority ?? 100}
+                    onChange={(e) => setEditing({ ...editing, priority: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <Switch
+                  checked={!!editing.is_posted_worker}
+                  onCheckedChange={(v) => setEditing({ ...editing, is_posted_worker: v })}
+                />
+                Utstationerad arbetskraft (kräver A1-intyg)
+              </label>
               <div className="flex items-center gap-6">
                 <label className="flex items-center gap-2 text-sm">
                   <Switch

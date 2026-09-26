@@ -40,6 +40,11 @@ export interface Subcontractor {
   insurance_expires_at: string | null;
   agreement_signed_at: string | null;
   hourly_rate: number | null;
+  id06_number: string | null;
+  id06_valid_until: string | null;
+  is_posted_worker: boolean;
+  a1_valid_until: string | null;
+  priority: number;
   active: boolean;
   notes: string | null;
   created_at: string;
@@ -297,10 +302,16 @@ export function invoiceSummary(agreedPrice: number | null, invoices: Subcontract
   };
 }
 
-/** Varningar för saknade uppgifter (F-skatt, avtal). */
+/** Saknade eller utgångna krav som blockerar tilldelning (speglar public.ue_missing_requirements). */
 export function expiryWarnings(sc: Subcontractor): string[] {
   const out: string[] = [];
+  const today = new Date().toISOString().slice(0, 10);
+  const bad = (d: string | null) => !d || d < today;
+  if (!sc.user_id) out.push("Inloggning saknas");
   if (!sc.f_skatt) out.push("F-skatt saknas");
+  if (bad(sc.insurance_expires_at)) out.push("Försäkring saknas/utgången");
   if (!sc.agreement_signed_at) out.push("Avtal saknas");
+  if (bad(sc.id06_valid_until)) out.push("ID06 saknas/utgånget");
+  if (sc.is_posted_worker && bad(sc.a1_valid_until)) out.push("A1-intyg saknas/utgånget");
   return out;
 }

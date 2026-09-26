@@ -29,6 +29,8 @@ interface Props {
   isAdmin: boolean;
   /** Arbetsledare/admin/säljare tilldelad jobbet -- får skapa ÄTA. */
   canCreate: boolean;
+  /** UE: ÄTA-begäran kräver alltid godkännande, oavsett belopp. */
+  forceApproval?: boolean;
 }
 
 const STATUS_LABEL: Record<AtaApprovalStatus, string> = {
@@ -45,7 +47,7 @@ const STATUS_VARIANT: Record<AtaApprovalStatus, "default" | "secondary" | "destr
   rejected: "destructive",
 };
 
-export function AtaCard({ jobId, isAdmin, canCreate }: Props) {
+export function AtaCard({ jobId, isAdmin, canCreate, forceApproval }: Props) {
   const [atas, setAtas] = useState<Ata[]>([]);
   const [threshold, setThreshold] = useState(10000);
   const [open, setOpen] = useState(false);
@@ -78,7 +80,7 @@ export function AtaCard({ jobId, isAdmin, canCreate }: Props) {
     }
     setBusy(true);
     try {
-      await createAta({ jobId, totalAmount: amount, description: form.description });
+      await createAta({ jobId, totalAmount: amount, description: form.description, forceApproval });
       toast.success(
         amount > threshold ? "ÄTA skapad – väntar på godkännande" : "ÄTA skapad",
       );

@@ -35,9 +35,12 @@ import { Route as BokadeRouteImport } from './routes/bokade'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UeIndexRouteImport } from './routes/ue.index'
 import { Route as JobbIndexRouteImport } from './routes/jobb.index'
 import { Route as EkonomiIndexRouteImport } from './routes/ekonomi.index'
 import { Route as EgenkontrollerIndexRouteImport } from './routes/egenkontroller.index'
+import { Route as ArbetsorderIndexRouteImport } from './routes/arbetsorder.index'
+import { Route as UeJobIdRouteImport } from './routes/ue.$jobId'
 import { Route as SigneraTokenRouteImport } from './routes/signera.$token'
 import { Route as OffertNyRouteImport } from './routes/offert.ny'
 import { Route as KalkylLeadIdRouteImport } from './routes/kalkyl.$leadId'
@@ -46,6 +49,7 @@ import { Route as FotoTokenRouteImport } from './routes/foto.$token'
 import { Route as EkonomiRotRouteImport } from './routes/ekonomi.rot'
 import { Route as EkonomiLeadIdRouteImport } from './routes/ekonomi.$leadId'
 import { Route as EgenkontrollerInstruktionerRouteImport } from './routes/egenkontroller.instruktioner'
+import { Route as ArbetsorderTokenRouteImport } from './routes/arbetsorder.$token'
 import { Route as ApiSendSelfChecksRouteImport } from './routes/api/send-self-checks'
 import { Route as ApiProcessWorkOrderRouteImport } from './routes/api/process-work-order'
 import { Route as ApiAiPitchRouteImport } from './routes/api/ai-pitch'
@@ -56,6 +60,7 @@ import { Route as ApiPublicLeadInboxRouteImport } from './routes/api/public/lead
 import { Route as ApiHooksSupabaseAuthEmailRouteImport } from './routes/api/hooks/supabase-auth-email'
 import { Route as ApiHooksResendEventsRouteImport } from './routes/api/hooks/resend-events'
 import { Route as ApiHooksInboundEmailRouteImport } from './routes/api/hooks/inbound-email'
+import { Route as ApiPublicWorkOrderTokenRouteImport } from './routes/api/public/work-order.$token'
 import { Route as ApiPublicSignTokenRouteImport } from './routes/api/public/sign.$token'
 import { Route as ApiPublicSelfCheckPdfSplatRouteImport } from './routes/api/public/self-check-pdf.$'
 import { Route as ApiPublicPhotosTokenRouteImport } from './routes/api/public/photos.$token'
@@ -191,6 +196,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UeIndexRoute = UeIndexRouteImport.update({
+  id: '/ue/',
+  path: '/ue/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JobbIndexRoute = JobbIndexRouteImport.update({
   id: '/jobb/',
   path: '/jobb/',
@@ -205,6 +215,16 @@ const EgenkontrollerIndexRoute = EgenkontrollerIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => EgenkontrollerRoute,
+} as any)
+const ArbetsorderIndexRoute = ArbetsorderIndexRouteImport.update({
+  id: '/arbetsorder/',
+  path: '/arbetsorder/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UeJobIdRoute = UeJobIdRouteImport.update({
+  id: '/ue/$jobId',
+  path: '/ue/$jobId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const SigneraTokenRoute = SigneraTokenRouteImport.update({
   id: '/signera/$token',
@@ -247,6 +267,11 @@ const EgenkontrollerInstruktionerRoute =
     path: '/instruktioner',
     getParentRoute: () => EgenkontrollerRoute,
   } as any)
+const ArbetsorderTokenRoute = ArbetsorderTokenRouteImport.update({
+  id: '/arbetsorder/$token',
+  path: '/arbetsorder/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSendSelfChecksRoute = ApiSendSelfChecksRouteImport.update({
   id: '/api/send-self-checks',
   path: '/api/send-self-checks',
@@ -297,6 +322,11 @@ const ApiHooksResendEventsRoute = ApiHooksResendEventsRouteImport.update({
 const ApiHooksInboundEmailRoute = ApiHooksInboundEmailRouteImport.update({
   id: '/api/hooks/inbound-email',
   path: '/api/hooks/inbound-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWorkOrderTokenRoute = ApiPublicWorkOrderTokenRouteImport.update({
+  id: '/api/public/work-order/$token',
+  path: '/api/public/work-order/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSignTokenRoute = ApiPublicSignTokenRouteImport.update({
@@ -352,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
+  '/arbetsorder/$token': typeof ArbetsorderTokenRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/ekonomi/$leadId': typeof EkonomiLeadIdRoute
   '/ekonomi/rot': typeof EkonomiRotRoute
@@ -360,9 +391,12 @@ export interface FileRoutesByFullPath {
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/offert/ny': typeof OffertNyRoute
   '/signera/$token': typeof SigneraTokenRoute
+  '/ue/$jobId': typeof UeJobIdRoute
+  '/arbetsorder/': typeof ArbetsorderIndexRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/ekonomi/': typeof EkonomiIndexRoute
   '/jobb/': typeof JobbIndexRoute
+  '/ue/': typeof UeIndexRoute
   '/api/hooks/inbound-email': typeof ApiHooksInboundEmailRoute
   '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
@@ -374,6 +408,7 @@ export interface FileRoutesByFullPath {
   '/api/public/photos/$token': typeof ApiPublicPhotosTokenRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
+  '/api/public/work-order/$token': typeof ApiPublicWorkOrderTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -404,6 +439,7 @@ export interface FileRoutesByTo {
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
+  '/arbetsorder/$token': typeof ArbetsorderTokenRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/ekonomi/$leadId': typeof EkonomiLeadIdRoute
   '/ekonomi/rot': typeof EkonomiRotRoute
@@ -412,9 +448,12 @@ export interface FileRoutesByTo {
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/offert/ny': typeof OffertNyRoute
   '/signera/$token': typeof SigneraTokenRoute
+  '/ue/$jobId': typeof UeJobIdRoute
+  '/arbetsorder': typeof ArbetsorderIndexRoute
   '/egenkontroller': typeof EgenkontrollerIndexRoute
   '/ekonomi': typeof EkonomiIndexRoute
   '/jobb': typeof JobbIndexRoute
+  '/ue': typeof UeIndexRoute
   '/api/hooks/inbound-email': typeof ApiHooksInboundEmailRoute
   '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
@@ -426,6 +465,7 @@ export interface FileRoutesByTo {
   '/api/public/photos/$token': typeof ApiPublicPhotosTokenRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
+  '/api/public/work-order/$token': typeof ApiPublicWorkOrderTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -458,6 +498,7 @@ export interface FileRoutesById {
   '/api/ai-pitch': typeof ApiAiPitchRoute
   '/api/process-work-order': typeof ApiProcessWorkOrderRoute
   '/api/send-self-checks': typeof ApiSendSelfChecksRoute
+  '/arbetsorder/$token': typeof ArbetsorderTokenRoute
   '/egenkontroller/instruktioner': typeof EgenkontrollerInstruktionerRoute
   '/ekonomi/$leadId': typeof EkonomiLeadIdRoute
   '/ekonomi/rot': typeof EkonomiRotRoute
@@ -466,9 +507,12 @@ export interface FileRoutesById {
   '/kalkyl/$leadId': typeof KalkylLeadIdRoute
   '/offert/ny': typeof OffertNyRoute
   '/signera/$token': typeof SigneraTokenRoute
+  '/ue/$jobId': typeof UeJobIdRoute
+  '/arbetsorder/': typeof ArbetsorderIndexRoute
   '/egenkontroller/': typeof EgenkontrollerIndexRoute
   '/ekonomi/': typeof EkonomiIndexRoute
   '/jobb/': typeof JobbIndexRoute
+  '/ue/': typeof UeIndexRoute
   '/api/hooks/inbound-email': typeof ApiHooksInboundEmailRoute
   '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
@@ -480,6 +524,7 @@ export interface FileRoutesById {
   '/api/public/photos/$token': typeof ApiPublicPhotosTokenRoute
   '/api/public/self-check-pdf/$': typeof ApiPublicSelfCheckPdfSplatRoute
   '/api/public/sign/$token': typeof ApiPublicSignTokenRoute
+  '/api/public/work-order/$token': typeof ApiPublicWorkOrderTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -513,6 +558,7 @@ export interface FileRouteTypes {
     | '/api/ai-pitch'
     | '/api/process-work-order'
     | '/api/send-self-checks'
+    | '/arbetsorder/$token'
     | '/egenkontroller/instruktioner'
     | '/ekonomi/$leadId'
     | '/ekonomi/rot'
@@ -521,9 +567,12 @@ export interface FileRouteTypes {
     | '/kalkyl/$leadId'
     | '/offert/ny'
     | '/signera/$token'
+    | '/ue/$jobId'
+    | '/arbetsorder/'
     | '/egenkontroller/'
     | '/ekonomi/'
     | '/jobb/'
+    | '/ue/'
     | '/api/hooks/inbound-email'
     | '/api/hooks/resend-events'
     | '/api/hooks/supabase-auth-email'
@@ -535,6 +584,7 @@ export interface FileRouteTypes {
     | '/api/public/photos/$token'
     | '/api/public/self-check-pdf/$'
     | '/api/public/sign/$token'
+    | '/api/public/work-order/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -565,6 +615,7 @@ export interface FileRouteTypes {
     | '/api/ai-pitch'
     | '/api/process-work-order'
     | '/api/send-self-checks'
+    | '/arbetsorder/$token'
     | '/egenkontroller/instruktioner'
     | '/ekonomi/$leadId'
     | '/ekonomi/rot'
@@ -573,9 +624,12 @@ export interface FileRouteTypes {
     | '/kalkyl/$leadId'
     | '/offert/ny'
     | '/signera/$token'
+    | '/ue/$jobId'
+    | '/arbetsorder'
     | '/egenkontroller'
     | '/ekonomi'
     | '/jobb'
+    | '/ue'
     | '/api/hooks/inbound-email'
     | '/api/hooks/resend-events'
     | '/api/hooks/supabase-auth-email'
@@ -587,6 +641,7 @@ export interface FileRouteTypes {
     | '/api/public/photos/$token'
     | '/api/public/self-check-pdf/$'
     | '/api/public/sign/$token'
+    | '/api/public/work-order/$token'
   id:
     | '__root__'
     | '/'
@@ -618,6 +673,7 @@ export interface FileRouteTypes {
     | '/api/ai-pitch'
     | '/api/process-work-order'
     | '/api/send-self-checks'
+    | '/arbetsorder/$token'
     | '/egenkontroller/instruktioner'
     | '/ekonomi/$leadId'
     | '/ekonomi/rot'
@@ -626,9 +682,12 @@ export interface FileRouteTypes {
     | '/kalkyl/$leadId'
     | '/offert/ny'
     | '/signera/$token'
+    | '/ue/$jobId'
+    | '/arbetsorder/'
     | '/egenkontroller/'
     | '/ekonomi/'
     | '/jobb/'
+    | '/ue/'
     | '/api/hooks/inbound-email'
     | '/api/hooks/resend-events'
     | '/api/hooks/supabase-auth-email'
@@ -640,6 +699,7 @@ export interface FileRouteTypes {
     | '/api/public/photos/$token'
     | '/api/public/self-check-pdf/$'
     | '/api/public/sign/$token'
+    | '/api/public/work-order/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -672,6 +732,7 @@ export interface RootRouteChildren {
   ApiAiPitchRoute: typeof ApiAiPitchRoute
   ApiProcessWorkOrderRoute: typeof ApiProcessWorkOrderRoute
   ApiSendSelfChecksRoute: typeof ApiSendSelfChecksRoute
+  ArbetsorderTokenRoute: typeof ArbetsorderTokenRoute
   EkonomiLeadIdRoute: typeof EkonomiLeadIdRoute
   EkonomiRotRoute: typeof EkonomiRotRoute
   FotoTokenRoute: typeof FotoTokenRoute
@@ -679,8 +740,11 @@ export interface RootRouteChildren {
   KalkylLeadIdRoute: typeof KalkylLeadIdRoute
   OffertNyRoute: typeof OffertNyRoute
   SigneraTokenRoute: typeof SigneraTokenRoute
+  UeJobIdRoute: typeof UeJobIdRoute
+  ArbetsorderIndexRoute: typeof ArbetsorderIndexRoute
   EkonomiIndexRoute: typeof EkonomiIndexRoute
   JobbIndexRoute: typeof JobbIndexRoute
+  UeIndexRoute: typeof UeIndexRoute
   ApiHooksInboundEmailRoute: typeof ApiHooksInboundEmailRoute
   ApiHooksResendEventsRoute: typeof ApiHooksResendEventsRoute
   ApiHooksSupabaseAuthEmailRoute: typeof ApiHooksSupabaseAuthEmailRoute
@@ -692,6 +756,7 @@ export interface RootRouteChildren {
   ApiPublicPhotosTokenRoute: typeof ApiPublicPhotosTokenRoute
   ApiPublicSelfCheckPdfSplatRoute: typeof ApiPublicSelfCheckPdfSplatRoute
   ApiPublicSignTokenRoute: typeof ApiPublicSignTokenRoute
+  ApiPublicWorkOrderTokenRoute: typeof ApiPublicWorkOrderTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -878,6 +943,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ue/': {
+      id: '/ue/'
+      path: '/ue'
+      fullPath: '/ue/'
+      preLoaderRoute: typeof UeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jobb/': {
       id: '/jobb/'
       path: '/jobb'
@@ -898,6 +970,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/egenkontroller/'
       preLoaderRoute: typeof EgenkontrollerIndexRouteImport
       parentRoute: typeof EgenkontrollerRoute
+    }
+    '/arbetsorder/': {
+      id: '/arbetsorder/'
+      path: '/arbetsorder'
+      fullPath: '/arbetsorder/'
+      preLoaderRoute: typeof ArbetsorderIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ue/$jobId': {
+      id: '/ue/$jobId'
+      path: '/ue/$jobId'
+      fullPath: '/ue/$jobId'
+      preLoaderRoute: typeof UeJobIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/signera/$token': {
       id: '/signera/$token'
@@ -954,6 +1040,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/egenkontroller/instruktioner'
       preLoaderRoute: typeof EgenkontrollerInstruktionerRouteImport
       parentRoute: typeof EgenkontrollerRoute
+    }
+    '/arbetsorder/$token': {
+      id: '/arbetsorder/$token'
+      path: '/arbetsorder/$token'
+      fullPath: '/arbetsorder/$token'
+      preLoaderRoute: typeof ArbetsorderTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/send-self-checks': {
       id: '/api/send-self-checks'
@@ -1023,6 +1116,13 @@ declare module '@tanstack/react-router' {
       path: '/api/hooks/inbound-email'
       fullPath: '/api/hooks/inbound-email'
       preLoaderRoute: typeof ApiHooksInboundEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/work-order/$token': {
+      id: '/api/public/work-order/$token'
+      path: '/api/public/work-order/$token'
+      fullPath: '/api/public/work-order/$token'
+      preLoaderRoute: typeof ApiPublicWorkOrderTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/sign/$token': {
@@ -1100,6 +1200,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiPitchRoute: ApiAiPitchRoute,
   ApiProcessWorkOrderRoute: ApiProcessWorkOrderRoute,
   ApiSendSelfChecksRoute: ApiSendSelfChecksRoute,
+  ArbetsorderTokenRoute: ArbetsorderTokenRoute,
   EkonomiLeadIdRoute: EkonomiLeadIdRoute,
   EkonomiRotRoute: EkonomiRotRoute,
   FotoTokenRoute: FotoTokenRoute,
@@ -1107,8 +1208,11 @@ const rootRouteChildren: RootRouteChildren = {
   KalkylLeadIdRoute: KalkylLeadIdRoute,
   OffertNyRoute: OffertNyRoute,
   SigneraTokenRoute: SigneraTokenRoute,
+  UeJobIdRoute: UeJobIdRoute,
+  ArbetsorderIndexRoute: ArbetsorderIndexRoute,
   EkonomiIndexRoute: EkonomiIndexRoute,
   JobbIndexRoute: JobbIndexRoute,
+  UeIndexRoute: UeIndexRoute,
   ApiHooksInboundEmailRoute: ApiHooksInboundEmailRoute,
   ApiHooksResendEventsRoute: ApiHooksResendEventsRoute,
   ApiHooksSupabaseAuthEmailRoute: ApiHooksSupabaseAuthEmailRoute,
@@ -1121,6 +1225,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPhotosTokenRoute: ApiPublicPhotosTokenRoute,
   ApiPublicSelfCheckPdfSplatRoute: ApiPublicSelfCheckPdfSplatRoute,
   ApiPublicSignTokenRoute: ApiPublicSignTokenRoute,
+  ApiPublicWorkOrderTokenRoute: ApiPublicWorkOrderTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

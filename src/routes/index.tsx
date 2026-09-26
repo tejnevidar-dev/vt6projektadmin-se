@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
 function HomeRedirect() {
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { isAdmin, isEkonomi, isEkonomiOnly, isInternal, isExternal, loading } = useUserRoles();
+  const { isAdmin, isEkonomi, isEkonomiOnly, isInternal, isExternal, roles, loading } = useUserRoles();
   const { side } = useWorkspace();
   // UX shortcut only, same as valj-panel.tsx — RequireAuth on the actual destination
   // route is what enforces this. See src/hooks/use-training-gate.ts.
@@ -29,6 +29,10 @@ function HomeRedirect() {
     if (authLoading || loading || gate.loading) return;
     if (!isAuthenticated) {
       navigate({ to: "/login", search: {} });
+      return;
+    }
+    if (!isAdmin && roles.includes("underentreprenor")) {
+      navigate({ to: "/ue" });
       return;
     }
     if (isEkonomiOnly) {
@@ -53,7 +57,7 @@ function HomeRedirect() {
       return;
     }
     navigate({ to: "/dashboard" });
-  }, [authLoading, loading, isAuthenticated, isAdmin, isEkonomi, isEkonomiOnly, isInternal, isExternal, side, navigate, gate.loading, gate.blocked]);
+  }, [authLoading, loading, isAuthenticated, isAdmin, isEkonomi, isEkonomiOnly, isInternal, isExternal, roles, side, navigate, gate.loading, gate.blocked]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">

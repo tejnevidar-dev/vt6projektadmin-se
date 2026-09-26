@@ -93,6 +93,10 @@ function buildNavItems(isAdmin: boolean, isUE = false): NavItem[] {
       ],
     },
     { to: "/personal", label: "Personal", icon: HardHat, group: "Hantera", side: "both", adminOnly: true },
+    ...(isUE && !isAdmin
+      ? [{ to: "/ue", label: "Mina jobb", icon: Hammer, group: "Arbeta", side: "intern" } as NavItem]
+      : []),
+    { to: "/arbetsorder", label: "Arbetsorder", icon: ClipboardList, group: "Hantera", side: "both", adminOnly: true },
     ...(isAdmin || isUE
       ? [
           {

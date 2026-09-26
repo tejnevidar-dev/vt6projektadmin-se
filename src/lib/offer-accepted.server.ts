@@ -53,6 +53,10 @@ export async function markOfferAccepted(sb: any, row: any, signedAt: Date): Prom
       sellerId: lead.seller_id ?? lead.created_by ?? row.created_by,
       idempotencySuffix: row.id,
     });
+
+    // Arbetsorder skapas automatiskt och skickas till UE (eller väntar på UE-pris).
+    const { createWorkOrderForLead } = await import("@/lib/work-order.server");
+    await createWorkOrderForLead(sb, lead.id);
   } catch (err) {
     console.error("markOfferAccepted failed:", err);
   }

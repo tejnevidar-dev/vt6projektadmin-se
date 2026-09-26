@@ -67,7 +67,9 @@ export default defineConfig(async ({ mode, command }) => {
         // activity, notifies the assigned seller in-app (see notifications system).
         "0 6 * * *": "stale-lead-reminders",
         // Every 10 min: SLA reminders for unanswered leads, silence + intake-failure alerts.
-        "*/10 * * * *": "lead-alerts",
+        "*/10 * * * *": ["lead-alerts", "work-order-timeouts"],
+        // Daily: alerts for expiring UE insurance / ID06 / A1 / documents.
+        "0 7 * * *": "ue-compliance",
       },
     });
   }

@@ -49,10 +49,11 @@ export async function createAta(input: {
   jobId: string;
   totalAmount: number;
   description: string;
+  forceApproval?: boolean;
 }): Promise<Ata> {
   const threshold = await getAtaApprovalThreshold();
   const { data: userData } = await supabase.auth.getUser();
-  const approval_status: AtaApprovalStatus = input.totalAmount > threshold ? "pending" : "none";
+  const approval_status: AtaApprovalStatus = input.forceApproval || input.totalAmount > threshold ? "pending" : "none";
   const { data, error } = await db
     .from("atas")
     .insert({
