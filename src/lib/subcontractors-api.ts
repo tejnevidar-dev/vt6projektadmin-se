@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const BUCKET = "subcontractor-docs";
 
-export type SubcontractorDocType = "avtal" | "forsakring" | "f_skatt" | "id" | "ovrigt";
+export type SubcontractorDocType = "avtal" | "forsakring" | "f_skatt" | "id" | "lonebevis" | "ovrigt";
 export type InvoiceStatus = "mottagen" | "godkand" | "avvisad" | "betald";
 
 export const DOC_TYPE_LABEL: Record<SubcontractorDocType, string> = {
@@ -10,6 +10,7 @@ export const DOC_TYPE_LABEL: Record<SubcontractorDocType, string> = {
   forsakring: "Försäkringsbevis",
   f_skatt: "F-skattebevis",
   id: "ID/legitimation",
+  lonebevis: "Lönebevis",
   ovrigt: "Övrigt",
 };
 
@@ -43,6 +44,8 @@ export interface Subcontractor {
   posting_notified_at: string | null;
   f_skatt_checked_at: string | null;
   kronofogden_debt: number | null;
+  tax_certificate_checked_at: string | null;
+  payroll_proof_month: string | null;
   pipeline_status: "hittad" | "kontaktad" | "samtal" | "kvalificerad" | "provjobb" | "aktiv" | "nej";
   trade: "taklaggare" | "platslagare" | "bada" | null;
   team_size: number | null;
@@ -70,6 +73,8 @@ export interface SubcontractorDocument {
   mime_type: string | null;
   file_size: number | null;
   valid_until: string | null;
+  invoice_id?: string | null;
+  period?: string | null;
   uploaded_by: string | null;
   created_at: string;
 }
@@ -167,6 +172,10 @@ export async function uploadSubcontractorDocument(params: {
   file: File;
   docType: SubcontractorDocType;
   validUntil?: string | null;
+  /** Lönebevis kopplas till en UE-faktura. */
+  invoiceId?: string | null;
+  /** Period (första dagen i månaden) som beviset gäller. */
+  period?: string | null;
   userId: string;
 }): Promise<void> {
   const path = `${params.subcontractorId}/${Date.now()}-${safeName(params.file.name)}`;
@@ -186,9 +195,24 @@ export async function uploadSubcontractorDocument(params: {
     mime_type: params.file.type || null,
     file_size: params.file.size,
     valid_until: params.validUntil || null,
+    invoice_id: params.invoiceId ?? null,
+    period: params.period ?? null,
     uploaded_by: params.userId,
   } as never);
   if (error) throw error;
+}
+
+/** Antal lönebevis per faktura (för betalningsspärren). */
+export async function countPayrollProofs(invoiceIds: string[]): Promise<Record<string, number>> {
+  if (!invoiceIds.length) return {};
+  const { data, error } = await (supabase.from("subcontractor_documents") as any)
+    .select("invoice_id")
+    .eq("doc_type", "lonebevis")
+    .in("invoice_id", invoiceIds);
+  if (error) throw error;
+  const out: Record<string, number> = {};
+  for (const r of (data ?? []) as { invoice_id: string }[]) out[r.invoice_id] = (out[r.invoice_id] ?? 0) + 1;
+  return out;
 }
 
 export async function deleteSubcontractorDocument(doc: SubcontractorDocument): Promise<void> {
@@ -327,6 +351,8 @@ export function expiryWarnings(sc: Subcontractor): string[] {
   if (sc.pipeline_status !== "aktiv" && sc.pipeline_status !== "provjobb") out.push(`Status: ${PIPELINE_LABELS[sc.pipeline_status]} (måste vara Provjobb eller Aktiv)`);
   if (!sc.user_id) out.push("Inloggning saknas");
   if (!sc.f_skatt || ageDays > 30) out.push("F-skatt saknas/kontroll äldre än 30 dagar");
+  const taxAge = sc.tax_certificate_checked_at ? (Date.parse(today) - Date.parse(sc.tax_certificate_checked_at)) / 86400000 : Infinity;
+  if (taxAge > 30) out.push("Skatteverkets intyg saknas/äldre än 30 dagar");
   if (bad(sc.insurance_expires_at)) out.push("Försäkring saknas/utgången");
   if (!sc.agreement_signed_at) out.push("Avtal saknas");
   if (bad(sc.id06_valid_until)) out.push("ID06 saknas/utgånget");

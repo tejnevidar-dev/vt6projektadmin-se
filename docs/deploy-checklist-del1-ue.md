@@ -42,3 +42,8 @@ Förutsättning: Vidar har kört de fyra migrationerna i Supabase (SQL-editorn),
 ## 5. Städa
 - [ ] Radera testleads, testoffert, signeringsbegäran, arbetsorder/erbjudanden, testjobb, UE-testposten och testanvändaren. Bekräfta 0 kvarvarande rader.
 - [ ] Uppdatera statustavlan.
+
+## 6. Tillägg efter UE-paket 2 (migration 130000)
+- [ ] Test-UE:n behöver också "Skatteverkets intyg kontrollerat" (datum idag) i /underentreprenorer, annars blockeras tilldelning (skatteverket_intyg). Månadsintyg krävs först när UE haft jobb en tidigare månad.
+- [ ] UE-faktura: försök godkänna utan lönebevis: nekas med "Ladda upp lönebevis". Ladda upp lönebevis på fakturan, godkänn: går.
+- [ ] Foto med fas "Dagslut (tätat tak)" kan laddas upp i /ue/<jobb>. Kl. 17 vardagar utan dagens foto: bell + mail till UE (cron `*/10`, task ue-day-end).

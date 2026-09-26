@@ -66,6 +66,7 @@ export default defineConfig(async ({ mode, command }) => {
         "stale-lead-reminders": { handler: path.resolve(process.cwd(), "tasks/stale-lead-reminders.ts"), description: "Stale lead reminders" },
         "lead-alerts": { handler: path.resolve(process.cwd(), "tasks/lead-alerts.ts"), description: "SLA, silence and intake-failure alerts" },
         "work-order-timeouts": { handler: path.resolve(process.cwd(), "tasks/work-order-timeouts.ts"), description: "Send work orders on to the next UE" },
+        "ue-day-end": { handler: path.resolve(process.cwd(), "tasks/ue-day-end.ts"), description: "UE day-end photo reminder" },
         "ue-compliance": { handler: path.resolve(process.cwd(), "tasks/ue-compliance.ts"), description: "Expiring UE requirements" },
       },
       // Replaces Lovable Cloud's "Jobs" schedule (send-booking-reminders, every 5 min).
@@ -76,7 +77,7 @@ export default defineConfig(async ({ mode, command }) => {
         // activity, notifies the assigned seller in-app (see notifications system).
         "0 6 * * *": "stale-lead-reminders",
         // Every 10 min: SLA reminders for unanswered leads, silence + intake-failure alerts.
-        "*/10 * * * *": ["lead-alerts", "work-order-timeouts"],
+        "*/10 * * * *": ["lead-alerts", "work-order-timeouts", "ue-day-end"],
         // Daily: alerts for expiring UE insurance / ID06 / A1 / documents.
         "0 7 * * *": "ue-compliance",
       },

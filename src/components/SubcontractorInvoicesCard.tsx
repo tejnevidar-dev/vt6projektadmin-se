@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import {
   INVOICE_STATUS_LABEL,
   deleteInvoice,
+  countPayrollProofs,
   getDocumentUrl,
   invoiceSummary,
+  uploadSubcontractorDocument,
   listJobInvoices,
   setInvoiceStatus,
   submitInvoice,
@@ -79,10 +81,33 @@ export function SubcontractorInvoicesCard({
     notes: "",
   });
   const [file, setFile] = useState<File | null>(null);
+  const [proofs, setProofs] = useState<Record<string, number>>({});
+
+  async function uploadProof(inv: SubcontractorInvoice, f: File | undefined) {
+    if (!f || !userId) return;
+    const sub = inv.subcontractor_id ?? linked;
+    if (!sub) return toast.error("Koppla ett UE-företag till projektet först");
+    try {
+      await uploadSubcontractorDocument({
+        subcontractorId: sub,
+        file: f,
+        docType: "lonebevis",
+        invoiceId: inv.id,
+        period: (inv.invoice_date ?? new Date().toISOString().slice(0, 10)).slice(0, 7) + "-01",
+        userId,
+      });
+      toast.success("Lönebevis uppladdat");
+      void load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Kunde inte ladda upp lönebeviset");
+    }
+  }
 
   const load = useCallback(async () => {
     try {
-      setInvoices(await listJobInvoices(jobId));
+      const list = await listJobInvoices(jobId);
+      setInvoices(list);
+      setProofs(await countPayrollProofs(list.map((i) => i.id)));
     } catch (e: any) {
       toast.error(e.message ?? "Kunde inte ladda fakturor");
     }
@@ -236,6 +261,15 @@ export function SubcontractorInvoicesCard({
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={STATUS_VARIANT[inv.status]}>{INVOICE_STATUS_LABEL[inv.status]}</Badge>
+              <Badge variant={(proofs[inv.id] ?? 0) > 0 ? "outline" : "destructive"}>
+                Lönebevis: {proofs[inv.id] ?? 0}
+              </Badge>
+              {(canSubmit || isAdmin) && inv.status !== "betald" && (
+                <label className="cursor-pointer rounded-md border px-2 py-1 text-xs hover:bg-muted">
+                  Ladda upp lönebevis
+                  <input type="file" className="hidden" onChange={(e) => void uploadProof(inv, e.target.files?.[0])} />
+                </label>
+              )}
               {inv.file_path && (
                 <Button
                   size="sm"
@@ -261,7 +295,8 @@ export function SubcontractorInvoicesCard({
                         toast.success("Status uppdaterad");
                         void load();
                       } catch (e: any) {
-                        toast.error(e.message);
+                        const m = String(e?.message ?? "");
+                        toast.error(m.includes("LONEBEVIS_KRAV") ? "Ladda upp lönebevis för fakturan först (Bilaga 5)." : m);
                       }
                     }}
                   >

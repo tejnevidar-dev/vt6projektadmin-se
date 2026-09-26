@@ -240,18 +240,18 @@ export function termsLines(lang: Lang, ctx: TermsContext): string[] {
   );
   out.push(
     sv
-      ? "Fast pris för ENDAST ARBETE, exkl. moms, omvänd betalningsskyldighet. Material, container och ställning tillhandahålls och bekostas av beställaren och ingår inte."
-      : "Fixed price for LABOUR ONLY, excl. VAT, reverse charge. Materials, skip and scaffolding are supplied and paid for by the client and are not included.",
+      ? "Fast pris för ENDAST ARBETE, exkl. moms, omvänd betalningsskyldighet. Material, container och ställning tillhandahålls och bekostas av beställaren, ingår inte och får inte faktureras av underentreprenören."
+      : "Fixed price for LABOUR ONLY, excl. VAT, reverse charge. Materials, skip and scaffolding are supplied and paid for by the Client, are not included and may not be invoiced by the Subcontractor.",
   );
   const ld = c.liquidated_damages;
   out.push(
     ld && ld.per_day != null && ld.cap_pct != null
       ? sv
-        ? `Vite vid försening: ${ld.per_day} kr per arbetsdag, högst ${fmtPct(ld.cap_pct)} av priset (ramavtal 5.2).`
-        : `Liquidated damages for delay: SEK ${ld.per_day} per working day, max ${fmtPct(ld.cap_pct)} of the price (framework agreement 5.2).`
+        ? `Vite vid försening som ${ue} orsakat: ${ld.per_day} kr per påbörjad arbetsdag, högst ${fmtPct(ld.cap_pct)} av priset. Väder undantas om taket hålls tätt och ${COMPANY_NAME_TO_UE} meddelas samma dag (ramavtal 5.2).`
+        : `Liquidated damages for delay caused by ${ue}: SEK ${ld.per_day} per commenced working day, capped at ${fmtPct(ld.cap_pct)} of the price. Weather is excluded if the roof is kept watertight and ${COMPANY_NAME_TO_UE} is informed the same day (framework agreement 5.2).`
       : sv
-        ? "Vite vid försening enligt ramavtalet 5.2."
-        : "Liquidated damages for delay under framework agreement 5.2.",
+        ? "Vite vid försening som underentreprenören orsakat enligt ramavtalet 5.2."
+        : "Liquidated damages for delay caused by the Subcontractor under framework agreement 5.2.",
   );
   const sk = c.skip_scaffold;
   if (sk && (sk.supplier || sk.delivery || sk.pickup)) {
@@ -261,36 +261,36 @@ export function termsLines(lang: Lang, ctx: TermsContext): string[] {
         : `Skip and scaffolding: ${[sk.supplier, sk.delivery ? `delivered ${sk.delivery}` : "", sk.pickup ? `collected ${sk.pickup}` : ""].filter(Boolean).join(", ")}.`,
     );
   } else {
-    out.push(sv ? "Container och ställning tillhandahålls av beställaren, tider meddelas av kontaktpersonen." : "Skip and scaffolding are provided by the client; times are announced by the contact person.");
+    out.push(sv ? "Container och ställning tillhandahålls av beställaren, tider meddelas av kontaktpersonen." : "Skip and scaffolding are provided by the Client; times are announced by the contact person.");
   }
   out.push(
     sv
-      ? `All kundkontakt om pris och extra arbeten går via ${COMPANY_NAME_TO_UE}. Kontaktperson: ${[c.contact.name, c.contact.phone].filter(Boolean).join(", ")}.`
-      : `All customer contact about price and extra work goes through ${COMPANY_NAME_TO_UE}. Contact person: ${[c.contact.name, c.contact.phone].filter(Boolean).join(", ")}.`,
+      ? `All kontakt med kunden om pris, extra arbeten, tider och reklamationer går via ${COMPANY_NAME_TO_UE}. Underentreprenören säljer eller utför aldrig arbete direkt åt kunden (Bilaga 6). Kontaktperson: ${[c.contact.name, c.contact.phone].filter(Boolean).join(", ")}.`
+      : `All contact with the customer about price, extra work, dates and complaints goes through ${COMPANY_NAME_TO_UE}. The Subcontractor never sells or performs work directly for the customer (Appendix 6). Contact person: ${[c.contact.name, c.contact.phone].filter(Boolean).join(", ")}.`,
   );
   const bas = [c.bas_p ? `BAS-P ${c.bas_p}` : "", c.bas_u ? `BAS-U ${c.bas_u}` : ""].filter(Boolean).join(", ");
   out.push(
     sv
-      ? `Säkerhet: taket ska vara tätt varje kväll. Fallskydd alltid. Se Bilaga 2.${bas ? ` Samordningsansvar: ${bas}.` : ""}`
-      : `Safety: the roof must be watertight every evening. Fall protection at all times. See Appendix 2.${bas ? ` Coordination responsibility: ${bas}.` : ""}`,
+      ? `Säkerhet: taket ska vara tätt vid varje arbetsdags slut. Fallskydd alltid. Se Bilaga 2.${bas ? ` Samordningsansvar: ${bas}.` : ""}`
+      : `Safety: the roof must be watertight at the end of every working day. Fall protection at all times. See Appendix 2.${bas ? ` Coordination responsibility: ${bas}.` : ""}`,
   );
   out.push(
     sv
       ? "Jobbet kan inte markeras klart utan foton och egenkontroll enligt Bilaga 3, inklusive foto på tätat tak varje kväll."
-      : "The job cannot be marked complete without photos and self-inspection under Appendix 3, including a photo of the sealed roof every evening.",
+      : "The job cannot be marked complete without photos and self-inspection in accordance with Appendix 3, including a photo of the sealed roof every evening.",
   );
   out.push(
     sv
       ? "ÄTA ersätts bara efter skriftligt förhandsgodkännande i systemet (Bilaga 4). Kundens beställningar hänvisas till " + COMPANY_NAME_TO_UE + "."
-      : "Change work is compensated only after prior written approval in the system (Appendix 4). Orders from the customer are referred to " + COMPANY_NAME_TO_UE + ".",
+      : "Change work is paid only after prior written approval in the system (Appendix 4). Requests from the customer are referred to " + COMPANY_NAME_TO_UE + ".",
   );
   const p = c.payment;
   const days = p?.days != null ? `${p.days} dagar` : null;
   const retention = p?.retention_pct != null && p?.retention_days != null;
   out.push(
     sv
-      ? `Fakturering efter godkänd slutkontroll. Betalning ${days ? `${days} efter` : "efter"} korrekt faktura och komplett lönebevis (Bilaga 5).${retention ? ` ${fmtPct(p!.retention_pct!)} hålls inne i ${p!.retention_days} dagar.` : ""}`
-      : `Invoicing after approved final inspection. Payment ${p?.days != null ? `${p.days} days after` : "after"} a correct invoice and complete proof of wages (Appendix 5).${retention ? ` ${fmtPct(p!.retention_pct!)} is retained for ${p!.retention_days} days.` : ""}`,
+      ? `Fakturering efter godkänd slutkontroll. Betalning ${days ? `${days} efter` : "efter"} korrekt faktura och komplett lönebevis (Bilaga 5).${retention ? ` ${fmtPct(p!.retention_pct!)} hålls inne och betalas ${p!.retention_days} dagar efter godkänd slutkontroll, om inga fel eller krav finns.` : ""}`
+      : `Invoicing after the approved final inspection. Payment ${p?.days != null ? `${p.days} days after` : "after"} a correct invoice and complete proof of wages (Appendix 5).${retention ? ` ${fmtPct(p!.retention_pct!)} is retained and paid ${p!.retention_days} days after the approved final inspection, provided there are no defects or claims.` : ""}`,
   );
   out.push(
     sv
@@ -385,6 +385,8 @@ export const REQUIREMENT_LABELS: Record<string, string> = {
   provjobb_pagar: "provjobb: ett jobb pågår redan (max ett åt gången)",
   utstationering_anmalan: "anmälan om utstationering till Arbetsmiljöverket",
   kronofogden: "skuld hos Kronofogden över gränsen",
+  skatteverket_intyg: "Skatteverkets intyg (max 30 dagar gammalt)",
+  manadsintyg: "månadsintyg för förra månaden",
   inloggning: "saknar inloggning",
   f_skatt: "F-skatt (kontroll max 30 dagar gammal)",
   forsakring: "giltig ansvarsförsäkring",

@@ -105,17 +105,24 @@ describe("arbetsorder: interna anteckningar och villkor", () => {
     expect(all).toContain("Ramavtal för underentreprenad mellan VT6 Invest AB och Tak AB, daterat 2026-09-30, med bilagor 1-6");
     expect(all).toContain("ENDAST ARBETE");
     expect(all).toContain("ingår inte");
-    expect(all).toContain("Taket ska vara tätt varje kväll".toLowerCase().replace("taket", "taket"));
+    expect(all).toContain("taket ska vara tätt vid varje arbetsdags slut");
+    expect(all).toContain("får inte faktureras av underentreprenören");
+    expect(all).toContain("Bilaga 6");
     expect(all).toContain("Genom att acceptera ingår Tak AB avtal");
     expect(termsLines("en", { subcontractorName: "Tak AB", frameworkDate: null, content: base }).join("\n")).toContain("LABOUR ONLY");
+    const en = termsLines("en", { subcontractorName: "Tak AB", frameworkDate: null, content: base }).join(String.fromCharCode(10));
+    expect(en).toContain("paid for by the Client");
+    expect(en).toContain("in accordance with Appendix 3");
+    expect(en).toContain("Requests from the customer");
   });
   it("vite och betalning visas med värden när de finns, annars 'enligt ramavtalet'", () => {
     const withVals = { ...base, liquidated_damages: { per_day: 500, cap_pct: 10 }, payment: { days: 30, retention_pct: 10, retention_days: 30 } };
     const a = termsLines("sv", { subcontractorName: "X", frameworkDate: null, content: withVals }).join("\n");
-    expect(a).toContain("500 kr per arbetsdag");
+    expect(a).toContain("Vite vid försening som X orsakat: 500 kr per påbörjad arbetsdag, högst 10 % av priset");
+    expect(a).toContain("Väder undantas om taket hålls tätt");
     expect(a).toContain("30 dagar efter korrekt faktura");
-    expect(a).toContain("10 % hålls inne i 30 dagar");
-    expect(termsLines("sv", { subcontractorName: "X", frameworkDate: null, content: base }).join("\n")).toContain("Vite vid försening enligt ramavtalet");
+    expect(a).toContain("10 % hålls inne och betalas 30 dagar efter godkänd slutkontroll, om inga fel eller krav finns");
+    expect(termsLines("sv", { subcontractorName: "X", frameworkDate: null, content: base }).join("\n")).toContain("Vite vid försening som underentreprenören orsakat enligt ramavtalet 5.2");
   });
 });
 
@@ -141,5 +148,16 @@ describe("validateAcceptance", () => {
     expect(validateAcceptance({ ...ok, acceptedBy: " " })).toBe("name_required");
     expect(validateAcceptance({ ...ok, personnel: [{ name: " ", status: "employee" }] })).toBe("personnel_required");
     expect(validateAcceptance({ ...ok, personnel: [{ name: "X", status: "annat" as any }] })).toBe("personnel_status_invalid");
+  });
+});
+
+describe("isDayEndReminderTime", () => {
+  it("bara kl. 17 Stockholmstid på vardagar, första tickan", async () => {
+    const { isDayEndReminderTime } = await import("@/lib/work-order.server");
+    expect(isDayEndReminderTime(new Date("2026-09-28T15:05:00Z"))).toBe(true); // mån 17:05 sommartid
+    expect(isDayEndReminderTime(new Date("2026-09-28T15:15:00Z"))).toBe(false); // 17:15
+    expect(isDayEndReminderTime(new Date("2026-09-28T14:05:00Z"))).toBe(false); // 16:05
+    expect(isDayEndReminderTime(new Date("2026-09-26T15:05:00Z"))).toBe(false); // lördag
+    expect(isDayEndReminderTime(new Date("2026-12-07T16:05:00Z"))).toBe(true); // mån 17:05 vintertid
   });
 });

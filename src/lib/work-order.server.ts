@@ -430,3 +430,68 @@ export async function processUeCompliance(sb: any, today = new Date()): Promise<
 }
 
 export const explainMissing = (missing: string[]) => missing.map((m) => REQUIREMENT_LABELS[m] ?? m);
+
+/** Ren regel: påminnelsen skickas första cron-tickan (var 10:e minut) kl. 17 Stockholmstid, vardagar. */
+export function isDayEndReminderTime(now: Date): boolean {
+  const parts = new Intl.DateTimeFormat("sv-SE", { hour: "2-digit", minute: "2-digit", weekday: "short", hour12: false, timeZone: "Europe/Stockholm" }).formatToParts(now);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  const weekday = get("weekday").toLowerCase();
+  const weekend = weekday.startsWith("lör") || weekday.startsWith("sön");
+  return !weekend && Number(get("hour")) === 17 && Number(get("minute")) < 10;
+}
+
+/** Cron: kl. 17 vardagar påminns UE med pågående jobb som saknar dagens foto på tätat tak. */
+export async function processUeDayEndReminders(sb: any, now = new Date()): Promise<{ reminded: number }> {
+  if (!isDayEndReminderTime(now)) return { reminded: 0 };
+  // "Idag" = senaste 12 timmarna (arbetsdagen ligger före kl. 17).
+  const since = new Date(now.getTime() - 12 * 3600000).toISOString();
+  const { data: jobs } = await sb
+    .from("jobs")
+    .select("id, address, assigned_to, subcontractor_id")
+    .eq("assignment_type", "underentreprenor")
+    .eq("status", "pagaende")
+    .not("assigned_to", "is", null);
+  let reminded = 0;
+  for (const j of jobs ?? []) {
+    const { count } = await sb
+      .from("job_photos")
+      .select("id", { count: "exact", head: true })
+      .eq("job_id", j.id)
+      .eq("phase", "dagslut")
+      .gte("created_at", since);
+    if ((count ?? 0) > 0) continue;
+    const link = `/ue/${j.id}`;
+    const { count: sent } = await sb
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("type", "ue_day_end")
+      .eq("link", link)
+      .gte("created_at", since);
+    if ((sent ?? 0) > 0) continue;
+    await sb.from("notifications").insert({
+      user_id: j.assigned_to,
+      type: "ue_day_end",
+      title: "Foto på tätat tak",
+      body: `Ladda upp dagens foto på tätat tak för ${j.address ?? "jobbet"} innan du går för dagen.`,
+      link,
+    });
+    if (j.subcontractor_id) {
+      const { data: sub } = await sb.from("subcontractors").select("email").eq("id", j.subcontractor_id).maybeSingle();
+      if (sub?.email) {
+        await sendAndLogEmail(sb, {
+          templateName: "lead-alert",
+          recipientEmail: sub.email,
+          idempotencyKey: `ue_day_end:${j.id}:${new Date(since).toISOString().slice(0, 10)}`,
+          templateData: {
+            heading: "Foto på tätat tak / Photo of the sealed roof",
+            intro: `VT6 Invest: ladda upp dagens foto på tätat tak för ${j.address ?? "jobbet"} innan du går för dagen. / Please upload today's photo of the sealed roof before leaving.`,
+            link: `${SITE_URL}${link}`,
+            cta: "Öppna jobbet / Open the job",
+          },
+        });
+      }
+    }
+    reminded++;
+  }
+  return { reminded };
+}

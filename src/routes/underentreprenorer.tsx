@@ -150,6 +150,8 @@ function SubcontractorsPage() {
       trade: editing.trade || null,
       team_size: editing.team_size ? Number(editing.team_size) : null,
       f_skatt_checked_at: editing.f_skatt_checked_at || null,
+      tax_certificate_checked_at: editing.tax_certificate_checked_at || null,
+      payroll_proof_month: editing.payroll_proof_month || null,
       posting_notified_at: editing.posting_notified_at || null,
       kronofogden_debt: editing.kronofogden_debt === null || editing.kronofogden_debt === undefined || (editing.kronofogden_debt as unknown) === "" ? null : Number(editing.kronofogden_debt),
       active: editing.active !== false,
@@ -477,6 +479,22 @@ function SubcontractorsPage() {
                     type="number"
                     value={editing.kronofogden_debt ?? ""}
                     onChange={(e) => setEditing({ ...editing, kronofogden_debt: e.target.value === "" ? null : Number(e.target.value) })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Skatteverkets intyg kontrollerat (datum, max 30 dagar gammalt)</Label>
+                  <Input
+                    type="date"
+                    value={editing.tax_certificate_checked_at ?? ""}
+                    onChange={(e) => setEditing({ ...editing, tax_certificate_checked_at: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Månadsintyg godkänt för månad (första dagen i månaden)</Label>
+                  <Input
+                    type="date"
+                    value={editing.payroll_proof_month ?? ""}
+                    onChange={(e) => setEditing({ ...editing, payroll_proof_month: e.target.value })}
                   />
                 </div>
                 <div className="grid gap-1.5">

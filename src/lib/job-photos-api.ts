@@ -6,7 +6,7 @@ import { prepareImageForUpload } from "@/lib/image-prepare";
 // notifications-api.ts/atas-api.ts.
 const db = supabase as any;
 
-export type PhotoPhase = "fore" | "efter";
+export type PhotoPhase = "fore" | "efter" | "dagslut";
 
 export interface JobPhoto {
   id: string;

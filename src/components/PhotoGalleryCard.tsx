@@ -36,6 +36,7 @@ export function PhotoGalleryCard({ jobId, canManage }: Props) {
   const [photoToDelete, setPhotoToDelete] = useState<JobPhoto | null>(null);
   const foreInput = useRef<HTMLInputElement>(null);
   const efterInput = useRef<HTMLInputElement>(null);
+  const dagslutInput = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     try {
@@ -96,6 +97,7 @@ export function PhotoGalleryCard({ jobId, canManage }: Props) {
 
   const fore = photos.filter((p) => p.phase === "fore");
   const efter = photos.filter((p) => p.phase === "efter");
+  const dagslut = photos.filter((p) => p.phase === "dagslut");
 
   return (
     <div className="space-y-4">
@@ -160,6 +162,24 @@ export function PhotoGalleryCard({ jobId, canManage }: Props) {
         multiple
         className="hidden"
         onChange={(e) => handleUpload(e.target.files, "efter")}
+      />
+
+      <PhotoSection
+        title="Dagslut: tätat tak (visas inte för kunden)"
+        photos={dagslut}
+        urls={urls}
+        canManage={canManage}
+        uploading={uploading === "dagslut"}
+        onUploadClick={() => dagslutInput.current?.click()}
+        onDelete={setPhotoToDelete}
+      />
+      <input
+        ref={dagslutInput}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => handleUpload(e.target.files, "dagslut")}
       />
 
       <AlertDialog open={!!photoToDelete} onOpenChange={(o) => !o && setPhotoToDelete(null)}>
