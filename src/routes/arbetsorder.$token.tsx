@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { WorkOrderAcceptForm, type AcceptancePayload } from "@/components/WorkOrderAcceptForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, FileText, Loader2, XCircle } from "lucide-react";
@@ -24,6 +24,11 @@ interface Info {
   fixedPrice: number;
   expiresAt: string;
   startDate: string | null;
+  endDate: string | null;
+  orderNumber: string | null;
+  subcontractor: { name: string; orgNumber: string | null } | null;
+  frameworkUrl: string | null;
+  terms: { sv: string[]; en: string[] };
   content: WorkOrderContent;
   attachments: { name: string; url: string }[];
 }
@@ -33,6 +38,9 @@ const fmtTime = (iso: string) =>
   new Intl.DateTimeFormat("sv-SE", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Stockholm" }).format(new Date(iso));
 
 const ERR: Record<string, string> = {
+  terms_required: "Du måste kryssa i villkoren. / You must accept the terms.",
+  name_required: "Ange ditt namn. / Enter your name.",
+  personnel_required: "Ange minst en person på plats. / Add at least one person.",
   already_answered: "Du har redan svarat på det här uppdraget. / You have already answered.",
   expired: "Tiden för att svara har gått ut. / The reply time has expired.",
   closed: "Uppdraget är inte längre tillgängligt. / The assignment is no longer available.",
@@ -45,7 +53,6 @@ function WorkOrderPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [lang, setLang] = useState<Lang>("sv");
-  const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<"accepted" | "declined" | null>(null);
 
@@ -60,13 +67,13 @@ function WorkOrderPage() {
     void load();
   }, [load]);
 
-  const respond = async (action: "accept" | "decline") => {
+  const respond = async (action: "accept" | "decline", reason = "", acceptance?: AcceptancePayload) => {
     setBusy(true);
     try {
       const res = await fetch(`/api/public/work-order/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, reason }),
+        body: JSON.stringify({ action, reason, ...(acceptance ?? {}) }),
       });
       const j = await res.json();
       if (!res.ok) {
@@ -90,7 +97,10 @@ function WorkOrderPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">{t.title}</h1>
+        <h1 className="text-xl font-semibold">
+          {t.title}
+          {info.orderNumber ? ` ${info.orderNumber}` : ""}
+        </h1>
         <div className="flex gap-1">
           {(["sv", "en"] as Lang[]).map((l) => (
             <Button key={l} size="sm" variant={lang === l ? "default" : "outline"} onClick={() => setLang(l)}>
@@ -99,7 +109,10 @@ function WorkOrderPage() {
           ))}
         </div>
       </div>
-      <p className="text-sm text-muted-foreground">{t.from}</p>
+      <p className="text-sm text-muted-foreground">
+        {t.from}
+        {info.subcontractor ? ` · ${t.subcontractor}: ${info.subcontractor.name}${info.subcontractor.orgNumber ? ` (${t.orgNo} ${info.subcontractor.orgNumber})` : ""}` : ""}
+      </p>
 
       <Card>
         <CardHeader className="pb-2">
@@ -108,9 +121,14 @@ function WorkOrderPage() {
         <CardContent className="space-y-3 text-sm">
           <Row label={t.price} value={<b>{fmtKr(info.fixedPrice)}</b>} />
           {info.startDate && <Row label={t.start} value={info.startDate} />}
+          {info.endDate && <Row label={t.end} value={info.endDate} />}
+          {c.storeys && <Row label={t.storeys} value={c.storeys} />}
+          {c.pitch && <Row label={t.pitch} value={c.pitch} />}
           {c.roof_area_kvm && <Row label={t.area} value={`${c.roof_area_kvm} m²`} />}
+          <List title={t.standardTasks} none={t.none} items={(c.standard_tasks ?? []).map((k) => t[`task_${k}`] ?? k)} />
           <List title={t.scope} none={t.none} items={c.scope.map((s) => `${s.label}: ${s.quantity} ${s.unit}`)} />
           <List title={t.materials} none={t.none} items={c.materials.map((s) => `${s.label}: ${s.quantity} ${s.unit}`)} />
+          {c.material_delivery_date && <Row label={t.materialDelivery} value={c.material_delivery_date} />}
           <Row label={t.contact} value={[c.contact.name, c.contact.phone, c.contact.email].filter(Boolean).join(" · ")} />
           {info.attachments.length > 0 && (
             <div>
@@ -150,13 +168,14 @@ function WorkOrderPage() {
             <p className="text-sm">
               {t.valid}: <b>{fmtTime(info.expiresAt)}</b>. {t.binding}
             </p>
-            <Button className="w-full" size="lg" disabled={busy} onClick={() => respond("accept")}>
-              {t.accept}
-            </Button>
-            <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Anledning om du avböjer (valfritt) / Reason (optional)" />
-            <Button className="w-full" variant="outline" disabled={busy} onClick={() => respond("decline")}>
-              {t.decline}
-            </Button>
+            <WorkOrderAcceptForm
+              lang={lang}
+              terms={info.terms[lang]}
+              frameworkUrl={info.frameworkUrl}
+              busy={busy}
+              onAccept={(p) => void respond("accept", "", p)}
+              onDecline={(r) => void respond("decline", r)}
+            />
           </CardContent>
         </Card>
       ) : (

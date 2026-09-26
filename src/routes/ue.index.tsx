@@ -5,7 +5,7 @@ import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { WorkOrderAcceptForm, type AcceptancePayload } from "@/components/WorkOrderAcceptForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { listMyOffers, respondToMyOffer, getWorkOrderPdf, type UeOfferView } from "@/lib/work-orders.functions";
@@ -40,7 +40,6 @@ function UeHome() {
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
-  const [reasons, setReasons] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     try {
@@ -61,10 +60,10 @@ function UeHome() {
     void load();
   }, [load]);
 
-  const answer = async (o: UeOfferView, action: "accept" | "decline") => {
+  const answer = async (o: UeOfferView, action: "accept" | "decline", reason?: string, acceptance?: AcceptancePayload) => {
     setBusy(o.offerId);
     try {
-      const r = await respond({ data: { offerId: o.offerId, action, reason: reasons[o.offerId] } });
+      const r = await respond({ data: { offerId: o.offerId, action, reason, ...(acceptance ?? {}) } });
       if (!r.ok) {
         const e = r.error ?? "";
         toast.error(e.startsWith("requirements:") ? "Dina krav är inte kompletta (försäkring, F-skatt, avtal, ID06). Kontakta VT6 Invest." : e);
@@ -95,11 +94,15 @@ function UeHome() {
         {offers.map((o) => (
           <Card key={o.offerId} className="border-primary/40">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Nytt uppdrag: {o.content.address}</CardTitle>
+              <CardTitle className="text-base">
+                Nytt uppdrag{o.orderNumber ? ` ${o.orderNumber}` : ""}: {o.content.address}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div>
-                Fast pris: <b>{kr(o.fixedPrice)}</b> (exkl. moms) · svara senast <b>{time(o.expiresAt)}</b>
+                Fast pris för arbetet: <b>{kr(o.fixedPrice)}</b> (exkl. moms) · svara senast <b>{time(o.expiresAt)}</b>
+                {o.startDate ? ` · start ${o.startDate}` : ""}
+                {o.endDate ? ` · klart senast ${o.endDate}` : ""}
               </div>
               {o.content.scope.length > 0 && (
                 <ul className="list-inside list-disc text-muted-foreground">
@@ -116,17 +119,14 @@ function UeHome() {
               <Button size="sm" variant="outline" onClick={() => void download(o.workOrderId)}>
                 <FileDown className="mr-1 h-4 w-4" /> Arbetsorder (PDF, sv + en)
               </Button>
-              <Button className="w-full" size="lg" disabled={busy === o.offerId} onClick={() => void answer(o, "accept")}>
-                Acceptera till fast pris
-              </Button>
-              <Input
-                placeholder="Anledning om du avböjer (valfritt)"
-                value={reasons[o.offerId] ?? ""}
-                onChange={(e) => setReasons({ ...reasons, [o.offerId]: e.target.value })}
+              <WorkOrderAcceptForm
+                lang="sv"
+                terms={o.terms.sv}
+                frameworkUrl={o.frameworkUrl}
+                busy={busy === o.offerId}
+                onAccept={(p) => void answer(o, "accept", undefined, p)}
+                onDecline={(r) => void answer(o, "decline", r)}
               />
-              <Button className="w-full" variant="outline" disabled={busy === o.offerId} onClick={() => void answer(o, "decline")}>
-                Avböj
-              </Button>
             </CardContent>
           </Card>
         ))}

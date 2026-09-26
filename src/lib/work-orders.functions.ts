@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { WorkOrderContent } from "@/lib/work-order";
+import type { Personnel, WorkOrderContent } from "@/lib/work-order";
 
 export interface WorkOrderOfferRow {
   id: string;
@@ -20,6 +20,11 @@ export interface WorkOrderRow {
   status: string;
   ue_price: number | null;
   start_date: string | null;
+  end_date: string | null;
+  order_number: string | null;
+  accepted_by: string | null;
+  accepted_at: string | null;
+  accepted_pdf_path: string | null;
   content: WorkOrderContent;
   created_at: string;
   lead_name: string | null;
@@ -55,19 +60,54 @@ export const listWorkOrders = createServerFn({ method: "POST" })
     }));
   });
 
-/** Sätter UE:s fasta pris (och ev. startdatum) och skickar arbetsordern vidare. */
-export const setWorkOrderPrice = createServerFn({ method: "POST" })
+export interface WorkOrderDetailsInput {
+  id: string;
+  price: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  /** Egna instruktioner till UE (leadens interna anteckningar kopieras aldrig). */
+  notes?: string | null;
+  storeys?: number | null;
+  pitch?: string | null;
+  materialDeliveryDate?: string | null;
+  skipSupplier?: string | null;
+  skipDelivery?: string | null;
+  skipPickup?: string | null;
+  basP?: string | null;
+  basU?: string | null;
+}
+
+/** Sätter pris, datum och villkorsfält och skickar arbetsordern vidare när allt krävt finns. */
+export const setWorkOrderDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; price: number; startDate?: string | null }) => {
+  .inputValidator((input: WorkOrderDetailsInput) => {
     if (!input?.id) throw new Error("id saknas");
     if (!(Number(input.price) > 0)) throw new Error("Ange ett pris över 0");
+    if (input.startDate && input.endDate && input.endDate < input.startDate) throw new Error("Slutdatum kan inte vara före startdatum");
     return input;
   })
   .handler(async ({ data, context }): Promise<{ result: string }> => {
     const sb = await requireAdmin(context.userId);
+    const { data: wo } = await sb.from("work_orders").select("content, status").eq("id", data.id).maybeSingle();
+    if (!wo) throw new Error("Arbetsordern hittades inte");
+    const c = (wo.content ?? {}) as Record<string, any>;
+    const clean = (v?: string | null) => (v && v.trim() ? v.trim().slice(0, 300) : null);
+    const content = {
+      ...c,
+      notes: clean(data.notes),
+      storeys: data.storeys && data.storeys > 0 ? Math.round(data.storeys) : null,
+      pitch: clean(data.pitch),
+      material_delivery_date: data.materialDeliveryDate || null,
+      skip_scaffold:
+        clean(data.skipSupplier) || clean(data.skipDelivery) || clean(data.skipPickup)
+          ? { supplier: clean(data.skipSupplier), delivery: clean(data.skipDelivery), pickup: clean(data.skipPickup) }
+          : null,
+      bas_p: clean(data.basP),
+      bas_u: clean(data.basU),
+    };
     const { error } = await sb
       .from("work_orders")
-      .update({ ue_price: data.price, start_date: data.startDate || null })
+      .update({ ue_price: data.price, start_date: data.startDate || null, end_date: data.endDate || null, content })
       .eq("id", data.id)
       .in("status", ["draft", "unassigned", "offered"]);
     if (error) throw new Error(error.message);
@@ -109,6 +149,11 @@ export interface UeOfferView {
   expiresAt: string;
   content: WorkOrderContent;
   startDate: string | null;
+  endDate: string | null;
+  orderNumber: string | null;
+  subcontractorName: string | null;
+  terms: { sv: string[]; en: string[] };
+  frameworkUrl: string | null;
   attachments: { name: string; url: string }[];
 }
 
@@ -126,10 +171,12 @@ export const listMyOffers = createServerFn({ method: "POST" })
     if (!rows.length) return [];
     const { data: wos } = await supabase
       .from("work_orders" as any)
-      .select("id, content, start_date")
+      .select("id, content, start_date, end_date, order_number")
       .in("id", rows.map((o) => o.work_order_id));
     const wo = new Map<string, any>(((wos ?? []) as any[]).map((w) => [w.id, w]));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { workOrderPdfInput } = await import("./work-order.server");
+    const { termsLines } = await import("./work-order");
     const out: UeOfferView[] = [];
     for (const o of rows) {
       const w = wo.get(o.work_order_id);
@@ -140,7 +187,14 @@ export const listMyOffers = createServerFn({ method: "POST" })
         const { data: s } = await supabaseAdmin.storage.from("lead-documents").createSignedUrl(a.path, 60 * 60);
         if (s?.signedUrl) attachments.push({ name: a.name, url: s.signedUrl });
       }
+      const pdfInput = await workOrderPdfInput(supabaseAdmin as any, w, o);
+      const ctx = { subcontractorName: pdfInput.subcontractor?.name ?? null, frameworkDate: pdfInput.frameworkDate, content: pdfInput.content as any };
       out.push({
+        endDate: w.end_date ?? null,
+        orderNumber: w.order_number ?? null,
+        subcontractorName: pdfInput.subcontractor?.name ?? null,
+        terms: { sv: termsLines("sv", ctx), en: termsLines("en", ctx) },
+        frameworkUrl: pdfInput.frameworkUrl,
         offerId: o.id,
         workOrderId: o.work_order_id,
         status: o.status,
@@ -157,7 +211,7 @@ export const listMyOffers = createServerFn({ method: "POST" })
 /** Inloggad UE accepterar eller avböjer ett erbjudande på den egna firman. */
 export const respondToMyOffer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { offerId: string; action: "accept" | "decline"; reason?: string }) => {
+  .inputValidator((input: { offerId: string; action: "accept" | "decline"; reason?: string; termsAccepted?: boolean; acceptedBy?: string; personnel?: Personnel[] }) => {
     if (!input?.offerId) throw new Error("offerId saknas");
     if (input.action !== "accept" && input.action !== "decline") throw new Error("Ogiltig åtgärd");
     return input;
@@ -168,13 +222,21 @@ export const respondToMyOffer = createServerFn({ method: "POST" })
     if (!own) throw new Error("Erbjudandet hittades inte");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { respondToOffer } = await import("./work-order.server");
-    return await respondToOffer(supabaseAdmin as any, data.offerId, data.action, data.reason);
+    return await respondToOffer(supabaseAdmin as any, data.offerId, data.action, data.reason, {
+      termsAccepted: data.termsAccepted === true,
+      acceptedBy: data.acceptedBy,
+      personnel: data.personnel ?? [],
+    });
   });
 
-/** Arbetsordern som PDF (sv + en). Behörighet styrs av RLS på work_orders (admin, UE med erbjudande, säljare). */
+/**
+ * Arbetsordern som PDF (sv + en), per erbjudande med UE:s namn och org.nr. Accepterade arbetsordrar
+ * ger den sparade accepterade versionen. Behörighet styrs av RLS på work_orders och work_order_offers
+ * (admin, UE med erbjudande, säljare).
+ */
 export const getWorkOrderPdf = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { workOrderId: string }) => {
+  .inputValidator((input: { workOrderId: string; offerId?: string }) => {
     if (!input?.workOrderId) throw new Error("workOrderId saknas");
     return input;
   })
@@ -182,8 +244,26 @@ export const getWorkOrderPdf = createServerFn({ method: "POST" })
     const { data: wo } = await context.supabase.from("work_orders" as any).select("*").eq("id", data.workOrderId).maybeSingle();
     if (!wo) throw new Error("Arbetsordern hittades inte");
     const w = wo as any;
-    const { buildWorkOrderPdf } = await import("./work-order-pdf.server");
     const { bytesToBase64 } = await import("./signing.server");
-    const bytes = await buildWorkOrderPdf({ content: w.content, uePrice: w.ue_price != null ? Number(w.ue_price) : null, startDate: w.start_date });
-    return { base64: bytesToBase64(bytes), fileName: `arbetsorder-${w.content?.offer_number ?? w.id.slice(0, 8)}.pdf` };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const fileName = `arbetsorder-${w.order_number ?? w.id.slice(0, 8)}.pdf`;
+
+    // Redan accepterad: leverera den sparade, accepterade PDF:en.
+    if (w.accepted_pdf_path) {
+      const { data: file } = await supabaseAdmin.storage.from("offers").download(w.accepted_pdf_path);
+      if (file) return { base64: bytesToBase64(new Uint8Array(await file.arrayBuffer())), fileName };
+    }
+
+    // Annars per erbjudande. RLS avgör vilka erbjudanden användaren får se.
+    let q = context.supabase.from("work_order_offers" as any).select("*").eq("work_order_id", data.workOrderId);
+    if (data.offerId) q = q.eq("id", data.offerId);
+    const { data: offers } = await q.order("created_at", { ascending: false }).limit(1);
+    const offer = ((offers ?? []) as any[])[0] ?? null;
+
+    const { buildWorkOrderPdf } = await import("./work-order-pdf.server");
+    const { workOrderPdfInput } = await import("./work-order.server");
+    const input = await workOrderPdfInput(supabaseAdmin as any, w, offer);
+    const deadline = offer && offer.status === "pending" ? new Date(offer.expires_at).toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", dateStyle: "short", timeStyle: "short" }) : undefined;
+    const bytes = await buildWorkOrderPdf({ ...input, deadline });
+    return { base64: bytesToBase64(bytes), fileName };
   });

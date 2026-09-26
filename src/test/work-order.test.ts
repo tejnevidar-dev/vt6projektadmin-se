@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { buildWorkOrderContent, offerExpiry, pickNextSubcontractor, upcomingExpiries } from "@/lib/work-order";
+import {
+  buildWorkOrderContent,
+  offerExpiry,
+  pickNextSubcontractor,
+  termsLines,
+  toWinAnsi,
+  upcomingExpiries,
+  validateAcceptance,
+  wrapText,
+  WO_TEXT,
+} from "@/lib/work-order";
 
 const prices = [
   { key: "betong", label: "Betongpannor", unit: "kvm" },
@@ -69,5 +79,67 @@ describe("upcomingExpiries", () => {
   it("hittar utgående, hoppar över inaktiva och tar A1 bara vid utstationering", () => {
     expect(r.map((x) => `${x.subcontractor}:${x.what}`)).toEqual(["UE3:ID06", "UE3:A1-intyg", "UE1:Ansvarsförsäkring"]);
     expect(r[0].daysLeft).toBe(-7);
+  });
+});
+
+describe("arbetsorder: interna anteckningar och villkor", () => {
+  const base = buildWorkOrderContent({
+    address: "Storgatan 1",
+    calc: null,
+    prices: [],
+    seller: { name: "Herman", phone: "070-1" },
+    documents: [],
+    notes: null,
+  });
+  it("etiketten för ränndalar är korrekt (inte rännor)", () => {
+    expect(WO_TEXT.sv.valleys).toBe("Ränndalar (meter)");
+    expect(WO_TEXT.en.valleys).toBe("Valleys (metres)");
+    expect(WO_TEXT.sv.gutters).toBeUndefined();
+  });
+  it("standardmomenten står alltid med", () => {
+    expect(base.standard_tasks).toEqual(["rivning", "underlagstak", "lakt", "taktackning", "nock"]);
+  });
+  it("villkorstexten refererar ramavtalet, endast arbete och accept", () => {
+    const lines = termsLines("sv", { subcontractorName: "Tak AB", frameworkDate: "2026-09-30", content: base });
+    const all = lines.join("\n");
+    expect(all).toContain("Ramavtal för underentreprenad mellan VT6 Invest AB och Tak AB, daterat 2026-09-30, med bilagor 1-6");
+    expect(all).toContain("ENDAST ARBETE");
+    expect(all).toContain("ingår inte");
+    expect(all).toContain("Taket ska vara tätt varje kväll".toLowerCase().replace("taket", "taket"));
+    expect(all).toContain("Genom att acceptera ingår Tak AB avtal");
+    expect(termsLines("en", { subcontractorName: "Tak AB", frameworkDate: null, content: base }).join("\n")).toContain("LABOUR ONLY");
+  });
+  it("vite och betalning visas med värden när de finns, annars 'enligt ramavtalet'", () => {
+    const withVals = { ...base, liquidated_damages: { per_day: 500, cap_pct: 10 }, payment: { days: 30, retention_pct: 10, retention_days: 30 } };
+    const a = termsLines("sv", { subcontractorName: "X", frameworkDate: null, content: withVals }).join("\n");
+    expect(a).toContain("500 kr per arbetsdag");
+    expect(a).toContain("30 dagar efter korrekt faktura");
+    expect(a).toContain("10 % hålls inne i 30 dagar");
+    expect(termsLines("sv", { subcontractorName: "X", frameworkDate: null, content: base }).join("\n")).toContain("Vite vid försening enligt ramavtalet");
+  });
+});
+
+describe("PDF-hjälpare", () => {
+  it("tankstreck och citattecken mappas, okända tecken blir ?", () => {
+    expect(toWinAnsi("Arbetsorder – nr 1 “x” …")).toBe('Arbetsorder - nr 1 "x" ...');
+    expect(toWinAnsi("åäö É")).toBe("åäö É");
+    expect(toWinAnsi("a中b")).toBe("a?b");
+  });
+  it("wrapText bryter långa rader och hårda långa ord", () => {
+    const m = (s: string) => s.length;
+    expect(wrapText("en två tre fyra", 8, m)).toEqual(["en två", "tre fyra"]);
+    expect(wrapText("abcdefghij", 4, m).every((l) => l.length <= 4)).toBe(true);
+    expect(wrapText("rad ett\nrad två", 20, m)).toEqual(["rad ett", "rad två"]);
+  });
+});
+
+describe("validateAcceptance", () => {
+  const ok = { termsAccepted: true, acceptedBy: "Anna Andersson", personnel: [{ name: "Anna", status: "employee" as const }] };
+  it("kräver kryssruta, namn och minst en person", () => {
+    expect(validateAcceptance(ok)).toBeNull();
+    expect(validateAcceptance({ ...ok, termsAccepted: false })).toBe("terms_required");
+    expect(validateAcceptance({ ...ok, acceptedBy: " " })).toBe("name_required");
+    expect(validateAcceptance({ ...ok, personnel: [{ name: " ", status: "employee" }] })).toBe("personnel_required");
+    expect(validateAcceptance({ ...ok, personnel: [{ name: "X", status: "annat" as any }] })).toBe("personnel_status_invalid");
   });
 });

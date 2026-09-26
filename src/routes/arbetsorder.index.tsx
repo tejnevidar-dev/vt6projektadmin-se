@@ -14,7 +14,7 @@ import {
   dispatchWorkOrderNow,
   getWorkOrderPdf,
   listWorkOrders,
-  setWorkOrderPrice,
+  setWorkOrderDetails,
   type WorkOrderRow,
 } from "@/lib/work-orders.functions";
 
@@ -46,7 +46,7 @@ const time = (iso: string) => new Date(iso).toLocaleString("sv-SE", { dateStyle:
 function WorkOrdersPage() {
   const { isAdmin, loading: rolesLoading } = useUserRoles();
   const list = useServerFn(listWorkOrders);
-  const setPrice = useServerFn(setWorkOrderPrice);
+  const setDetails = useServerFn(setWorkOrderDetails);
   const dispatch = useServerFn(dispatchWorkOrderNow);
   const cancel = useServerFn(cancelWorkOrder);
   const pdf = useServerFn(getWorkOrderPdf);
@@ -54,6 +54,11 @@ function WorkOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [prices, setPrices] = useState<Record<string, string>>({});
   const [starts, setStarts] = useState<Record<string, string>>({});
+  const [ends, setEnds] = useState<Record<string, string>>({});
+  // Extra fält per arbetsorder (villkor och instruktioner till UE).
+  const [extra, setExtra] = useState<Record<string, Record<string, string>>>({});
+  const ex = (w: WorkOrderRow, k: string, fallback = "") => extra[w.id]?.[k] ?? fallback;
+  const setEx = (w: WorkOrderRow, k: string, v: string) => setExtra({ ...extra, [w.id]: { ...(extra[w.id] ?? {}), [k]: v } });
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -106,7 +111,7 @@ function WorkOrdersPage() {
               <Card key={w.id}>
                 <CardHeader className="pb-2">
                   <CardTitle className="flex flex-wrap items-center gap-2 text-base">
-                    {w.content.address}
+                    {w.order_number ? `${w.order_number} · ` : ""}{w.content.address}
                     <Badge variant={w.status === "accepted" ? "default" : w.status === "unassigned" ? "destructive" : "secondary"}>
                       {STATUS[w.status] ?? w.status}
                     </Badge>
@@ -119,6 +124,8 @@ function WorkOrdersPage() {
                   <div className="text-muted-foreground">
                     UE-pris: {w.ue_price != null ? <b className="text-foreground">{kr(Number(w.ue_price))}</b> : "ej satt"}
                     {w.start_date ? ` · start ${w.start_date}` : ""}
+                    {w.end_date ? ` · klart ${w.end_date}` : ""}
+                    {w.accepted_by ? ` · accepterad av ${w.accepted_by}` : ""}
                   </div>
                   {w.offers.length > 0 && (
                     <ul className="list-inside list-disc text-xs text-muted-foreground">
@@ -132,26 +139,66 @@ function WorkOrdersPage() {
                     </ul>
                   )}
                   {editable && (
-                    <div className="flex flex-wrap items-end gap-2">
-                      <Input
-                        className="w-36"
-                        inputMode="decimal"
-                        placeholder="UE-pris (kr)"
-                        value={prices[w.id] ?? (w.ue_price != null ? String(w.ue_price) : "")}
-                        onChange={(e) => setPrices({ ...prices, [w.id]: e.target.value })}
-                      />
-                      <Input
-                        className="w-40"
-                        type="date"
-                        value={starts[w.id] ?? w.start_date ?? ""}
-                        onChange={(e) => setStarts({ ...starts, [w.id]: e.target.value })}
-                      />
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-end gap-2">
+                        <Input
+                          className="w-36"
+                          inputMode="decimal"
+                          placeholder="UE-pris (kr)"
+                          value={prices[w.id] ?? (w.ue_price != null ? String(w.ue_price) : "")}
+                          onChange={(e) => setPrices({ ...prices, [w.id]: e.target.value })}
+                        />
+                        <label className="text-xs text-muted-foreground">
+                          Start
+                          <Input className="w-40" type="date" value={starts[w.id] ?? w.start_date ?? ""} onChange={(e) => setStarts({ ...starts, [w.id]: e.target.value })} />
+                        </label>
+                        <label className="text-xs text-muted-foreground">
+                          Klart senast
+                          <Input className="w-40" type="date" value={ends[w.id] ?? w.end_date ?? ""} onChange={(e) => setEnds({ ...ends, [w.id]: e.target.value })} />
+                        </label>
+                        <label className="text-xs text-muted-foreground">
+                          Materialleverans
+                          <Input className="w-40" type="date" value={ex(w, "matDate", w.content.material_delivery_date ?? "")} onChange={(e) => setEx(w, "matDate", e.target.value)} />
+                        </label>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Input className="w-24" inputMode="numeric" placeholder="Våningar" value={ex(w, "storeys", w.content.storeys != null ? String(w.content.storeys) : "")} onChange={(e) => setEx(w, "storeys", e.target.value)} />
+                        <Input className="w-32" placeholder="Taklutning" value={ex(w, "pitch", w.content.pitch ?? "")} onChange={(e) => setEx(w, "pitch", e.target.value)} />
+                        <Input className="w-44" placeholder="Container/ställning: leverantör" value={ex(w, "skipSup", w.content.skip_scaffold?.supplier ?? "")} onChange={(e) => setEx(w, "skipSup", e.target.value)} />
+                        <Input className="w-40" placeholder="Levereras (datum/tid)" value={ex(w, "skipDel", w.content.skip_scaffold?.delivery ?? "")} onChange={(e) => setEx(w, "skipDel", e.target.value)} />
+                        <Input className="w-40" placeholder="Hämtas (datum/tid)" value={ex(w, "skipPick", w.content.skip_scaffold?.pickup ?? "")} onChange={(e) => setEx(w, "skipPick", e.target.value)} />
+                        <Input className="w-32" placeholder="BAS-P" value={ex(w, "basP", w.content.bas_p ?? "")} onChange={(e) => setEx(w, "basP", e.target.value)} />
+                        <Input className="w-32" placeholder="BAS-U" value={ex(w, "basU", w.content.bas_u ?? "")} onChange={(e) => setEx(w, "basU", e.target.value)} />
+                      </div>
+                      <Input placeholder="Instruktioner till UE (kunduppgifter och priser ska inte skrivas här)" value={ex(w, "notes", w.content.notes ?? "")} onChange={(e) => setEx(w, "notes", e.target.value)} />
                       <Button
                         size="sm"
                         disabled={busy === w.id}
                         onClick={() => {
                           const p = Number((prices[w.id] ?? String(w.ue_price ?? "")).replace(/\s/g, "").replace(",", "."));
-                          void run(w.id, () => setPrice({ data: { id: w.id, price: p, startDate: starts[w.id] ?? w.start_date } }), "Sparat och skickat");
+                          const st = ex(w, "storeys", w.content.storeys != null ? String(w.content.storeys) : "");
+                          void run(
+                            w.id,
+                            () =>
+                              setDetails({
+                                data: {
+                                  id: w.id,
+                                  price: p,
+                                  startDate: starts[w.id] ?? w.start_date,
+                                  endDate: ends[w.id] ?? w.end_date,
+                                  notes: ex(w, "notes", w.content.notes ?? ""),
+                                  storeys: st ? Number(st) : null,
+                                  pitch: ex(w, "pitch", w.content.pitch ?? ""),
+                                  materialDeliveryDate: ex(w, "matDate", w.content.material_delivery_date ?? ""),
+                                  skipSupplier: ex(w, "skipSup", w.content.skip_scaffold?.supplier ?? ""),
+                                  skipDelivery: ex(w, "skipDel", w.content.skip_scaffold?.delivery ?? ""),
+                                  skipPickup: ex(w, "skipPick", w.content.skip_scaffold?.pickup ?? ""),
+                                  basP: ex(w, "basP", w.content.bas_p ?? ""),
+                                  basU: ex(w, "basU", w.content.bas_u ?? ""),
+                                },
+                              }),
+                            "Sparat (skickas när pris, start och slut finns)",
+                          );
                         }}
                       >
                         <Send className="mr-1 h-3.5 w-3.5" /> Spara & skicka till UE

@@ -10,6 +10,8 @@ import {
   pickNextSubcontractor,
   REQUIREMENT_LABELS,
   upcomingExpiries,
+  validateAcceptance,
+  type Personnel,
   type WorkOrderContent,
 } from "@/lib/work-order";
 
@@ -30,6 +32,58 @@ export async function loadDispatchConfig(sb: any): Promise<{ acceptHours: number
   const { data } = await sb.from("app_settings").select("value").eq("key", CONFIG_KEY).maybeSingle();
   const h = Number((data?.value as any)?.accept_hours);
   return { acceptHours: Number.isFinite(h) && h > 0 ? h : 24 };
+}
+
+export interface WorkOrderDefaults {
+  liquidated_damages: { per_day: number | null; cap_pct: number | null } | null;
+  payment: { days: number | null; retention_pct: number | null; retention_days: number | null } | null;
+  client_org_number: string | null;
+  framework_url: string | null;
+  bas_p: string | null;
+  bas_u: string | null;
+}
+
+export async function loadWorkOrderDefaults(sb: any): Promise<WorkOrderDefaults> {
+  const { data } = await sb.from("app_settings").select("value").eq("key", "ue_work_order_defaults").maybeSingle();
+  const v = (data?.value ?? {}) as Partial<WorkOrderDefaults>;
+  return {
+    liquidated_damages: v.liquidated_damages ?? null,
+    payment: v.payment ?? null,
+    client_org_number: v.client_org_number ?? null,
+    framework_url: v.framework_url ?? null,
+    bas_p: v.bas_p ?? null,
+    bas_u: v.bas_u ?? null,
+  };
+}
+
+/** Allt PDF:en och acceptsidan behöver för ett visst erbjudande (UE:s namn, org.nr, ramavtalsdatum). */
+export async function workOrderPdfInput(sb: any, wo: any, offer: any | null) {
+  const defaults = await loadWorkOrderDefaults(sb);
+  let sub: any = null;
+  const subId = offer?.subcontractor_id ?? wo.accepted_subcontractor_id ?? null;
+  if (subId) {
+    const { data } = await sb.from("subcontractors").select("company_name, org_number, agreement_signed_at").eq("id", subId).maybeSingle();
+    sub = data;
+  }
+  // Villkorsfält som inte satts på arbetsordern faller tillbaka på standardvärdena.
+  const content = {
+    ...wo.content,
+    liquidated_damages: wo.content?.liquidated_damages ?? defaults.liquidated_damages,
+    payment: wo.content?.payment ?? defaults.payment,
+    bas_p: wo.content?.bas_p ?? defaults.bas_p,
+    bas_u: wo.content?.bas_u ?? defaults.bas_u,
+  } as WorkOrderContent;
+  return {
+    content,
+    uePrice: offer ? Number(offer.fixed_price) : wo.ue_price != null ? Number(wo.ue_price) : null,
+    startDate: wo.start_date ?? null,
+    endDate: wo.end_date ?? null,
+    orderNumber: wo.order_number ?? null,
+    subcontractor: sub ? { name: sub.company_name as string, orgNumber: (sub.org_number as string | null) ?? null } : null,
+    frameworkDate: sub?.agreement_signed_at ?? null,
+    clientOrgNumber: defaults.client_org_number,
+    frameworkUrl: defaults.framework_url,
+  };
 }
 
 async function notifyAdmin(sb: any, a: { type: string; title: string; body: string; leadId?: string | null; suffix: string }) {
@@ -87,7 +141,9 @@ export async function createWorkOrderForLead(sb: any, leadId: string): Promise<{
       prices: prices ?? [],
       seller,
       documents: docs ?? [],
-      notes: lead.notes ?? null,
+      // Leadens interna anteckningar (kunduppgifter, priser, kommentarer) ska aldrig till UE.
+      // Admin skriver egna instruktioner till UE på /arbetsorder.
+      notes: null,
     });
 
     const uePrice = Number(lead.subcontractor_price) > 0 ? Number(lead.subcontractor_price) : null;
@@ -101,17 +157,14 @@ export async function createWorkOrderForLead(sb: any, leadId: string): Promise<{
       return null;
     }
 
-    if (uePrice) {
-      await dispatchWorkOrder(sb, wo.id);
-    } else {
-      await notifyAdmin(sb, {
-        type: "work_order_needs_price",
-        title: `Arbetsorder skapad: ange UE:s fasta pris`,
-        body: `Offerten för ${content.address} är signerad och arbetsordern är klar. Ange UE:s fasta pris så skickas den automatiskt till nästa lediga UE.`,
-        leadId,
-        suffix: wo.id,
-      });
-    }
+    // Start- och slutdatum är okända vid skapandet, så admin måste alltid komplettera innan utskick.
+    await notifyAdmin(sb, {
+      type: "work_order_needs_details",
+      title: `Arbetsorder skapad: ange pris och datum`,
+      body: `Offerten för ${content.address} är signerad. Ange UE:s fasta pris, startdatum och slutdatum på Arbetsorder, så skickas den automatiskt till nästa lediga UE.`,
+      leadId,
+      suffix: wo.id,
+    });
     return wo;
   } catch (err) {
     console.error("createWorkOrderForLead failed:", err);
@@ -122,7 +175,23 @@ export async function createWorkOrderForLead(sb: any, leadId: string): Promise<{
 /** Skickar arbetsordern till nästa godkända UE. Ingen UE kvar -> status 'unassigned' + larm. */
 export async function dispatchWorkOrder(sb: any, workOrderId: string): Promise<"offered" | "unassigned" | "skipped"> {
   const { data: wo } = await sb.from("work_orders").select("*").eq("id", workOrderId).maybeSingle();
-  if (!wo || !["draft", "offered", "unassigned"].includes(wo.status) || !(Number(wo.ue_price) > 0)) return "skipped";
+  if (!wo || !["draft", "offered", "unassigned"].includes(wo.status)) return "skipped";
+  // Pris, startdatum och slutdatum krävs före utskick. Saknas något larmas admin.
+  const missing = [
+    !(Number(wo.ue_price) > 0) ? "UE-pris" : "",
+    !wo.start_date ? "startdatum" : "",
+    !wo.end_date ? "slutdatum" : "",
+  ].filter(Boolean);
+  if (missing.length) {
+    await notifyAdmin(sb, {
+      type: "work_order_needs_details",
+      title: "Arbetsordern kan inte skickas än",
+      body: `Saknas för ${(wo.content as WorkOrderContent).address}: ${missing.join(", ")}. Komplettera på Arbetsorder så skickas den.`,
+      leadId: wo.lead_id,
+      suffix: `${wo.id}:${missing.join("+")}`,
+    });
+    return "skipped";
+  }
 
   const { data: offers } = await sb.from("work_order_offers").select("subcontractor_id, status").eq("work_order_id", wo.id);
   if ((offers ?? []).some((o: any) => o.status === "pending")) return "skipped";
@@ -173,7 +242,7 @@ export async function dispatchWorkOrder(sb: any, workOrderId: string): Promise<"
       user_id: sub.user_id,
       type: "work_order_offer",
       title: "Nytt uppdrag",
-      body: `${content.address} – fast pris ${kr(Number(wo.ue_price))}. Svara senast ${stockholm(expires)}.`,
+      body: `${wo.order_number ? `${wo.order_number}: ` : ""}${content.address} - fast pris ${kr(Number(wo.ue_price))}. Svara senast ${stockholm(expires)}.`,
       link: "/ue",
     });
   }
@@ -183,6 +252,7 @@ export async function dispatchWorkOrder(sb: any, workOrderId: string): Promise<"
       recipientEmail: sub.email,
       idempotencyKey: `wo-offer:${token}`,
       templateData: {
+        orderNumber: wo.order_number ?? undefined,
         address: content.address,
         price: kr(Number(wo.ue_price)),
         deadline: stockholm(expires),
@@ -202,6 +272,7 @@ export async function respondToOffer(
   offerId: string,
   action: "accept" | "decline",
   reason?: string | null,
+  acceptance?: { termsAccepted?: boolean; acceptedBy?: string; personnel?: Personnel[] },
 ): Promise<RespondResult> {
   const { data: offer } = await sb.from("work_order_offers").select("*").eq("id", offerId).maybeSingle();
   if (!offer) return { ok: false, error: "not_found" };
@@ -228,7 +299,13 @@ export async function respondToOffer(
     return { ok: true, status: "declined" };
   }
 
-  // Accept: kontrollera kraven igen, det kan ha gått ut sedan utskicket.
+  // Accept: kryssruta, namn och minst en person på plats krävs, annars binder inte accepten.
+  const bad = validateAcceptance(acceptance ?? {});
+  if (bad) return { ok: false, error: bad };
+  const personnel = (acceptance!.personnel ?? []).filter((p) => p.name?.trim()).map((p) => ({ name: p.name.trim().slice(0, 120), status: p.status }));
+  const acceptedBy = acceptance!.acceptedBy!.trim().slice(0, 120);
+
+  // Kontrollera kraven igen, det kan ha gått ut sedan utskicket.
   const { data: missing } = await sb.rpc("ue_missing_requirements", { _sub: offer.subcontractor_id });
   if (Array.isArray(missing) && missing.length) return { ok: false, error: "requirements:" + missing.join(",") };
   const { data: sub } = await sb.from("subcontractors").select("id, company_name, user_id").eq("id", offer.subcontractor_id).maybeSingle();
@@ -264,7 +341,10 @@ export async function respondToOffer(
     })
     .eq("id", wo.lead_id);
 
-  await sb.from("work_order_offers").update({ status: "accepted", responded_at: now }).eq("id", offer.id);
+  await sb
+    .from("work_order_offers")
+    .update({ status: "accepted", responded_at: now, accepted_by: acceptedBy, terms_accepted_at: now, personnel })
+    .eq("id", offer.id);
   await sb
     .from("work_order_offers")
     .update({ status: "cancelled" })
@@ -273,8 +353,29 @@ export async function respondToOffer(
     .neq("id", offer.id);
   await sb
     .from("work_orders")
-    .update({ status: "accepted", job_id: job.id, accepted_subcontractor_id: sub.id })
+    .update({
+      status: "accepted",
+      job_id: job.id,
+      accepted_subcontractor_id: sub.id,
+      accepted_by: acceptedBy,
+      accepted_at: now,
+      terms_accepted_at: now,
+      personnel,
+    })
     .eq("id", wo.id);
+
+  // Accepterad version av PDF:en (med "Accepterad av ... datum") sparas i dokumenten. Icke-kritiskt.
+  try {
+    const { buildWorkOrderPdf } = await import("@/lib/work-order-pdf.server");
+    const input = await workOrderPdfInput(sb, { ...wo, accepted_subcontractor_id: sub.id }, offer);
+    const bytes = await buildWorkOrderPdf({ ...input, accepted: { by: acceptedBy, at: stockholm(new Date(now)), personnel } });
+    const path = `arbetsorder/${wo.id}/accepterad-${wo.order_number ?? wo.id.slice(0, 8)}.pdf`;
+    const { error: upErr } = await sb.storage.from("offers").upload(path, bytes, { contentType: "application/pdf", upsert: true });
+    if (upErr) console.error("accepted pdf upload failed:", upErr.message);
+    else await sb.from("work_orders").update({ accepted_pdf_path: path }).eq("id", wo.id);
+  } catch (err) {
+    console.error("accepted pdf failed:", err);
+  }
 
   const cfg = await loadConfig(sb);
   await sendAlert(sb, cfg, {

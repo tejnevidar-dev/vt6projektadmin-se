@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { respondToOffer } from "@/lib/work-order.server";
-import type { WorkOrderContent } from "@/lib/work-order";
+import { respondToOffer, workOrderPdfInput } from "@/lib/work-order.server";
+import { termsLines, type WorkOrderContent } from "@/lib/work-order";
 
 // Publik åtkomst för UE via mailtoken (ingen inloggning): visa arbetsordern, ladda ner PDF,
 // acceptera eller avböja. Token är 48 hex-tecken och gäller ett erbjudande.
@@ -41,7 +41,8 @@ export const Route = createFileRoute("/api/public/work-order/$token")({
         if (new URL(request.url).searchParams.get("pdf") === "1") {
           const { buildWorkOrderPdf } = await import("@/lib/work-order-pdf.server");
           const deadline = new Intl.DateTimeFormat("sv-SE", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Stockholm" }).format(new Date(offer.expires_at));
-          const bytes = await buildWorkOrderPdf({ content, uePrice: Number(offer.fixed_price), startDate: wo.start_date, deadline });
+          const input = await workOrderPdfInput(sb, wo, offer);
+          const bytes = await buildWorkOrderPdf({ ...input, deadline });
           return new Response(bytes as unknown as BodyInit, {
             headers: { "Content-Type": "application/pdf", "Content-Disposition": 'inline; filename="arbetsorder.pdf"', "Cache-Control": "no-store" },
           });
@@ -52,13 +53,20 @@ export const Route = createFileRoute("/api/public/work-order/$token")({
           const { data: s } = await sb.storage.from("lead-documents").createSignedUrl(a.path, 60 * 60);
           if (s?.signedUrl) attachments.push({ name: a.name, url: s.signedUrl });
         }
+        const input = await workOrderPdfInput(sb, wo, offer);
+        const ctx = { subcontractorName: input.subcontractor?.name ?? null, frameworkDate: input.frameworkDate, content: input.content as any };
         return Response.json({
           status: expired ? "expired" : offer.status,
           workOrderStatus: wo.status,
+          orderNumber: wo.order_number,
           fixedPrice: Number(offer.fixed_price),
           expiresAt: offer.expires_at,
           startDate: wo.start_date,
-          content,
+          endDate: wo.end_date,
+          subcontractor: input.subcontractor,
+          frameworkUrl: input.frameworkUrl,
+          terms: { sv: termsLines("sv", ctx), en: termsLines("en", ctx) },
+          content: input.content,
           attachments,
         });
       },
@@ -74,8 +82,15 @@ export const Route = createFileRoute("/api/public/work-order/$token")({
         if (body?.action !== "accept" && body?.action !== "decline") return bad("invalid_action");
         const found = await load(sb, params.token);
         if (!found) return bad("not_found", 404);
-        const res = await respondToOffer(sb, found.offer.id, body.action, typeof body.reason === "string" ? body.reason : null);
-        if (!res.ok) return bad(res.error, res.error === "not_found" ? 404 : 409);
+        const res = await respondToOffer(sb, found.offer.id, body.action, typeof body.reason === "string" ? body.reason : null, {
+          termsAccepted: body.termsAccepted === true,
+          acceptedBy: typeof body.acceptedBy === "string" ? body.acceptedBy : undefined,
+          personnel: Array.isArray(body.personnel) ? body.personnel : [],
+        });
+        if (!res.ok) {
+          const validation = ["terms_required", "name_required", "personnel_required", "personnel_status_invalid"].includes(res.error);
+          return bad(res.error, res.error === "not_found" ? 404 : validation ? 400 : 409);
+        }
         return Response.json(res);
       },
     },

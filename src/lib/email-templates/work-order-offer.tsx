@@ -3,6 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry'
 
 interface Props {
+  orderNumber?: string
   address?: string
   price?: string
   deadline?: string
@@ -11,7 +12,7 @@ interface Props {
 }
 
 // Mot underentreprenörer används företagsnamnet VT6 Invest (inte varumärket RoslagsTak).
-const Email = ({ address, price, deadline, url, contact }: Props) => (
+const Email = ({ orderNumber, address, price, deadline, url, contact }: Props) => (
   <Html lang="sv" dir="ltr">
     <Head />
     <Preview>{`Nytt uppdrag / New assignment: ${address ?? ''}`}</Preview>
@@ -23,6 +24,12 @@ const Email = ({ address, price, deadline, url, contact }: Props) => (
           avböj digitalt.
         </Text>
         <Section style={box}>
+          {orderNumber ? (
+            <>
+              <Text style={label}>Arbetsorder nr / Work order no.</Text>
+              <Text style={value}>{orderNumber}</Text>
+            </>
+          ) : null}
           <Text style={label}>Adress</Text>
           <Text style={value}>{address}</Text>
           <Text style={label}>Fast pris (exkl. moms)</Text>
@@ -54,7 +61,8 @@ const Email = ({ address, price, deadline, url, contact }: Props) => (
 
 export const template = {
   component: Email,
-  subject: (data: Record<string, any>) => `Nytt uppdrag / New assignment – ${data?.address ?? ''}`.trim(),
+  subject: (data: Record<string, any>) =>
+    `Nytt uppdrag / New assignment${data?.orderNumber ? ` ${data.orderNumber}` : ''} - ${data?.address ?? ''}`.trim(),
   displayName: 'Arbetsorder till UE',
   previewData: {
     address: 'Storgatan 1, Täby',
