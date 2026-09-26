@@ -59,6 +59,15 @@ export default defineConfig(async ({ mode, command }) => {
     nitroPlugin = nitro({
       defaultPreset: "cloudflare-module",
       experimental: { tasks: true },
+      // Tasks must be registered explicitly: the vite plugin's scan root is not ./tasks, so
+      // file scanning found nothing and every cron ran an empty task list (nothing executed).
+      tasks: {
+        "send-booking-reminders": { handler: path.resolve(process.cwd(), "tasks/send-booking-reminders.ts"), description: "Booking reminders" },
+        "stale-lead-reminders": { handler: path.resolve(process.cwd(), "tasks/stale-lead-reminders.ts"), description: "Stale lead reminders" },
+        "lead-alerts": { handler: path.resolve(process.cwd(), "tasks/lead-alerts.ts"), description: "SLA, silence and intake-failure alerts" },
+        "work-order-timeouts": { handler: path.resolve(process.cwd(), "tasks/work-order-timeouts.ts"), description: "Send work orders on to the next UE" },
+        "ue-compliance": { handler: path.resolve(process.cwd(), "tasks/ue-compliance.ts"), description: "Expiring UE requirements" },
+      },
       // Replaces Lovable Cloud's "Jobs" schedule (send-booking-reminders, every 5 min).
       // On cloudflare-module this becomes an actual Cloudflare Cron Trigger automatically.
       scheduledTasks: {
