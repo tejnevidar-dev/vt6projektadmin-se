@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/table";
 import { AlertTriangle, FileText, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/underentreprenorer")({
   component: () => (
@@ -100,6 +101,50 @@ function SubcontractorsPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<Subcontractor> | null>(null);
   const [docsFor, setDocsFor] = useState<Subcontractor | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("alla");
+  const [callFor, setCallFor] = useState<Subcontractor | null>(null);
+  const [callNote, setCallNote] = useState("");
+  const [callStatus, setCallStatus] = useState<Subcontractor["pipeline_status"]>("kontaktad");
+  const [userOptions, setUserOptions] = useState<{ id: string; label: string }[]>([]);
+
+  // Användare med rollen underentreprenor kan kopplas till en UE-post (inloggning för /ue).
+  useEffect(() => {
+    if (!isAdmin) return;
+    (async () => {
+      const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "underentreprenor");
+      const ids = [...new Set((roles ?? []).map((r: any) => r.user_id as string))];
+      if (!ids.length) return setUserOptions([]);
+      const { data: profs } = await supabase.from("profiles").select("id, display_name, email").in("id", ids);
+      setUserOptions((profs ?? []).map((p: any) => ({ id: p.id, label: p.display_name || p.email || p.id })));
+    })().catch(() => setUserOptions([]));
+  }, [isAdmin]);
+
+  async function quickStatus(sc: Subcontractor, status: Subcontractor["pipeline_status"]) {
+    try {
+      await updateSubcontractor(sc.id, { pipeline_status: status });
+      toast.success("Status: " + PIPELINE_LABELS[status]);
+      void reload();
+    } catch (e: any) {
+      toast.error(e.message ?? "Kunde inte spara");
+    }
+  }
+
+  async function saveCall() {
+    if (!callFor) return;
+    const line = new Date().toISOString().slice(0, 10) + ": " + (callNote.trim() || "samtal");
+    try {
+      await updateSubcontractor(callFor.id, {
+        notes: [callFor.notes, line].filter(Boolean).join(String.fromCharCode(10)),
+        pipeline_status: callStatus,
+      });
+      toast.success("Samtal loggat");
+      setCallFor(null);
+      setCallNote("");
+      void reload();
+    } catch (e: any) {
+      toast.error(e.message ?? "Kunde inte spara");
+    }
+  }
 
   const reload = useCallback(async () => {
     if (rolesLoading) return;
@@ -147,6 +192,7 @@ function SubcontractorsPage() {
       a1_valid_until: editing.a1_valid_until || null,
       priority: Number(editing.priority) > 0 ? Number(editing.priority) : 100,
       pipeline_status: editing.pipeline_status ?? "hittad",
+      user_id: editing.user_id || null,
       trade: editing.trade || null,
       team_size: editing.team_size ? Number(editing.team_size) : null,
       f_skatt_checked_at: editing.f_skatt_checked_at || null,
@@ -201,6 +247,19 @@ function SubcontractorsPage() {
         ) : undefined
       }
     >
+      {isAdmin && (
+        <div className="mb-3 flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Status:</span>
+          <select className="h-8 rounded-md border bg-background px-2" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="alla">Alla ({rows.length})</option>
+            {(Object.keys(PIPELINE_LABELS) as Subcontractor["pipeline_status"][]).map((k) => (
+              <option key={k} value={k}>
+                {PIPELINE_LABELS[k]} ({rows.filter((r) => r.pipeline_status === k).length})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="rounded-lg border border-border bg-card">
         <Table>
           <TableHeader>
@@ -230,13 +289,41 @@ function SubcontractorsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {rows.map((sc) => {
+            {rows.filter((r) => statusFilter === "alla" || r.pipeline_status === statusFilter).map((sc) => {
               const warnings = expiryWarnings(sc);
               const t = invoiceTotals(sc.id);
               return (
                 <TableRow key={sc.id}>
                   <TableCell>
                     <div className="font-medium">{sc.company_name}</div>
+                    {isAdmin && (
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <select
+                          className="h-7 rounded-md border bg-background px-1 text-xs"
+                          value={sc.pipeline_status}
+                          onChange={(e) => void quickStatus(sc, e.target.value as Subcontractor["pipeline_status"])}
+                        >
+                          {(Object.keys(PIPELINE_LABELS) as Subcontractor["pipeline_status"][]).map((k) => (
+                            <option key={k} value={k}>
+                              {PIPELINE_LABELS[k]}
+                            </option>
+                          ))}
+                        </select>
+                        {sc.trade && <Badge variant="outline">{sc.trade === "taklaggare" ? "Takläggare" : sc.trade === "platslagare" ? "Plåtslagare" : "Båda"}</Badge>}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => {
+                            setCallFor(sc);
+                            setCallNote("");
+                            setCallStatus(sc.pipeline_status === "hittad" ? "kontaktad" : sc.pipeline_status);
+                          }}
+                        >
+                          Logga samtal
+                        </Button>
+                      </div>
+                    )}
                     {sc.address && (
                       <div className="text-xs text-muted-foreground">{sc.address}</div>
                     )}
@@ -315,6 +402,33 @@ function SubcontractorsPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!callFor} onOpenChange={(o) => !o && setCallFor(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Logga samtal: {callFor?.company_name}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <Textarea value={callNote} onChange={(e) => setCallNote(e.target.value)} placeholder="Vad sades? (datum läggs till automatiskt, inga personnamn)" rows={4} />
+            <div className="grid gap-1.5">
+              <Label>Ny status</Label>
+              <select className="h-9 rounded-md border bg-background px-2 text-sm" value={callStatus} onChange={(e) => setCallStatus(e.target.value as Subcontractor["pipeline_status"])}>
+                {(Object.keys(PIPELINE_LABELS) as Subcontractor["pipeline_status"][]).map((k) => (
+                  <option key={k} value={k}>
+                    {PIPELINE_LABELS[k]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCallFor(null)}>
+              Avbryt
+            </Button>
+            <Button onClick={() => void saveCall()}>Spara</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
@@ -427,6 +541,21 @@ function SubcontractorsPage() {
                     onChange={(e) => setEditing({ ...editing, priority: Number(e.target.value) })}
                   />
                 </div>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Inloggning (användare med rollen Underentreprenör)</Label>
+                <select
+                  className="h-9 rounded-md border bg-background px-2 text-sm"
+                  value={editing.user_id ?? ""}
+                  onChange={(e) => setEditing({ ...editing, user_id: e.target.value || null })}
+                >
+                  <option value="">Ingen kopplad (bjud in under Admin med rollen Underentreprenör)</option>
+                  {userOptions.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="grid gap-1.5">

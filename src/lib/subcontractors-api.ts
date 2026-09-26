@@ -107,6 +107,7 @@ export async function listSubcontractors(): Promise<Subcontractor[]> {
     .from("subcontractors")
     .select("*")
     .order("active", { ascending: false })
+    .order("priority", { ascending: true })
     .order("company_name", { ascending: true });
   if (error) throw error;
   return (data ?? []) as Subcontractor[];
