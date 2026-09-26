@@ -93,6 +93,11 @@ export async function processBookingReminders(supabase: any): Promise<BookingRem
       await supabase.from('booking_reminders').update({ status: 'cancelled', error_message: 'lead_or_booking_missing' }).eq('id', r.id)
       skipped++; continue
     }
+    // Bokningen har redan passerat (t.ex. påminnelser som blev liggande när cron var nere): skicka inget.
+    if (new Date(lead.booking_date).getTime() < Date.now()) {
+      await supabase.from('booking_reminders').update({ status: 'cancelled', error_message: 'booking_passed' }).eq('id', r.id)
+      skipped++; continue
+    }
 
     let address: string | undefined
     if (lead.property_id) {
