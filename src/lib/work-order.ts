@@ -160,7 +160,8 @@ export function offerExpiry(now: Date, hours: number): Date {
 export const REQUIREMENT_LABELS: Record<string, string> = {
   registerpost: "saknar registerpost",
   aktiv: "är inte aktiv",
-  status: "pipelinestatus är inte Aktiv",
+  status: "pipelinestatus måste vara Provjobb eller Aktiv",
+  provjobb_pagar: "provjobb: ett jobb pågår redan (max ett åt gången)",
   utstationering_anmalan: "anmälan om utstationering till Arbetsmiljöverket",
   kronofogden: "skuld hos Kronofogden över gränsen",
   inloggning: "saknar inloggning",

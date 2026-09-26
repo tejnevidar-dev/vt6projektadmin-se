@@ -147,6 +147,8 @@ function SubcontractorsPage() {
       a1_valid_until: editing.a1_valid_until || null,
       priority: Number(editing.priority) > 0 ? Number(editing.priority) : 100,
       pipeline_status: editing.pipeline_status ?? "hittad",
+      trade: editing.trade || null,
+      team_size: editing.team_size ? Number(editing.team_size) : null,
       f_skatt_checked_at: editing.f_skatt_checked_at || null,
       posting_notified_at: editing.posting_notified_at || null,
       kronofogden_debt: editing.kronofogden_debt === null || editing.kronofogden_debt === undefined || (editing.kronofogden_debt as unknown) === "" ? null : Number(editing.kronofogden_debt),
@@ -426,7 +428,29 @@ function SubcontractorsPage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="grid gap-1.5">
-                  <Label>Pipelinestatus (bara Aktiv får arbetsorder)</Label>
+                  <Label>Yrke</Label>
+                  <select
+                    className="h-9 rounded-md border bg-background px-2 text-sm"
+                    value={editing.trade ?? ""}
+                    onChange={(e) => setEditing({ ...editing, trade: (e.target.value || null) as Subcontractor["trade"] })}
+                  >
+                    <option value="">Ej angivet</option>
+                    <option value="taklaggare">Takläggare</option>
+                    <option value="platslagare">Plåtslagare</option>
+                    <option value="bada">Båda</option>
+                  </select>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Kapacitet: antal personer i laget (valfritt)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editing.team_size ?? ""}
+                    onChange={(e) => setEditing({ ...editing, team_size: e.target.value === "" ? null : Number(e.target.value) })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Pipelinestatus (Aktiv, eller Provjobb med max ett jobb åt gången)</Label>
                   <select
                     className="h-9 rounded-md border bg-background px-2 text-sm"
                     value={editing.pipeline_status ?? "hittad"}

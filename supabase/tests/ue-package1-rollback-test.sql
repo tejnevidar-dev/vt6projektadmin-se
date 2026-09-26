@@ -24,9 +24,11 @@ BEGIN
 
   UPDATE subcontractors SET f_skatt = true, f_skatt_checked_at = current_date, insurance_expires_at = current_date + 90,
     agreement_signed_at = current_date, id06_valid_until = current_date + 90 WHERE id = S;
-  o := o || E'
-saknas trots krav men status hittad: ' || array_to_string(public.ue_missing_requirements(S), ',');
-  UPDATE subcontractors SET pipeline_status = 'aktiv' WHERE id = S;
+  o := o || E'\nkrav uppfyllda men status hittad (status): ' || array_to_string(public.ue_missing_requirements(S), ',');
+  UPDATE subcontractors SET pipeline_status = 'nej' WHERE id = S;
+  o := o || E'\nstatus nej blockerar (status): ' || array_to_string(public.ue_missing_requirements(S), ',');
+  UPDATE subcontractors SET pipeline_status = 'provjobb' WHERE id = S;
+  o := o || E'\nprovjobb utan pagaende jobb (tom): [' || array_to_string(public.ue_missing_requirements(S), ',') || ']';
   o := o || E'\nsaknas efter komplettering (tom): [' || array_to_string(public.ue_missing_requirements(S), ',') || ']';
 
   UPDATE subcontractors SET is_posted_worker = true WHERE id = S;
@@ -36,6 +38,17 @@ saknas trots krav men status hittad: ' || array_to_string(public.ue_missing_requ
   INSERT INTO jobs (lead_id, assigned_to, assignment_type, subcontractor_id, status)
     VALUES (L, U, 'underentreprenor', S, 'pagaende') RETURNING id INTO J;
   o := o || E'\njobb med godkand UE skapat (ok)';
+
+  -- Provjobb: ett andra pågående jobb ska nekas, och släppas när det första är klart.
+  DECLARE L2 uuid; BEGIN
+    INSERT INTO leads (name) VALUES ('ZZ ue-test 2') RETURNING id INTO L2;
+    BEGIN
+      INSERT INTO jobs (lead_id, assigned_to, assignment_type, subcontractor_id) VALUES (L2, U, 'underentreprenor', S);
+      o := o || E'\nANDRA JOBBET UNDER PROVJOBB SKAPADES (FEL)';
+    EXCEPTION WHEN others THEN
+      o := o || E'\nandra jobb under provjobb nekat (ok): ' || left(SQLERRM, 60);
+    END;
+  END;
 
   -- Klart-spärr som UE-användaren
   PERFORM set_config('request.jwt.claims', json_build_object('sub', U, 'role', 'authenticated')::text, true);

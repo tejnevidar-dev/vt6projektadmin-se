@@ -43,7 +43,9 @@ export interface Subcontractor {
   posting_notified_at: string | null;
   f_skatt_checked_at: string | null;
   kronofogden_debt: number | null;
-  pipeline_status: "hittad" | "kontaktad" | "samtal" | "kvalificerad" | "provjobb" | "aktiv";
+  pipeline_status: "hittad" | "kontaktad" | "samtal" | "kvalificerad" | "provjobb" | "aktiv" | "nej";
+  trade: "taklaggare" | "platslagare" | "bada" | null;
+  team_size: number | null;
   id06_number: string | null;
   id06_valid_until: string | null;
   is_posted_worker: boolean;
@@ -313,6 +315,7 @@ export const PIPELINE_LABELS: Record<Subcontractor["pipeline_status"], string> =
   kvalificerad: "Kvalificerad",
   provjobb: "Provjobb",
   aktiv: "Aktiv",
+  nej: "Nej (underkänd/avböjd)",
 };
 
 /** Saknade eller utgångna krav som blockerar tilldelning (speglar public.ue_missing_requirements). */
@@ -321,7 +324,7 @@ export function expiryWarnings(sc: Subcontractor): string[] {
   const today = new Date().toISOString().slice(0, 10);
   const bad = (d: string | null) => !d || d < today;
   const ageDays = sc.f_skatt_checked_at ? (Date.parse(today) - Date.parse(sc.f_skatt_checked_at)) / 86400000 : Infinity;
-  if (sc.pipeline_status !== "aktiv") out.push(`Status: ${PIPELINE_LABELS[sc.pipeline_status]} (måste vara Aktiv)`);
+  if (sc.pipeline_status !== "aktiv" && sc.pipeline_status !== "provjobb") out.push(`Status: ${PIPELINE_LABELS[sc.pipeline_status]} (måste vara Provjobb eller Aktiv)`);
   if (!sc.user_id) out.push("Inloggning saknas");
   if (!sc.f_skatt || ageDays > 30) out.push("F-skatt saknas/kontroll äldre än 30 dagar");
   if (bad(sc.insurance_expires_at)) out.push("Försäkring saknas/utgången");

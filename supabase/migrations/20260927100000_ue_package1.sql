@@ -14,7 +14,9 @@ ALTER TABLE public.subcontractors
   ADD COLUMN IF NOT EXISTS f_skatt_checked_at date,
   ADD COLUMN IF NOT EXISTS kronofogden_debt numeric(12,2),
   ADD COLUMN IF NOT EXISTS pipeline_status text NOT NULL DEFAULT 'hittad'
-    CHECK (pipeline_status IN ('hittad', 'kontaktad', 'samtal', 'kvalificerad', 'provjobb', 'aktiv')),
+    CHECK (pipeline_status IN ('hittad', 'kontaktad', 'samtal', 'kvalificerad', 'provjobb', 'aktiv', 'nej')),
+  ADD COLUMN IF NOT EXISTS trade text CHECK (trade IN ('taklaggare', 'platslagare', 'bada')),
+  ADD COLUMN IF NOT EXISTS team_size integer CHECK (team_size IS NULL OR team_size > 0),
   ADD COLUMN IF NOT EXISTS priority integer NOT NULL DEFAULT 100;
 
 -- Gränser ändras utan ny migration (standard: F-skattekontroll max 30 dagar gammal, skuld max 10 000 kr).
@@ -23,8 +25,8 @@ VALUES ('ue_requirements_config', '{"f_skatt_max_age_days": 30, "max_kronofogden
 ON CONFLICT (key) DO NOTHING;
 
 -- Lista på det som saknas för att en UE ska få tilldelas jobb (tom lista = godkänd).
--- Bara pipelinestatus 'aktiv' och komplett stopplista får arbetsorder.
-CREATE OR REPLACE FUNCTION public.ue_missing_requirements(_sub uuid)
+-- Pipelinestatus 'aktiv' (eller 'provjobb' med max ett pågående jobb) och komplett stopplista krävs.
+CREATE OR REPLACE FUNCTION public.ue_missing_requirements(_sub uuid, _except_job uuid DEFAULT NULL)
 RETURNS text[] LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $$
 DECLARE
   s public.subcontractors%ROWTYPE; m text[] := '{}'; cfg jsonb;
@@ -37,7 +39,20 @@ BEGIN
   max_debt := COALESCE((cfg ->> 'max_kronofogden_debt')::numeric, 10000);
 
   IF NOT s.active THEN m := m || 'aktiv'; END IF;
-  IF s.pipeline_status <> 'aktiv' THEN m := m || 'status'; END IF;
+  -- Aktiv: fritt. Provjobb: högst ett pågående jobb (inget annat med status <> 'klar').
+  -- Övriga statusar (inkl. 'nej') får inga jobb.
+  IF s.pipeline_status = 'provjobb' THEN
+    IF EXISTS (
+      SELECT 1 FROM public.jobs j
+      WHERE j.status <> 'klar'::public.job_status
+        AND (_except_job IS NULL OR j.id <> _except_job)
+        AND (j.subcontractor_id = s.id OR (s.user_id IS NOT NULL AND j.assigned_to = s.user_id))
+    ) THEN
+      m := m || 'provjobb_pagar';
+    END IF;
+  ELSIF s.pipeline_status <> 'aktiv' THEN
+    m := m || 'status';
+  END IF;
   IF s.user_id IS NULL THEN m := m || 'inloggning'; END IF;
   IF NOT s.f_skatt OR s.f_skatt_checked_at IS NULL OR s.f_skatt_checked_at < current_date - max_age THEN
     m := m || 'f_skatt';
@@ -50,7 +65,7 @@ BEGIN
   IF COALESCE(s.kronofogden_debt, 0) > max_debt THEN m := m || 'kronofogden'; END IF;
   RETURN m;
 END $$;
-GRANT EXECUTE ON FUNCTION public.ue_missing_requirements(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.ue_missing_requirements(uuid, uuid) TO authenticated, service_role;
 
 -- Spärr: ett jobb kan inte tilldelas en UE som saknar något krav.
 CREATE OR REPLACE FUNCTION public.enforce_ue_requirements()
@@ -72,7 +87,7 @@ BEGIN
   IF sub IS NULL THEN
     RAISE EXCEPTION 'UE_KRAV: underentreprenoren saknar registerpost' USING ERRCODE = 'P0001';
   END IF;
-  missing := public.ue_missing_requirements(sub);
+  missing := public.ue_missing_requirements(sub, NEW.id);
   IF array_length(missing, 1) IS NOT NULL THEN
     RAISE EXCEPTION 'UE_KRAV: underentreprenoren saknar: %', array_to_string(missing, ', ') USING ERRCODE = 'P0001';
   END IF;
