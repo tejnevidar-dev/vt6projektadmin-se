@@ -3,6 +3,7 @@ import {
   DEFAULT_CONFIG,
   findDuplicate,
   isBusinessHour,
+  normalizeEmail,
   parseConfig,
   phoneKey,
   pickSeller,
@@ -73,5 +74,28 @@ describe("övrigt", () => {
   it("öppettider i Stockholmstid", () => {
     expect(isBusinessHour(new Date("2026-09-25T10:00:00Z"))).toBe(true); // 12:00
     expect(isBusinessHour(new Date("2026-09-25T00:30:00Z"))).toBe(false); // 02:30
+  });
+});
+
+describe("tom e-post (valfri i webbformuläret)", () => {
+  const leads = [
+    { id: "1", email: "", phone: "070-111 22 33" },
+    { id: "2", email: null, phone: "+46 73 999 88 77" },
+    { id: "3", email: "anna@exempel.se", phone: null },
+  ];
+  it("normalizeEmail gör tom och blank sträng till null", () => {
+    expect(normalizeEmail("")).toBeNull();
+    expect(normalizeEmail("   ")).toBeNull();
+    expect(normalizeEmail(undefined)).toBeNull();
+    expect(normalizeEmail(" Anna@Exempel.se ")).toBe("Anna@Exempel.se");
+  });
+  it("matchar aldrig på tom eller null e-post", () => {
+    // Inkommande utan e-post får inte matcha befintliga leads som saknar e-post.
+    expect(findDuplicate(leads, { email: "", phone: "0700000000" })).toBeNull();
+    expect(findDuplicate(leads, { email: null, phone: null })).toBeNull();
+    expect(findDuplicate(leads, { email: "   " })).toBeNull();
+  });
+  it("matchar på telefon när e-post saknas", () => {
+    expect(findDuplicate(leads, { email: "", phone: "0739998877" })?.id).toBe("2");
   });
 });

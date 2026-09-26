@@ -8,6 +8,7 @@ import {
   parseConfig,
   pickSeller,
   type LeadIntakeConfig,
+  normalizeEmail,
 } from "@/lib/lead-intake";
 
 const CONFIG_KEY = "lead_intake_config";
@@ -189,7 +190,7 @@ export async function ingestLead(supabase: any, cfg: LeadIntakeConfig, input: In
       property_id: property.id,
       name: input.name,
       phone: input.phone ?? null,
-      email: input.email ?? null,
+      email: normalizeEmail(input.email),
       status: input.status ?? "hot",
       source: input.source,
       job_type: input.jobType ?? "roof_replacement",
@@ -213,7 +214,7 @@ export async function ingestLead(supabase: any, cfg: LeadIntakeConfig, input: In
   const details = [
     `Kanal: ${input.sourceLabel}`,
     input.phone ? `Telefon: ${input.phone}` : "",
-    input.email ? `E-post: ${input.email}` : "",
+    normalizeEmail(input.email) ? `E-post: ${normalizeEmail(input.email)}` : "",
     input.address ? `Adress: ${input.address}` : "",
     input.summary ? `Meddelande: ${clip(input.summary, 300)}` : "",
   ].filter(Boolean);

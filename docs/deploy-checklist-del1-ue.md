@@ -17,6 +17,7 @@ Förutsättning: Vidar har kört de fyra migrationerna i Supabase (SQL-editorn),
 
 ## 2. Publika endpoints (regel 4, direkt efter deploy)
 - [ ] Webbformulär (roslagstak-webhook): skicka testlead, se den i CRM. Radera efteråt.
+- [ ] Webbformulär utan e-post (`"email": ""` och utelämnat fält): 201, lead skapas med e-post tom, notis och SLA fungerar. Radera efteråt.
 - [ ] `POST /api/public/lead-inbox` med `x-inbox-secret`: 200, lead skapas. Radera efteråt.
 - [ ] Inbound-email: skicka testmail till info@ från egen adress, lead skapas. Radera efteråt.
 - [ ] `GET /api/public/morning-stats` med `X-Report-Secret`: 200, innehåller `paid`-blocket. Utan nyckel: 401.

@@ -118,3 +118,9 @@ export function safeEqual(a: string, b: string): boolean {
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
 }
+
+/** Tom eller blank e-post (t.ex. valfritt fält i formuläret) blir null; annars trimmad adress. */
+export const normalizeEmail = (raw: string | null | undefined): string | null => {
+  const e = raw?.trim();
+  return e ? e : null;
+};

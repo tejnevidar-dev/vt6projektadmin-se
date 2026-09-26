@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { ingestLead, loadConfig } from "@/lib/lead-intake.server";
+import { normalizeEmail } from "@/lib/lead-intake";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,7 +57,8 @@ const PayloadSchema = z.object({
   mode: z.enum(["configure", "consultation"]),
   name: z.string().min(1).max(255),
   phone: z.string().min(1).max(64),
-  email: z.string().email().max(255),
+  // Valfri: formuläret skickar tom sträng när kunden inte fyller i e-post.
+  email: z.union([z.literal(""), z.string().trim().email().max(255)]).optional().nullable(),
   address: z.string().max(500).optional().nullable(),
   current_roof: z.string().max(255).optional().nullable(),
   new_roof: z.string().max(255).optional().nullable(),
@@ -72,7 +74,7 @@ const PayloadSchema = z.object({
 function buildNotes(p: z.infer<typeof PayloadSchema>): string {
   const lines: string[] = [];
   lines.push(`📥 Inkommande från RoslagsTak.se (${p.mode === "configure" ? "Offertkonfigurator" : "Rådgivning"})`);
-  lines.push(`E-post: ${p.email}`);
+  if (normalizeEmail(p.email)) lines.push(`E-post: ${normalizeEmail(p.email)}`);
   if (p.message) lines.push(`Meddelande: ${p.message}`);
   if (p.mode === "configure") {
     if (p.current_roof) lines.push(`Nuvarande tak: ${p.current_roof}`);
@@ -129,7 +131,7 @@ export const Route = createFileRoute("/api/public/roslagstak-webhook")({
           externalId: `roslagstak:${p.id}`,
           name: p.name,
           phone: p.phone,
-          email: p.email,
+          email: normalizeEmail(p.email),
           address: p.address,
           roofType: p.current_roof ?? null,
           status: "hot",
