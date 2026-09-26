@@ -9,6 +9,9 @@
 //
 //   bun run scripts/rescue-missed-quotes.ts <rader.json>            # torrkörning, visar vad som skulle skickas
 //   WEBHOOK_SECRET=... bun run scripts/rescue-missed-quotes.ts <rader.json> --send
+//   INBOX_SECRET=...   bun run scripts/rescue-missed-quotes.ts <rader.json> --send --via inbox
+//     (via lead-inbox: fungerar utan webhook-secreten. Kräver att koden med "as_website" är deployad,
+//      annars ignoreras fältet och leaden får källa "inbox". Samma external_id => idempotent även mot webhooken senare.)
 //
 // Valfria miljövariabler: CRM_URL (standard https://admin-vt6.tejnevidar.workers.dev), DELAY_MS (standard 1500).
 // Persondata skrivs aldrig ut: loggen visar bara id, status och antal.
@@ -65,6 +68,21 @@ export function toPayload(r: QuoteRow) {
   };
 }
 
+/** Payload för lead-inbox: samma external_id som webhooken (roslagstak:<id>) så att det aldrig dubbleras. */
+export function toInboxPayload(r: QuoteRow) {
+  const p = toPayload(r);
+  return {
+    name: p.name,
+    phone: p.phone || null,
+    email: p.email || null,
+    address: p.address,
+    message: p.message,
+    channel: "hemsidan",
+    as_website: true,
+    external_id: `roslagstak:${r.id}`,
+  };
+}
+
 async function main() {
   const file = process.argv[2];
   const send = process.argv.includes("--send");
@@ -72,8 +90,9 @@ async function main() {
   const rows: QuoteRow[] = JSON.parse(readFileSync(file, "utf8"));
   const base = (process.env.CRM_URL || "https://admin-vt6.tejnevidar.workers.dev").replace(/\/$/, "");
   const delay = Number(process.env.DELAY_MS || 1500);
-  const secret = process.env.WEBHOOK_SECRET;
-  if (send && !secret) throw new Error("Sätt WEBHOOK_SECRET för --send");
+  const viaInbox = process.argv.includes("--via") && process.argv[process.argv.indexOf("--via") + 1] === "inbox";
+  const secret = viaInbox ? process.env.INBOX_SECRET : process.env.WEBHOOK_SECRET;
+  if (send && !secret) throw new Error(viaInbox ? "Sätt INBOX_SECRET för --send --via inbox" : "Sätt WEBHOOK_SECRET för --send");
 
   const todo = rows
     .filter((r) => r.id)
@@ -88,10 +107,10 @@ async function main() {
       console.log(`  ${r.id}: skulle skickas`);
       continue;
     }
-    const res = await fetch(`${base}/api/public/roslagstak-webhook`, {
+    const res = await fetch(`${base}/api/public/${viaInbox ? "lead-inbox" : "roslagstak-webhook"}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Webhook-Secret": secret! },
-      body: JSON.stringify(toPayload(r)),
+      headers: { "Content-Type": "application/json", ...(viaInbox ? { "x-inbox-secret": secret! } : { "X-Webhook-Secret": secret! }) },
+      body: JSON.stringify(viaInbox ? toInboxPayload(r) : toPayload(r)),
     });
     let status = String(res.status);
     try {

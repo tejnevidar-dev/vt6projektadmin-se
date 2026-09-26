@@ -34,6 +34,8 @@ const Payload = z
     address: opt(500),
     message: opt(5000),
     channel: opt(64),
+    /** true: leaden räknas som webbformulärlead (source roslagstak, "Hemsidan"), t.ex. vid räddning av missade förfrågningar. */
+    as_website: z.boolean().optional().nullable(),
     campaign: opt(255),
     utm_source: opt(255),
     utm_medium: opt(255),
@@ -107,7 +109,11 @@ export const Route = createFileRoute("/api/public/lead-inbox")({
         const email = p.email?.trim().toLowerCase() || null;
         const name = p.name?.trim() || (email ? email.split("@")[0].replace(/[._-]+/g, " ") : "Okänt namn");
         const message = p.message?.trim() || "";
-        const externalId = `inbox:${p.external_id?.trim() || crypto.randomUUID()}`;
+        const rawId = p.external_id?.trim();
+        // Webbformulärleads använder webhookens id-format, så samma förfrågan aldrig dubbleras mellan kanalerna.
+        const externalId = p.as_website && rawId
+          ? rawId.startsWith("roslagstak:") ? rawId : `roslagstak:${rawId}`
+          : `inbox:${rawId || crypto.randomUUID()}`;
 
         const tracking = Object.fromEntries(
           Object.entries({
@@ -134,8 +140,8 @@ export const Route = createFileRoute("/api/public/lead-inbox")({
 
         const cfg = await loadConfig(supabaseAdmin);
         const result = await ingestLead(supabaseAdmin, cfg, {
-          source: "inbox",
-          sourceLabel: channel,
+          source: p.as_website ? "roslagstak" : "inbox",
+          sourceLabel: p.as_website ? "Hemsidan" : channel,
           externalId,
           name,
           phone: p.phone?.trim() || null,

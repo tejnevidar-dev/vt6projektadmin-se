@@ -22,3 +22,14 @@ describe("rescue-missed-quotes", () => {
     expect(toPayload({ id: "x", mode: null, name: "A", phone: "1" }).mode).toBe("consultation");
   });
 });
+
+describe("rescue via lead-inbox", () => {
+  it("använder samma external_id som webhooken och tom e-post blir null", async () => {
+    const { toInboxPayload } = await import("../../scripts/rescue-missed-quotes");
+    const p = toInboxPayload({ id: "abc", name: "Anna", phone: "070", email: "", message: "Hej" });
+    expect(p.external_id).toBe("roslagstak:abc");
+    expect(p.email).toBeNull();
+    expect(p.as_website).toBe(true);
+    expect(p.message.startsWith("Missad förfrågan från sajten")).toBe(true);
+  });
+});
