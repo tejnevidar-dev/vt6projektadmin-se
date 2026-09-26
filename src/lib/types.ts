@@ -200,6 +200,10 @@ export interface Lead {
   offerPdfPath: string | null;
   needsOffer: boolean;
   rotPaid: boolean;
+  /** När kunden betalade jobbet (kassamålet mäts på detta). */
+  customerPaidAt: string | null;
+  /** Betalt belopp i kr. */
+  customerPaidAmount: number | null;
   contactPersonId: string | null;
   propertyDesignation: string | null;
   personalNumber: string | null;
@@ -338,6 +342,8 @@ export function toFlatLead(lp: LeadWithProperty): Lead {
     offerPdfPath: (lp as { offer_pdf_path?: string | null }).offer_pdf_path ?? null,
     needsOffer: (lp as { needs_offer?: boolean | null }).needs_offer ?? false,
     rotPaid: (lp as { rot_paid?: boolean | null }).rot_paid ?? false,
+    customerPaidAt: (lp as { customer_paid_at?: string | null }).customer_paid_at ?? null,
+    customerPaidAmount: (lp as { customer_paid_amount?: number | null }).customer_paid_amount ?? null,
     contactPersonId: (lp as { contact_person_id?: string | null }).contact_person_id ?? null,
     propertyDesignation: lp.property?.property_designation ?? null,
     personalNumber: (lp as { personal_number?: string | null }).personal_number ?? null,

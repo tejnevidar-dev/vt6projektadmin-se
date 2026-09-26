@@ -72,6 +72,24 @@ describe("buildMorningStats", () => {
     expect(s.intake_errors_24h).toBe(2);
   });
 
+  it("betalda jobb och betalt belopp per period", () => {
+    const s = buildMorningStats({
+      leads: [
+        lead({ id: "p1", customer_paid_at: hoursAgo(24), customer_paid_amount: 100000 }),
+        lead({ id: "p2", customer_paid_at: hoursAgo(24 * 20), customer_paid_amount: "50000.50" }),
+        lead({ id: "p3", customer_paid_at: hoursAgo(24 * 60), customer_paid_amount: 10000 }),
+        lead({ id: "u1" }),
+      ],
+      staffTouchedLeadIds: new Set(),
+      slaHours: 2,
+      intakeErrors24h: 0,
+      now,
+    });
+    expect(s.paid.last_7d).toEqual({ jobs: 1, amount: 100000 });
+    expect(s.paid.month_to_date).toEqual({ jobs: 2, amount: 150000.5 });
+    expect(s.paid.total).toEqual({ jobs: 3, amount: 160000.5 });
+  });
+
   it("innehåller inga personuppgifter", () => {
     const json = JSON.stringify(
       buildMorningStats({ leads: [lead({ id: "secret-id-123" })], staffTouchedLeadIds: new Set(), slaHours: 2, intakeErrors24h: 0, now }),

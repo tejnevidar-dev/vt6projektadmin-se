@@ -1,6 +1,10 @@
--- Externa säljare ('saljare_extern'): får bara se och ändra leads de själva skapat eller
--- tilldelats (created_by / seller_id = auth.uid()) samt tillhörande fastighet, aktiviteter,
--- dokument och filer. Interna roller (admin, saljare, ekonomi ...) påverkas inte:
+-- Externa säljare ('saljare_extern') v2, del 1 av 3: grundbehörighet.
+-- Ersätter den aldrig körda 20260925120100_external_seller_role_policies.sql (borttagen).
+--
+-- En extern säljare får bara se och ändra leads de själva skapat eller tilldelats
+-- (created_by / seller_id = auth.uid()) samt tillhörande fastighet, aktiviteter, dokument
+-- och filer. Offertdelen (kalkyl, offert, signering) kommer i del 2.
+-- Interna roller (admin, saljare, ekonomi ...) påverkas inte:
 --   * alla nya tillåtande policyer gäller bara restricted sellers
 --   * alla nya RESTRICTIVE policyer har formen NOT restricted OR <ägar-villkor>
 -- En användare som även har admin/saljare räknas som intern (is_restricted_seller = false).
@@ -38,6 +42,8 @@ GRANT EXECUTE ON FUNCTION private.own_property(uuid, uuid) TO authenticated;
 ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS created_by uuid DEFAULT auth.uid();
 
 -- ---------- leads ----------
+-- Steg en extern säljare får sätta/flytta till: hela säljresan fram till förhandling.
+-- Vunnen (bokad), pågående och slutförd sätts bara av företaget / via kundens signering.
 CREATE POLICY "Extern saljare can select own leads" ON public.leads
   FOR SELECT TO authenticated
   USING (private.is_restricted_seller(auth.uid()) AND (created_by = auth.uid() OR seller_id = auth.uid()));
@@ -59,6 +65,8 @@ CREATE POLICY "Extern saljare can update own leads" ON public.leads
 
 -- RLS kan inte jämföra OLD/NEW: lås ekonomi-, ägar- och tilldelningsfält för externa säljare i en trigger.
 -- Namnet börjar på "aa_" så att den körs före övriga BEFORE UPDATE-triggers.
+-- Medvetet olåsta: offer_pdf_path (säljaren laddar upp/genererar egna offerter).
+-- Låsta: offer_accepted_at (sätts bara av kundens signering), provision, fakturering, ROT, completed_at.
 CREATE OR REPLACE FUNCTION public.aa_lock_restricted_seller_lead_fields()
 RETURNS trigger LANGUAGE plpgsql SET search_path = '' AS $$
 BEGIN
@@ -82,13 +90,13 @@ BEGIN
        OR NEW.foreman_name IS DISTINCT FROM OLD.foreman_name
        OR NEW.completed_at IS DISTINCT FROM OLD.completed_at
        OR NEW.offer_accepted_at IS DISTINCT FROM OLD.offer_accepted_at
-       OR NEW.offer_pdf_path IS DISTINCT FROM OLD.offer_pdf_path
        OR NEW.external_id IS DISTINCT FROM OLD.external_id
     THEN
       RAISE EXCEPTION 'Externa saljare far inte andra detta falt' USING ERRCODE = '42501';
     END IF;
     IF NEW.pipeline_stage IS DISTINCT FROM OLD.pipeline_stage
-       AND NEW.pipeline_stage NOT IN ('saljpanel', 'kontaktad', 'mote_bokat', 'mote_genomfort', 'forlorad') THEN
+       AND NEW.pipeline_stage NOT IN ('saljpanel', 'kontaktad', 'mote_bokat', 'mote_genomfort',
+                                      'offererad', 'offert_skickad', 'uppfoljning', 'forhandling', 'forlorad') THEN
       RAISE EXCEPTION 'Externa saljare far inte flytta leaden till detta steg' USING ERRCODE = '42501';
     END IF;
   END IF;
@@ -137,7 +145,7 @@ CREATE POLICY "Extern saljare can delete own uploaded documents" ON public.lead_
   FOR DELETE TO authenticated
   USING (private.is_restricted_seller(auth.uid()) AND private.own_lead(lead_id, auth.uid()) AND uploaded_by = auth.uid());
 
--- ---------- Storage: bara bucketen lead-documents, bara mappar (= lead-id) de äger ----------
+-- ---------- Storage: lead-documents, bara mappar (= lead-id) de äger ----------
 CREATE POLICY "Extern saljare can read own lead-documents files" ON storage.objects
   FOR SELECT TO authenticated
   USING (bucket_id = 'lead-documents' AND private.is_restricted_seller(auth.uid())
@@ -165,16 +173,3 @@ CREATE POLICY "Extern saljare blocked from sales_goals" ON public.sales_goals
 CREATE POLICY "Extern saljare only own lead_stage_history" ON public.lead_stage_history
   AS RESTRICTIVE FOR SELECT TO authenticated
   USING (NOT private.is_restricted_seller(auth.uid()) OR private.own_lead(lead_id, auth.uid()));
-
--- Offerter/kalkyler hanteras av företaget; läsbara via "lead.created_by = auth.uid()" i de gamla policyerna.
-CREATE POLICY "Extern saljare blocked from offers" ON public.offers
-  AS RESTRICTIVE FOR SELECT TO authenticated
-  USING (NOT private.is_restricted_seller(auth.uid()));
-
-CREATE POLICY "Extern saljare blocked from calculations" ON public.calculations
-  AS RESTRICTIVE FOR SELECT TO authenticated
-  USING (NOT private.is_restricted_seller(auth.uid()));
-
-CREATE POLICY "Extern saljare blocked from offer_drafts" ON public.offer_drafts
-  AS RESTRICTIVE FOR SELECT TO authenticated
-  USING (NOT private.is_restricted_seller(auth.uid()));

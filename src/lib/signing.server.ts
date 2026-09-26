@@ -67,3 +67,14 @@ export async function queueEmail(
 ): Promise<{ ok: boolean; error?: string }> {
   return sendAndLogEmail(supabase, params)
 }
+
+/** Kontrollerar admin-rollen med service role (används för godkännandeflödet). */
+export async function isAdminUser(supabaseAdmin: any, userId: string): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('role', 'admin')
+    .maybeSingle()
+  return !!data
+}

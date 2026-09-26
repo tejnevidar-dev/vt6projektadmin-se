@@ -49,12 +49,14 @@ export interface AlertInput {
   intro?: string;
   details?: string[];
   idempotencySuffix?: string;
+  /** Egen länk (relativ sökväg) istället för leadens sida. */
+  link?: string;
 }
 
 /** Skickar notis i klockan och mail till admin och/eller ansvarig säljare. Får aldrig kasta. */
 export async function sendAlert(supabase: any, cfg: LeadIntakeConfig, a: AlertInput): Promise<void> {
   try {
-    const link = a.leadId ? leadLink(a.leadId) : "/webhook-logs";
+    const link = a.link ?? (a.leadId ? leadLink(a.leadId) : "/webhook-logs");
     const admins = a.toAdmin === false ? [] : await adminUserIds(supabase, cfg);
     const recipients: { userId: string; body: string; isSeller: boolean }[] = admins.map((userId) => ({
       userId,

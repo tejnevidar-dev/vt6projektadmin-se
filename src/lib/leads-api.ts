@@ -644,3 +644,22 @@ export async function setLeadOfferAccepted(
     { offer_accepted_at: iso },
   );
 }
+
+/** Markerar att kunden betalt jobbet (bara admin/ekonomi, låst i databasen för andra), eller ångrar det. */
+export async function setLeadCustomerPaid(id: string, paid: boolean, amount?: number | null): Promise<void> {
+  const { error } = await (supabase.from("leads") as any)
+    .update({
+      customer_paid_at: paid ? new Date().toISOString() : null,
+      customer_paid_amount: paid ? (amount ?? null) : null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity(
+    id,
+    "updated",
+    paid
+      ? `Kunden har betalat${amount ? ` (${Math.round(amount).toLocaleString("sv-SE")} kr)` : ""}`
+      : "Kundbetalning återställd",
+    { customer_paid: paid, amount: amount ?? null },
+  );
+}

@@ -57,8 +57,12 @@ import {
   listSigningRequests,
   resendSigningEmail,
   getSigningPdfUrl,
+  approveSigningRequest,
+  getCompanySignatureStatus,
   type SigningRequestRow,
 } from "@/lib/signing.functions";
+import { ApproveOfferDialog } from "@/components/ApproveOfferDialog";
+import { useUserRoles } from "@/hooks/use-role";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/offert/ny")({
@@ -235,12 +239,40 @@ function OffertNyContent() {
   const callListSignings = useServerFn(listSigningRequests);
   const callResendSigning = useServerFn(resendSigningEmail);
   const callSigningPdf = useServerFn(getSigningPdfUrl);
+  const callApprove = useServerFn(approveSigningRequest);
+  const callCompanySig = useServerFn(getCompanySignatureStatus);
+  const { isAdmin } = useUserRoles();
+  const [hasCompanySig, setHasCompanySig] = useState(false);
+  const [approveDlg, setApproveDlg] = useState<{ row: SigningRequestRow; mode: "approve" | "reject" } | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const loadSignings = async () => {
     try {
       setSignings(await callListSignings({ data: undefined as never }));
     } catch {
       /* ignore */
+    }
+  };
+  useEffect(() => {
+    if (!isAdmin) return;
+    callCompanySig({ data: undefined as never })
+      .then((s) => setHasCompanySig(s.exists))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, approveDlg]);
+
+  /** Ett klick: godkänn med sparad bolagssignatur. Saknas den öppnas ritdialogen första gången. */
+  const approveNow = async (row: SigningRequestRow) => {
+    if (!hasCompanySig) return setApproveDlg({ row, mode: "approve" });
+    setApprovingId(row.id);
+    try {
+      const res = await callApprove({ data: { id: row.id } });
+      toast.success(res.emailed ? "Godkänd och skickad till kunden" : "Godkänd (mejlet kunde inte skickas, kopiera länken)");
+      void loadSignings();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Kunde inte godkänna");
+    } finally {
+      setApprovingId(null);
     }
   };
   useEffect(() => {
@@ -1094,6 +1126,16 @@ function OffertNyContent() {
         onCreated={loadSignings}
       />
 
+      <ApproveOfferDialog
+        open={!!approveDlg}
+        onOpenChange={(o) => {
+          if (!o) setApproveDlg(null);
+        }}
+        row={approveDlg?.row ?? null}
+        mode={approveDlg?.mode ?? "approve"}
+        onDone={() => void loadSignings()}
+      />
+
       {signings.length > 0 && (
         <Card className="mt-4">
           <CardHeader className="py-3">
@@ -1106,29 +1148,47 @@ function OffertNyContent() {
                   <div className="min-w-[180px] flex-1">
                     <span className="font-medium">{s.offer_number}</span>{" "}
                     <span className="text-muted-foreground">· {s.customer_name}</span>
+                    {s.created_by_name ? (
+                      <span className="text-xs text-muted-foreground"> · {s.created_by_name}</span>
+                    ) : null}
                   </div>
-                  <Badge variant={s.status === "signed" ? "default" : "secondary"}>
+                  <Badge variant={s.status === "signed" ? "default" : s.status === "awaiting_approval" ? "destructive" : "secondary"}>
                     {s.status === "signed"
                       ? "Signerad av kund"
-                      : s.status === "viewed"
-                        ? "Öppnad av kund"
-                        : s.status === "cancelled"
-                          ? "Avbruten"
-                          : "Väntar"}
+                      : s.status === "awaiting_approval"
+                        ? "Väntar på godkännande"
+                        : s.status === "viewed"
+                          ? "Öppnad av kund"
+                          : s.status === "cancelled"
+                            ? "Avbruten"
+                            : "Väntar"}
                   </Badge>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(
-                        `${window.location.origin}/signera/${s.token}`,
-                      );
-                      toast.success("Länk kopierad");
-                    }}
-                  >
-                    Kopiera länk
-                  </Button>
-                  {s.status !== "signed" && (
+                  {s.status === "awaiting_approval" && isAdmin && (
+                    <>
+                      <Button size="sm" disabled={approvingId === s.id} onClick={() => void approveNow(s)}>
+                        {approvingId === s.id ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : null}
+                        Godkänn & skicka
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setApproveDlg({ row: s, mode: "reject" })}>
+                        Avslå
+                      </Button>
+                    </>
+                  )}
+                  {s.status !== "awaiting_approval" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        void navigator.clipboard.writeText(
+                          `${window.location.origin}/signera/${s.token}`,
+                        );
+                        toast.success("Länk kopierad");
+                      }}
+                    >
+                      Kopiera länk
+                    </Button>
+                  )}
+                  {s.status !== "signed" && s.status !== "awaiting_approval" && s.status !== "cancelled" && (
                     <Button
                       size="sm"
                       variant="ghost"

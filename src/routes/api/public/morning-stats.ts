@@ -26,7 +26,7 @@ export const Route = createFileRoute("/api/public/morning-stats")({
 
         const { data: leads, error } = await db
           .from("leads")
-          .select("id, source, pipeline_stage, created_at, updated_at, offer_accepted_at, completed_at, last_contact")
+          .select("id, source, pipeline_stage, created_at, updated_at, offer_accepted_at, completed_at, last_contact, customer_paid_at, customer_paid_amount")
           .order("created_at", { ascending: false })
           .limit(5000);
         if (error) return json({ error: "Query failed" }, 500);

@@ -9,6 +9,7 @@ import { fetchLeadDocuments, getLeadDocumentUrl, isInvoiceDocument, type LeadDoc
 import { fetchOffersForLead, type OfferRow } from "@/lib/calculations-api";
 import { InvoiceRotPanel } from "@/components/InvoiceRotPanel";
 import { EconomyNoteCard } from "@/components/EconomyNoteCard";
+import { CustomerPaidCard } from "@/components/CustomerPaidCard";
 import { isRotApplicationDue, type Lead } from "@/lib/types";
 import { daysToDue, isOverdue, margin, missingRotData, net, VAT } from "@/lib/economy-analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -282,6 +283,7 @@ function EkonomiDetail() {
           </Card>
 
           <div className="space-y-4">
+            <CustomerPaidCard lead={lead} onUpdated={refresh} />
             <InvoiceRotPanel lead={lead} onUpdated={refresh} />
             <EconomyNoteCard leadId={lead.id} note={lead.economyNote} onUpdated={refresh} />
           </div>

@@ -14,9 +14,16 @@ export interface StatsLead {
   offer_accepted_at: string | null;
   completed_at: string | null;
   last_contact: string | null;
+  customer_paid_at?: string | null;
+  customer_paid_amount?: number | string | null;
 }
 
 export type CountBySource = Record<string, number>;
+
+export interface PaidCounts {
+  jobs: number;
+  amount: number;
+}
 
 export interface WindowCounts {
   total: number;
@@ -30,6 +37,8 @@ export interface MorningStats {
   pipeline: Record<string, number>;
   offers_out: number;
   won: { last_24h: WindowCounts; last_7d: WindowCounts; month_to_date: WindowCounts; total: number };
+  /** Betalda jobb och betalt belopp (kr): kassamålet mäts på detta. */
+  paid: { last_7d: PaidCounts; month_to_date: PaidCounts; total: PaidCounts };
   last_lead_at: string | null;
   hours_since_last_lead: number | null;
   intake_errors_24h: number;
@@ -71,6 +80,7 @@ export function buildMorningStats(input: {
   const newLeads = { last_24h: empty(), last_7d: empty(), month_to_date: empty() };
   const won = { last_24h: empty(), last_7d: empty(), month_to_date: empty(), total: 0 };
   const pipeline: Record<string, number> = {};
+  const paid = { last_7d: { jobs: 0, amount: 0 }, month_to_date: { jobs: 0, amount: 0 }, total: { jobs: 0, amount: 0 } };
   let offersOut = 0;
   let overSla = 0;
   let unansweredTotal = 0;
@@ -86,6 +96,18 @@ export function buildMorningStats(input: {
 
     pipeline[l.pipeline_stage] = (pipeline[l.pipeline_stage] ?? 0) + 1;
     if (l.pipeline_stage === "offert_skickad") offersOut++;
+
+    if (l.customer_paid_at) {
+      const amt = Number(l.customer_paid_amount ?? 0) || 0;
+      const pd = new Date(l.customer_paid_at).getTime();
+      const bump = (p: PaidCounts) => {
+        p.jobs++;
+        p.amount += amt;
+      };
+      bump(paid.total);
+      if (pd >= t7) bump(paid.last_7d);
+      if (pd >= tMonth) bump(paid.month_to_date);
+    }
 
     if (isWon(l)) {
       won.total++;
@@ -119,6 +141,7 @@ export function buildMorningStats(input: {
     pipeline,
     offers_out: offersOut,
     won,
+    paid,
     last_lead_at: lastLeadMs === null ? null : new Date(lastLeadMs).toISOString(),
     hours_since_last_lead: lastLeadMs === null ? null : Math.round(((now.getTime() - lastLeadMs) / 3600000) * 10) / 10,
     intake_errors_24h: input.intakeErrors24h,

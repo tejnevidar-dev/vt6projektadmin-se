@@ -8,6 +8,7 @@ import {
   randomOtp,
   signingUrl,
 } from '@/lib/signing.server'
+import { markOfferAccepted } from '@/lib/offer-accepted.server'
 
 const OTP_TTL_MS = 15 * 60 * 1000
 const MAX_ATTEMPTS = 6
@@ -34,6 +35,8 @@ async function loadRow(supabase: any, token: string) {
     .select('*')
     .eq('token', token)
     .maybeSingle()
+  // Offert som väntar på godkännande är inte synlig för kund (länken gäller först när den godkänts).
+  if (data?.status === 'awaiting_approval') return null
   return data ?? null
 }
 
@@ -200,6 +203,8 @@ export const Route = createFileRoute('/api/public/sign/$token')({
               otp_code_hash: null,
             })
             .eq('id', row.id)
+
+          await markOfferAccepted(supabase, row, now)
 
           const docUrl = signingUrl(row.token)
 
