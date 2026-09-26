@@ -44,3 +44,5 @@ dist-ssr
 
 # Supabase CLI's own local cache (e.g. cli-latest version-check file) — never source
 supabase/.temp/
+
+rescue-rows*.json
