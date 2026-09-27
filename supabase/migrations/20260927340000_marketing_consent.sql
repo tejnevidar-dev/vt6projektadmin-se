@@ -75,6 +75,13 @@ CREATE TRIGGER trg_lock_marketing_consent_fields
 BEFORE UPDATE ON public.jobs
 FOR EACH ROW EXECUTE FUNCTION public.lock_marketing_consent_fields();
 
+-- job_photos "Manage photos for accessible jobs" är FOR ALL (täcker INSERT också), så en
+-- arbetsledare/UE kan annars INSERT:a ett nytt foto med marketing_ok redan satt - inte bara
+-- UPDATE:a ett befintligt. Spärren måste därför gälla BEFORE INSERT OR UPDATE (Driftchefens
+-- fråga 2026-09-27): vid INSERT från icke admin/säljare krävs marketing_ok IS NULL, vid UPDATE
+-- får värdet inte ändras alls. jobs saknar en motsvarande INSERT-policy för icke-admin (jobs
+-- skapas bara via triggern handle_lead_booking, SECURITY DEFINER, som kringgår RLS helt), så
+-- lock_marketing_consent_fields ovan behöver inte samma BEFORE INSERT-gren.
 CREATE OR REPLACE FUNCTION public.lock_marketing_ok_field()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -87,7 +94,11 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF OLD.marketing_ok IS DISTINCT FROM NEW.marketing_ok THEN
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.marketing_ok IS NOT NULL THEN
+      RAISE EXCEPTION 'Bara admin eller säljare får sätta marketing_ok på ett jobbfoto.';
+    END IF;
+  ELSIF OLD.marketing_ok IS DISTINCT FROM NEW.marketing_ok THEN
     RAISE EXCEPTION 'Bara admin eller säljare får ändra marketing_ok på ett jobbfoto.';
   END IF;
 
@@ -97,5 +108,5 @@ $$;
 
 DROP TRIGGER IF EXISTS trg_lock_marketing_ok_field ON public.job_photos;
 CREATE TRIGGER trg_lock_marketing_ok_field
-BEFORE UPDATE ON public.job_photos
+BEFORE INSERT OR UPDATE ON public.job_photos
 FOR EACH ROW EXECUTE FUNCTION public.lock_marketing_ok_field();
