@@ -68,7 +68,19 @@ export const createSigningRequest = createServerFn({ method: "POST" })
       const token = randomToken();
       const basePath = `signering/${id}/original.pdf`;
 
-      const bytes = base64ToBytes(data.pdfBase64);
+      // Kundvillkor (ångerrätt/byggherreansvar/garanti): inaktivt scaffold tills Vidar sätter
+      // active:true efter att Jurist levererat texterna (se customer-terms.ts). Rör inte PDF:en
+      // eller signature_requests-raden alls förrän dess -- dagens offerter opåverkade.
+      const { parseCustomerTerms, isCustomerTermsReady } = await import("./customer-terms");
+      const { data: termsRow } = await (supabaseAdmin as any).from("app_settings").select("value").eq("key", "customer_terms").maybeSingle();
+      const termsCfg = parseCustomerTerms(termsRow?.value);
+      const termsReady = isCustomerTermsReady(termsCfg);
+
+      let bytes = base64ToBytes(data.pdfBase64);
+      if (termsReady) {
+        const { appendCustomerTermsPages } = await import("./customer-terms-pdf.server");
+        bytes = await appendCustomerTermsPages(bytes, termsCfg);
+      }
       const { error: upErr } = await supabaseAdmin.storage
         .from("offers")
         .upload(basePath, bytes, { contentType: "application/pdf", upsert: true });
@@ -91,6 +103,7 @@ export const createSigningRequest = createServerFn({ method: "POST" })
         company_place: admin ? data.companyPlace!.trim() : null,
         company_date: admin ? data.companyDate! : null,
         company_signed_at: admin ? new Date().toISOString() : null,
+        customer_terms_version: termsReady ? termsCfg.version : null,
       });
       if (insErr) throw new Error(insErr.message);
 
