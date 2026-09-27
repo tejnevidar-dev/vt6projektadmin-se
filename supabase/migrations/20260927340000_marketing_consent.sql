@@ -8,9 +8,16 @@
 -- vilken detaljnivå. Idag finns det bara som fri text i fakta.md-filer utanför CRM (Blidö/Singö),
 -- vilket inte skalar och inte går att kontrollera programmatiskt innan ett foto publiceras.
 --
--- Additiv, ändrar inget befintligt beteende och inga RLS-regler (nya kolumner täcks av
--- befintliga policies på jobs/job_photos). Ingen automatisk gallring/radering ingår - det är en
--- egen, separat leverans om/när det behövs (jfr lönebevis-gallring, samma resonemang).
+-- Additiv, ändrar inget befintligt beteende för andra kolumner. Inga nya RLS-policies (nya
+-- kolumner täcks av befintliga policies på jobs/job_photos), MEN se kolumnspärren nedan:
+-- "Owners update own jobs" (assigned_to = auth.uid()) och job_photos "FOR ALL"-policyn släpper
+-- annars igenom UPDATE på VILKEN SOM HELST kolumn för en arbetsledare/UE som äger jobbet - alltså
+-- även de nya samtyckesfälten. Bara admin och säljare ska kunna sätta samtycke (Driftchefens
+-- fråga 2026-09-27), så en BEFORE UPDATE-trigger låser dem, samma mönster som
+-- lock_arbetsledare_ata_fields() för atas.
+--
+-- Ingen automatisk gallring/radering ingår - det är en egen, separat leverans om/när det behövs
+-- (jfr lönebevis-gallring, samma resonemang).
 
 CREATE TYPE public.marketing_consent_status AS ENUM ('ej_fragat', 'ja_utan_adress', 'ja_med_ort', 'nej');
 
@@ -38,3 +45,57 @@ COMMENT ON COLUMN public.job_photos.marketing_ok IS
   'NULL = ärver jobbets marketing_consent. FALSE = uteslut just detta foto (t.ex. ansikte/skylt
    synligt) även om jobbet har samtycke. Sätts aldrig till TRUE för att kringgå ett jobb utan
    samtycke - den kontrollen görs av den som väljer bilder, inte av ett schema-villkor här.';
+
+-- ===== Kolumnspärr: bara admin/säljare får sätta samtycke =====
+CREATE OR REPLACE FUNCTION public.lock_marketing_consent_fields()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF private.has_role(auth.uid(), 'admin'::app_role)
+     OR private.has_role(auth.uid(), 'saljare'::app_role) THEN
+    RETURN NEW;
+  END IF;
+
+  IF OLD.marketing_consent IS DISTINCT FROM NEW.marketing_consent
+     OR OLD.marketing_consent_at IS DISTINCT FROM NEW.marketing_consent_at
+     OR OLD.marketing_consent_by IS DISTINCT FROM NEW.marketing_consent_by
+     OR OLD.marketing_consent_source IS DISTINCT FROM NEW.marketing_consent_source THEN
+    RAISE EXCEPTION 'Bara admin eller säljare får ändra kundens marknadsföringssamtycke.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_lock_marketing_consent_fields ON public.jobs;
+CREATE TRIGGER trg_lock_marketing_consent_fields
+BEFORE UPDATE ON public.jobs
+FOR EACH ROW EXECUTE FUNCTION public.lock_marketing_consent_fields();
+
+CREATE OR REPLACE FUNCTION public.lock_marketing_ok_field()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF private.has_role(auth.uid(), 'admin'::app_role)
+     OR private.has_role(auth.uid(), 'saljare'::app_role) THEN
+    RETURN NEW;
+  END IF;
+
+  IF OLD.marketing_ok IS DISTINCT FROM NEW.marketing_ok THEN
+    RAISE EXCEPTION 'Bara admin eller säljare får ändra marketing_ok på ett jobbfoto.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_lock_marketing_ok_field ON public.job_photos;
+CREATE TRIGGER trg_lock_marketing_ok_field
+BEFORE UPDATE ON public.job_photos
+FOR EACH ROW EXECUTE FUNCTION public.lock_marketing_ok_field();

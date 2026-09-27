@@ -27,6 +27,51 @@ export interface StatsSubcontractor {
   active: boolean;
 }
 
+export interface StatsWorkOrder {
+  id: string;
+  job_id: string | null;
+  status: string;
+  ue_price: number | string | null;
+}
+
+export interface StatsInvoice {
+  job_id: string | null;
+  work_order_id: string | null;
+  amount: number | string;
+  vat_amount: number | string | null;
+  status: string;
+}
+
+/**
+ * Totalt obetalt till UE just nu: godkända/mottagna fakturor (inte betalda, inte avvisade) plus
+ * accepterade arbetsordrar som ännu inte fakturerats alls (fast UE-pris, ingen faktura-rad kvar
+ * efter att avvisade räknats bort). Ingen dubbelräkning: en arbetsorder med en aktiv faktura
+ * räknas via fakturan, inte via ue_price. Underlag för "fri kassa = kontosaldo minus obetalt till
+ * UE" (Vidars beslut 2026-09-28, se ledning/kassaprognos.md).
+ */
+export function computeUnpaidToUe(workOrders: StatsWorkOrder[], invoices: StatsInvoice[]): number {
+  let total = 0;
+  const activeJobIds = new Set<string>();
+  const activeWorkOrderIds = new Set<string>();
+
+  for (const inv of invoices) {
+    if (inv.status === "avvisad") continue;
+    if (inv.job_id) activeJobIds.add(inv.job_id);
+    if (inv.work_order_id) activeWorkOrderIds.add(inv.work_order_id);
+    if (inv.status === "mottagen" || inv.status === "godkand") {
+      total += (Number(inv.amount) || 0) + (Number(inv.vat_amount) || 0);
+    }
+  }
+
+  for (const wo of workOrders) {
+    if (wo.status !== "accepted" || wo.ue_price == null) continue;
+    const alreadyInvoiced = activeWorkOrderIds.has(wo.id) || (!!wo.job_id && activeJobIds.has(wo.job_id));
+    if (!alreadyInvoiced) total += Number(wo.ue_price) || 0;
+  }
+
+  return Math.round(total);
+}
+
 export type CountBySource = Record<string, number>;
 
 export interface PaidCounts {
@@ -56,6 +101,8 @@ export interface MorningStats {
     sold_not_executed_roof_replacements: number;
     active_ue: { taklaggare: number; platslagare: number; bada: number; total: number };
   };
+  /** Fri kassa mäts netto: kontosaldo (anges av Vidar, inte i CRM) minus detta. */
+  unpaid_to_ue: number;
 }
 
 const empty = (): WindowCounts => ({ total: 0, by_source: {} });
@@ -83,6 +130,8 @@ export function buildMorningStats(input: {
   slaHours: number;
   intakeErrors24h: number;
   subcontractors?: StatsSubcontractor[];
+  workOrders?: StatsWorkOrder[];
+  subcontractorInvoices?: StatsInvoice[];
   now?: Date;
 }): MorningStats {
   const now = input.now ?? new Date();
@@ -175,5 +224,6 @@ export function buildMorningStats(input: {
     hours_since_last_lead: lastLeadMs === null ? null : Math.round(((now.getTime() - lastLeadMs) / 3600000) * 10) / 10,
     intake_errors_24h: input.intakeErrors24h,
     capacity: { sold_not_executed_roof_replacements: soldNotExecuted, active_ue: activeUe },
+    unpaid_to_ue: computeUnpaidToUe(input.workOrders ?? [], input.subcontractorInvoices ?? []),
   };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildMorningStats, monthStartStockholm, type StatsLead } from "@/lib/morning-stats";
+import { buildMorningStats, computeUnpaidToUe, monthStartStockholm, type StatsInvoice, type StatsLead, type StatsWorkOrder } from "@/lib/morning-stats";
 
 const now = new Date("2026-09-26T08:00:00Z");
 const hoursAgo = (h: number) => new Date(now.getTime() - h * 3600000).toISOString();
@@ -135,5 +135,60 @@ describe("buildMorningStats", () => {
     });
     expect(s.capacity.sold_not_executed_roof_replacements).toBe(2);
     expect(s.capacity.active_ue).toEqual({ taklaggare: 2, platslagare: 1, bada: 1, total: 5 });
+  });
+});
+
+describe("computeUnpaidToUe", () => {
+  const wo = (o: Partial<StatsWorkOrder> & { id: string }): StatsWorkOrder => ({
+    job_id: null,
+    status: "accepted",
+    ue_price: 50000,
+    ...o,
+  });
+  const inv = (o: Partial<StatsInvoice>): StatsInvoice => ({
+    job_id: null,
+    work_order_id: null,
+    amount: 10000,
+    vat_amount: null,
+    status: "mottagen",
+    ...o,
+  });
+
+  it("räknar mottagna och godkända fakturor, inte betalda eller avvisade", () => {
+    const total = computeUnpaidToUe(
+      [],
+      [inv({ status: "mottagen", amount: 10000 }), inv({ status: "godkand", amount: 20000 }), inv({ status: "betald", amount: 99999 }), inv({ status: "avvisad", amount: 99999 })],
+    );
+    expect(total).toBe(30000);
+  });
+  it("lägger till momsen på fakturan om den finns", () => {
+    expect(computeUnpaidToUe([], [inv({ amount: 10000, vat_amount: 2500 })])).toBe(12500);
+  });
+  it("accepterad arbetsorder utan faktura räknas via ue_price", () => {
+    expect(computeUnpaidToUe([wo({ id: "w1", ue_price: 45000 })], [])).toBe(45000);
+  });
+  it("dubbelräknar inte en arbetsorder som redan har en aktiv faktura", () => {
+    const total = computeUnpaidToUe(
+      [wo({ id: "w1", ue_price: 45000 })],
+      [inv({ work_order_id: "w1", status: "godkand", amount: 40000 })],
+    );
+    expect(total).toBe(40000);
+  });
+  it("en avvisad faktura konsumerar inte fallbacken - ue_price räknas ändå", () => {
+    const total = computeUnpaidToUe(
+      [wo({ id: "w1", job_id: "j1", ue_price: 45000 })],
+      [inv({ job_id: "j1", work_order_id: "w1", status: "avvisad", amount: 45000 })],
+    );
+    expect(total).toBe(45000);
+  });
+  it("faller tillbaka på job_id-matchning när faktura saknar work_order_id (äldre fakturor)", () => {
+    const total = computeUnpaidToUe(
+      [wo({ id: "w1", job_id: "j1", ue_price: 45000 })],
+      [inv({ job_id: "j1", work_order_id: null, status: "godkand", amount: 42000 })],
+    );
+    expect(total).toBe(42000);
+  });
+  it("ignorerar arbetsordrar som inte är accepterade eller saknar pris", () => {
+    expect(computeUnpaidToUe([wo({ id: "w1", status: "offered" }), wo({ id: "w2", ue_price: null })], [])).toBe(0);
   });
 });
