@@ -755,7 +755,6 @@ function DocumentsDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(DOC_TYPE_LABEL)
-                      .filter(([k]) => k !== "forsakring")
                       .map(([k, label]) => (
                         <SelectItem key={k} value={k}>
                           {label}

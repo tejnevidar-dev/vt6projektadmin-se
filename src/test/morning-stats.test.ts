@@ -40,7 +40,7 @@ describe("buildMorningStats", () => {
         lead({ id: "b", created_at: hoursAgo(1) }), // obesvarad men under SLA
         lead({ id: "c", created_at: hoursAgo(6) }), // hanterad av personal
         lead({ id: "d", created_at: hoursAgo(6), last_contact: hoursAgo(3) }), // kontaktad
-        lead({ id: "e", created_at: hoursAgo(100) }), // äldre än 72 h: bara i total
+        lead({ id: "e", created_at: hoursAgo(609) }), // gammal (609 h) obesvarad: ska OCKSÅ räknas som over_sla
         lead({ id: "f", created_at: hoursAgo(6), source: "field" }), // ej intagskälla
       ],
       staffTouchedLeadIds: new Set(["c"]),
@@ -48,9 +48,11 @@ describe("buildMorningStats", () => {
       intakeErrors24h: 0,
       now,
     });
-    expect(s.unanswered.over_sla).toBe(1);
+    // Bugg t.o.m. 2026-09-27: en 72-timmarsgräns gjorde att leads äldre än det aldrig
+    // räknades som over_sla, trots att de var långt över SLA-tiden (609 h i detta fall).
+    expect(s.unanswered.over_sla).toBe(2);
     expect(s.unanswered.total).toBe(3);
-    expect(s.unanswered.oldest_hours).toBe(100);
+    expect(s.unanswered.oldest_hours).toBe(609);
   });
 
   it("vunna jobb och offerter ute", () => {
@@ -106,5 +108,32 @@ describe("buildMorningStats", () => {
 
   it("månadsstart i Stockholmstid", () => {
     expect(monthStartStockholm(now).toISOString()).toBe("2026-08-31T22:00:00.000Z");
+  });
+
+  it("kapacitet: sålda men ej utförda takbyten, aktiva UE per yrke", () => {
+    const s = buildMorningStats({
+      leads: [
+        lead({ id: "r1", pipeline_stage: "bokad", job_type: "roof_replacement" }),
+        lead({ id: "r2", pipeline_stage: "pagaende", job_type: "roof_replacement" }),
+        lead({ id: "r3", pipeline_stage: "slutford", job_type: "roof_replacement" }), // klar, räknas inte
+        lead({ id: "r4", pipeline_stage: "bokad", job_type: "roof_cleaning" }), // fel jobbtyp
+        lead({ id: "r5", pipeline_stage: "offert_skickad", job_type: "roof_replacement" }), // inte sålt än
+      ],
+      subcontractors: [
+        { trade: "taklaggare", pipeline_status: "aktiv", active: true },
+        { trade: "taklaggare", pipeline_status: "aktiv", active: true },
+        { trade: "platslagare", pipeline_status: "aktiv", active: true },
+        { trade: "bada", pipeline_status: "aktiv", active: true },
+        { trade: "taklaggare", pipeline_status: "provjobb", active: true }, // inte aktiv än
+        { trade: "taklaggare", pipeline_status: "aktiv", active: false }, // inaktiv
+        { trade: null, pipeline_status: "aktiv", active: true },
+      ],
+      staffTouchedLeadIds: new Set(),
+      slaHours: 2,
+      intakeErrors24h: 0,
+      now,
+    });
+    expect(s.capacity.sold_not_executed_roof_replacements).toBe(2);
+    expect(s.capacity.active_ue).toEqual({ taklaggare: 2, platslagare: 1, bada: 1, total: 5 });
   });
 });

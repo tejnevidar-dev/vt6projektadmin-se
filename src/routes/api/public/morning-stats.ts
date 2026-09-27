@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { loadConfig } from "@/lib/lead-intake.server";
 import { safeEqual } from "@/lib/lead-intake";
-import { buildMorningStats, INTAKE_SOURCES, type StatsLead } from "@/lib/morning-stats";
+import { buildMorningStats, INTAKE_SOURCES, type StatsLead, type StatsSubcontractor } from "@/lib/morning-stats";
 
 // Skyddad endpoint med aggregerade siffror till morgonrapporten. Returnerar BARA antal:
 // inga namn, telefonnummer, mailadresser eller lead-id.
@@ -26,10 +26,12 @@ export const Route = createFileRoute("/api/public/morning-stats")({
 
         const { data: leads, error } = await db
           .from("leads")
-          .select("id, source, pipeline_stage, created_at, updated_at, offer_accepted_at, completed_at, last_contact, customer_paid_at, customer_paid_amount")
+          .select("id, source, pipeline_stage, created_at, updated_at, offer_accepted_at, completed_at, last_contact, customer_paid_at, customer_paid_amount, job_type")
           .order("created_at", { ascending: false })
           .limit(5000);
         if (error) return json({ error: "Query failed" }, 500);
+
+        const { data: subs } = await db.from("subcontractors").select("trade, pipeline_status, active");
 
         const openIds = ((leads ?? []) as StatsLead[])
           .filter((l) => l.pipeline_stage === "inkommande_webb" && (INTAKE_SOURCES as readonly string[]).includes(l.source))
@@ -56,6 +58,7 @@ export const Route = createFileRoute("/api/public/morning-stats")({
             staffTouchedLeadIds: touched,
             slaHours: cfg.slaHours,
             intakeErrors24h: errors ?? 0,
+            subcontractors: (subs ?? []) as StatsSubcontractor[],
           }),
         );
       },

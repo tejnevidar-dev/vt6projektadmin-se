@@ -3,6 +3,8 @@
 
 export const WON_STAGES = ["bokad", "pagaende", "slutford"] as const;
 export const INTAKE_SOURCES = ["roslagstak", "email", "inbox"] as const;
+/** Sålt men inte klart: vunnet takbyte som väntar på eller är under utförande. */
+export const SOLD_NOT_EXECUTED_STAGES = ["bokad", "pagaende"] as const;
 const DAY = 86400000;
 
 export interface StatsLead {
@@ -16,6 +18,13 @@ export interface StatsLead {
   last_contact: string | null;
   customer_paid_at?: string | null;
   customer_paid_amount?: number | string | null;
+  job_type?: string | null;
+}
+
+export interface StatsSubcontractor {
+  trade: string | null;
+  pipeline_status: string;
+  active: boolean;
 }
 
 export type CountBySource = Record<string, number>;
@@ -42,6 +51,11 @@ export interface MorningStats {
   last_lead_at: string | null;
   hours_since_last_lead: number | null;
   intake_errors_24h: number;
+  /** Kapacitet: sålda men ej utförda takbyten (bokad/pågående) och aktiva UE-lag per yrke. */
+  capacity: {
+    sold_not_executed_roof_replacements: number;
+    active_ue: { taklaggare: number; platslagare: number; bada: number; total: number };
+  };
 }
 
 const empty = (): WindowCounts => ({ total: 0, by_source: {} });
@@ -68,6 +82,7 @@ export function buildMorningStats(input: {
   staffTouchedLeadIds: Set<string>;
   slaHours: number;
   intakeErrors24h: number;
+  subcontractors?: StatsSubcontractor[];
   now?: Date;
 }): MorningStats {
   const now = input.now ?? new Date();
@@ -75,7 +90,6 @@ export function buildMorningStats(input: {
   const t7 = now.getTime() - 7 * DAY;
   const tMonth = monthStartStockholm(now).getTime();
   const slaCut = now.getTime() - input.slaHours * 3600000;
-  const lookback = now.getTime() - 72 * 3600000;
 
   const newLeads = { last_24h: empty(), last_7d: empty(), month_to_date: empty() };
   const won = { last_24h: empty(), last_7d: empty(), month_to_date: empty(), total: 0 };
@@ -86,6 +100,7 @@ export function buildMorningStats(input: {
   let unansweredTotal = 0;
   let oldestMs: number | null = null;
   let lastLeadMs: number | null = null;
+  let soldNotExecuted = 0;
 
   for (const l of input.leads) {
     const created = new Date(l.created_at).getTime();
@@ -96,6 +111,9 @@ export function buildMorningStats(input: {
 
     pipeline[l.pipeline_stage] = (pipeline[l.pipeline_stage] ?? 0) + 1;
     if (l.pipeline_stage === "offert_skickad") offersOut++;
+    if (l.job_type === "roof_replacement" && (SOLD_NOT_EXECUTED_STAGES as readonly string[]).includes(l.pipeline_stage)) {
+      soldNotExecuted++;
+    }
 
     if (l.customer_paid_at) {
       const amt = Number(l.customer_paid_amount ?? 0) || 0;
@@ -124,9 +142,20 @@ export function buildMorningStats(input: {
       !input.staffTouchedLeadIds.has(l.id);
     if (untouched) {
       unansweredTotal++;
-      if (created <= slaCut && created >= lookback) overSla++;
+      // Ingen övre åldersgräns: en lead som väntat 600 timmar bryter SLA precis lika mycket
+      // som en som väntat 3 (bugg fram till 2026-09-27: leads äldre än 72 h räknades aldrig hit).
+      if (created <= slaCut) overSla++;
       if (oldestMs === null || created < oldestMs) oldestMs = created;
     }
+  }
+
+  const activeUe = { taklaggare: 0, platslagare: 0, bada: 0, total: 0 };
+  for (const s of input.subcontractors ?? []) {
+    if (!s.active || s.pipeline_status !== "aktiv") continue;
+    activeUe.total++;
+    if (s.trade === "taklaggare") activeUe.taklaggare++;
+    else if (s.trade === "platslagare") activeUe.platslagare++;
+    else if (s.trade === "bada") activeUe.bada++;
   }
 
   return {
@@ -145,5 +174,6 @@ export function buildMorningStats(input: {
     last_lead_at: lastLeadMs === null ? null : new Date(lastLeadMs).toISOString(),
     hours_since_last_lead: lastLeadMs === null ? null : Math.round(((now.getTime() - lastLeadMs) / 3600000) * 10) / 10,
     intake_errors_24h: input.intakeErrors24h,
+    capacity: { sold_not_executed_roof_replacements: soldNotExecuted, active_ue: activeUe },
   };
 }
