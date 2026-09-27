@@ -64,6 +64,7 @@ export default defineConfig(async ({ mode, command }) => {
       tasks: {
         "send-booking-reminders": { handler: path.resolve(process.cwd(), "tasks/send-booking-reminders.ts"), description: "Booking reminders" },
         "stale-lead-reminders": { handler: path.resolve(process.cwd(), "tasks/stale-lead-reminders.ts"), description: "Stale lead reminders" },
+        "offer-age-alert": { handler: path.resolve(process.cwd(), "tasks/offer-age-alert.ts"), description: "Stale sent-offer reminders" },
         "lead-alerts": { handler: path.resolve(process.cwd(), "tasks/lead-alerts.ts"), description: "SLA, silence and intake-failure alerts" },
         "work-order-timeouts": { handler: path.resolve(process.cwd(), "tasks/work-order-timeouts.ts"), description: "Send work orders on to the next UE" },
         "ue-day-end": { handler: path.resolve(process.cwd(), "tasks/ue-day-end.ts"), description: "UE day-end photo reminder" },
@@ -75,7 +76,7 @@ export default defineConfig(async ({ mode, command }) => {
         "*/5 * * * *": "send-booking-reminders",
         // Once/day: flags leads stuck in forhandling/uppfoljning without recent
         // activity, notifies the assigned seller in-app (see notifications system).
-        "0 6 * * *": "stale-lead-reminders",
+        "0 6 * * *": ["stale-lead-reminders", "offer-age-alert"],
         // Every 10 min: SLA reminders for unanswered leads, silence + intake-failure alerts.
         "*/10 * * * *": ["lead-alerts", "work-order-timeouts", "ue-day-end"],
         // Daily: alerts for expiring UE insurance / ID06 / A1 / documents.
