@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   INVOICE_STATUS_LABEL,
   deleteInvoice,
@@ -82,6 +83,14 @@ export function SubcontractorInvoicesCard({
   });
   const [file, setFile] = useState<File | null>(null);
   const [proofs, setProofs] = useState<Record<string, number>>({});
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase.from("work_orders" as any) as any).select("order_number").eq("job_id", jobId).maybeSingle();
+      setOrderNumber(data?.order_number ?? null);
+    })();
+  }, [jobId]);
 
   async function uploadProof(inv: SubcontractorInvoice, f: File | undefined) {
     if (!f || !userId) return;
@@ -228,6 +237,7 @@ export function SubcontractorInvoicesCard({
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Fakturor från underentreprenören för detta projekt.
+          {orderNumber && <span className="ml-1 font-medium text-foreground">Arbetsorder {orderNumber}.</span>}
         </p>
         {canSubmit && (
           <Button size="sm" onClick={() => setOpen(true)}>
@@ -247,6 +257,7 @@ export function SubcontractorInvoicesCard({
             <div className="min-w-0">
               <div className="font-medium">
                 {inv.invoice_number ? `Faktura ${inv.invoice_number}` : "Faktura"} — {kr(inv.amount)}
+                {orderNumber && <span className="ml-1 text-xs font-normal text-muted-foreground">({orderNumber})</span>}
               </div>
               <div className="text-xs text-muted-foreground">
                 {[

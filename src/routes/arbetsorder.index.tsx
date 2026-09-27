@@ -16,6 +16,7 @@ import {
   getWorkOrderPdf,
   listWorkOrders,
   setWorkOrderDetails,
+  suggestUePriceForWorkOrder,
   type WorkOrderRow,
 } from "@/lib/work-orders.functions";
 
@@ -61,6 +62,15 @@ function WorkOrdersPage() {
   const ex = (w: WorkOrderRow, k: string, fallback = "") => extra[w.id]?.[k] ?? fallback;
   const setEx = (w: WorkOrderRow, k: string, v: string) => setExtra({ ...extra, [w.id]: { ...(extra[w.id] ?? {}), [k]: v } });
   const [busy, setBusy] = useState<string | null>(null);
+  const suggestFn = useServerFn(suggestUePriceForWorkOrder);
+  const [suggestion, setSuggestion] = useState<Record<string, { lines: { label: string; amount: number }[]; total: number } | null>>({});
+  const loadSuggestion = async (id: string) => {
+    try {
+      setSuggestion({ ...suggestion, [id]: await suggestFn({ data: { workOrderId: id } }) });
+    } catch {
+      setSuggestion({ ...suggestion, [id]: null });
+    }
+  };
   const [ues, setUes] = useState<Subcontractor[]>([]);
   useEffect(() => {
     if (isAdmin) listSubcontractors().then((l) => setUes(l.filter((u) => u.active && (u.pipeline_status === "provjobb" || u.pipeline_status === "aktiv")))).catch(() => setUes([]));
@@ -153,6 +163,9 @@ function WorkOrdersPage() {
                           value={prices[w.id] ?? (w.ue_price != null ? String(w.ue_price) : "")}
                           onChange={(e) => setPrices({ ...prices, [w.id]: e.target.value })}
                         />
+                        <Button size="sm" variant="ghost" className="h-9 px-2 text-xs" onClick={() => void loadSuggestion(w.id)}>
+                          Förslag ur prislistan (Bilaga 1, ej bindande)
+                        </Button>
                         <label className="text-xs text-muted-foreground">
                           Start
                           <Input className="w-40" type="date" value={starts[w.id] ?? w.start_date ?? ""} onChange={(e) => setStarts({ ...starts, [w.id]: e.target.value })} />
@@ -190,6 +203,26 @@ function WorkOrdersPage() {
                           ))}
                         </select>
                       </label>
+                      {suggestion[w.id] !== undefined && (
+                        <div className="rounded-md border border-dashed border-border p-2 text-xs text-muted-foreground">
+                          {suggestion[w.id] === null || suggestion[w.id]!.lines.length === 0 ? (
+                            "Inget förslag – ingen kalkyl eller okänt material/moment."
+                          ) : (
+                            <>
+                              {suggestion[w.id]!.lines.map((l) => (
+                                <div key={l.label} className="flex justify-between gap-2">
+                                  <span>{l.label}</span>
+                                  <span>{l.amount.toLocaleString("sv-SE")} kr</span>
+                                </div>
+                              ))}
+                              <div className="mt-1 flex justify-between border-t border-border pt-1 font-medium text-foreground">
+                                <span>Förslag totalt (utkast, ej beslutat)</span>
+                                <span>{suggestion[w.id]!.total.toLocaleString("sv-SE")} kr</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
                       <Input placeholder="Instruktioner till UE (kunduppgifter och priser ska inte skrivas här)" value={ex(w, "notes", w.content.notes ?? "")} onChange={(e) => setEx(w, "notes", e.target.value)} />
                       <Button
                         size="sm"

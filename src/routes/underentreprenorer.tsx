@@ -9,6 +9,7 @@ import {
   deleteSubcontractor,
   deleteSubcontractorDocument,
   expiryWarnings,
+  nextPipelineStep,
   PIPELINE_LABELS,
   getDocumentUrl,
   getMySubcontractor,
@@ -123,6 +124,20 @@ function SubcontractorsPage() {
     try {
       await updateSubcontractor(sc.id, { pipeline_status: status });
       toast.success("Status: " + PIPELINE_LABELS[status]);
+      void reload();
+    } catch (e: any) {
+      toast.error(e.message ?? "Kunde inte spara");
+    }
+  }
+
+  /** Ett klick: loggar samtal (dagens datum) OCH flyttar till nästa steg i samma sparning. */
+  async function oneClickNextStep(sc: Subcontractor) {
+    const next = nextPipelineStep(sc.pipeline_status);
+    if (!next) return;
+    const line = `${new Date().toISOString().slice(0, 10)}: samtal – gick vidare till ${PIPELINE_LABELS[next]}`;
+    try {
+      await updateSubcontractor(sc.id, { notes: [sc.notes, line].filter(Boolean).join(String.fromCharCode(10)), pipeline_status: next });
+      toast.success(`Nästa steg: ${PIPELINE_LABELS[next]}`);
       void reload();
     } catch (e: any) {
       toast.error(e.message ?? "Kunde inte spara");
@@ -322,6 +337,16 @@ function SubcontractorsPage() {
                         >
                           Logga samtal
                         </Button>
+                        {nextPipelineStep(sc.pipeline_status) && (
+                          <Button
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => void oneClickNextStep(sc)}
+                            title="Loggar dagens samtal och går vidare till nästa steg, i ett klick"
+                          >
+                            → {PIPELINE_LABELS[nextPipelineStep(sc.pipeline_status)!]}
+                          </Button>
+                        )}
                       </div>
                     )}
                     {sc.address && (

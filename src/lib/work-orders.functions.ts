@@ -276,3 +276,35 @@ export const getWorkOrderPdf = createServerFn({ method: "POST" })
     const bytes = await buildWorkOrderPdf({ ...input, deadline });
     return { base64: bytesToBase64(bytes), fileName };
   });
+
+/**
+ * Internt förslag på UE-pris ur Bilaga 1-utkastet, för admin att jämföra med det manuella priset.
+ * Sätter aldrig något pris, syns aldrig för UE (inte i PDF, mail eller UE-vyn). Priserna är
+ * Agent – UE:s 🟡-antaganden, inte beslutade av Vidar.
+ */
+export const suggestUePriceForWorkOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { workOrderId: string }) => {
+    if (!input?.workOrderId) throw new Error("workOrderId saknas");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<{ lines: { label: string; amount: number }[]; total: number } | null> => {
+    const sb = await requireAdmin(context.userId);
+    const { data: wo } = await sb.from("work_orders").select("lead_id").eq("id", data.workOrderId).maybeSingle();
+    if (!wo?.lead_id) return null;
+    const { data: calc } = await sb.from("calculations").select("*").eq("lead_id", wo.lead_id).maybeSingle();
+    if (!calc) return null;
+    const { data: cfgRow } = await sb.from("app_settings").select("value").eq("key", "ue_price_list_config").maybeSingle();
+    const { parseUePriceList, suggestUePrice } = await import("./ue-price-list");
+    const items: Record<string, number> = {};
+    for (const p of (calc.plat_items as { key: string; quantity: number }[] | null) ?? []) items[p.key] = (items[p.key] ?? 0) + Number(p.quantity);
+    return suggestUePrice(
+      {
+        roofAreaKvm: Number(calc.roof_area_kvm) || null,
+        materialKey: calc.material_key ?? null,
+        ranndalarMeter: Number(calc.ranndalar_meter) || null,
+        items,
+      },
+      parseUePriceList(cfgRow?.value),
+    );
+  });

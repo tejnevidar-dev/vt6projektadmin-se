@@ -86,6 +86,7 @@ export interface SubcontractorDocument {
 export interface SubcontractorInvoice {
   id: string;
   job_id: string;
+  work_order_id?: string | null;
   subcontractor_id: string | null;
   submitted_by: string | null;
   invoice_number: string | null;
@@ -279,8 +280,11 @@ export async function submitInvoice(params: {
     fileName = params.file.name;
   }
 
+  // Arbetsordernumret kopplas automatiskt via jobbet, så det syns på fakturan utan extra inmatning.
+  const { data: wo } = await (supabase.from("work_orders" as any) as any).select("id").eq("job_id", params.jobId).maybeSingle();
   const { error } = await supabase.from("subcontractor_invoices").insert({
     job_id: params.jobId,
+    work_order_id: wo?.id ?? null,
     subcontractor_id: params.subcontractorId ?? null,
     submitted_by: params.userId,
     invoice_number: params.invoiceNumber || null,
@@ -346,6 +350,15 @@ export const PIPELINE_LABELS: Record<Subcontractor["pipeline_status"], string> =
   aktiv: "Aktiv",
   nej: "Nej (underkänd/avböjd)",
 };
+
+/** Ordningen i samtalsflödet. 'nej' ligger utanför (sätts separat, aldrig som "nästa steg"). */
+export const PIPELINE_ORDER: Subcontractor["pipeline_status"][] = ["hittad", "kontaktad", "samtal", "kvalificerad", "provjobb", "aktiv"];
+
+/** Nästa steg i samtalsflödet, eller null om redan sist (aktiv) eller avvikande (nej). */
+export function nextPipelineStep(status: Subcontractor["pipeline_status"]): Subcontractor["pipeline_status"] | null {
+  const i = PIPELINE_ORDER.indexOf(status);
+  return i === -1 || i === PIPELINE_ORDER.length - 1 ? null : PIPELINE_ORDER[i + 1];
+}
 
 /** Saknade eller utgångna krav som blockerar tilldelning (speglar public.ue_missing_requirements). */
 export function expiryWarnings(sc: Subcontractor): string[] {
