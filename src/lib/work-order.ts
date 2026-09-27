@@ -145,7 +145,7 @@ export const WO_TEXT: Record<Lang, Record<string, string>> = {
     accept: "Acceptera uppdraget",
     decline: "Avböj",
     valid: "Svara senast",
-    binding: "Genom att acceptera binds det fasta priset.",
+    binding: "Accepten är bindande enligt ramavtalet 2.3.",
     orderNo: "Arbetsorder nr",
     subcontractor: "Underentreprenör",
     orgNo: "org.nr",
@@ -191,7 +191,7 @@ export const WO_TEXT: Record<Lang, Record<string, string>> = {
     accept: "Accept the assignment",
     decline: "Decline",
     valid: "Reply by",
-    binding: "By accepting, the fixed price is binding.",
+    binding: "Acceptance is binding under framework agreement 2.3.",
     orderNo: "Work order no.",
     subcontractor: "Subcontractor",
     orgNo: "reg. no.",
@@ -235,13 +235,13 @@ export function termsLines(lang: Lang, ctx: TermsContext): string[] {
 
   out.push(
     sv
-      ? `Gäller enligt Ramavtal för underentreprenad mellan ${COMPANY_NAME_TO_UE} AB och ${ue}${ctx.frameworkDate ? `, daterat ${ctx.frameworkDate}` : ""}, med bilagor 1-6.`
-      : `Applies under the Framework Agreement for subcontracting between ${COMPANY_NAME_TO_UE} AB and ${ue}${ctx.frameworkDate ? `, dated ${ctx.frameworkDate}` : ""}, with appendices 1-6.`,
+      ? `Gäller enligt Ramavtal för underentreprenad mellan ${COMPANY_NAME_TO_UE} AB (org.nr 559539-3595) och ${ue}${ctx.frameworkDate ? `, daterat ${ctx.frameworkDate}` : ""}, med bilagor 1-6.`
+      : `Applies under the Framework Agreement for subcontracting between ${COMPANY_NAME_TO_UE} AB (reg. no. 559539-3595) and ${ue}${ctx.frameworkDate ? `, dated ${ctx.frameworkDate}` : ""}, with appendices 1-6.`,
   );
   out.push(
     sv
-      ? "Fast pris för ENDAST ARBETE, exkl. moms, omvänd betalningsskyldighet. Material, container och ställning tillhandahålls och bekostas av beställaren, ingår inte och får inte faktureras av underentreprenören."
-      : "Fixed price for LABOUR ONLY, excl. VAT, reverse charge. Materials, skip and scaffolding are supplied and paid for by the Client, are not included and may not be invoiced by the Subcontractor.",
+      ? "Fast pris för ENDAST ARBETE, exkl. moms, omvänd betalningsskyldighet. Material, container och ställning tillhandahålls och bekostas av beställaren, ingår inte och får inte faktureras av underentreprenören. Priset omfattar allt arbete som behövs för ett fackmässigt färdigt resultat inom arbetsorderns omfattning (ramavtal 2.5)."
+      : "Fixed price for LABOUR ONLY, excl. VAT, reverse charge. Materials, skip and scaffolding are supplied and paid for by the Client, are not included and may not be invoiced by the Subcontractor. The price covers all work needed for a professionally completed result within the scope of the work order (framework agreement 2.5).",
   );
   const ld = c.liquidated_damages;
   out.push(
@@ -271,13 +271,18 @@ export function termsLines(lang: Lang, ctx: TermsContext): string[] {
   const bas = [c.bas_p ? `BAS-P ${c.bas_p}` : "", c.bas_u ? `BAS-U ${c.bas_u}` : ""].filter(Boolean).join(", ");
   out.push(
     sv
-      ? `Säkerhet: taket ska vara tätt vid varje arbetsdags slut. Fallskydd alltid. Se Bilaga 2.${bas ? ` Samordningsansvar: ${bas}.` : ""}`
-      : `Safety: the roof must be watertight at the end of every working day. Fall protection at all times. See Appendix 2.${bas ? ` Coordination responsibility: ${bas}.` : ""}`,
+      ? `Säkerhet: taket ska vara tätt vid varje arbetsdags slut. Fallskydd alltid. Se Bilaga 2. Följ arbetsmiljöplanen och samordnarens anvisningar.${bas ? ` Samordningsansvar: ${bas}.` : ""}`
+      : `Safety: the roof must be watertight at the end of every working day. Fall protection at all times. See Appendix 2. Follow the work environment plan and the coordinator's instructions.${bas ? ` Coordination responsibility: ${bas}.` : ""}`,
   );
   out.push(
     sv
       ? "Jobbet kan inte markeras klart utan foton och egenkontroll enligt Bilaga 3, inklusive foto på tätat tak varje kväll."
       : "The job cannot be marked complete without photos and self-inspection in accordance with Appendix 3, including a photo of the sealed roof every evening.",
+  );
+  out.push(
+    sv
+      ? "Garanti: 10 år på utförandet från godkänd slutkontroll (ramavtal 6.3)."
+      : "Warranty: 10 years on workmanship from the approved final inspection (framework agreement 6.3).",
   );
   out.push(
     sv
@@ -289,13 +294,13 @@ export function termsLines(lang: Lang, ctx: TermsContext): string[] {
   const retention = p?.retention_pct != null && p?.retention_days != null;
   out.push(
     sv
-      ? `Fakturering efter godkänd slutkontroll. Betalning ${days ? `${days} efter` : "efter"} korrekt faktura och komplett lönebevis (Bilaga 5).${retention ? ` ${fmtPct(p!.retention_pct!)} hålls inne och betalas ${p!.retention_days} dagar efter godkänd slutkontroll, om inga fel eller krav finns.` : ""}`
-      : `Invoicing after the approved final inspection. Payment ${p?.days != null ? `${p.days} days after` : "after"} a correct invoice and complete proof of wages (Appendix 5).${retention ? ` ${fmtPct(p!.retention_pct!)} is retained and paid ${p!.retention_days} days after the approved final inspection, provided there are no defects or claims.` : ""}`,
+      ? `Fakturering efter godkänd slutkontroll. Betalning ${days ? `${days} efter` : "efter"} att godkänd slutkontroll, korrekt faktura och komplett lönebevis finns (Bilaga 5).${retention ? ` ${fmtPct(p!.retention_pct!)} hålls inne och betalas ${p!.retention_days} dagar efter godkänd slutkontroll, om inga anmärkta fel, lönekrav eller andra krav är obehandlade.` : ""} ${COMPANY_NAME_TO_UE} får kvitta enligt ramavtalet 7.4.`
+      : `Invoicing after the approved final inspection. Payment ${p?.days != null ? `${p.days} days after` : "after"} the approved final inspection, a correct invoice and complete proof of wages all exist (Appendix 5).${retention ? ` ${fmtPct(p!.retention_pct!)} is retained and paid ${p!.retention_days} days after the approved final inspection, provided no noted defects, wage claims or other claims are outstanding.` : ""} ${COMPANY_NAME_TO_UE} may set off under framework agreement 7.4.`,
   );
   out.push(
     sv
-      ? `Genom att acceptera ingår ${ue} avtal om denna arbetsorder till angivet fast pris och angivna tider, på villkoren i ramavtalet.`
-      : `By accepting, ${ue} enters into an agreement on this work order at the stated fixed price and times, on the terms of the framework agreement.`,
+      ? `Genom att acceptera ingår ${ue} avtal om denna arbetsorder till angivet fast pris och angivna tider, på villkoren i ramavtalet. ${ue} intygar att uppgifterna om personal på plats är riktiga (ramavtal 2.4) och att all lön betalas enligt ramavtalet 8.3.`
+      : `By accepting, ${ue} enters into an agreement on this work order at the stated fixed price and times, on the terms of the framework agreement. ${ue} certifies that the information on personnel on site is correct (framework agreement 2.4) and that all wages are paid in accordance with framework agreement 8.3.`,
   );
   return out;
 }

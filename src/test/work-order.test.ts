@@ -102,13 +102,17 @@ describe("arbetsorder: interna anteckningar och villkor", () => {
   it("villkorstexten refererar ramavtalet, endast arbete och accept", () => {
     const lines = termsLines("sv", { subcontractorName: "Tak AB", frameworkDate: "2026-09-30", content: base });
     const all = lines.join("\n");
-    expect(all).toContain("Ramavtal för underentreprenad mellan VT6 Invest AB och Tak AB, daterat 2026-09-30, med bilagor 1-6");
+    expect(all).toContain("Ramavtal för underentreprenad mellan VT6 Invest AB (org.nr 559539-3595) och Tak AB, daterat 2026-09-30, med bilagor 1-6");
     expect(all).toContain("ENDAST ARBETE");
     expect(all).toContain("ingår inte");
+    expect(all).toContain("fackmässigt färdigt resultat inom arbetsorderns omfattning (ramavtal 2.5)");
     expect(all).toContain("taket ska vara tätt vid varje arbetsdags slut");
+    expect(all).toContain("Följ arbetsmiljöplanen och samordnarens anvisningar");
+    expect(all).toContain("Garanti: 10 år på utförandet från godkänd slutkontroll (ramavtal 6.3)");
     expect(all).toContain("får inte faktureras av underentreprenören");
     expect(all).toContain("Bilaga 6");
     expect(all).toContain("Genom att acceptera ingår Tak AB avtal");
+    expect(all).toContain("Tak AB intygar att uppgifterna om personal på plats är riktiga (ramavtal 2.4)");
     expect(termsLines("en", { subcontractorName: "Tak AB", frameworkDate: null, content: base }).join("\n")).toContain("LABOUR ONLY");
     const en = termsLines("en", { subcontractorName: "Tak AB", frameworkDate: null, content: base }).join(String.fromCharCode(10));
     expect(en).toContain("paid for by the Client");
@@ -120,8 +124,8 @@ describe("arbetsorder: interna anteckningar och villkor", () => {
     const a = termsLines("sv", { subcontractorName: "X", frameworkDate: null, content: withVals }).join("\n");
     expect(a).toContain("Vite vid försening som X orsakat: 500 kr per påbörjad arbetsdag, högst 10 % av priset");
     expect(a).toContain("Väder undantas om taket hålls tätt");
-    expect(a).toContain("30 dagar efter korrekt faktura");
-    expect(a).toContain("10 % hålls inne och betalas 30 dagar efter godkänd slutkontroll, om inga fel eller krav finns");
+    expect(a).toContain("30 dagar efter att godkänd slutkontroll, korrekt faktura och komplett lönebevis finns");
+    expect(a).toContain("10 % hålls inne och betalas 30 dagar efter godkänd slutkontroll, om inga anmärkta fel, lönekrav eller andra krav är obehandlade");
     expect(termsLines("sv", { subcontractorName: "X", frameworkDate: null, content: base }).join("\n")).toContain("Vite vid försening som underentreprenören orsakat enligt ramavtalet 5.2");
   });
 });

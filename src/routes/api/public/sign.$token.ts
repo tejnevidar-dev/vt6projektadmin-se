@@ -9,6 +9,7 @@ import {
   signingUrl,
 } from '@/lib/signing.server'
 import { markOfferAccepted } from '@/lib/offer-accepted.server'
+import { markUeAgreementSigned } from '@/lib/ue-agreement.server'
 
 const OTP_TTL_MS = 15 * 60 * 1000
 const MAX_ATTEMPTS = 6
@@ -106,11 +107,16 @@ export const Route = createFileRoute('/api/public/sign/$token')({
             .update({ otp_code_hash: hash, otp_sent_at: new Date().toISOString(), otp_attempts: 0 })
             .eq('id', row.id)
 
+          const isUeAgreement = row.document_type === 'avtal' && !!row.subcontractor_id
           const res = await queueEmail(supabase, {
             templateName: 'signature-otp',
             recipientEmail: row.customer_email,
             idempotencyKey: `sign-otp-${row.id}-${Date.now()}`,
-            templateData: { code, offerNumber: row.offer_number },
+            templateData: {
+              code,
+              offerNumber: row.offer_number,
+              docLabel: isUeAgreement ? 'Ramavtal' : undefined,
+            },
           })
           if (!res.ok) return bad('email_failed:' + (res.error ?? ''), 502)
           return Response.json({ ok: true, emailMasked: maskEmail(row.customer_email) })
@@ -206,7 +212,14 @@ export const Route = createFileRoute('/api/public/sign/$token')({
 
           await markOfferAccepted(supabase, row, now)
 
+          const isUeAgreement = row.document_type === 'avtal' && !!row.subcontractor_id
+          if (isUeAgreement) {
+            await markUeAgreementSigned(supabase, row, signedBytes, now)
+          }
+
           const docUrl = signingUrl(row.token)
+          const docLabel = isUeAgreement ? 'Ramavtal' : undefined
+          const companyFallback = isUeAgreement ? 'VT6 Invest' : undefined
 
           // Kopia till kund
           await queueEmail(supabase, {
@@ -220,6 +233,8 @@ export const Route = createFileRoute('/api/public/sign/$token')({
               customerName: name,
               companySigner: row.company_signer_name,
               isInternal: false,
+              docLabel,
+              companyFallback,
             },
           })
 
@@ -241,6 +256,8 @@ export const Route = createFileRoute('/api/public/sign/$token')({
                 customerName: name,
                 companySigner: row.company_signer_name,
                 isInternal: true,
+                docLabel,
+                companyFallback,
               },
             })
           }

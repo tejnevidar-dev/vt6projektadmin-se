@@ -19,6 +19,8 @@ interface Props {
   customerName?: string
   companySigner?: string
   isInternal?: boolean
+  docLabel?: string
+  companyFallback?: string
 }
 
 const Email = ({
@@ -28,24 +30,26 @@ const Email = ({
   customerName,
   companySigner,
   isInternal,
+  docLabel,
+  companyFallback,
 }: Props) => (
   <Html lang="sv" dir="ltr">
     <Head />
-    <Preview>{`Offert ${offerNumber ?? ''} är signerad av båda parter`}</Preview>
+    <Preview>{`${docLabel ?? 'Offert'} ${offerNumber ?? ''} är signerad av båda parter`}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Offerten är signerad</Heading>
+        <Heading style={h1}>{docLabel === 'Ramavtal' ? 'Ramavtalet är signerat' : 'Offerten är signerad'}</Heading>
         <Text style={text}>
           {isInternal
-            ? `${customerName ?? 'Kunden'} har signerat offert ${offerNumber ?? ''}. Dokumentet är nu undertecknat av båda parter.`
-            : `Hej${recipientName ? ' ' + recipientName : ''}! Tack – offert ${offerNumber ?? ''} är nu signerad av både dig och ${companySigner || 'RoslagsTak'}.`}
+            ? `${customerName ?? 'Kunden'} har signerat ${(docLabel ?? 'offert').toLowerCase()} ${offerNumber ?? ''}. Dokumentet är nu undertecknat av båda parter.`
+            : `Hej${recipientName ? ' ' + recipientName : ''}! Tack – ${(docLabel ?? 'offert').toLowerCase()} ${offerNumber ?? ''} är nu signerad av både dig och ${companySigner || companyFallback || 'RoslagsTak'}.`}
         </Text>
         <Section style={box}>
-          <Text style={label}>Offertnummer</Text>
+          <Text style={label}>{docLabel === 'Ramavtal' ? 'Dokument' : 'Offertnummer'}</Text>
           <Text style={value}>{offerNumber ?? ''}</Text>
           <Text style={label}>Parter</Text>
           <Text style={value}>
-            {companySigner || 'RoslagsTak'} &amp; {customerName ?? 'Kund'}
+            {companySigner || companyFallback || 'RoslagsTak'} &amp; {customerName ?? 'Kund'}
           </Text>
         </Section>
         <Section style={{ margin: '20px 0' }}>
@@ -62,7 +66,7 @@ const Email = ({
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
-    `Offert ${data?.offerNumber ?? ''} – signerad av båda parter`.trim(),
+    `${data?.docLabel ?? 'Offert'} ${data?.offerNumber ?? ''} – signerad av båda parter`.trim(),
   displayName: 'Signerad offert',
   previewData: {
     recipientName: 'Anna',

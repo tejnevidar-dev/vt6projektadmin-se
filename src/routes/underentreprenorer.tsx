@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useState } from "react";
+import { createUeAgreementSigningRequest, sendUeAgreementEmail } from "@/lib/ue-agreement.functions";
 import { AppShell, RequireAuth } from "@/components/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserRoles } from "@/hooks/use-role";
@@ -107,6 +109,10 @@ function SubcontractorsPage() {
   const [callNote, setCallNote] = useState("");
   const [callStatus, setCallStatus] = useState<Subcontractor["pipeline_status"]>("kontaktad");
   const [userOptions, setUserOptions] = useState<{ id: string; label: string }[]>([]);
+  const [ueAgreement, setUeAgreement] = useState<{ id: string; token: string; sent: boolean } | null>(null);
+  const [ueAgreementBusy, setUeAgreementBusy] = useState(false);
+  const createUeAgreement = useServerFn(createUeAgreementSigningRequest);
+  const sendUeAgreement = useServerFn(sendUeAgreementEmail);
 
   // Användare med rollen underentreprenor kan kopplas till en UE-post (inloggning för /ue).
   useEffect(() => {
@@ -141,6 +147,34 @@ function SubcontractorsPage() {
       void reload();
     } catch (e: any) {
       toast.error(e.message ?? "Kunde inte spara");
+    }
+  }
+
+  async function createAgreement() {
+    if (!editing?.id) return;
+    setUeAgreementBusy(true);
+    try {
+      const res = await createUeAgreement({ data: { subcontractorId: editing.id } });
+      setUeAgreement({ id: res.id, token: res.token, sent: false });
+      toast.success("Signeringslänk skapad – förhandsgranska innan den skickas till UE:n");
+    } catch (e: any) {
+      toast.error(e.message ?? "Kunde inte skapa signeringsbegäran");
+    } finally {
+      setUeAgreementBusy(false);
+    }
+  }
+
+  async function sendAgreement() {
+    if (!ueAgreement) return;
+    setUeAgreementBusy(true);
+    try {
+      await sendUeAgreement({ data: { id: ueAgreement.id } });
+      setUeAgreement({ ...ueAgreement, sent: true });
+      toast.success("Ramavtalet skickat till UE:ns e-post");
+    } catch (e: any) {
+      toast.error(e.message ?? "Kunde inte skicka");
+    } finally {
+      setUeAgreementBusy(false);
     }
   }
 
@@ -397,6 +431,7 @@ function SubcontractorsPage() {
                           variant="ghost"
                           onClick={() => {
                             setEditing({ ...sc });
+                            setUeAgreement(null);
                             setEditOpen(true);
                           }}
                         >
@@ -518,7 +553,40 @@ function SubcontractorsPage() {
                     setEditing({ ...editing, agreement_signed_at: e.target.value })
                   }
                 />
+                <p className="text-xs text-muted-foreground">Sätts även automatiskt när UE signerar digitalt nedan.</p>
               </div>
+              {editing.id && !editing.agreement_signed_at && (
+                <div className="grid gap-2 rounded-md border border-dashed p-3">
+                  <Label>Digital signering av ramavtalet</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Skapar en förhandsgranskningslänk – skickas INTE till UE:n förrän du klickar "Skicka".
+                    Vägrar om ramavtalet fortfarande har obeslutade punkter (väntar på Vidar).
+                  </p>
+                  {!ueAgreement ? (
+                    <Button size="sm" variant="outline" disabled={ueAgreementBusy} onClick={() => void createAgreement()}>
+                      Skapa signeringslänk
+                    </Button>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <a
+                        className="text-sm underline"
+                        href={`${window.location.origin}/signera/${ueAgreement.token}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Förhandsgranska
+                      </a>
+                      {!ueAgreement.sent ? (
+                        <Button size="sm" disabled={ueAgreementBusy} onClick={() => void sendAgreement()}>
+                          Skicka till UE:ns e-post
+                        </Button>
+                      ) : (
+                        <Badge>Skickat</Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="grid gap-1.5">
                   <Label>Försäkringsbolag</Label>

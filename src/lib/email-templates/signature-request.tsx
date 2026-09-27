@@ -18,21 +18,25 @@ interface Props {
   signUrl?: string
   companySigner?: string
   amount?: string
+  /** "Offert" (standard) eller t.ex. "Ramavtal" för UE-avtal. */
+  docLabel?: string
+  /** Namnet som visas om companySigner saknas. Standard "RoslagsTak" (kundfrämjande). */
+  companyFallback?: string
 }
 
-const Email = ({ customerName, offerNumber, signUrl, companySigner, amount }: Props) => (
+const Email = ({ customerName, offerNumber, signUrl, companySigner, amount, docLabel, companyFallback }: Props) => (
   <Html lang="sv" dir="ltr">
     <Head />
-    <Preview>{`Offert ${offerNumber ?? ''} är klar för signering`}</Preview>
+    <Preview>{`${docLabel ?? 'Offert'} ${offerNumber ?? ''} är klar för signering`}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Din offert är klar för signering</Heading>
+        <Heading style={h1}>{docLabel === 'Ramavtal' ? 'Ramavtalet är klart för signering' : 'Din offert är klar för signering'}</Heading>
         <Text style={text}>
-          Hej{customerName ? ' ' + customerName : ''}! Offert <b>{offerNumber}</b> är signerad av{' '}
-          {companySigner || 'RoslagsTak'} och väntar nu på din signatur.
+          Hej{customerName ? ' ' + customerName : ''}! {docLabel ?? 'Offert'} <b>{offerNumber}</b> är signerad av{' '}
+          {companySigner || companyFallback || 'RoslagsTak'} och väntar nu på din signatur.
         </Text>
         <Section style={box}>
-          <Text style={label}>Offertnummer</Text>
+          <Text style={label}>{docLabel === 'Ramavtal' ? 'Dokument' : 'Offertnummer'}</Text>
           <Text style={value}>{offerNumber}</Text>
           {amount ? (
             <>
@@ -43,7 +47,7 @@ const Email = ({ customerName, offerNumber, signUrl, companySigner, amount }: Pr
         </Section>
         <Section style={{ margin: '20px 0' }}>
           <Button href={signUrl ?? '#'} style={button}>
-            Öppna och signera offerten
+            {docLabel === 'Ramavtal' ? 'Öppna och signera ramavtalet' : 'Öppna och signera offerten'}
           </Button>
         </Section>
         <Text style={small}>
@@ -59,7 +63,7 @@ const Email = ({ customerName, offerNumber, signUrl, companySigner, amount }: Pr
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
-    `Offert ${data?.offerNumber ?? ''} – klar för signering`.trim(),
+    `${data?.docLabel ?? 'Offert'} ${data?.offerNumber ?? ''} – klar för signering`.trim(),
   displayName: 'Offert för signering',
   previewData: {
     customerName: 'Anna Andersson',

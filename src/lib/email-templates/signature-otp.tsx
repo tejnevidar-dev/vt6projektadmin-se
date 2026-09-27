@@ -14,9 +14,10 @@ import type { TemplateEntry } from './registry'
 interface Props {
   code?: string
   offerNumber?: string
+  docLabel?: string
 }
 
-const Email = ({ code, offerNumber }: Props) => (
+const Email = ({ code, offerNumber, docLabel }: Props) => (
   <Html lang="sv" dir="ltr">
     <Head />
     <Preview>{`Din engångskod för signering: ${code ?? ''}`}</Preview>
@@ -24,7 +25,7 @@ const Email = ({ code, offerNumber }: Props) => (
       <Container style={container}>
         <Heading style={h1}>Din engångskod</Heading>
         <Text style={text}>
-          Använd koden nedan för att signera offert <b>{offerNumber ?? ''}</b>. Koden är giltig i 15
+          Använd koden nedan för att signera {docLabel === 'Ramavtal' ? 'ramavtalet' : 'offert'} <b>{offerNumber ?? ''}</b>. Koden är giltig i 15
           minuter.
         </Text>
         <Section style={codeBox}>
