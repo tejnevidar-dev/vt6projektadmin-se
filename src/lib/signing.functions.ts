@@ -68,23 +68,42 @@ export const createSigningRequest = createServerFn({ method: "POST" })
       const token = randomToken();
       const basePath = `signering/${id}/original.pdf`;
 
-      // Kundvillkor (ångerrätt/byggherreansvar/garanti): inaktivt scaffold tills Vidar sätter
-      // active:true efter att Jurist levererat texterna (se customer-terms.ts). Rör inte PDF:en
-      // eller signature_requests-raden alls förrän dess -- dagens offerter opåverkade.
-      const { parseCustomerTerms, isCustomerTermsReady } = await import("./customer-terms");
+      // Kundvillkor: två oberoende block (ångerrätt/ångerblankett, och allmänna villkor), se
+      // customer-terms.ts. "withdrawal_only" räcker för att bifoga ångerrätten - allmänna
+      // villkor väntar på K1/K2/K3/K5. Genererar/laddar inte upp något extra i "none"-läget --
+      // dagens offerter (inkl. de 12 utestående v40-v42) helt opåverkade.
+      const { parseCustomerTerms, resolveCustomerTermsMode } = await import("./customer-terms");
       const { data: termsRow } = await (supabaseAdmin as any).from("app_settings").select("value").eq("key", "customer_terms").maybeSingle();
       const termsCfg = parseCustomerTerms(termsRow?.value);
-      const termsReady = isCustomerTermsReady(termsCfg);
+      const termsMode = resolveCustomerTermsMode(termsCfg);
 
-      let bytes = base64ToBytes(data.pdfBase64);
-      if (termsReady) {
-        const { appendCustomerTermsPages } = await import("./customer-terms-pdf.server");
-        bytes = await appendCustomerTermsPages(bytes, termsCfg);
-      }
+      const bytes = base64ToBytes(data.pdfBase64);
       const { error: upErr } = await supabaseAdmin.storage
         .from("offers")
         .upload(basePath, bytes, { contentType: "application/pdf", upsert: true });
       if (upErr) throw new Error("Kunde inte spara PDF: " + upErr.message);
+
+      let termsPdfPath: string | null = null;
+      let withdrawalPdfPath: string | null = null;
+      if (termsMode !== "none") {
+        const { buildAngerrattPdf } = await import("./customer-terms-pdf.server");
+        const angerrattBytes = await buildAngerrattPdf(termsCfg.angerratt_text!, termsCfg.angerblankett_text!);
+        withdrawalPdfPath = `signering/${id}/angerratt.pdf`;
+        const { error: e2 } = await supabaseAdmin.storage
+          .from("offers")
+          .upload(withdrawalPdfPath, angerrattBytes, { contentType: "application/pdf", upsert: true });
+        if (e2) throw new Error("Kunde inte spara ångerrätts-PDF: " + e2.message);
+
+        if (termsMode === "full") {
+          const { buildAllmannaVillkorPdf } = await import("./customer-terms-pdf.server");
+          const villkorBytes = await buildAllmannaVillkorPdf(termsCfg.allmanna_villkor_text!);
+          termsPdfPath = `signering/${id}/allmanna-villkor.pdf`;
+          const { error: e1 } = await supabaseAdmin.storage
+            .from("offers")
+            .upload(termsPdfPath, villkorBytes, { contentType: "application/pdf", upsert: true });
+          if (e1) throw new Error("Kunde inte spara allmänna villkor-PDF: " + e1.message);
+        }
+      }
 
       const { error: insErr } = await supabase.from("signature_requests" as any).insert({
         id,
@@ -103,7 +122,9 @@ export const createSigningRequest = createServerFn({ method: "POST" })
         company_place: admin ? data.companyPlace!.trim() : null,
         company_date: admin ? data.companyDate! : null,
         company_signed_at: admin ? new Date().toISOString() : null,
-        customer_terms_version: termsReady ? termsCfg.version : null,
+        customer_terms_version: termsMode !== "none" ? termsCfg.withdrawal_version : null,
+        terms_pdf_path: termsPdfPath,
+        right_of_withdrawal_pdf_path: withdrawalPdfPath,
       });
       if (insErr) throw new Error(insErr.message);
 
@@ -134,6 +155,7 @@ export const createSigningRequest = createServerFn({ method: "POST" })
       const url = signingUrl(token);
       let emailed = false;
       if (data.sendEmail) {
+        const { signingDocUrl } = await import("./signing.server");
         const res = await queueEmail(supabaseAdmin, {
           templateName: "signature-request",
           recipientEmail: data.customerEmail.trim().toLowerCase(),
@@ -144,6 +166,8 @@ export const createSigningRequest = createServerFn({ method: "POST" })
             signUrl: url,
             companySigner: data.companySignerName,
             amount: data.totalAmount != null ? money(data.totalAmount) : undefined,
+            termsUrl: termsMode === "full" ? signingDocUrl(token, "villkor") : undefined,
+            withdrawalUrl: termsMode !== "none" ? signingDocUrl(token, "angerratt") : undefined,
           },
         });
         emailed = res.ok;
@@ -339,6 +363,7 @@ export const approveSigningRequest = createServerFn({ method: "POST" })
     if (updErr) throw new Error(updErr.message);
 
     const url = signingUrl(row.token);
+    const { signingDocUrl } = await import("./signing.server");
     const res = await queueEmail(supabaseAdmin, {
       templateName: "signature-request",
       recipientEmail: row.customer_email,
@@ -349,6 +374,8 @@ export const approveSigningRequest = createServerFn({ method: "POST" })
         signUrl: url,
         companySigner: sig.signer_name,
         amount: row.total_amount != null ? money(Number(row.total_amount)) : undefined,
+        termsUrl: row.terms_pdf_path ? signingDocUrl(row.token, "villkor") : undefined,
+        withdrawalUrl: row.right_of_withdrawal_pdf_path ? signingDocUrl(row.token, "angerratt") : undefined,
       },
     });
     if (res.ok) await sb.from("signature_requests").update({ sent_at: now.toISOString() }).eq("id", row.id);

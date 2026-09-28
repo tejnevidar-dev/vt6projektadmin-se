@@ -22,9 +22,13 @@ interface Props {
   docLabel?: string
   /** Namnet som visas om companySigner saknas. Standard "RoslagsTak" (kundfrämjande). */
   companyFallback?: string
+  /** Länk till "Allmänna villkor"-PDF:en. Satt bara när kundvillkoren är aktiverade. */
+  termsUrl?: string
+  /** Länk till "Information om ångerrätt + ångerblankett"-PDF:en. */
+  withdrawalUrl?: string
 }
 
-const Email = ({ customerName, offerNumber, signUrl, companySigner, amount, docLabel, companyFallback }: Props) => (
+const Email = ({ customerName, offerNumber, signUrl, companySigner, amount, docLabel, companyFallback, termsUrl, withdrawalUrl }: Props) => (
   <Html lang="sv" dir="ltr">
     <Head />
     <Preview>{`${docLabel ?? 'Offert'} ${offerNumber ?? ''} är klar för signering`}</Preview>
@@ -50,6 +54,13 @@ const Email = ({ customerName, offerNumber, signUrl, companySigner, amount, docL
             {docLabel === 'Ramavtal' ? 'Öppna och signera ramavtalet' : 'Öppna och signera offerten'}
           </Button>
         </Section>
+        {termsUrl && withdrawalUrl ? (
+          <Text style={text}>
+            Du har <b>14 dagars ångerrätt</b> från att du signerar. Läs mer i{' '}
+            <a href={withdrawalUrl}>informationen om ångerrätt och ångerblanketten</a>, och i{' '}
+            <a href={termsUrl}>de allmänna villkoren</a>.
+          </Text>
+        ) : null}
         <Text style={small}>
           Du får en engångskod till din e-post innan du signerar. När båda parter har signerat får du
           en kopia av det färdiga dokumentet.

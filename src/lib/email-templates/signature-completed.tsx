@@ -21,6 +21,13 @@ interface Props {
   isInternal?: boolean
   docLabel?: string
   companyFallback?: string
+  /** Kundvillkor (satt bara när kundvillkoren är aktiverade, dvs. isInternal-mailet får inga). */
+  termsUrl?: string
+  withdrawalUrl?: string
+  /** "Ångerfristen går ut [datum]" - alltid när kundvillkoren är aktiverade. */
+  withdrawalEndDate?: string
+  /** Ifylld bara om kunden kryssade i "arbetet får börja tidigt" vid signeringen. */
+  earlyStartSentence?: string
 }
 
 const Email = ({
@@ -32,6 +39,10 @@ const Email = ({
   isInternal,
   docLabel,
   companyFallback,
+  termsUrl,
+  withdrawalUrl,
+  withdrawalEndDate,
+  earlyStartSentence,
 }: Props) => (
   <Html lang="sv" dir="ltr">
     <Head />
@@ -57,6 +68,14 @@ const Email = ({
             Hämta signerat dokument
           </Button>
         </Section>
+        {!isInternal && withdrawalEndDate ? (
+          <Text style={text}>
+            Du har 14 dagars ångerrätt. Ångerfristen går ut <b>{withdrawalEndDate}</b>. Läs mer i{' '}
+            {withdrawalUrl ? <a href={withdrawalUrl}>informationen om ångerrätt och ångerblanketten</a> : 'de bifogade dokumenten'}
+            {termsUrl ? <> och i <a href={termsUrl}>de allmänna villkoren</a></> : null}.
+          </Text>
+        ) : null}
+        {!isInternal && earlyStartSentence ? <Text style={text}>{earlyStartSentence}</Text> : null}
         <Text style={small}>Länk: {documentUrl}</Text>
       </Container>
     </Body>

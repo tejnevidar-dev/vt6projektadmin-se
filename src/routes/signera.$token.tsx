@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SignaturePad } from "@/components/SignaturePad";
 import { CheckCircle2, FileText, Loader2, Mail, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -36,6 +37,12 @@ interface SignInfo {
   signedAt: string | null;
   otpSent: boolean;
   pdfUrl: string | null;
+  /** Kundvillkor (ångerrätt m.m.): null/undefined för dagens vanliga offerter, opåverkade. */
+  termsVersion: string | null;
+  ack1Label: string | null;
+  earlyStartCheckboxText: string | null;
+  termsUrl: string | null;
+  withdrawalUrl: string | null;
 }
 
 const ERROR_TEXT: Record<string, string> = {
@@ -51,6 +58,7 @@ const ERROR_TEXT: Record<string, string> = {
   invalid_name: "Ange ditt namn.",
   invalid_place: "Ange ort.",
   invalid_code_format: "Koden består av 6 siffror.",
+  terms_ack_required: "Du måste bekräfta att du tagit del av villkoren och ångerrätten innan du kan signera.",
 };
 
 function fmtSek(n: number) {
@@ -69,6 +77,8 @@ function SigneraPage() {
   const [place, setPlace] = useState("");
   const [signature, setSignature] = useState<string | null>(null);
   const [doneUrl, setDoneUrl] = useState<string | null>(null);
+  const [ack1, setAck1] = useState(false);
+  const [earlyStart, setEarlyStart] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -125,6 +135,7 @@ function SigneraPage() {
     if (name.trim().length < 2) return toast.error("Ange namnförtydligande");
     if (place.trim().length < 2) return toast.error("Ange ort");
     if (!/^\d{6}$/.test(code.trim())) return toast.error("Ange den 6-siffriga koden");
+    if (info?.termsVersion && !ack1) return toast.error("Du måste kryssa i att du tagit del av villkoren och ångerrätten");
     setBusy(true);
     try {
       const res = await post({
@@ -133,6 +144,8 @@ function SigneraPage() {
         name: name.trim(),
         place: place.trim(),
         signaturePng: signature,
+        ack1: info?.termsVersion ? ack1 : undefined,
+        earlyStart: info?.termsVersion ? earlyStart : undefined,
       });
       setDoneUrl(res?.pdfUrl ?? null);
       toast.success("Tack! Offerten är signerad.");
@@ -272,6 +285,40 @@ function SigneraPage() {
                 />
               </div>
 
+              {info.termsVersion && (
+                <div className="space-y-3 rounded-md border border-border bg-card p-4">
+                  <p className="text-sm font-medium">Ångerrätt</p>
+                  <p className="text-xs text-muted-foreground">
+                    Du kan ångra avtalet inom 14 dagar från att du signerar.{" "}
+                    {info.withdrawalUrl && (
+                      <a className="underline" href={info.withdrawalUrl} target="_blank" rel="noreferrer">
+                        Så här gör du
+                      </a>
+                    )}
+                    {info.termsUrl && (
+                      <>
+                        {" "}
+                        · <a className="underline" href={info.termsUrl} target="_blank" rel="noreferrer">
+                          Allmänna villkor
+                        </a>
+                      </>
+                    )}
+                  </p>
+                  {info.ack1Label && (
+                    <label className="flex items-start gap-2 text-sm">
+                      <Checkbox checked={ack1} onCheckedChange={(v) => setAck1(v === true)} className="mt-0.5" />
+                      <span>{info.ack1Label}</span>
+                    </label>
+                  )}
+                  {info.earlyStartCheckboxText && (
+                    <label className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <Checkbox checked={earlyStart} onCheckedChange={(v) => setEarlyStart(v === true)} className="mt-0.5" />
+                      <span>{info.earlyStartCheckboxText}</span>
+                    </label>
+                  )}
+                </div>
+              )}
+
               <div className="rounded-md border border-border bg-card p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-start gap-2">
@@ -303,7 +350,12 @@ function SigneraPage() {
                 )}
               </div>
 
-              <Button className="w-full" size="lg" onClick={sign} disabled={busy || !codeSent}>
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={sign}
+                disabled={busy || !codeSent || (!!info.termsVersion && !ack1)}
+              >
                 {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Signera offerten
               </Button>

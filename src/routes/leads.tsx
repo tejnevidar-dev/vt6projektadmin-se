@@ -145,10 +145,22 @@ function LeadsContent() {
     });
   }, [jobTypeLeads, search, region, municipality, statusFilter, assignedFilter, createdByFilter, needsOfferFilter, activeView]);
 
+  // Inkorgen (nya, obehandlade leads) sorteras äldst först - den som väntat längst är mest
+  // brådskande för SLA:n. Övriga steg behåller ordningen från fetchLeads (nyast först);
+  // stabil sortering (jämför bara par där båda är inkommande_webb) rör dem inte.
+  const sortedLeads = useMemo(() => {
+    return [...filteredLeads].sort((a, b) => {
+      if (a.pipelineStage === "inkommande_webb" && b.pipelineStage === "inkommande_webb") {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      return 0;
+    });
+  }, [filteredLeads]);
+
 
   const stageLeads = useMemo(
-    () => (stageFilter === "all" ? filteredLeads : filteredLeads.filter((l) => l.pipelineStage === stageFilter)),
-    [filteredLeads, stageFilter]
+    () => (stageFilter === "all" ? sortedLeads : sortedLeads.filter((l) => l.pipelineStage === stageFilter)),
+    [sortedLeads, stageFilter]
   );
 
 

@@ -9,6 +9,16 @@ export function signingUrl(token: string): string {
   return `${PUBLIC_SITE_URL}/signera/${token}`
 }
 
+/**
+ * Länk till ett av kundvillkors-dokumenten (villkor/ångerrätt) för en signeringsbegäran.
+ * Går via GET /api/public/sign/$token?doc=... som mintar en färsk signerad lagringslänk vid
+ * varje anrop, samma mönster som själva offert-PDF:en (aldrig en rå, långlivad lagringslänk
+ * direkt i ett mejl).
+ */
+export function signingDocUrl(token: string, doc: 'villkor' | 'angerratt'): string {
+  return `${PUBLIC_SITE_URL}/api/public/sign/${token}?doc=${doc}`
+}
+
 export function randomToken(bytes = 32): string {
   const arr = new Uint8Array(bytes)
   crypto.getRandomValues(arr)

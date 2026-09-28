@@ -6,10 +6,14 @@ import {
   maskEmail,
   queueEmail,
   randomOtp,
+  signingDocUrl,
   signingUrl,
 } from '@/lib/signing.server'
 import { markOfferAccepted } from '@/lib/offer-accepted.server'
 import { markUeAgreementSigned } from '@/lib/ue-agreement.server'
+import { computeWithdrawalDates, parseCustomerTerms } from '@/lib/customer-terms'
+
+const fmtDateSv = (d: Date) => d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' })
 
 const OTP_TTL_MS = 15 * 60 * 1000
 const MAX_ATTEMPTS = 6
@@ -41,7 +45,7 @@ async function loadRow(supabase: any, token: string) {
   return data ?? null
 }
 
-function publicView(row: any, pdfUrl: string | null) {
+function publicView(row: any, pdfUrl: string | null, terms: ReturnType<typeof parseCustomerTerms> | null) {
   return {
     offerNumber: row.offer_number,
     customerName: row.customer_name,
@@ -54,16 +58,38 @@ function publicView(row: any, pdfUrl: string | null) {
     signedAt: row.customer_signed_at,
     otpSent: Boolean(row.otp_sent_at) && !row.otp_verified_at,
     pdfUrl,
+    // Kundvillkor (ångerrätt m.m.): bara satt när denna signeringsbegäran skapades i "full"-
+    // eller "withdrawal_only"-läge (se customer-terms.ts). NULL/undefined för alla äldre eller
+    // inaktiva offerter -- signeringssidan visar då ingenting nytt, exakt som idag. Vilket
+    // kryssruta 1-lydelse som visas beror på om allmänna villkor bifogades (terms_pdf_path
+    // satt = "full", annars "withdrawal_only") - se resolveCustomerTermsMode.
+    termsVersion: row.customer_terms_version ?? null,
+    ack1Label: row.customer_terms_version ? (row.terms_pdf_path ? terms?.ack_full_label : terms?.ack_withdrawal_label) ?? null : null,
+    earlyStartCheckboxText: row.customer_terms_version ? terms?.early_start_checkbox_text ?? null : null,
+    termsUrl: row.customer_terms_version && row.terms_pdf_path ? signingDocUrl(row.token, 'villkor') : null,
+    withdrawalUrl: row.customer_terms_version && row.right_of_withdrawal_pdf_path ? signingDocUrl(row.token, 'angerratt') : null,
   }
 }
 
 export const Route = createFileRoute('/api/public/sign/$token')({
   server: {
     handlers: {
-      GET: async ({ params }) => {
+      GET: async ({ params, request }) => {
         const supabase = admin()
         const row = await loadRow(supabase, params.token)
         if (!row) return bad('not_found', 404)
+
+        // Länkar till kundvillkors-PDF:erna (från mejlen): mintar en färsk, långlivad signerad
+        // lagringslänk och skickar en 302-redirect dit, aldrig en rå länk i själva mejlet.
+        const doc = new URL(request.url).searchParams.get('doc')
+        if (doc === 'villkor' || doc === 'angerratt') {
+          if (!row.customer_terms_version) return bad('not_found', 404)
+          const path = doc === 'villkor' ? row.terms_pdf_path : row.right_of_withdrawal_pdf_path
+          if (!path) return bad('not_found', 404)
+          const { data: signed } = await supabase.storage.from('offers').createSignedUrl(path, 60 * 60 * 24 * 30)
+          if (!signed?.signedUrl) return bad('not_found', 404)
+          return Response.redirect(signed.signedUrl, 302)
+        }
 
         const path = row.signed_pdf_path ?? row.base_pdf_path
         const { data: signed } = await supabase.storage.from('offers').createSignedUrl(path, 60 * 30)
@@ -77,7 +103,13 @@ export const Route = createFileRoute('/api/public/sign/$token')({
           row.status = 'viewed'
         }
 
-        return Response.json(publicView(row, signed?.signedUrl ?? null))
+        let terms: ReturnType<typeof parseCustomerTerms> | null = null
+        if (row.customer_terms_version) {
+          const { data: cfgRow } = await supabase.from('app_settings').select('value').eq('key', 'customer_terms').maybeSingle()
+          terms = parseCustomerTerms(cfgRow?.value)
+        }
+
+        return Response.json(publicView(row, signed?.signedUrl ?? null, terms))
       },
 
       POST: async ({ params, request }) => {
@@ -138,6 +170,13 @@ export const Route = createFileRoute('/api/public/sign/$token')({
           if (Date.now() - new Date(row.otp_sent_at).getTime() > OTP_TTL_MS) return bad('code_expired')
           if ((row.otp_attempts ?? 0) >= MAX_ATTEMPTS) return bad('too_many_attempts', 429)
 
+          // Kundvillkor (kryssruta 1, obligatorisk) - bara när denna begäran skapades med
+          // aktiverade kundvillkor. Kryssruta 2 (tidig start) är alltid frivillig.
+          const earlyStart = body.earlyStart === true
+          if (row.customer_terms_version) {
+            if (body.ack1 !== true) return bad('terms_ack_required')
+          }
+
           const hash = await hashOtp(row.token, code)
           if (hash !== row.otp_code_hash) {
             await supabase
@@ -193,6 +232,10 @@ export const Route = createFileRoute('/api/public/sign/$token')({
             .upload(signedPath, signedBytes, { contentType: 'application/pdf', upsert: true })
           if (upErr) return bad('upload_failed', 500)
 
+          const termsAck = row.customer_terms_version
+            ? { ...(row.customer_terms_ack ?? {}), ack1_at: now.toISOString(), ack1_ip: ip, ack1_ua: userAgent }
+            : row.customer_terms_ack
+
           await supabase
             .from('signature_requests')
             .update({
@@ -207,6 +250,9 @@ export const Route = createFileRoute('/api/public/sign/$token')({
               customer_user_agent: userAgent,
               otp_verified_at: now.toISOString(),
               otp_code_hash: null,
+              customer_terms_ack: termsAck,
+              early_start_requested: row.customer_terms_version ? earlyStart : false,
+              early_start_requested_at: row.customer_terms_version && earlyStart ? now.toISOString() : null,
             })
             .eq('id', row.id)
 
@@ -220,6 +266,18 @@ export const Route = createFileRoute('/api/public/sign/$token')({
           const docUrl = signingUrl(row.token)
           const docLabel = isUeAgreement ? 'Ramavtal' : undefined
           const companyFallback = isUeAgreement ? 'VT6 Invest' : undefined
+
+          let withdrawalEndDate: string | undefined
+          let earlyStartSentence: string | undefined
+          if (row.customer_terms_version) {
+            const { withdrawalEndsAt } = computeWithdrawalDates(now)
+            withdrawalEndDate = fmtDateSv(withdrawalEndsAt)
+            if (earlyStart) {
+              const { data: cfgRow } = await supabase.from('app_settings').select('value').eq('key', 'customer_terms').maybeSingle()
+              const terms = parseCustomerTerms(cfgRow?.value)
+              earlyStartSentence = terms.early_start_confirmed_sentence?.replaceAll('{datum}', withdrawalEndDate)
+            }
+          }
 
           // Kopia till kund
           await queueEmail(supabase, {
@@ -235,6 +293,10 @@ export const Route = createFileRoute('/api/public/sign/$token')({
               isInternal: false,
               docLabel,
               companyFallback,
+              termsUrl: row.terms_pdf_path ? signingDocUrl(row.token, 'villkor') : undefined,
+              withdrawalUrl: row.right_of_withdrawal_pdf_path ? signingDocUrl(row.token, 'angerratt') : undefined,
+              withdrawalEndDate,
+              earlyStartSentence,
             },
           })
 
