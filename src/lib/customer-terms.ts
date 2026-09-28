@@ -23,6 +23,8 @@ export interface CustomerTermsConfig {
   angerblankett_text: string | null;
   /** Kryssruta 1 när BARA ångerrätt bifogas (inte allmänna villkor). */
   ack_withdrawal_label: string | null;
+  /** Mening under signaturknappen ("Genom att signera ingår du...") i withdrawal_only-läget. */
+  withdrawal_binding_sentence: string | null;
   /** Kryssruta 2 (frivillig, ALDRIG förkryssad): begäran om att arbetet får börja tidigt. */
   early_start_checkbox_text: string | null;
   /** Mening i bekräftelsemailet om kryssruta 2 var ikryssad. Innehåller "{datum}" som token. */
@@ -46,6 +48,7 @@ export const EMPTY_CUSTOMER_TERMS: CustomerTermsConfig = {
   angerratt_text: null,
   angerblankett_text: null,
   ack_withdrawal_label: null,
+  withdrawal_binding_sentence: null,
   early_start_checkbox_text: null,
   early_start_confirmed_sentence: null,
   villkor_active: false,
@@ -64,6 +67,7 @@ export function parseCustomerTerms(raw: unknown): CustomerTermsConfig {
     angerratt_text: r.angerratt_text ?? null,
     angerblankett_text: r.angerblankett_text ?? null,
     ack_withdrawal_label: r.ack_withdrawal_label ?? null,
+    withdrawal_binding_sentence: r.withdrawal_binding_sentence ?? null,
     early_start_checkbox_text: r.early_start_checkbox_text ?? null,
     early_start_confirmed_sentence: r.early_start_confirmed_sentence ?? null,
     villkor_active: r.villkor_active === true,
@@ -87,6 +91,7 @@ export function isWithdrawalReady(cfg: CustomerTermsConfig): boolean {
     !notResolved(cfg.angerratt_text) &&
     !notResolved(cfg.angerblankett_text) &&
     !notResolved(cfg.ack_withdrawal_label) &&
+    !notResolved(cfg.withdrawal_binding_sentence) &&
     !notResolved(cfg.early_start_checkbox_text) &&
     !notResolved(cfg.early_start_confirmed_sentence)
   );
@@ -111,6 +116,13 @@ export function resolveCustomerTermsMode(cfg: CustomerTermsConfig): CustomerTerm
   if (withdrawalReady && villkorReady && !notResolved(cfg.ack_full_label)) return "full";
   if (withdrawalReady) return "withdrawal_only";
   return "none";
+}
+
+/** DB-värdet för signature_requests.customer_terms_mode, juristens exakta namngivning. */
+export function customerTermsModeToDbValue(mode: CustomerTermsMode): string | null {
+  if (mode === "full") return "full_v1";
+  if (mode === "withdrawal_only") return "angerratt_only";
+  return null;
 }
 
 export interface WithdrawalDates {

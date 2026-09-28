@@ -40,6 +40,7 @@ interface SignInfo {
   /** Kundvillkor (ångerrätt m.m.): null/undefined för dagens vanliga offerter, opåverkade. */
   termsVersion: string | null;
   ack1Label: string | null;
+  bindingSentence: string | null;
   earlyStartCheckboxText: string | null;
   termsUrl: string | null;
   withdrawalUrl: string | null;
@@ -360,8 +361,8 @@ function SigneraPage() {
                 Signera offerten
               </Button>
               <p className="text-center text-xs text-muted-foreground">
-                Genom att signera godkänner du offertens innehåll och villkor. Signeringstidpunkt, IP och
-                e-postverifiering registreras som signeringsbevis i dokumentet.
+                {info.bindingSentence ??
+                  "Genom att signera godkänner du offertens innehåll och villkor. Signeringstidpunkt, IP och e-postverifiering registreras som signeringsbevis i dokumentet."}
               </p>
             </CardContent>
           </Card>

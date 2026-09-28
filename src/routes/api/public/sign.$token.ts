@@ -65,6 +65,9 @@ function publicView(row: any, pdfUrl: string | null, terms: ReturnType<typeof pa
     // satt = "full", annars "withdrawal_only") - se resolveCustomerTermsMode.
     termsVersion: row.customer_terms_version ?? null,
     ack1Label: row.customer_terms_version ? (row.terms_pdf_path ? terms?.ack_full_label : terms?.ack_withdrawal_label) ?? null : null,
+    // Bara satt i withdrawal_only-läget (juristens "övergång"-lydelse). I "full"-läget visar
+    // signeringssidan sin vanliga generiska text tills vidare -- ingen sådan mening given än.
+    bindingSentence: row.customer_terms_version && !row.terms_pdf_path ? terms?.withdrawal_binding_sentence ?? null : null,
     earlyStartCheckboxText: row.customer_terms_version ? terms?.early_start_checkbox_text ?? null : null,
     termsUrl: row.customer_terms_version && row.terms_pdf_path ? signingDocUrl(row.token, 'villkor') : null,
     withdrawalUrl: row.customer_terms_version && row.right_of_withdrawal_pdf_path ? signingDocUrl(row.token, 'angerratt') : null,

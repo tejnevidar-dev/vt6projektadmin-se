@@ -72,7 +72,7 @@ export const createSigningRequest = createServerFn({ method: "POST" })
       // customer-terms.ts. "withdrawal_only" räcker för att bifoga ångerrätten - allmänna
       // villkor väntar på K1/K2/K3/K5. Genererar/laddar inte upp något extra i "none"-läget --
       // dagens offerter (inkl. de 12 utestående v40-v42) helt opåverkade.
-      const { parseCustomerTerms, resolveCustomerTermsMode } = await import("./customer-terms");
+      const { customerTermsModeToDbValue, parseCustomerTerms, resolveCustomerTermsMode } = await import("./customer-terms");
       const { data: termsRow } = await (supabaseAdmin as any).from("app_settings").select("value").eq("key", "customer_terms").maybeSingle();
       const termsCfg = parseCustomerTerms(termsRow?.value);
       const termsMode = resolveCustomerTermsMode(termsCfg);
@@ -123,6 +123,7 @@ export const createSigningRequest = createServerFn({ method: "POST" })
         company_date: admin ? data.companyDate! : null,
         company_signed_at: admin ? new Date().toISOString() : null,
         customer_terms_version: termsMode !== "none" ? termsCfg.withdrawal_version : null,
+        customer_terms_mode: customerTermsModeToDbValue(termsMode),
         terms_pdf_path: termsPdfPath,
         right_of_withdrawal_pdf_path: withdrawalPdfPath,
       });

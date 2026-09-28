@@ -14,6 +14,7 @@ const WITHDRAWAL_RAW = {
   angerratt_text: "Du har 14 dagars ångerrätt...",
   angerblankett_text: "Jag meddelar härmed...",
   ack_withdrawal_label: "Jag har tagit del av informationen om ångerrätt...",
+  withdrawal_binding_sentence: "Genom att signera ingår du ett avtal...",
   early_start_checkbox_text: "Jag begär att arbetet får börja...",
   early_start_confirmed_sentence: "Ångerfristen går ut {datum}.",
 };
