@@ -10,6 +10,7 @@ import {
   type LeadIntakeConfig,
   normalizeEmail,
 } from "@/lib/lead-intake";
+import { slaDeadline } from "@/lib/opening-hours";
 
 const CONFIG_KEY = "lead_intake_config";
 const SITE_URL = (process.env.PUBLIC_SITE_URL || "https://admin-vt6.tejnevidar.workers.dev").replace(/\/$/, "");
@@ -241,6 +242,7 @@ export interface LeadAlertResult {
   slaAlerts: number;
   silenceAlert: boolean;
   errorAlert: boolean;
+  bookingSlaAlerts: number;
 }
 
 async function alreadySent(supabase: any, type: string, opts: { link?: string; sinceHours?: number }): Promise<boolean> {
@@ -254,7 +256,7 @@ async function alreadySent(supabase: any, type: string, opts: { link?: string; s
 export async function processLeadAlerts(supabase: any): Promise<LeadAlertResult> {
   const cfg = await loadConfig(supabase);
   const now = Date.now();
-  const result: LeadAlertResult = { slaAlerts: 0, silenceAlert: false, errorAlert: false };
+  const result: LeadAlertResult = { slaAlerts: 0, silenceAlert: false, errorAlert: false, bookingSlaAlerts: 0 };
 
   // 1. SLA: nya leads som ingen ur personalen rört inom slaHours.
   const olderThan = new Date(now - cfg.slaHours * 3600000).toISOString();
@@ -325,6 +327,34 @@ export async function processLeadAlerts(supabase: any): Promise<LeadAlertResult>
       idempotencySuffix: String(Math.floor(now / 3600000)),
     });
     result.errorAlert = true;
+  }
+
+  // 4. Bokningsflödet: obekräftade booking_requests vars SLA-löfte (ring inom 1 h / bekräfta
+  // inom 2 h, öppettidsjusterat - se opening-hours.ts) har gått ut.
+  const { data: openBookings } = await supabase
+    .from("booking_requests")
+    .select("id, lead_id, slot, created_at, leads(name, seller_id)")
+    .eq("status", "ny")
+    .gte("created_at", newerThan);
+  const slaCfgRow = await supabase.from("app_settings").select("value").eq("key", "booking_sla_config").maybeSingle();
+  const slaCfg = slaCfgRow.data?.value ?? {};
+  const callbackHours = typeof slaCfg.callback_hours === "number" ? slaCfg.callback_hours : 1;
+  const confirmHours = typeof slaCfg.confirm_hours === "number" ? slaCfg.confirm_hours : 2;
+  for (const b of (openBookings ?? []) as any[]) {
+    const hours = b.slot === "ring_mig" ? callbackHours : confirmHours;
+    const deadline = slaDeadline(new Date(b.created_at), hours);
+    if (deadline.getTime() > now) continue;
+    if (await alreadySent(supabase, "booking_sla", { link: leadLink(b.lead_id) })) continue;
+    const lead = b.leads;
+    await sendAlert(supabase, cfg, {
+      type: "booking_sla",
+      leadId: b.lead_id,
+      title: b.slot === "ring_mig" ? `Ring mig-löftet har gått ut: ${lead?.name ?? ""}` : `Bokningen är inte bekräftad: ${lead?.name ?? ""}`,
+      body: b.slot === "ring_mig" ? "Kunden väntar fortfarande på att bli uppringd." : "Bokningen är inte bekräftad mot kunden än.",
+      sellerId: lead?.seller_id ?? null,
+      details: lead?.seller_id ? [] : ["Ingen säljare är tilldelad leaden."],
+    });
+    result.bookingSlaAlerts++;
   }
 
   return result;

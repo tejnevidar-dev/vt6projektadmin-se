@@ -6,6 +6,7 @@ import { template as signatureOtpTemplate } from './signature-otp'
 import { template as signatureCompletedTemplate } from './signature-completed'
 import { template as leadAlertTemplate } from './lead-alert'
 import { template as workOrderOfferTemplate } from './work-order-offer'
+import { template as reviewRequestTemplate } from './review-request'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -24,4 +25,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'signature-completed': signatureCompletedTemplate,
   'lead-alert': leadAlertTemplate,
   'work-order-offer': workOrderOfferTemplate,
+  'review-request': reviewRequestTemplate,
 }

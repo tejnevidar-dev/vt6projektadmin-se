@@ -57,6 +57,7 @@ import { Route as ApiPublicRoslagstakWebhookRouteImport } from './routes/api/pub
 import { Route as ApiPublicMorningStatsRouteImport } from './routes/api/public/morning-stats'
 import { Route as ApiPublicLookupInviteRouteImport } from './routes/api/public/lookup-invite'
 import { Route as ApiPublicLeadInboxRouteImport } from './routes/api/public/lead-inbox'
+import { Route as ApiPublicBookingRequestRouteImport } from './routes/api/public/booking-request'
 import { Route as ApiHooksSupabaseAuthEmailRouteImport } from './routes/api/hooks/supabase-auth-email'
 import { Route as ApiHooksResendEventsRouteImport } from './routes/api/hooks/resend-events'
 import { Route as ApiHooksInboundEmailRouteImport } from './routes/api/hooks/inbound-email'
@@ -308,6 +309,11 @@ const ApiPublicLeadInboxRoute = ApiPublicLeadInboxRouteImport.update({
   path: '/api/public/lead-inbox',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBookingRequestRoute = ApiPublicBookingRequestRouteImport.update({
+  id: '/api/public/booking-request',
+  path: '/api/public/booking-request',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiHooksSupabaseAuthEmailRoute =
   ApiHooksSupabaseAuthEmailRouteImport.update({
     id: '/api/hooks/supabase-auth-email',
@@ -400,6 +406,7 @@ export interface FileRoutesByFullPath {
   '/api/hooks/inbound-email': typeof ApiHooksInboundEmailRoute
   '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
+  '/api/public/booking-request': typeof ApiPublicBookingRequestRoute
   '/api/public/lead-inbox': typeof ApiPublicLeadInboxRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/morning-stats': typeof ApiPublicMorningStatsRoute
@@ -457,6 +464,7 @@ export interface FileRoutesByTo {
   '/api/hooks/inbound-email': typeof ApiHooksInboundEmailRoute
   '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
+  '/api/public/booking-request': typeof ApiPublicBookingRequestRoute
   '/api/public/lead-inbox': typeof ApiPublicLeadInboxRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/morning-stats': typeof ApiPublicMorningStatsRoute
@@ -516,6 +524,7 @@ export interface FileRoutesById {
   '/api/hooks/inbound-email': typeof ApiHooksInboundEmailRoute
   '/api/hooks/resend-events': typeof ApiHooksResendEventsRoute
   '/api/hooks/supabase-auth-email': typeof ApiHooksSupabaseAuthEmailRoute
+  '/api/public/booking-request': typeof ApiPublicBookingRequestRoute
   '/api/public/lead-inbox': typeof ApiPublicLeadInboxRoute
   '/api/public/lookup-invite': typeof ApiPublicLookupInviteRoute
   '/api/public/morning-stats': typeof ApiPublicMorningStatsRoute
@@ -576,6 +585,7 @@ export interface FileRouteTypes {
     | '/api/hooks/inbound-email'
     | '/api/hooks/resend-events'
     | '/api/hooks/supabase-auth-email'
+    | '/api/public/booking-request'
     | '/api/public/lead-inbox'
     | '/api/public/lookup-invite'
     | '/api/public/morning-stats'
@@ -633,6 +643,7 @@ export interface FileRouteTypes {
     | '/api/hooks/inbound-email'
     | '/api/hooks/resend-events'
     | '/api/hooks/supabase-auth-email'
+    | '/api/public/booking-request'
     | '/api/public/lead-inbox'
     | '/api/public/lookup-invite'
     | '/api/public/morning-stats'
@@ -691,6 +702,7 @@ export interface FileRouteTypes {
     | '/api/hooks/inbound-email'
     | '/api/hooks/resend-events'
     | '/api/hooks/supabase-auth-email'
+    | '/api/public/booking-request'
     | '/api/public/lead-inbox'
     | '/api/public/lookup-invite'
     | '/api/public/morning-stats'
@@ -748,6 +760,7 @@ export interface RootRouteChildren {
   ApiHooksInboundEmailRoute: typeof ApiHooksInboundEmailRoute
   ApiHooksResendEventsRoute: typeof ApiHooksResendEventsRoute
   ApiHooksSupabaseAuthEmailRoute: typeof ApiHooksSupabaseAuthEmailRoute
+  ApiPublicBookingRequestRoute: typeof ApiPublicBookingRequestRoute
   ApiPublicLeadInboxRoute: typeof ApiPublicLeadInboxRoute
   ApiPublicLookupInviteRoute: typeof ApiPublicLookupInviteRoute
   ApiPublicMorningStatsRoute: typeof ApiPublicMorningStatsRoute
@@ -1097,6 +1110,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLeadInboxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/booking-request': {
+      id: '/api/public/booking-request'
+      path: '/api/public/booking-request'
+      fullPath: '/api/public/booking-request'
+      preLoaderRoute: typeof ApiPublicBookingRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/hooks/supabase-auth-email': {
       id: '/api/hooks/supabase-auth-email'
       path: '/api/hooks/supabase-auth-email'
@@ -1216,6 +1236,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHooksInboundEmailRoute: ApiHooksInboundEmailRoute,
   ApiHooksResendEventsRoute: ApiHooksResendEventsRoute,
   ApiHooksSupabaseAuthEmailRoute: ApiHooksSupabaseAuthEmailRoute,
+  ApiPublicBookingRequestRoute: ApiPublicBookingRequestRoute,
   ApiPublicLeadInboxRoute: ApiPublicLeadInboxRoute,
   ApiPublicLookupInviteRoute: ApiPublicLookupInviteRoute,
   ApiPublicMorningStatsRoute: ApiPublicMorningStatsRoute,
