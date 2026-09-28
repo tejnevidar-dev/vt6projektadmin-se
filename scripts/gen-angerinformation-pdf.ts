@@ -8,7 +8,7 @@ import { buildAngerrattPdf } from "../src/lib/customer-terms-pdf.server";
 const angerrattText = `Ångerrätt
 Du har rätt att frånträda (ångra) detta avtal inom 14 dagar utan att ange något skäl. Ångerfristen löper ut 14 dagar efter den dag då avtalet ingicks, alltså den dag du signerade offerten.
 
-För att utöva ångerrätten ska du meddela oss, RoslagsTak (VT6 Invest AB), [postadress – BESLUT K4], [e-post – BESLUT K4], 070-154 36 39, ditt beslut att frånträda avtalet. Gör det i ett tydligt meddelande, till exempel ett brev eller ett mejl. Du kan använda den bifogade ångerblanketten, men det är inget krav.
+För att utöva ångerrätten ska du meddela oss, RoslagsTak (VT6 Invest AB), Stångholmsbacken 77, 127 40 Skärholmen, vidar@roslagstak.se, 070-154 36 39, ditt beslut att frånträda avtalet. Gör det i ett tydligt meddelande, till exempel ett brev eller ett mejl. Du kan använda den bifogade ångerblanketten, men det är inget krav.
 
 För att du ska hinna ångra dig i tid räcker det att du skickar ditt meddelande om att du utövar ångerrätten innan ångerfristen har gått ut.
 
@@ -21,7 +21,7 @@ Arbetet börjar inte under ångerfristen om du inte uttryckligen har begärt det
 När ångerrätten upphör
 Om arbetet har utförts helt efter att du uttryckligen samtyckt till att det började under ångerfristen och gått med på att ångerrätten då upphör, har du inte längre någon ångerrätt.`;
 
-const angerblankettText = `Till: RoslagsTak (VT6 Invest AB), [postadress – BESLUT K4], [e-post – BESLUT K4]
+const angerblankettText = `Till: RoslagsTak (VT6 Invest AB), Stångholmsbacken 77, 127 40 Skärholmen, vidar@roslagstak.se
 
 Jag meddelar härmed att jag frånträder mitt avtal om följande tjänst:
 Offertnummer: ……………………
@@ -35,4 +35,4 @@ const bytes = await buildAngerrattPdf(angerrattText, angerblankettText);
 const out = resolve(import.meta.dir, "../../ledning/jurist/angerinformation-v1.pdf");
 await writeFile(out, bytes);
 console.log("Skrev", out, `(${bytes.byteLength} bytes)`);
-console.log("OBS: [postadress - BESLUT K4] och [e-post - BESLUT K4] är fortfarande platshållare - Vidar måste fylla i dem för hand i denna PDF, eller vänta med utskick tills K4 är beslutat.");
+console.log("K4 komplett (postadress + vidar@roslagstak.se, bekräftat av Jurist/Vidar 2026-09-28) - klar för bifogning som den är.");
