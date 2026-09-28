@@ -12,6 +12,10 @@ const SITE_NAME = "admin.vt6"
 // (not the root domain) isolates sending reputation from any regular company email
 // on the root domain -- matches the sender domain Lovable used before.
 const FROM_DOMAIN = "notify.vt6projektadmin.se"
+// noreply@FROM_DOMAIN has no MX - any reply (t.ex. ett ångerbesked svarat direkt på mailet)
+// studsar annars i tomma intet. IT-stöd fynd 2026-09-28. Default till kundärende-adressen
+// (samma som K4:s e-post för ångermeddelanden) när anroparen inte satt något eget replyTo.
+const DEFAULT_REPLY_TO = "vidar@roslagstak.se"
 
 export type SendTemplateEmailResult =
   | { sent: true }
@@ -67,7 +71,7 @@ export async function sendTemplateEmail(
       html,
       text,
       idempotencyKey: options.idempotencyKey || crypto.randomUUID(),
-      replyTo: options.replyTo,
+      replyTo: options.replyTo ?? DEFAULT_REPLY_TO,
     })
   } catch (error) {
     if (error instanceof EmailSuppressedError) {
