@@ -7,6 +7,10 @@
 --    bekräftelse är en separat, senare admin-knapp som kräver Vidars OK.
 -- 2) OMDÖMEN: efter betalt jobb (leads.customer_paid_at) flaggas leaden "redo" av en daglig
 --    cron. Själva utskicket är en manuell knapp, avstängd tills Vidar godkänt mall-texten.
+--
+-- RLS rättad efter Driftchefens granskning 2026-09-28: booking_requests och leads.review_*
+-- är nu begränsade till admin/säljare, se resp. avsnitt nedan. Test: supabase/tests/
+-- booking-requests-rls-test.sql (körs som en UE-roll i samma transaktion).
 
 CREATE TYPE public.booking_slot AS ENUM ('formiddag', 'eftermiddag', 'ring_mig');
 
@@ -39,12 +43,18 @@ GRANT SELECT, INSERT, UPDATE ON public.booking_requests TO authenticated;
 GRANT ALL ON public.booking_requests TO service_role;
 ALTER TABLE public.booking_requests ENABLE ROW LEVEL SECURITY;
 
--- Samma synlighetsmodell som leads: all personal (delad pool, ingen ägarspärr) - se
--- CLAUDE.md "seller_id är bara provisionstilldelning, ingen åtkomstspärr".
-CREATE POLICY "Staff reads booking requests" ON public.booking_requests
-  FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Staff updates booking requests" ON public.booking_requests
-  FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+-- RÄTTAT (Driftchefens granskning 2026-09-28): "TO authenticated USING (true)" är för brett -
+-- kundens namn och telefon skulle då kunna läsas/ändras av underentreprenor, hantverkare och
+-- viewer också, inte bara sälj/admin. "Delad pool" (CLAUDE.md) gäller SÄLJARE som ser varandras
+-- leads, inte alla inloggade roller. Bara admin/säljare hanterar bokningar - lägg till
+-- arbetsledare här om det visar sig behövas.
+CREATE POLICY "Sales staff read booking requests" ON public.booking_requests
+  FOR SELECT TO authenticated
+  USING (private.has_role(auth.uid(), 'admin'::app_role) OR private.has_role(auth.uid(), 'saljare'::app_role));
+CREATE POLICY "Sales staff update booking requests" ON public.booking_requests
+  FOR UPDATE TO authenticated
+  USING (private.has_role(auth.uid(), 'admin'::app_role) OR private.has_role(auth.uid(), 'saljare'::app_role))
+  WITH CHECK (private.has_role(auth.uid(), 'admin'::app_role) OR private.has_role(auth.uid(), 'saljare'::app_role));
 -- INSERT sker bara från den publika endpointen via service-role (anon/authenticated skapar
 -- aldrig en bokningsrad direkt) - ingen INSERT-policy för authenticated här, medvetet.
 
@@ -78,3 +88,38 @@ ALTER TABLE public.leads
 INSERT INTO public.app_settings (key, value)
 VALUES ('review_request_config', '{"delay_days": 3, "template": null, "google_review_url": null}'::jsonb)
 ON CONFLICT (key) DO NOTHING;
+
+-- Kolumnspärr (Driftchefens granskning 2026-09-28, samma fråga som för marketing_consent):
+-- leads har en bred befintlig UPDATE-policy ("TO authenticated USING (true)", från
+-- 20260414210533) som täcker ALLA inloggade roller, inte bara sälj/admin - ändrar jag inte här
+-- (stort, separat scope), men de nya review_*-kolumnerna ska bara kunna sättas av admin/säljare,
+-- inte t.ex. en underentreprenör eller hantverkare som råkar ha uppdateringsrätt på leaden via
+-- en jobbkoppling. Samma mönster som lock_marketing_consent_fields (340000).
+CREATE OR REPLACE FUNCTION public.lock_review_fields()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF private.has_role(auth.uid(), 'admin'::app_role)
+     OR private.has_role(auth.uid(), 'saljare'::app_role) THEN
+    RETURN NEW;
+  END IF;
+
+  IF OLD.review_status IS DISTINCT FROM NEW.review_status
+     OR OLD.review_requested_at IS DISTINCT FROM NEW.review_requested_at
+     OR OLD.review_sent_at IS DISTINCT FROM NEW.review_sent_at
+     OR OLD.review_received_at IS DISTINCT FROM NEW.review_received_at
+     OR OLD.review_opt_out IS DISTINCT FROM NEW.review_opt_out THEN
+    RAISE EXCEPTION 'Bara admin eller säljare får ändra omdömesstatus på en lead.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_lock_review_fields ON public.leads;
+CREATE TRIGGER trg_lock_review_fields
+BEFORE UPDATE ON public.leads
+FOR EACH ROW EXECUTE FUNCTION public.lock_review_fields();
