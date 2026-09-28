@@ -369,13 +369,14 @@ export function expiryWarnings(sc: Subcontractor): string[] {
   if (sc.pipeline_status !== "aktiv" && sc.pipeline_status !== "provjobb") out.push(`Status: ${PIPELINE_LABELS[sc.pipeline_status]} (måste vara Provjobb eller Aktiv)`);
   if (!sc.user_id) out.push("Inloggning saknas");
   if (!sc.f_skatt || ageDays > 30) out.push("F-skatt saknas/kontroll äldre än 30 dagar");
-  const taxAge = sc.tax_certificate_checked_at ? (Date.parse(today) - Date.parse(sc.tax_certificate_checked_at)) / 86400000 : Infinity;
-  if (taxAge > 30) out.push("Skatteverkets intyg saknas/äldre än 30 dagar");
+  // v2.1 (Vidars beslut 2026-09-28): Skatteverkets intyg krävs bara en gång före första jobbet,
+  // ingen löpande 30-dagarskontroll. Kronofogden-gränsen är borttagen ur avtalet - Vidar
+  // kontrollerar själv innan en UE tas in, ingen spärr i CRM.
+  if (!sc.tax_certificate_checked_at) out.push("Skatteverkets intyg saknas");
   if (bad(sc.insurance_expires_at)) out.push("Försäkring saknas/utgången");
   if (!sc.agreement_signed_at) out.push("Avtal saknas");
   if (bad(sc.id06_valid_until)) out.push("ID06 saknas/utgånget");
   if (sc.is_posted_worker && bad(sc.a1_valid_until)) out.push("A1-intyg saknas/utgånget");
   if (sc.is_posted_worker && !sc.posting_notified_at) out.push("Anmälan om utstationering saknas");
-  if ((sc.kronofogden_debt ?? 0) > 10000) out.push("Skuld hos Kronofogden över gränsen");
   return out;
 }
