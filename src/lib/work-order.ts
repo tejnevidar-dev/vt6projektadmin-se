@@ -289,13 +289,15 @@ export function termsLines(lang: Lang, ctx: TermsContext): string[] {
       ? "ÄTA ersätts bara efter skriftligt förhandsgodkännande i systemet (Bilaga 4). Kundens beställningar hänvisas till " + COMPANY_NAME_TO_UE + "."
       : "Change work is paid only after prior written approval in the system (Appendix 4). Requests from the customer are referred to " + COMPANY_NAME_TO_UE + ".",
   );
+  // Avtal v2.1 (Vidars beslut 2026-09-28, spec från Agent - Jurist): inget lönebevis, ingen
+  // innehållen betalning - hela beloppet betalas N dagar efter godkänd slutkontroll och
+  // korrekt faktura. Kvittningshänvisningen är nu 7.3 (var 7.4 i v2.0, en klausul togs bort).
   const p = c.payment;
   const days = p?.days != null ? `${p.days} dagar` : null;
-  const retention = p?.retention_pct != null && p?.retention_days != null;
   out.push(
     sv
-      ? `Fakturering efter godkänd slutkontroll. Betalning ${days ? `${days} efter` : "efter"} att godkänd slutkontroll, korrekt faktura och komplett lönebevis finns (Bilaga 5).${retention ? ` ${fmtPct(p!.retention_pct!)} hålls inne och betalas ${p!.retention_days} dagar efter godkänd slutkontroll, om inga anmärkta fel, lönekrav eller andra krav är obehandlade.` : ""} ${COMPANY_NAME_TO_UE} får kvitta enligt ramavtalet 7.4.`
-      : `Invoicing after the approved final inspection. Payment ${p?.days != null ? `${p.days} days after` : "after"} the approved final inspection, a correct invoice and complete proof of wages all exist (Appendix 5).${retention ? ` ${fmtPct(p!.retention_pct!)} is retained and paid ${p!.retention_days} days after the approved final inspection, provided no noted defects, wage claims or other claims are outstanding.` : ""} ${COMPANY_NAME_TO_UE} may set off under framework agreement 7.4.`,
+      ? `Fakturering efter godkänd slutkontroll. Betalning av hela beloppet ${days ? `${days} efter` : "efter"} godkänd slutkontroll och korrekt faktura (Bilaga 5). ${COMPANY_NAME_TO_UE} får kvitta enligt ramavtalet 7.3.`
+      : `Invoicing after the approved final inspection. Payment of the full amount ${p?.days != null ? `${p.days} days after` : "after"} the approved final inspection and a correct invoice (Appendix 5). ${COMPANY_NAME_TO_UE} may set off under framework agreement 7.3.`,
   );
   out.push(
     sv

@@ -120,12 +120,12 @@ describe("arbetsorder: interna anteckningar och villkor", () => {
     expect(en).toContain("Requests from the customer");
   });
   it("vite och betalning visas med värden när de finns, annars 'enligt ramavtalet'", () => {
-    const withVals = { ...base, liquidated_damages: { per_day: 500, cap_pct: 10 }, payment: { days: 30, retention_pct: 10, retention_days: 30 } };
+    const withVals = { ...base, liquidated_damages: { per_day: 500, cap_pct: 10 }, payment: { days: 30, retention_pct: null, retention_days: null } };
     const a = termsLines("sv", { subcontractorName: "X", frameworkDate: null, content: withVals }).join("\n");
     expect(a).toContain("Vite vid försening som X orsakat: 500 kr per påbörjad arbetsdag, högst 10 % av priset");
     expect(a).toContain("Väder undantas om taket hålls tätt");
-    expect(a).toContain("30 dagar efter att godkänd slutkontroll, korrekt faktura och komplett lönebevis finns");
-    expect(a).toContain("10 % hålls inne och betalas 30 dagar efter godkänd slutkontroll, om inga anmärkta fel, lönekrav eller andra krav är obehandlade");
+    expect(a).toContain("Betalning av hela beloppet 30 dagar efter godkänd slutkontroll och korrekt faktura (Bilaga 5)");
+    expect(a).toContain("får kvitta enligt ramavtalet 7.3");
     expect(termsLines("sv", { subcontractorName: "X", frameworkDate: null, content: base }).join("\n")).toContain("Vite vid försening som underentreprenören orsakat enligt ramavtalet 5.2");
   });
 });
